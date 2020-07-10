@@ -1,0 +1,13 @@
+# https://cirrus-ci.org/examples/#flutter-web
+define_platforms:
+  chromium:
+    name: Chromium
+    extends: chrome
+    settings:
+      arguments: --no-sandbox
+      executable:
+        linux: chromium
+
+# A dummy task to make the example work
+task:
+  script: true

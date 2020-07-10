@@ -1,0 +1,19 @@
+container:
+  image: golang:latest
+
+task:
+  container:
+    image: golangci/golangci-lint:latest
+  name: Lint
+  script: golangci-lint run -v -p bugs,complexity,format,performance,style,unused -D goimports,wsl,gochecknoglobals,funlen,noctx,gofumpt
+
+task:
+  name: Test
+  script: go test -v ./...
+
+task:
+  name: Build
+  depends_on:
+    - Lint
+    - Test
+  script: go build -v ./...
