@@ -5,7 +5,12 @@ task:
   container:
     image: golangci/golangci-lint:latest
   name: Lint
-  script: golangci-lint run -v -p bugs,complexity,format,performance,style,unused -D goimports,wsl,gochecknoglobals,funlen,noctx,gofumpt
+  script: golangci-lint run -v --out-format json -p bugs,complexity,format,performance,style,unused -D goimports,wsl,gochecknoglobals,funlen,noctx,gofumpt > golangci.json
+  always:
+    artifacts:
+      path: golangci.json
+      type: text/json
+      format: golangci
 
 task:
   name: Test
