@@ -1,7 +1,7 @@
-package cmd_test
+package commands_test
 
 import (
-	"github.com/cirruslabs/cirrus-cli/internal/cmd"
+	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
@@ -38,7 +38,7 @@ func tempChdir(t *testing.T) {
 func TestValidateNoArgsNoFile(t *testing.T) {
 	tempChdir(t)
 
-	command := cmd.NewRootCmd()
+	command := commands.NewRootCmd()
 	command.SetArgs([]string{"validate", ""})
 	err := command.Execute()
 
@@ -52,7 +52,7 @@ func TestValidateNoArgsHasFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	command := cmd.NewRootCmd()
+	command := commands.NewRootCmd()
 	command.SetArgs([]string{"validate", ""})
 	err := command.Execute()
 
@@ -67,7 +67,7 @@ func TestValidateFileArgHasFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	command := cmd.NewRootCmd()
+	command := commands.NewRootCmd()
 	command.SetArgs([]string{"validate", "-f", "custom.yml"})
 	err := command.Execute()
 
