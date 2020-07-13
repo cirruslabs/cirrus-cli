@@ -25,7 +25,7 @@ var invalidCases = []string{
 }
 
 func absolutize(file string) string {
-	return filepath.Join("..", "..", "test", "fixtures", "parser", file)
+	return filepath.Join("..", "..", "testdata", "parser", file)
 }
 
 func TestValidConfigs(t *testing.T) {
