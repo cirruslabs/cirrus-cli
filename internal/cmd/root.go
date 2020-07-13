@@ -1,9 +1,6 @@
 package cmd
 
-import (
-	"github.com/cirruslabs/cirrus-cli/internal/cmd/validate"
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
 func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -11,7 +8,7 @@ func NewRootCmd() *cobra.Command {
 		Short: "Cirrus CLI",
 	}
 
-	cmd.AddCommand(validate.NewValidateCmd())
+	cmd.AddCommand(newValidateCmd())
 
 	return cmd
 }

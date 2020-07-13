@@ -1,4 +1,4 @@
-package validate_test
+package cmd_test
 
 import (
 	"github.com/cirruslabs/cirrus-cli/internal/cmd"

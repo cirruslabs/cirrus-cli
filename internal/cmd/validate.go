@@ -1,4 +1,4 @@
-package validate
+package cmd
 
 import (
 	"errors"
@@ -31,7 +31,7 @@ func validate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func NewValidateCmd() *cobra.Command {
+func newValidateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate Cirrus CI configuration file",
