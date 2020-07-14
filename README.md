@@ -1,6 +1,6 @@
 # Cirrus CLI
 
-CLI for executing Cirrus tasks locally.
+WIP CLI for executing Cirrus tasks locally. Currently can only validate Cirrus CI configuration file.
 
 ## Installation
 
