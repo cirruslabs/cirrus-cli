@@ -13,7 +13,7 @@ Check the [releases page](https://github.com/cirruslabs/cirrus-cli/releases) for
 If you have Go 1.14 installed, you can run:
 
 ```
-go install github.com/cirruslabs/cirrus-cli/...
+go get github.com/cirruslabs/cirrus-cli/...
 ```
 
 This will build and place the `cirrus` binary in `$GOPATH/bin`.
