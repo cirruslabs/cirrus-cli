@@ -15,6 +15,3 @@ builds:
 
 archives:
   - format: zip
-
-release:
-  disable: true

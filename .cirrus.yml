@@ -23,5 +23,4 @@ task:
     - Test
   script:
     - wget -O - https://github.com/goreleaser/goreleaser/releases/download/v0.140.0/goreleaser_Linux_x86_64.tar.gz | tar xz goreleaser
-    - ./goreleaser --skip-publish
-    - bash .ci/upload-release-assets.sh
+    - ./goreleaser
