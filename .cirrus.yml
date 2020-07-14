@@ -17,8 +17,8 @@ task:
   script: go test -v ./...
 
 task:
-  name: Build
-  depends_on:
-    - Lint
-    - Test
-  script: go build -v ./...
+  name: Release
+  only_if: $CIRRUS_TAG != ''
+  container:
+    image: goreleaser/goreleaser:latest
+  release_script: gorelease
