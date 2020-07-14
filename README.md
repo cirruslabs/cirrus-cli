@@ -1,5 +1,7 @@
 # Cirrus CLI
 
+[![Build Status](https://api.cirrus-ci.com/github/cirruslabs/cirrus-cli.svg)](https://cirrus-ci.com/github/cirruslabs/cirrus-cli)
+
 WIP CLI for executing Cirrus tasks locally. Currently can only validate Cirrus CI configuration file.
 
 ## Installation
