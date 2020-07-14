@@ -23,4 +23,4 @@ task:
     GITHUB_TOKEN: ENCRYPTED[!98ace8259c6024da912c14d5a3c5c6aac186890a8d4819fad78f3e0c41a4e0cd3a2537dd6e91493952fb056fa434be7c!]
   container:
     image: goreleaser/goreleaser:latest
-  release_script: gorelease
+  release_script: goreleaser
