@@ -8,6 +8,9 @@ define_platforms:
       executable:
         linux: chromium
 
-# A dummy task to make the example work
+# A dummy instance and a task to make the example work
+container:
+  image: debian:latest
+
 task:
   script: true
