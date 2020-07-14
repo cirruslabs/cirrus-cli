@@ -1,0 +1,20 @@
+project_name: cirrus
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - main: cmd/cirrus/main.go
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+archives:
+  - format: zip
+
+release:
+  disable: true
