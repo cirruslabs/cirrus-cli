@@ -2,11 +2,13 @@ package parser
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 	"io/ioutil"
 	"time"
@@ -22,7 +24,7 @@ type Parser struct {
 }
 
 const (
-	DefaultRPCEndpoint = "us-central1.gcp.api.cirrus-ci.com:8239"
+	DefaultRPCEndpoint = "grpc.cirrus-ci.com:443"
 	defaultTimeout     = time.Second * 5
 )
 
@@ -44,7 +46,10 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	defer cancel()
 
 	// Setup Cirrus CI RPC connection
-	conn, err := grpc.DialContext(ctx, p.rpcEndpoint(), grpc.WithInsecure())
+	tlsCredentials := credentials.NewTLS(&tls.Config{
+		MinVersion: tls.VersionTLS13,
+	})
+	conn, err := grpc.DialContext(ctx, p.rpcEndpoint(), grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrRPC, err)
 	}
