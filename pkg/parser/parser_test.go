@@ -2,16 +2,17 @@ package parser_test
 
 import (
 	"errors"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"log"
+	"net"
 	"path/filepath"
 	"testing"
 
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/h2non/gock.v1"
 )
-
-const fakeGraphqlEndpoint = "https://api.invalid"
 
 var validCases = []string{
 	"example-android.yml",
@@ -54,26 +55,35 @@ func TestInvalidConfigs(t *testing.T) {
 	}
 }
 
-// TestErrTransport ensures that network-related errors result in ErrTransport.
-func TestErrTransport(t *testing.T) {
-	gock.New(fakeGraphqlEndpoint).Reply(500)
-	defer gock.Off()
-
-	p := parser.Parser{GraphqlEndpoint: fakeGraphqlEndpoint}
+// TestErrTransport ensures that network-related errors result in ErrRPC.
+func TestErrRPC(t *testing.T) {
+	p := parser.Parser{RPCEndpoint: "api.invalid:443"}
 	result, err := p.Parse("a: b")
 
 	assert.Nil(t, result)
-	assert.True(t, errors.Is(err, parser.ErrTransport))
+	assert.True(t, errors.Is(err, parser.ErrRPC))
 }
 
-// TestErrInternal ensures that unexpected errors result in ErrInternal.
+// TestErrInternal ensures that RPC errors other than grpc.codes.InvalidArgument result in ErrRPC.
 func TestErrInternal(t *testing.T) {
-	gock.New(fakeGraphqlEndpoint).Reply(200).BodyString("{}")
-	defer gock.Off()
+	// Create a gRPC server that returns grpc.codes.Unimplemented to all of it's method calls
+	listener, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	p := parser.Parser{GraphqlEndpoint: fakeGraphqlEndpoint}
+	server := grpc.NewServer()
+	api.RegisterCirrusCIServiceServer(server, &api.UnimplementedCirrusCIServiceServer{})
+	go func() {
+		if err := server.Serve(listener); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	defer server.Stop()
+
+	p := parser.Parser{RPCEndpoint: listener.Addr().String()}
 	result, err := p.Parse("a: b")
 
 	assert.Nil(t, result)
-	assert.True(t, errors.Is(err, parser.ErrInternal))
+	assert.True(t, errors.Is(err, parser.ErrRPC))
 }

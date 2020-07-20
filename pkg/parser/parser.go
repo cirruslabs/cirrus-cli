@@ -1,121 +1,82 @@
 package parser
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	"io/ioutil"
-	"net/http"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 var (
-	ErrInternal  = errors.New("internal error")
-	ErrTransport = errors.New("transport error")
+	ErrRPC = errors.New("RPC error")
 )
 
 type Parser struct {
-	// GraphqlEndpoint specifies an alternative GraphQL endpoint to use. If empty, DefaultGraphqlEndpoint is used.
-	GraphqlEndpoint string
+	// RPCEndpoint specifies an alternative RPC endpoint to use. If empty, DefaultRPCEndpoint is used.
+	RPCEndpoint string
 }
 
 const (
-	DefaultGraphqlEndpoint = "https://api.cirrus-ci.com/graphql"
-	defaultTimeout         = time.Second * 5
+	DefaultRPCEndpoint = "grpc.cirrus-ci.com:443"
+	defaultTimeout     = time.Second * 5
 )
 
 type Result struct {
 	Errors []string
 }
 
-const gqlQuery = `mutation Validate($clientMutationId: String, $config: String) {
-  validate(input: {clientMutationId: $clientMutationId, config: $config}) {
-    errors
-  }
-}
-`
-
-type gqlValidate struct {
-	Errors []string
-}
-
-type gqlData struct {
-	Validate gqlValidate
-}
-
-type gqlError struct {
-	Message string
-}
-
-type gqlResponse struct {
-	Data   *gqlData
-	Errors []gqlError
-}
-
-func (p *Parser) graphqlEndpoint() string {
-	if p.GraphqlEndpoint == "" {
-		return DefaultGraphqlEndpoint
+func (p *Parser) rpcEndpoint() string {
+	if p.RPCEndpoint == "" {
+		return DefaultRPCEndpoint
 	}
 
-	return p.GraphqlEndpoint
+	return p.RPCEndpoint
 }
 
 func (p *Parser) Parse(config string) (*Result, error) {
-	// Prepare GraphQL query
-	query := struct {
-		Query     string            `json:"query"`
-		Variables map[string]string `json:"variables"`
-	}{
-		Query: gqlQuery,
-		Variables: map[string]string{
-			"clientMutationId": uuid.New().String(),
-			"config":           config,
-		},
-	}
-	buf, err := json.Marshal(&query)
+	// Create a context to enforce the defaultTimeout
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+
+	// Setup Cirrus CI RPC connection
+	tlsCredentials := credentials.NewTLS(&tls.Config{
+		MinVersion: tls.VersionTLS13,
+	})
+	conn, err := grpc.DialContext(ctx, p.rpcEndpoint(), grpc.WithTransportCredentials(tlsCredentials))
 	if err != nil {
-		return nil, fmt.Errorf("%w, %v", ErrInternal, err)
+		return nil, fmt.Errorf("%w: %v", ErrRPC, err)
 	}
-	requestBody := bytes.NewBuffer(buf)
+	defer conn.Close()
 
-	// Send config for validation via Cirrus CI API
-	client := http.Client{Timeout: defaultTimeout}
-	resp, err := client.Post(p.graphqlEndpoint(), "text/json", requestBody)
+	// Send config for parsing by the Cirrus CI RPC and retrieve results
+	client := api.NewCirrusCIServiceClient(conn)
+
+	request := api.ParseConfigRequest{
+		Config: config,
+	}
+
+	_, err = client.ParseConfig(ctx, &request)
 	if err != nil {
-		return nil, fmt.Errorf("%w, %v", ErrTransport, err)
-	}
-	defer resp.Body.Close()
+		s := status.Convert(err)
 
-	// GraphQL's convention is to always return HTTP 200,
-	// in all other cases something has really gone wrong.
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: got HTTP %d (%s)", ErrTransport, resp.StatusCode, resp.Status)
-	}
-
-	responseBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrTransport, err)
+		switch s.Code() {
+		case codes.InvalidArgument:
+			// The configuration that we sent is invalid
+			return &Result{Errors: []string{s.Message()}}, nil
+		default:
+			// Unexpected error
+			return nil, fmt.Errorf("%w: %v", ErrRPC, err)
+		}
 	}
 
-	// Parse and validate JSON result
-	var parsed gqlResponse
-	err = json.Unmarshal(responseBody, &parsed)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrTransport, err)
-	}
-
-	if len(parsed.Errors) > 0 {
-		return nil, fmt.Errorf("%w: %s", ErrInternal, parsed.Errors[0].Message)
-	}
-
-	if parsed.Data == nil {
-		return nil, fmt.Errorf("%w: empty GraphQL response without errors", ErrInternal)
-	}
-
-	return &Result{Errors: parsed.Data.Validate.Errors}, nil
+	return &Result{}, nil
 }
 
 func (p *Parser) ParseFromFile(path string) (*Result, error) {

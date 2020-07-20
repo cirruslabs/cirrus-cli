@@ -9,7 +9,7 @@ import (
 )
 
 // A simplest possible, but valid configuration.
-var validConfig = []byte("task:\n  script: true")
+var validConfig = []byte("container:\n  image: debian:latest\n\ntask:\n  script: true")
 
 // tempDir supplements an alternative to TB.TempDir()[1], which is only available in 1.15.
 // [1]: https://github.com/golang/go/issues/35998
