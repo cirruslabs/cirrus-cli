@@ -1,3 +1,6 @@
 linters-settings:
+  # Even in Rust you can get away with partial matching,
+  # so make sure that the linter respects the programmer's
+  # intent expressed in the form of "default" case.
   exhaustive:
     default-signifies-exhaustive: true
