@@ -30,6 +30,7 @@ const (
 
 type Result struct {
 	Errors []string
+	Tasks  []*api.Task
 }
 
 func (p *Parser) rpcEndpoint() string {
@@ -62,7 +63,7 @@ func (p *Parser) Parse(config string) (*Result, error) {
 		Config: config,
 	}
 
-	_, err = client.ParseConfig(ctx, &request)
+	response, err := client.ParseConfig(ctx, &request)
 	if err != nil {
 		s := status.Convert(err)
 
@@ -76,7 +77,7 @@ func (p *Parser) Parse(config string) (*Result, error) {
 		}
 	}
 
-	return &Result{}, nil
+	return &Result{Tasks: response.Tasks}, nil
 }
 
 func (p *Parser) ParseFromFile(path string) (*Result, error) {

@@ -7,16 +7,17 @@ import (
 	"log"
 )
 
-var ErrValidate = errors.New("validation failed")
+var ErrValidate = errors.New("validate failed")
 
-var file string
+var validateFile string
 
 func validate(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
+	// Parse
 	p := parser.Parser{}
-	result, err := p.ParseFromFile(file)
+	result, err := p.ParseFromFile(validateFile)
 	if err != nil {
 		return err
 	}
@@ -38,7 +39,7 @@ func newValidateCmd() *cobra.Command {
 		RunE:  validate,
 	}
 
-	cmd.PersistentFlags().StringVarP(&file, "file", "f", ".cirrus.yml", "use file as the configuration file")
+	cmd.PersistentFlags().StringVarP(&validateFile, "file", "f", ".cirrus.yml", "use file as the configuration file")
 
 	return cmd
 }
