@@ -17,7 +17,7 @@ docker_builder:
   test_script:
     - wget --no-verbose -O - https://golang.org/dl/go1.14.6.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
-    - go test -v ./...
+    - go test -v -parallel 1 ./...
   env:
     HOME: /root
 
