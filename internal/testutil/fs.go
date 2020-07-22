@@ -3,6 +3,7 @@ package testutil
 import (
 	"io/ioutil"
 	"os"
+	"runtime"
 	"testing"
 )
 
