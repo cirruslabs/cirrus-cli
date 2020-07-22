@@ -12,9 +12,14 @@ task:
       type: text/json
       format: golangci
 
-task:
+docker_builder:
   name: Test
-  script: go test -v ./...
+  test_script:
+    - wget --no-verbose -O - https://golang.org/dl/go1.14.6.linux-amd64.tar.gz | tar -C /usr/local -xz
+    - export PATH=$PATH:/usr/local/go/bin
+    - go test -v ./...
+  env:
+    HOME: /root
 
 task:
   name: Release
