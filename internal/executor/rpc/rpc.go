@@ -15,6 +15,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
+	"runtime"
 	"sync"
 
 	// Registers a gzip compressor needed for streaming logs from the agent
@@ -67,9 +68,50 @@ func (r *RPC) ClientSecret() string {
 	return r.clientSecret
 }
 
+func getDockerBridgeIP() string {
+	// Worst-case scenario, but still better than nothing
+	// since there's still a chance this would work with
+	// a Docker daemon configured by default.
+	const assumedBridgeIP = "172.17.0.1"
+
+	iface, err := net.InterfaceByName("bridge0")
+	if err != nil {
+		return assumedBridgeIP
+	}
+
+	addrs, err := iface.Addrs()
+	if err != nil {
+		return assumedBridgeIP
+	}
+
+	if len(addrs) > 1 {
+		ip, _, err := net.ParseCIDR(addrs[0].String())
+		if err != nil {
+			return assumedBridgeIP
+		}
+
+		return ip.String()
+	}
+
+	return assumedBridgeIP
+}
+
 // Start creates the listener and starts RPC server in a separate goroutine.
 func (r *RPC) Start() {
-	listener, err := net.Listen("tcp", "localhost:0")
+	host := "localhost"
+
+	// Work around host.docker.internal missing on Linux
+	//
+	// See the following tickets:
+	// * https://github.com/docker/for-linux/issues/264
+	// * https://github.com/moby/moby/pull/40007
+	if runtime.GOOS == "linux" {
+		host = getDockerBridgeIP()
+	}
+
+	address := fmt.Sprintf("%s:0", host)
+
+	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		panic(err)
 	}
@@ -88,6 +130,11 @@ func (r *RPC) Start() {
 
 // Endpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag.
 func (r *RPC) Endpoint() string {
+	// Work around host.docker.internal missing on Linux
+	if runtime.GOOS == "linux" {
+		return r.listener.Addr().String()
+	}
+
 	port := r.listener.Addr().(*net.TCPAddr).Port
 
 	return fmt.Sprintf("host.docker.internal:%d", port)
