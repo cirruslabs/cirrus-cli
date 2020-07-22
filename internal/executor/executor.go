@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
 	"github.com/sirupsen/logrus"
@@ -90,13 +91,13 @@ func (e *Executor) Run() error {
 
 		// Handle timeout
 		if timedOut {
-			task.Status = build.StatusTimedOut
+			task.Status = taskstatus.TimedOut
 		}
 
 		e.logger.Infof("task %s %s", task.String(), task.Status.String())
 
 		// Bail-out if the task has failed
-		if task.Status != build.StatusSucceeded {
+		if task.Status != taskstatus.Succeeded {
 			break
 		}
 

@@ -2,6 +2,7 @@ package build
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -78,7 +79,7 @@ func (b *Build) taskHasUnresolvedDependencies(task *Task) bool {
 	for _, requiredGroup := range task.ProtoTask.RequiredGroups {
 		requiredTask := b.GetTask(requiredGroup)
 
-		if requiredTask.Status == StatusNew {
+		if requiredTask.Status == taskstatus.New {
 			return true
 		}
 	}
@@ -92,7 +93,7 @@ func (b *Build) GetNextTask() *Task {
 			continue
 		}
 
-		if task.Status == StatusNew {
+		if task.Status == taskstatus.New {
 			return task
 		}
 	}

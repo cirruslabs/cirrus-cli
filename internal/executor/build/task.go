@@ -3,40 +3,17 @@ package build
 import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"strconv"
 	"time"
 )
 
-type TaskStatus int
-
-const (
-	StatusNew TaskStatus = iota
-	StatusSucceeded
-	StatusFailed
-	StatusTimedOut
-)
-
-func (status TaskStatus) String() string {
-	switch status {
-	case StatusNew:
-		return "new"
-	case StatusSucceeded:
-		return "succeeded"
-	case StatusFailed:
-		return "failed"
-	case StatusTimedOut:
-		return "timed out"
-	default:
-		return fmt.Sprintf("entered unhandled status %d", int(status))
-	}
-}
-
 const defaultTaskTimeout = 60 * time.Minute
 
 type Task struct {
 	ID       int64
-	Status   TaskStatus
+	Status   taskstatus.Status
 	Instance *instance.Instance
 	Timeout  time.Duration
 

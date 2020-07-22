@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -154,12 +155,12 @@ func (r *RPC) ReportSingleCommand(
 	if req.Succeded {
 		nextCommand = getCommandAfter(task.ProtoTask.Commands, req.CommandName)
 		if nextCommand == "" {
-			task.Status = build.StatusSucceeded
+			task.Status = taskstatus.Succeeded
 		}
 	} else {
 		// An empty string instructs the agent to do nothing and terminate
 		nextCommand = ""
-		task.Status = build.StatusFailed
+		task.Status = taskstatus.Failed
 	}
 
 	return &api.ReportSingleCommandResponse{
