@@ -223,10 +223,12 @@ func (r *RPC) Heartbeat(ctx context.Context, req *api.HeartbeatRequest) (*api.He
 	r.build.Mutex.Lock()
 	defer r.build.Mutex.Unlock()
 
-	_, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
 	if err != nil {
 		return nil, err
 	}
+
+	r.logger.WithField("task", task.ProtoTask.Name).Debug("received heartbeat")
 
 	return &api.HeartbeatResponse{}, nil
 }
