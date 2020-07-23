@@ -25,6 +25,74 @@ const (
 	DefaultAgentVolumePath = "/cirrus-ci-agent"
 )
 
+// GetAgentVolume returns a Docker volume name with the agent residing at the DefaultAgentVolumePath inside of it.
+//
+// A special helper container is used to extract the agent from the image into a volume. This container's name is
+// updated afterwards to indicate a successful completion and skip unnecessary steps in the future invocations.
+func GetAgentVolume(ctx context.Context) (string, error) {
+	// Create a Docker client
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return "", err
+	}
+	defer cli.Close()
+
+	// Retrieve the latest agent image
+	pullResult, err := cli.ImagePull(ctx, defaultAgentImage, types.ImagePullOptions{})
+	if err != nil {
+		return "", err
+	}
+	_, err = io.Copy(ioutil.Discard, pullResult)
+	if err != nil {
+		return "", err
+	}
+
+	// Retrieve a short ID for this image
+	image, _, err := cli.ImageInspectWithRaw(ctx, defaultAgentImage)
+	if err != nil {
+		return "", err
+	}
+	shortImageID, err := truncateDigest(image.ID)
+	if err != nil {
+		return "", err
+	}
+
+	// Craft the name for a final volume and a helper container (which has a temporary and a final stage)
+	volumeName := fmt.Sprintf("cirrus-agent-%s", shortImageID)
+	containerNameFinal := fmt.Sprintf("cirrus-agent-extractor-%s", shortImageID)
+	containerNameTemporary := containerNameFinal + "-tmp"
+
+	// Check the presence of a (1) finished container and (2) a volume, which means that we've actually processed
+	// the image already and created a volume named volumeName
+	volumeExists, finalContainerExists := true, true
+
+	_, err = cli.VolumeInspect(ctx, volumeName)
+	if err != nil {
+		if client.IsErrNotFound(err) {
+			volumeExists = false
+		} else {
+			return "", err
+		}
+	}
+
+	_, err = cli.ContainerInspect(ctx, containerNameFinal)
+	if err != nil {
+		if client.IsErrNotFound(err) {
+			finalContainerExists = false
+		} else {
+			return "", err
+		}
+	}
+
+	// Perhaps we can tell the user to use an already created volume
+	if volumeExists && finalContainerExists {
+		return volumeName, nil
+	}
+
+	// Nope, let's work on it
+	return createAgentVolume(ctx, cli, containerNameTemporary, containerNameFinal, volumeName)
+}
+
 func cleanupContainer(ctx context.Context, cli *client.Client, containerName string) error {
 	timeout := time.Second
 	err := cli.ContainerStop(ctx, containerName, &timeout)
@@ -130,72 +198,4 @@ func createAgentVolume(
 	}
 
 	return volumeName, nil
-}
-
-// GetAgentVolume returns a Docker volume name with the agent residing at the DefaultAgentVolumePath inside of it.
-//
-// A special helper container is used to extract the agent from the image into a volume. This container's name is
-// updated afterwards to indicate a successful completion and skip unnecessary steps in the future invocations.
-func GetAgentVolume(ctx context.Context) (string, error) {
-	// Create a Docker client
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return "", err
-	}
-	defer cli.Close()
-
-	// Retrieve the latest agent image
-	pullResult, err := cli.ImagePull(ctx, defaultAgentImage, types.ImagePullOptions{})
-	if err != nil {
-		return "", err
-	}
-	_, err = io.Copy(ioutil.Discard, pullResult)
-	if err != nil {
-		return "", err
-	}
-
-	// Retrieve a short ID for this image
-	image, _, err := cli.ImageInspectWithRaw(ctx, defaultAgentImage)
-	if err != nil {
-		return "", err
-	}
-	shortImageID, err := truncateDigest(image.ID)
-	if err != nil {
-		return "", err
-	}
-
-	// Craft the name for a final volume and a helper container (which has a temporary and a final stage)
-	volumeName := fmt.Sprintf("cirrus-agent-%s", shortImageID)
-	containerNameFinal := fmt.Sprintf("cirrus-agent-extractor-%s", shortImageID)
-	containerNameTemporary := containerNameFinal + "-tmp"
-
-	// Check the presence of a (1) finished container and (2) a volume, which means that we've actually processed
-	// the image already and created a volume named volumeName
-	volumeExists, finalContainerExists := true, true
-
-	_, err = cli.VolumeInspect(ctx, volumeName)
-	if err != nil {
-		if client.IsErrNotFound(err) {
-			volumeExists = false
-		} else {
-			return "", err
-		}
-	}
-
-	_, err = cli.ContainerInspect(ctx, containerNameFinal)
-	if err != nil {
-		if client.IsErrNotFound(err) {
-			finalContainerExists = false
-		} else {
-			return "", err
-		}
-	}
-
-	// Perhaps we can tell the user to use an already created volume
-	if volumeExists && finalContainerExists {
-		return volumeName, nil
-	}
-
-	// Nope, let's work on it
-	return createAgentVolume(ctx, cli, containerNameTemporary, containerNameFinal, volumeName)
 }
