@@ -22,7 +22,7 @@ type Task struct {
 	ProtoTask *api.Task
 
 	// A mutex to guarantee safe accesses from both the main loop and gRPC server handlers
-	Mutex sync.Mutex
+	Mutex sync.RWMutex
 }
 
 func NewFromProto(protoTask *api.Task) (*Task, error) {
@@ -72,8 +72,8 @@ func NewFromProto(protoTask *api.Task) (*Task, error) {
 }
 
 func (task *Task) Status() taskstatus.Status {
-	task.Mutex.Lock()
-	defer task.Mutex.Unlock()
+	task.Mutex.RLock()
+	defer task.Mutex.RUnlock()
 
 	return task.status
 }
