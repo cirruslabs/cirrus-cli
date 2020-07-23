@@ -49,8 +49,6 @@ func (e *Executor) Run() error {
 	e.rpc.Start()
 
 	for {
-		e.build.Mutex.Lock()
-
 		// Pick next undone task to run
 		task := e.build.GetNextTask()
 		if task == nil {
@@ -73,8 +71,6 @@ func (e *Executor) Run() error {
 		// Setup a context to enforce the timeout for this task
 		ctx, cancel := context.WithTimeout(context.Background(), task.Timeout)
 
-		e.build.Mutex.Unlock()
-
 		// Run task
 		var timedOut bool
 		if err := taskInstance.Run(ctx, &instanceRunOpts); err != nil {
@@ -87,21 +83,17 @@ func (e *Executor) Run() error {
 		}
 		cancel()
 
-		e.build.Mutex.Lock()
-
 		// Handle timeout
 		if timedOut {
-			task.Status = taskstatus.TimedOut
+			task.SetStatus(taskstatus.TimedOut)
 		}
 
-		e.logger.Infof("task %s %s", task.String(), task.Status.String())
+		e.logger.Infof("task %s %s", task.String(), task.Status().String())
 
 		// Bail-out if the task has failed
-		if task.Status != taskstatus.Succeeded {
+		if task.Status() != taskstatus.Succeeded {
 			break
 		}
-
-		e.build.Mutex.Unlock()
 	}
 
 	e.rpc.Stop()

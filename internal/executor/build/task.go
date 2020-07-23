@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -13,12 +14,15 @@ const defaultTaskTimeout = 60 * time.Minute
 
 type Task struct {
 	ID       int64
-	Status   taskstatus.Status
+	status   taskstatus.Status
 	Instance *instance.Instance
 	Timeout  time.Duration
 
 	// Original Protocol Buffers structure for reference
 	ProtoTask *api.Task
+
+	// A mutex to guarantee safe accesses from both the main loop and gRPC server handlers
+	Mutex sync.Mutex
 }
 
 func NewFromProto(protoTask *api.Task) (*Task, error) {
@@ -65,6 +69,20 @@ func NewFromProto(protoTask *api.Task) (*Task, error) {
 		Timeout:   timeout,
 		ProtoTask: protoTask,
 	}, nil
+}
+
+func (task *Task) Status() taskstatus.Status {
+	task.Mutex.Lock()
+	defer task.Mutex.Unlock()
+
+	return task.status
+}
+
+func (task *Task) SetStatus(status taskstatus.Status) {
+	task.Mutex.Lock()
+	defer task.Mutex.Unlock()
+
+	task.status = status
 }
 
 func (task *Task) String() string {

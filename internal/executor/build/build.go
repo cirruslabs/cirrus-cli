@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"path/filepath"
-	"sync"
 )
 
 type Build struct {
@@ -19,9 +18,6 @@ type Build struct {
 
 	// The actual tasks comprising this build
 	tasks map[int64]*Task
-
-	// A mutex to guarantee safe access to this build from both the "main loop" and gRPC server handlers
-	Mutex sync.Mutex
 }
 
 func New(projectDir string, tasks []*api.Task) (*Build, error) {
@@ -79,7 +75,7 @@ func (b *Build) taskHasUnresolvedDependencies(task *Task) bool {
 	for _, requiredGroup := range task.ProtoTask.RequiredGroups {
 		requiredTask := b.GetTask(requiredGroup)
 
-		if requiredTask.Status == taskstatus.New {
+		if requiredTask.Status() == taskstatus.New {
 			return true
 		}
 	}
@@ -93,7 +89,7 @@ func (b *Build) GetNextTask() *Task {
 			continue
 		}
 
-		if task.Status == taskstatus.New {
+		if task.Status() == taskstatus.New {
 			return task
 		}
 	}

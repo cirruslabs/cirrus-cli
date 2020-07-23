@@ -150,9 +150,6 @@ func (r *RPC) InitialCommands(
 	ctx context.Context,
 	req *api.InitialCommandsRequest,
 ) (*api.CommandsResponse, error) {
-	r.build.Mutex.Lock()
-	defer r.build.Mutex.Unlock()
-
 	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
 	if err != nil {
 		return nil, err
@@ -186,9 +183,6 @@ func (r *RPC) ReportSingleCommand(
 	ctx context.Context,
 	req *api.ReportSingleCommandRequest,
 ) (*api.ReportSingleCommandResponse, error) {
-	r.build.Mutex.Lock()
-	defer r.build.Mutex.Unlock()
-
 	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
 	if err != nil {
 		return nil, err
@@ -202,12 +196,12 @@ func (r *RPC) ReportSingleCommand(
 	if req.Succeded {
 		nextCommand = getCommandAfter(task.ProtoTask.Commands, req.CommandName)
 		if nextCommand == "" {
-			task.Status = taskstatus.Succeeded
+			task.SetStatus(taskstatus.Succeeded)
 		}
 	} else {
 		// An empty string instructs the agent to do nothing and terminate
 		nextCommand = ""
-		task.Status = taskstatus.Failed
+		task.SetStatus(taskstatus.Failed)
 	}
 
 	return &api.ReportSingleCommandResponse{
@@ -231,16 +225,12 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 
 		switch x := logEntry.Value.(type) {
 		case *api.LogEntry_Key:
-			r.build.Mutex.Lock()
-
 			task, err := r.build.GetTaskFromIdentification(x.Key.TaskIdentification, r.clientSecret)
 			if err != nil {
 				return err
 			}
 			currentTaskName = task.ProtoTask.Name
 			currentCommand = x.Key.CommandName
-
-			r.build.Mutex.Unlock()
 
 			r.logger.WithFields(map[string]interface{}{
 				"task":    currentTaskName,
@@ -267,9 +257,6 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 }
 
 func (r *RPC) Heartbeat(ctx context.Context, req *api.HeartbeatRequest) (*api.HeartbeatResponse, error) {
-	r.build.Mutex.Lock()
-	defer r.build.Mutex.Unlock()
-
 	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
 	if err != nil {
 		return nil, err
@@ -281,9 +268,6 @@ func (r *RPC) Heartbeat(ctx context.Context, req *api.HeartbeatRequest) (*api.He
 }
 
 func (r *RPC) ReportAgentError(ctx context.Context, req *api.ReportAgentProblemRequest) (*empty.Empty, error) {
-	r.build.Mutex.Lock()
-	defer r.build.Mutex.Unlock()
-
 	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
 	if err != nil {
 		return nil, err
@@ -295,9 +279,6 @@ func (r *RPC) ReportAgentError(ctx context.Context, req *api.ReportAgentProblemR
 }
 
 func (r *RPC) ReportAgentWarning(ctx context.Context, req *api.ReportAgentProblemRequest) (*empty.Empty, error) {
-	r.build.Mutex.Lock()
-	defer r.build.Mutex.Unlock()
-
 	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
 	if err != nil {
 		return nil, err
@@ -309,9 +290,6 @@ func (r *RPC) ReportAgentWarning(ctx context.Context, req *api.ReportAgentProble
 }
 
 func (r *RPC) ReportAgentSignal(ctx context.Context, req *api.ReportAgentSignalRequest) (*empty.Empty, error) {
-	r.build.Mutex.Lock()
-	defer r.build.Mutex.Unlock()
-
 	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
 	if err != nil {
 		return nil, err
