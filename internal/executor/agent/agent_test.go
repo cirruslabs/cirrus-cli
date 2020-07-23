@@ -3,6 +3,7 @@ package agent_test
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/agent"
+	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -32,7 +33,7 @@ func TestGetAgentVolume(t *testing.T) {
 	// Create a container with the agent's volume mounted
 	const mountTo = "/agent-volume"
 	containerConfig := &container.Config{
-		Image: "debian:latest",
+		Image: testutil.FetchedImage(t, "debian:latest"),
 		Cmd:   []string{"test", "-x", filepath.Join(mountTo, agent.DefaultAgentVolumePath)},
 	}
 	hostConfig := &container.HostConfig{
