@@ -4,24 +4,9 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // https://github.com/cirruslabs/cirrus-ci-agent/issues/14
 	"github.com/sirupsen/logrus"
 	"testing"
 )
-
-func getBasicContainerInstance(t *testing.T, image string) *api.Task_Instance {
-	instancePayload, err := proto.Marshal(&api.ContainerInstance{
-		Image: image,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return &api.Task_Instance{
-		Type:    "container",
-		Payload: instancePayload,
-	}
-}
 
 // TestExecutorEmpty ensures that Executor works fine with an empty task list.
 func TestExecutorEmpty(t *testing.T) {
@@ -53,7 +38,7 @@ func TestExecutorClone(t *testing.T) {
 					},
 				},
 			},
-			Instance: getBasicContainerInstance(t, "debian:latest"),
+			Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
 	})
 	if err != nil {
@@ -98,7 +83,7 @@ func TestExecutorScript(t *testing.T) {
 					},
 				},
 			},
-			Instance: getBasicContainerInstance(t, "debian:latest"),
+			Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
 	}, executor.WithLogger(logger))
 	if err != nil {
