@@ -8,7 +8,10 @@ func NewRootCmd() *cobra.Command {
 		Short: "Cirrus CLI",
 	}
 
-	cmd.AddCommand(newValidateCmd())
+	cmd.AddCommand(
+		newValidateCmd(),
+		newRunCmd(),
+	)
 
 	return cmd
 }
