@@ -3,6 +3,7 @@ package executor
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
@@ -11,6 +12,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 )
+
+var ErrBuildFailed = errors.New("build failed")
 
 type Executor struct {
 	build *build.Build
@@ -93,7 +96,7 @@ func (e *Executor) Run(ctx context.Context) error {
 
 		// Bail-out if the task has failed
 		if task.Status() != taskstatus.Succeeded {
-			break
+			return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
 		}
 	}
 
