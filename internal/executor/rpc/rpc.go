@@ -190,15 +190,24 @@ func (r *RPC) ReportSingleCommand(
 
 	var nextCommand string
 
+	logEntry := r.logger.WithFields(map[string]interface{}{
+		"task":    task.ProtoTask.Name,
+		"command": req.CommandName,
+	})
+
 	// Register whether the current command succeeded or failed
 	// so that the main loop can make the decision whether
 	// to proceed with the execution or not.
 	if req.Succeded {
+		logEntry.Debug("command succeeded")
+
 		nextCommand = getCommandAfter(task.ProtoTask.Commands, req.CommandName)
 		if nextCommand == "" {
 			task.SetStatus(taskstatus.Succeeded)
 		}
 	} else {
+		logEntry.Debug("command failed")
+
 		// An empty string instructs the agent to do nothing and terminate
 		nextCommand = ""
 		task.SetStatus(taskstatus.Failed)
