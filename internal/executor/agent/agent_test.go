@@ -9,7 +9,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
-	"path/filepath"
+	"path"
 	"testing"
 )
 
@@ -34,7 +34,7 @@ func TestGetAgentVolume(t *testing.T) {
 	const mountTo = "/agent-volume"
 	containerConfig := &container.Config{
 		Image: testutil.FetchedImage(t, "debian:latest"),
-		Cmd:   []string{"test", "-x", filepath.Join(mountTo, agent.DefaultAgentVolumePath)},
+		Cmd:   []string{"test", "-x", path.Join(mountTo, agent.DefaultAgentVolumePath)},
 	}
 	hostConfig := &container.HostConfig{
 		Mounts: []mount.Mount{

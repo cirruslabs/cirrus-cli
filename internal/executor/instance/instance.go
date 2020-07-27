@@ -13,7 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"path/filepath"
+	"path"
 	"strconv"
 )
 
@@ -87,7 +87,7 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 	containerConfig := container.Config{
 		Image: inst.image,
 		Cmd: []string{
-			filepath.Join(agentVolumeMountPoint, agent.DefaultAgentVolumePath),
+			path.Join(agentVolumeMountPoint, agent.DefaultAgentVolumePath),
 			"-api-endpoint",
 			config.Endpoint,
 			"-insecure-endpoint",
