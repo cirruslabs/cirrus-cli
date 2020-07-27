@@ -2,11 +2,13 @@ package executor_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
@@ -115,4 +117,37 @@ func TestExecutorScript(t *testing.T) {
 	if err := e.Run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// TestExecutorFails ensures that we get an ErrBuildFailed when running
+// a build with a deliberately failing command.
+func TestExecutorFails(t *testing.T) {
+	dir := testutil.TempDir(t)
+
+	e, err := executor.New(dir, []*api.Task{
+		{
+			LocalGroupId: 0,
+			Name:         "mainTask",
+			Commands: []*api.Command{
+				{
+					Name: "failingCommand",
+					Instruction: &api.Command_ScriptInstruction{
+						ScriptInstruction: &api.ScriptInstruction{
+							Scripts: []string{
+								"false",
+							},
+						},
+					},
+				},
+			},
+			Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = e.Run(context.Background())
+	assert.NotNil(t, err)
+	assert.True(t, errors.Is(err, executor.ErrBuildFailed))
 }
