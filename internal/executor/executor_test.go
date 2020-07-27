@@ -2,10 +2,13 @@ package executor_test
 
 import (
 	"context"
+	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/sirupsen/logrus"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -27,6 +30,16 @@ func TestExecutorEmpty(t *testing.T) {
 func TestExecutorClone(t *testing.T) {
 	dir := testutil.TempDir(t)
 
+	// Create a canary file
+	const canaryFile = "canary.file"
+	file, err := os.Create(filepath.Join(dir, canaryFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+
 	e, err := executor.New(dir, []*api.Task{
 		{
 			LocalGroupId: 0,
@@ -36,6 +49,14 @@ func TestExecutorClone(t *testing.T) {
 					Name: "clone",
 					Instruction: &api.Command_CloneInstruction{
 						CloneInstruction: &api.CloneInstruction{},
+					},
+				},
+				{
+					Name: "check",
+					Instruction: &api.Command_ScriptInstruction{
+						ScriptInstruction: &api.ScriptInstruction{
+							Scripts: []string{fmt.Sprintf("test -e %s", canaryFile)},
+						},
 					},
 				},
 			},
