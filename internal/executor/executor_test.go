@@ -1,6 +1,7 @@
 package executor_test
 
 import (
+	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
@@ -17,7 +18,7 @@ func TestExecutorEmpty(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := e.Run(); err != nil {
+	if err := e.Run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -45,7 +46,7 @@ func TestExecutorClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := e.Run(); err != nil {
+	if err := e.Run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -90,7 +91,7 @@ func TestExecutorScript(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := e.Run(); err != nil {
+	if err := e.Run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -45,7 +45,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	return e, nil
 }
 
-func (e *Executor) Run() error {
+func (e *Executor) Run(ctx context.Context) error {
 	e.rpc.Start()
 
 	for {
@@ -68,8 +68,8 @@ func (e *Executor) Run() error {
 			Logger:       e.logger,
 		}
 
-		// Setup a context to enforce the timeout for this task
-		ctx, cancel := context.WithTimeout(context.Background(), task.Timeout)
+		// Wrap the context to enforce a timeout for this task
+		ctx, cancel := context.WithTimeout(ctx, task.Timeout)
 
 		// Run task
 		var timedOut bool

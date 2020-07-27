@@ -44,7 +44,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return e.Run()
+	return e.Run(cmd.Context())
 }
 
 func newRunCmd() *cobra.Command {

@@ -120,6 +120,14 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 		return err
 	}
 
+	defer func() {
+		logger.WithContext(ctx).Debugf("cleaning up container %s", cont.ID)
+		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{Force: true})
+		if err != nil {
+			logger.WithContext(ctx).WithError(err).Warn("while removing container")
+		}
+	}()
+
 	logger.WithContext(ctx).Debugf("starting container %s", cont.ID)
 	if err := cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{}); err != nil {
 		return err
@@ -131,11 +139,6 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 	case res := <-waitChan:
 		logger.WithContext(ctx).Debugf("container exited with %v error and exit code %d", res.Error, res.StatusCode)
 	case err := <-errChan:
-		return err
-	}
-
-	logger.WithContext(ctx).Debugf("removing container %s", cont.ID)
-	if err := cli.ContainerRemove(ctx, cont.ID, types.ContainerRemoveOptions{}); err != nil {
 		return err
 	}
 
