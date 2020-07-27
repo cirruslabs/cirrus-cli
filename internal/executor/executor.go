@@ -47,6 +47,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 
 func (e *Executor) Run(ctx context.Context) error {
 	e.rpc.Start()
+	defer e.rpc.Stop()
 
 	for {
 		// Pick next undone task to run
@@ -95,8 +96,6 @@ func (e *Executor) Run(ctx context.Context) error {
 			break
 		}
 	}
-
-	e.rpc.Stop()
 
 	return nil
 }
