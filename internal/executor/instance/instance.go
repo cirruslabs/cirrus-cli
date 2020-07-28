@@ -18,7 +18,9 @@ import (
 )
 
 type Instance struct {
-	image string
+	image  string
+	cpu    float32
+	memory uint32
 }
 
 var ErrUnsupportedInstance = errors.New("unsupported instance type")
@@ -29,6 +31,9 @@ const (
 
 	// agentVolumeMountPoint specifies where in the instance container should we mount the volume with the agent binary.
 	agentVolumeMountPoint = "/tmp/cirrus-ci/agent-dir"
+
+	mebi = 1024 * 1024
+	nano = 1_000_000_000
 )
 
 func NewFromProto(instance *api.Task_Instance) (*Instance, error) {
@@ -42,7 +47,9 @@ func NewFromProto(instance *api.Task_Instance) (*Instance, error) {
 	}
 
 	return &Instance{
-		image: taskContainer.Image,
+		image:  taskContainer.Image,
+		cpu:    taskContainer.Cpu,
+		memory: taskContainer.Memory,
 	}, nil
 }
 
@@ -113,6 +120,10 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 				Target:   ContainerProjectDir,
 				ReadOnly: true,
 			},
+		},
+		Resources: container.Resources{
+			NanoCPUs: int64(inst.cpu * nano),
+			Memory:   int64(inst.memory * mebi),
 		},
 	}
 	cont, err := cli.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, "")
