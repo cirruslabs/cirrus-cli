@@ -44,7 +44,7 @@ func NewFromProto(protoTask *api.Task) (*Task, error) {
 			Instruction: &api.Command_ScriptInstruction{
 				ScriptInstruction: &api.ScriptInstruction{
 					Scripts: []string{
-						"echo 'Coping mounted project to a working directory...'",
+						"echo 'Copying mounted project directory to a working directory...'",
 						"cp -rT $CIRRUS_PROJECT_DIR .",
 					},
 				},
