@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"net"
 	"runtime"
+	"strings"
 	"sync"
 
 	// Registers a gzip compressor needed for streaming logs from the agent
@@ -253,7 +254,12 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			r.logger.WithFields(map[string]interface{}{
 				"task":    currentTaskName,
 				"command": currentCommand,
-			}).Debugf("received chunk: %s", string(x.Chunk.Data))
+			}).Debugf("received chunk of %d bytes", len(x.Chunk.Data))
+
+			logLines := strings.Split(string(x.Chunk.Data), "\n")
+			for _, logLine := range logLines {
+				r.logger.WithContext(stream.Context()).Info(logLine)
+			}
 		}
 	}
 
