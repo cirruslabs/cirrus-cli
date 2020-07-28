@@ -1,0 +1,17 @@
+container:
+  image: debian:latest
+
+task:
+  container:
+    cpu: 1.5
+    memory: 512M
+
+  cpu_check_script:
+    - echo 150000 > quota
+    - echo 100000 > period
+    - cmp /sys/fs/cgroup/cpu/cpu.cfs_quota_us quota
+    - cmp /sys/fs/cgroup/cpu/cpu.cfs_period_us period
+
+  memory_check_script:
+    - expr 512 \* 1024 \* 1024 > limit
+    - cmp /sys/fs/cgroup/memory/memory.limit_in_bytes limit

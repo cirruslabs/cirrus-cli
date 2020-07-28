@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"github.com/otiai10/copy"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -35,6 +36,20 @@ func TempDir(t *testing.T) string {
 // TempChdir switches to a temporary per-test directory.
 func TempChdir(t *testing.T) {
 	if err := os.Chdir(TempDir(t)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TempChdirPopulatedWith creates a temporary per-test directory
+// filled with sourceDir contents and switches to it.
+func TempChdirPopulatedWith(t *testing.T, sourceDir string) {
+	tempDir := TempDir(t)
+
+	if err := copy.Copy(sourceDir, tempDir); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.Chdir(tempDir); err != nil {
 		t.Fatal(err)
 	}
 }
