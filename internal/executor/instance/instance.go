@@ -149,10 +149,24 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 		return err
 	}
 
-	// Start additional containers (if any)
+	// Create controls for the additional containers
 	var additionalContainersWG sync.WaitGroup
-	additionalContainersErrChan := make(chan error, len(inst.additionalContainers))
 	additionalContainersCtx, additionalContainersCancel := context.WithCancel(context.Background())
+
+	// Schedule all containers for removal
+	defer func() {
+		logger.WithContext(ctx).Debugf("cleaning up container %s", cont.ID)
+		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{Force: true})
+		if err != nil {
+			logger.WithContext(ctx).WithError(err).Warn("while removing container")
+		}
+
+		additionalContainersCancel()
+		additionalContainersWG.Wait()
+	}()
+
+	// Start additional containers (if any)
+	additionalContainersErrChan := make(chan error, len(inst.additionalContainers))
 	for _, additionalContainer := range inst.additionalContainers {
 		additionalContainer := additionalContainer
 
@@ -164,17 +178,6 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 			additionalContainersWG.Done()
 		}()
 	}
-
-	defer func() {
-		logger.WithContext(ctx).Debugf("cleaning up container %s", cont.ID)
-		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{Force: true})
-		if err != nil {
-			logger.WithContext(ctx).WithError(err).Warn("while removing container")
-		}
-
-		additionalContainersCancel()
-		additionalContainersWG.Wait()
-	}()
 
 	logger.WithContext(ctx).Debugf("starting container %s", cont.ID)
 	if err := cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{}); err != nil {
