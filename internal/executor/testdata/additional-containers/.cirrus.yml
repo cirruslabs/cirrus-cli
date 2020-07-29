@@ -1,0 +1,22 @@
+container:
+  image: debian:latest
+
+task:
+  container:
+    additional_containers:
+      - name: mysql
+        image: mysql:latest
+        port: 3306
+        env:
+          MYSQL_ROOT_PASSWORD: insecure
+      - name: postgres
+        image: postgres:latest
+        port: 5432
+        env:
+          POSTGRES_PASSWORD: insecure
+  prepare_script:
+    - apt-get update && apt-get -y install netcat-openbsd
+  mysql_test_script:
+    - nc -z 127.0.0.1 3306
+  postgres_test_script:
+    - nc -z 127.0.0.1 5432

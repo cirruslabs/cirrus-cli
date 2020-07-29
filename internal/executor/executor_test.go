@@ -7,10 +7,8 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -156,23 +154,11 @@ func TestExecutorFails(t *testing.T) {
 
 // TestResourceLimits ensures that the desired CPU and memory limits are enforced for instances.
 func TestResourceLimits(t *testing.T) {
-	testutil.TempChdirPopulatedWith(t, "testdata/resource-limits")
+	testutil.Execute(t, "testdata/resource-limits")
+}
 
-	p := parser.Parser{}
-	result, err := p.ParseFromFile(".cirrus.yml")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	require.Empty(t, result.Errors)
-	require.NotEmpty(t, result.Tasks)
-
-	e, err := executor.New(".", result.Tasks)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := e.Run(context.Background()); err != nil {
-		t.Fatal(err)
-	}
+// TestAdditionalContainers ensures that the services created in the additional containers
+// are reachable from the main container.
+func TestAdditionalContainers(t *testing.T) {
+	testutil.Execute(t, "testdata/additional-containers")
 }
