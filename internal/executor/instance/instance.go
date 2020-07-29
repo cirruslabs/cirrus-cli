@@ -166,14 +166,14 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 	}
 
 	defer func() {
-		additionalContainersCancel()
-		additionalContainersWG.Wait()
-
 		logger.WithContext(ctx).Debugf("cleaning up container %s", cont.ID)
 		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{Force: true})
 		if err != nil {
 			logger.WithContext(ctx).WithError(err).Warn("while removing container")
 		}
+
+		additionalContainersCancel()
+		additionalContainersWG.Wait()
 	}()
 
 	logger.WithContext(ctx).Debugf("starting container %s", cont.ID)
