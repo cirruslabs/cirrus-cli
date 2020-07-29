@@ -133,12 +133,12 @@ func (r *RPC) Start() {
 func (r *RPC) Endpoint() string {
 	// Work around host.docker.internal missing on Linux
 	if runtime.GOOS == "linux" {
-		return r.listener.Addr().String()
+		return "http://" + r.listener.Addr().String()
 	}
 
 	port := r.listener.Addr().(*net.TCPAddr).Port
 
-	return fmt.Sprintf("host.docker.internal:%d", port)
+	return fmt.Sprintf("http://host.docker.internal:%d", port)
 }
 
 // Stop gracefully stops the RPC server.

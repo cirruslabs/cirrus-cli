@@ -42,14 +42,20 @@ func TempChdir(t *testing.T) {
 
 // TempChdirPopulatedWith creates a temporary per-test directory
 // filled with sourceDir contents and switches to it.
-func TempChdirPopulatedWith(t *testing.T, sourceDir string) {
+func TempDirPopulatedWith(t *testing.T, sourceDir string) string {
 	tempDir := TempDir(t)
 
 	if err := copy.Copy(sourceDir, tempDir); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := os.Chdir(tempDir); err != nil {
+	return tempDir
+}
+
+// TempChdirPopulatedWith creates a temporary per-test directory
+// filled with sourceDir contents and switches to it.
+func TempChdirPopulatedWith(t *testing.T, sourceDir string) {
+	if err := os.Chdir(TempDirPopulatedWith(t, sourceDir)); err != nil {
 		t.Fatal(err)
 	}
 }

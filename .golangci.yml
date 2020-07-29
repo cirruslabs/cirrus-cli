@@ -15,3 +15,7 @@ linters:
     #
     # [1]: https://github.com/mdempsky/maligned/commit/6e39bd26a8c8b58c5a22129593044655a9e25959
     - maligned
+
+    # We don't have high-performance requirements at this moment, so sacrificing
+    # the code readability for marginal performance gains is not worth it.
+    - prealloc
