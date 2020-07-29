@@ -150,6 +150,11 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 	}
 
 	// Create controls for the additional containers
+	//
+	// We also separate the context here to gain a better control of the cancellation order:
+	// when the parent context (ctx) is cancelled, the main container will be killed first,
+	// and only then all the additional containers will be killed via a separate context
+	// (additionalContainersCtx).
 	var additionalContainersWG sync.WaitGroup
 	additionalContainersCtx, additionalContainersCancel := context.WithCancel(context.Background())
 
