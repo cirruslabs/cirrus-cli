@@ -2,7 +2,7 @@
 
 [![Build Status](https://api.cirrus-ci.com/github/cirruslabs/cirrus-cli.svg)](https://cirrus-ci.com/github/cirruslabs/cirrus-cli)
 
-WIP CLI for executing Cirrus tasks locally. Currently can only validate Cirrus CI configuration file.
+CLI for executing Cirrus tasks locally.
 
 ## Installation
 
@@ -24,8 +24,21 @@ To be able to run `cirrus` command from anywhere, make sure that the `$GOPATH/bi
 
 ## Usage
 
+### Validate
+
 To validate a Cirrus CI configuration, simply switch to a directory where the `.cirrus.yml` is located and run:
 
 ```
 cirrus validate
 ```
+
+### Running
+
+To run Cirrus CI tasks locally, simply switch to a directory where the `.cirrus.yml` is located and run:
+                                
+```
+cirrus run
+```
+
+**Note:** Cirrus CLI only support [Linux `container`s](https://cirrus-ci.org/guide/linux/#linux-containers) instances at the moment.
+
