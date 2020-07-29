@@ -16,7 +16,7 @@ import (
 
 const (
 	// defaultAgentImage is the image we'll extract the agent from.
-	defaultAgentImage = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v1.1"
+	defaultAgentImage = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v1.2.4"
 
 	// defaultAgentImagePath is a path to an agent's binary in the defaultAgentImage.
 	defaultAgentImagePath = "/bin/cirrus-ci-agent"

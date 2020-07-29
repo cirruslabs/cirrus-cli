@@ -97,7 +97,6 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 			path.Join(agentVolumeMountPoint, agent.DefaultAgentVolumePath),
 			"-api-endpoint",
 			config.Endpoint,
-			"-insecure-endpoint",
 			"-server-token",
 			config.ServerSecret,
 			"-client-token",
