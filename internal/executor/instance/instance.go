@@ -150,24 +150,24 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 	}
 
 	// Start additional containers (if any)
-	var acWG sync.WaitGroup
-	acErrChan := make(chan error, len(inst.additionalContainers))
-	acCtx, acCancel := context.WithCancel(context.Background())
+	var additionalContainersWG sync.WaitGroup
+	additionalContainersErrChan := make(chan error, len(inst.additionalContainers))
+	additionalContainersCtx, additionalContainersCancel := context.WithCancel(context.Background())
 	for _, additionalContainer := range inst.additionalContainers {
 		additionalContainer := additionalContainer
 
-		acWG.Add(1)
+		additionalContainersWG.Add(1)
 		go func() {
-			if err := runAdditionalContainer(acCtx, logger, additionalContainer, cli, cont.ID); err != nil {
-				acErrChan <- err
+			if err := runAdditionalContainer(additionalContainersCtx, logger, additionalContainer, cli, cont.ID); err != nil {
+				additionalContainersErrChan <- err
 			}
-			acWG.Done()
+			additionalContainersWG.Done()
 		}()
 	}
 
 	defer func() {
-		acCancel()
-		acWG.Wait()
+		additionalContainersCancel()
+		additionalContainersWG.Wait()
 
 		logger.WithContext(ctx).Debugf("cleaning up container %s", cont.ID)
 		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{Force: true})
@@ -188,7 +188,7 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 		logger.WithContext(ctx).Debugf("container exited with %v error and exit code %d", res.Error, res.StatusCode)
 	case err := <-errChan:
 		return err
-	case acErr := <-acErrChan:
+	case acErr := <-additionalContainersErrChan:
 		return acErr
 	}
 
@@ -198,12 +198,12 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 func runAdditionalContainer(
 	ctx context.Context,
 	logger *logrus.Logger,
-	ac *api.AdditionalContainer,
+	additionalContainer *api.AdditionalContainer,
 	cli *client.Client,
 	connectToContainer string,
 ) error {
-	logger.WithContext(ctx).Debugf("pulling image %s", ac.Image)
-	progress, err := cli.ImagePull(ctx, ac.Image, types.ImagePullOptions{})
+	logger.WithContext(ctx).Debugf("pulling image %s", additionalContainer.Image)
+	progress, err := cli.ImagePull(ctx, additionalContainer.Image, types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
@@ -214,14 +214,14 @@ func runAdditionalContainer(
 
 	logger.WithContext(ctx).Debug("creating container")
 	containerConfig := container.Config{
-		Image: ac.Image,
-		Cmd:   ac.Command,
-		Env:   envMapToSlice(ac.Environment),
+		Image: additionalContainer.Image,
+		Cmd:   additionalContainer.Command,
+		Env:   envMapToSlice(additionalContainer.Environment),
 	}
 	hostConfig := container.HostConfig{
 		Resources: container.Resources{
-			NanoCPUs: int64(ac.Cpu * nano),
-			Memory:   int64(ac.Memory * mebi),
+			NanoCPUs: int64(additionalContainer.Cpu * nano),
+			Memory:   int64(additionalContainer.Memory * mebi),
 		},
 		NetworkMode: container.NetworkMode(fmt.Sprintf("container:%s", connectToContainer)),
 	}
@@ -242,9 +242,9 @@ func runAdditionalContainer(
 	// would require fiddling with Netfilter, which results in unwanted complexity.
 	//
 	// So here we simply do our best effort and warn the user about potential problems.
-	if ac.HostPort != 0 {
+	if additionalContainer.HostPort != 0 {
 		logger.Warnf("port mappings are unsupported by the Cirrus CLI, please tell the application "+
-			"running in the additional container '%s' to use a different port", ac.Name)
+			"running in the additional container '%s' to use a different port", additionalContainer.Name)
 	}
 
 	logger.WithContext(ctx).Debugf("starting container %s", cont.ID)
