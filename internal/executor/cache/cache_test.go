@@ -50,7 +50,7 @@ func TestKeySanitization(t *testing.T) {
 		actualFiles = append(actualFiles, dirEntry.Name())
 	}
 
-	require.EqualValues(t, expectedFiles, actualFiles)
+	require.ElementsMatch(t, expectedFiles, actualFiles)
 }
 
 // TestGetAndPut ensures that the cache correctly stores and retrieves different blobs at once.
