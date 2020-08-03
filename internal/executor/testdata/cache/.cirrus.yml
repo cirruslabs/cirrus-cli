@@ -11,6 +11,7 @@ fill_cache_task:
   script: touch cache/from-main-script
 
 check_cache_task:
+  depends_on: fill_cache
   test_cache:
     folder: cache
   script:
