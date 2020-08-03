@@ -5,7 +5,7 @@ task:
   container:
     image: golangci/golangci-lint:latest
   name: Lint
-  script: golangci-lint run -v --out-format json -p bugs,complexity,format,performance,style,unused -D goimports,wsl,gochecknoglobals,funlen,noctx,gofumpt > golangci.json
+  script: golangci-lint run -v --out-format json --max-issues-per-linter 0 --max-same-issues 0 -p bugs,complexity,format,performance,style,unused -D goimports,wsl,gochecknoglobals,funlen,noctx,gofumpt > golangci.json
   always:
     artifacts:
       path: golangci.json
@@ -17,7 +17,7 @@ docker_builder:
   test_script:
     - wget --no-verbose -O - https://golang.org/dl/go1.14.6.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
-    - go test -v -p 1 ./...
+    - go test -p 1 ./...
   env:
     HOME: /root
 

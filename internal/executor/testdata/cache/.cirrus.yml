@@ -1,0 +1,18 @@
+container:
+  image: debian:latest
+
+fill_cache_task:
+  test_cache:
+    folder: cache
+    populate_script:
+      - mkdir cache
+      - cd cache
+      - dd if=/dev/urandom of=from-populate-script bs=10M count=10
+  script: touch cache/from-main-script
+
+check_cache_task:
+  test_cache:
+    folder: cache
+  script:
+    - test -e cache/from-populate-script
+    - test -e cache/from-main-script

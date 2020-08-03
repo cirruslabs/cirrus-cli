@@ -19,3 +19,6 @@ linters:
     # We don't have high-performance requirements at this moment, so sacrificing
     # the code readability for marginal performance gains is not worth it.
     - prealloc
+
+    # New linters that require a lot of codebase churn and noise, but perhaps we can enable them in the future.
+    - nlreturn

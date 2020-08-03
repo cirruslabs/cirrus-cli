@@ -19,7 +19,7 @@ import (
 	"strings"
 	"sync"
 
-	// Registers a gzip compressor needed for streaming logs from the agent
+	// Registers a gzip compressor needed for streaming logs from the agent.
 	_ "google.golang.org/grpc/encoding/gzip"
 )
 
@@ -254,7 +254,7 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			r.logger.WithFields(map[string]interface{}{
 				"task":    currentTaskName,
 				"command": currentCommand,
-			}).Debugf("received chunk of %d bytes", len(x.Chunk.Data))
+			}).Debugf("received log chunk of %d bytes", len(x.Chunk.Data))
 
 			logLines := strings.Split(string(x.Chunk.Data), "\n")
 			for _, logLine := range logLines {

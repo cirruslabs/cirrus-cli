@@ -3,6 +3,7 @@ package build
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,6 +16,8 @@ type Build struct {
 
 	// Environment variables that will be injected via an agent
 	Environment map[string]string
+
+	Cache *cache.Cache
 
 	// The actual tasks comprising this build
 	tasks map[int64]*Task
@@ -39,8 +42,14 @@ func New(projectDir string, tasks []*api.Task) (*Build, error) {
 		wrappedTasks[wrappedTask.ID] = wrappedTask
 	}
 
+	c, err := cache.New("", filepath.Base(absoluteProjectDir))
+	if err != nil {
+		return nil, err
+	}
+
 	return &Build{
 		ProjectDir: absoluteProjectDir,
+		Cache:      c,
 		Environment: map[string]string{
 			"CIRRUS_PROJECT_DIR": instance.ContainerProjectDir,
 			"CIRRUS_WORKING_DIR": "/tmp/cirrus-ci/working-dir",
