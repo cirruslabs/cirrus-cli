@@ -81,13 +81,14 @@ func (r *RPC) DownloadCache(req *api.DownloadCacheRequest, stream api.CirrusCISe
 		return err
 	}
 
-	r.logger.WithContext(stream.Context()).Debugf("sending cache with key %s", req.CacheKey)
-
 	file, err := r.build.Cache.Get(req.CacheKey)
 	if err != nil {
+		r.logger.WithContext(stream.Context()).WithError(err).Debugf("while getting cache blob with key %s", req.CacheKey)
 		return status.Errorf(codes.NotFound, "cache blob with the specified key not found")
 	}
 	defer file.Close()
+
+	r.logger.WithContext(stream.Context()).Debugf("sending cache with key %s", req.CacheKey)
 
 	buf := make([]byte, bufSize)
 
