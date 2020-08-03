@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const bufSize = 10 * 1024 * 1024
@@ -72,11 +73,38 @@ func (c *Cache) Put(key string) (*PutOperation, error) {
 }
 
 func (c *Cache) blobPath(key string) string {
-	// Sanitize user-controlled data by hashing it
-	keyHash := sha256.Sum256([]byte(key))
+	if needsSanitization(key) {
+		keyHash := sha256.Sum256([]byte(key))
+		key = fmt.Sprintf("%x", keyHash)
+	}
 
-	// Craft the blob's file name
-	fileName := fmt.Sprintf("%x", keyHash)
+	return filepath.Join(c.namespaceDir, key)
+}
 
-	return filepath.Join(c.namespaceDir, fileName)
+func needsSanitization(key string) bool {
+	if key == "" {
+		return true
+	}
+
+	isSafeChar := func(c rune) bool {
+		if '0' <= c && c <= '9' {
+			return true
+		}
+		if 'a' <= c && c <= 'z' {
+			return true
+		}
+		if 'A' <= c && c <= 'Z' {
+			return true
+		}
+		if c == '-' || c == '_' {
+			return true
+		}
+		return false
+	}
+	isUnsafeChar := func(c rune) bool {
+		return !isSafeChar(c)
+	}
+	containsUnsafeChar := strings.IndexFunc(key, isUnsafeChar) != -1
+
+	return containsUnsafeChar
 }
