@@ -47,8 +47,8 @@ func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
 			}
 			n, err := putOp.Write(x.Chunk.Data)
 			if err != nil {
-				r.logger.WithContext(stream.Context()).WithError(err).Debug("while processing chunk")
-				return status.Error(codes.Internal, "failed to process chunk")
+				r.logger.WithContext(stream.Context()).WithError(err).Debug("while processing cache chunk")
+				return status.Error(codes.Internal, "failed to process cache chunk")
 			}
 			bytesSaved += int64(n)
 		}
