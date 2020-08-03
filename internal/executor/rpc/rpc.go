@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
@@ -121,7 +122,9 @@ func (r *RPC) Start() {
 	r.serverWaitGroup.Add(1)
 	go func() {
 		if err := r.server.Serve(listener); err != nil {
-			r.logger.WithError(err).Error("RPC server failed")
+			if !errors.Is(err, grpc.ErrServerStopped) {
+				r.logger.WithError(err).Error("RPC server failed")
+			}
 		}
 		r.serverWaitGroup.Done()
 	}()
