@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"bufio"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 )
+
+const bufSize = 10 * 1024 * 1024
 
 var (
 	ErrFailedToInitialize = errors.New("cache initialization failed")
@@ -63,6 +66,7 @@ func (c *Cache) Put(key string) (*PutOperation, error) {
 
 	return &PutOperation{
 		tmpBlobFile:   tmpBlobFile,
+		tmpBlobWriter: bufio.NewWriterSize(tmpBlobFile, bufSize),
 		finalBlobPath: c.blobPath(key),
 	}, nil
 }
