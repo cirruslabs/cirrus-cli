@@ -109,7 +109,7 @@ func (r *RPC) DownloadCache(req *api.DownloadCacheRequest, stream api.CirrusCISe
 			break
 		}
 		if err != nil {
-			r.logger.WithContext(stream.Context()).WithError(err).Warn("while sending cache chunk")
+			r.logger.WithContext(stream.Context()).WithError(err).Warnf("while sending cache chunk of size %d", n)
 			return err
 		}
 	}
