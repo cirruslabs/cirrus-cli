@@ -28,6 +28,7 @@ type Parser struct {
 const (
 	DefaultRPCEndpoint = "grpc.cirrus-ci.com:443"
 	defaultTimeout     = time.Second * 5
+	defaultRetries     = 3
 )
 
 type Result struct {
@@ -61,7 +62,7 @@ func (p *Parser) Parse(config string) (*Result, error) {
 		grpc.WithTransportCredentials(tlsCredentials),
 		grpc.WithUnaryInterceptor(
 			grpcretry.UnaryClientInterceptor(
-				grpcretry.WithMax(3),
+				grpcretry.WithMax(defaultRetries),
 			),
 		),
 	)
