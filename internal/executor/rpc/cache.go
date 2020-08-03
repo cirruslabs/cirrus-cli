@@ -9,7 +9,7 @@ import (
 	"io"
 )
 
-const bufSize = 10 * 1024 * 1024
+const sendBufSize = 1024 * 1024
 
 func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
 	var putOp *cache.PutOperation
@@ -90,7 +90,7 @@ func (r *RPC) DownloadCache(req *api.DownloadCacheRequest, stream api.CirrusCISe
 
 	r.logger.WithContext(stream.Context()).Debugf("sending cache with key %s", req.CacheKey)
 
-	buf := make([]byte, bufSize)
+	buf := make([]byte, sendBufSize)
 
 	for {
 		n, err := file.Read(buf)
