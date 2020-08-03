@@ -5,7 +5,9 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -47,12 +49,24 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	defer cancel()
 
 	// Setup Cirrus CI RPC connection
+	certPool, _ := gocertifi.CACerts()
 	tlsCredentials := credentials.NewTLS(&tls.Config{
 		MinVersion: tls.VersionTLS13,
+		RootCAs:    certPool,
 	})
-	conn, err := grpc.DialContext(ctx, p.rpcEndpoint(), grpc.WithTransportCredentials(tlsCredentials))
+	conn, err := grpc.DialContext(
+		ctx,
+		p.rpcEndpoint(),
+		grpc.WithBlock(),
+		grpc.WithTransportCredentials(tlsCredentials),
+		grpc.WithUnaryInterceptor(
+			grpcretry.UnaryClientInterceptor(
+				grpcretry.WithMax(3),
+			),
+		),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrRPC, err)
+		return nil, fmt.Errorf("%w: failed to dial with '%v'", ErrRPC, err)
 	}
 	defer conn.Close()
 

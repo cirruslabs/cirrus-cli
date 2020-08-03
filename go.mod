@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
+	github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894
 	github.com/cirruslabs/cirrus-ci-agent v0.0.0-20200714161959-c9529312cb42
 	github.com/containerd/containerd v1.3.6 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
@@ -16,6 +17,7 @@ require (
 	github.com/google/go-cmp v0.5.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
