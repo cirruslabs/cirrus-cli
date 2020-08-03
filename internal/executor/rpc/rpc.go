@@ -19,7 +19,7 @@ import (
 	"strings"
 	"sync"
 
-	// Registers a gzip compressor needed for streaming logs from the agent
+	// Registers a gzip compressor needed for streaming logs from the agent.
 	_ "google.golang.org/grpc/encoding/gzip"
 )
 
