@@ -37,7 +37,7 @@ func Execute(t *testing.T, projectDir string) {
 	require.Empty(t, result.Errors)
 	require.NotEmpty(t, result.Tasks)
 
-	e, err := executor.New(".", result.Tasks)
+	e, err := executor.New(dir, result.Tasks)
 	if err != nil {
 		t.Fatal(err)
 	}
