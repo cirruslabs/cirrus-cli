@@ -162,3 +162,7 @@ func TestResourceLimits(t *testing.T) {
 func TestAdditionalContainers(t *testing.T) {
 	testutil.Execute(t, "testdata/additional-containers")
 }
+
+func TestCache(t *testing.T) {
+	testutil.Execute(t, "testdata/cache")
+}

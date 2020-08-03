@@ -1,0 +1,17 @@
+container:
+  image: debian:latest
+
+fill_cache_task:
+  test_cache:
+    folder: cache
+    populate_script:
+      - mkdir cache
+      - touch cache/from-populate-script
+  script: touch cache/from-main-script
+
+check_cache_task:
+  test_cache:
+    folder: cache
+  script:
+    - test -e cache/from-populate-script
+    - test -e cache/from-main-script
