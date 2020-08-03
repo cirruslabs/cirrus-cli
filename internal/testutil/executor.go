@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck // https://github.com/cirruslabs/cirrus-ci-agent/issues/14
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"path/filepath"
 	"testing"
@@ -37,7 +38,11 @@ func Execute(t *testing.T, projectDir string) {
 	require.Empty(t, result.Errors)
 	require.NotEmpty(t, result.Tasks)
 
-	e, err := executor.New(dir, result.Tasks)
+	// Create a logger with the maximum verbosity
+	logger := logrus.New()
+	logger.Level = logrus.TraceLevel
+
+	e, err := executor.New(dir, result.Tasks, executor.WithLogger(logger))
 	if err != nil {
 		t.Fatal(err)
 	}
