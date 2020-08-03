@@ -6,7 +6,8 @@ fill_cache_task:
     folder: cache
     populate_script:
       - mkdir cache
-      - touch cache/from-populate-script
+      - cd cache
+      - dd if=/dev/urandom of=from-populate-script bs=10M count=10
   script: touch cache/from-main-script
 
 check_cache_task:
