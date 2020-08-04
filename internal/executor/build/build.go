@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"path"
 	"path/filepath"
 )
 
@@ -51,8 +52,7 @@ func New(projectDir string, tasks []*api.Task) (*Build, error) {
 		ProjectDir: absoluteProjectDir,
 		Cache:      c,
 		Environment: map[string]string{
-			"CIRRUS_PROJECT_DIR": instance.ContainerProjectDir,
-			"CIRRUS_WORKING_DIR": "/tmp/cirrus-ci/working-dir",
+			"CIRRUS_WORKING_DIR": path.Join(instance.WorkingVolumeMountpoint, instance.WorkingVolumeWorkingDir),
 		},
 		tasks: wrappedTasks,
 	}, nil

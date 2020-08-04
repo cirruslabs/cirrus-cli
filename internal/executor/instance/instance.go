@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/agent"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -33,12 +32,6 @@ var (
 )
 
 const (
-	// ContainerProjectDir specifies where in the instance container should we bind-mount the projectDir.
-	ContainerProjectDir = "/tmp/cirrus-ci/project-dir"
-
-	// agentVolumeMountPoint specifies where in the instance container should we mount the volume with the agent binary.
-	agentVolumeMountPoint = "/tmp/cirrus-ci/agent-dir"
-
 	mebi = 1024 * 1024
 	nano = 1_000_000_000
 )
@@ -92,17 +85,17 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 		return err
 	}
 
-	agentVolumeName, err := agent.GetAgentVolume(ctx)
+	workingVolumeName, err := CreateWorkingVolume(ctx, cli, config.ProjectDir)
 	if err != nil {
 		return err
 	}
-	logger.WithContext(ctx).Debugf("using agent from volume %s", agentVolumeName)
+	logger.WithContext(ctx).Debugf("using working volume %s", workingVolumeName)
 
 	logger.WithContext(ctx).Debug("creating container")
 	containerConfig := container.Config{
 		Image: inst.image,
 		Cmd: []string{
-			path.Join(agentVolumeMountPoint, agent.DefaultAgentVolumePath),
+			path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent),
 			"-api-endpoint",
 			config.Endpoint,
 			"-server-token",
@@ -116,16 +109,9 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 	hostConfig := container.HostConfig{
 		Mounts: []mount.Mount{
 			{
-				Type:     mount.TypeVolume,
-				Source:   agentVolumeName,
-				Target:   agentVolumeMountPoint,
-				ReadOnly: true,
-			},
-			{
-				Type:     mount.TypeBind,
-				Source:   config.ProjectDir,
-				Target:   ContainerProjectDir,
-				ReadOnly: true,
+				Type:   mount.TypeVolume,
+				Source: workingVolumeName,
+				Target: WorkingVolumeMountpoint,
 			},
 		},
 		Resources: container.Resources{
@@ -164,6 +150,12 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{Force: true})
 		if err != nil {
 			logger.WithContext(ctx).WithError(err).Warn("while removing container")
+		}
+
+		logger.WithContext(ctx).Debugf("cleaning up working volume %s", workingVolumeName)
+		err = cli.VolumeRemove(context.Background(), workingVolumeName, false)
+		if err != nil {
+			logger.WithContext(ctx).WithError(err).Warn("while removing working volume")
 		}
 
 		additionalContainersCancel()

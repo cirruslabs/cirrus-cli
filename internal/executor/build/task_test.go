@@ -5,30 +5,49 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-// TestCloneInterception ensures that the clone instruction is replaced with
-// a CLI adaptation in the form of a script instruction.
+// TestCloneInterception ensures that the first command named "clone" is removed.
 func TestCloneInterception(t *testing.T) {
-	task, err := build.NewFromProto(&api.Task{
-		Commands: []*api.Command{
+	examples := map[string][]*api.Command{
+		"clone command with clone instruction": {
 			{
-				Name: "whatever",
+				Name: "clone",
 				Instruction: &api.Command_CloneInstruction{
 					CloneInstruction: &api.CloneInstruction{},
 				},
 			},
 		},
-		Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
-	})
-	if err != nil {
-		t.Fatal(err)
+		"clone command with script instruction": {
+			{
+				Name: "clone",
+				Instruction: &api.Command_ScriptInstruction{
+					ScriptInstruction: &api.ScriptInstruction{
+						Scripts: []string{"git clone --help"},
+					},
+				},
+			},
+		},
+		"clone command with no instruction": {
+			{
+				Name: "clone",
+			},
+		},
 	}
 
-	require.NotEmpty(t, task.ProtoTask.Commands)
-	cloneAdaptation, isScript := task.ProtoTask.Commands[0].Instruction.(*api.Command_ScriptInstruction)
-	assert.True(t, isScript)
-	assert.NotEmpty(t, cloneAdaptation.ScriptInstruction.Scripts)
+	for exampleName, commands := range examples {
+		commands := commands
+		t.Run(exampleName, func(t *testing.T) {
+			task, err := build.NewFromProto(&api.Task{
+				Commands: commands,
+				Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Empty(t, task.ProtoTask.Commands)
+		})
+	}
 }

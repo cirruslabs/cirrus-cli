@@ -32,26 +32,12 @@ func NewFromProto(protoTask *api.Task) (*Task, error) {
 		return nil, err
 	}
 
-	// Intercept the first clone instruction and adapt it for the CLI
-	for _, command := range protoTask.Commands {
-		_, ok := command.Instruction.(*api.Command_CloneInstruction)
-		if !ok {
-			continue
+	// Intercept the first clone instruction and remove it
+	for i, command := range protoTask.Commands {
+		if command.Name == "clone" {
+			protoTask.Commands = append(protoTask.Commands[:i], protoTask.Commands[i+1:]...)
+			break
 		}
-
-		*command = api.Command{
-			Name: command.Name,
-			Instruction: &api.Command_ScriptInstruction{
-				ScriptInstruction: &api.ScriptInstruction{
-					Scripts: []string{
-						"echo 'Copying mounted project directory to a working directory...'",
-						"cp -rT $CIRRUS_PROJECT_DIR .",
-					},
-				},
-			},
-		}
-
-		break
 	}
 
 	timeout := defaultTaskTimeout
