@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/build/filter"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
@@ -19,11 +20,14 @@ type Executor struct {
 	build *build.Build
 	rpc   *rpc.RPC
 
-	logger *logrus.Logger
+	logger     *logrus.Logger
+	taskFilter filter.TaskFilter
 }
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
-	e := &Executor{}
+	e := &Executor{
+		taskFilter: filter.MatchAnyTask(),
+	}
 
 	// Apply options
 	for _, opt := range opts {
@@ -37,7 +41,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	}
 
 	// Create a build that describes what we're about to do
-	b, err := build.New(projectDir, tasks)
+	b, err := build.New(projectDir, tasks, build.WithTaskFilter(e.taskFilter))
 	if err != nil {
 		return nil, err
 	}

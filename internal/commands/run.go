@@ -3,6 +3,7 @@ package commands
 import (
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/build/filter"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -33,13 +34,24 @@ func run(cmd *cobra.Command, args []string) error {
 		return ErrRun
 	}
 
-	// Run
+	var executorOpts []executor.Option
+
+	// Enable logging
 	logger := logrus.New()
+	logger.Out = cmd.OutOrStderr()
 	if verbose {
 		logger.Level = logrus.DebugLevel
 	}
+	executorOpts = append(executorOpts, executor.WithLogger(logger))
 
-	e, err := executor.New(filepath.Dir(runFile), result.Tasks, executor.WithLogger(logger))
+	// Configure a task filter based on the task pattern (if specified)
+	if len(args) == 1 {
+		taskFilter := filter.MatchTaskByPattern(args[0])
+		executorOpts = append(executorOpts, executor.WithTaskFilter(taskFilter))
+	}
+
+	// Run
+	e, err := executor.New(filepath.Dir(runFile), result.Tasks, executorOpts...)
 	if err != nil {
 		return err
 	}
@@ -49,9 +61,10 @@ func run(cmd *cobra.Command, args []string) error {
 
 func newRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "run",
+		Use:   "run [flags] [task pattern]",
 		Short: "Execute Cirrus CI tasks locally",
 		RunE:  run,
+		Args:  cobra.MaximumNArgs(1),
 	}
 
 	cmd.PersistentFlags().StringVarP(&runFile, "file", "f", ".cirrus.yml", "use file as the configuration file")
