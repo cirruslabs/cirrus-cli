@@ -54,7 +54,7 @@ func CreateWorkingVolume(ctx context.Context, cli *client.Client, projectDir str
 	containerConfig := &container.Config{
 		Image: AgentImage,
 		Cmd: []string{
-			"/bin/sh", "-c", fmt.Sprintf("rsync -r %s/ %s && cp /bin/cirrus-ci-agent %s",
+			"/bin/sh", "-c", fmt.Sprintf("rsync -r --filter=':- .gitignore' %s/ %s && cp /bin/cirrus-ci-agent %s",
 				projectDirMountpoint, path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir),
 				path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent)),
 		},

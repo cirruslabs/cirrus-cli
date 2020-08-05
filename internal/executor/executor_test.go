@@ -154,15 +154,29 @@ func TestExecutorFails(t *testing.T) {
 
 // TestResourceLimits ensures that the desired CPU and memory limits are enforced for instances.
 func TestResourceLimits(t *testing.T) {
-	testutil.Execute(t, "testdata/resource-limits")
+	dir := testutil.TempDirPopulatedWith(t, "testdata/resource-limits")
+	testutil.Execute(t, dir)
 }
 
 // TestAdditionalContainers ensures that the services created in the additional containers
 // are reachable from the main container.
 func TestAdditionalContainers(t *testing.T) {
-	testutil.Execute(t, "testdata/additional-containers")
+	dir := testutil.TempDirPopulatedWith(t, "testdata/additional-containers")
+	testutil.Execute(t, dir)
 }
 
 func TestCache(t *testing.T) {
-	testutil.Execute(t, "testdata/cache")
+	dir := testutil.TempDirPopulatedWith(t, "testdata/cache")
+	testutil.Execute(t, dir)
+}
+
+func TestGitignore(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/gitignore")
+
+	// Activate .gitignore
+	if err := os.Rename(filepath.Join(dir, ".gitignore.inert"), filepath.Join(dir, ".gitignore")); err != nil {
+		t.Fatal(err)
+	}
+
+	testutil.Execute(t, dir)
 }
