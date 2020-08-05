@@ -3,7 +3,7 @@ package commands
 import (
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/build/filter"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -44,9 +44,9 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	executorOpts = append(executorOpts, executor.WithLogger(logger))
 
-	// Configure a task filter based on the task pattern (if specified)
+	// Enable a task filter if the task name is specified
 	if len(args) == 1 {
-		taskFilter := filter.MatchTaskByPattern(args[0])
+		taskFilter := taskfilter.MatchExactTask(args[0])
 		executorOpts = append(executorOpts, executor.WithTaskFilter(taskFilter))
 	}
 
@@ -61,7 +61,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 func newRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "run [flags] [task pattern]",
+		Use:   "run [flags] [task]",
 		Short: "Execute Cirrus CI tasks locally",
 		RunE:  run,
 		Args:  cobra.MaximumNArgs(1),

@@ -26,30 +26,24 @@ func TestRun(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestRunTaskPattern(t *testing.T) {
+func TestRunSpecificTask(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/task-pattern")
 
 	var examples = map[string]struct {
 		Pattern         string
 		ExpectedStrings []string
 	}{
-		"single task": {"first_working", []string{
+		"first single task": {"first_working", []string{
 			"task first_working (0) succeeded",
 		}},
-		"multiple tasks": {"first_working,Second Working", []string{
-			"task first_working (0) succeeded",
+		"second single task": {"Second Working", []string{
 			"task Second Working (2) succeeded",
 		}},
-		"multiple tasks (reversed)": {"Second Working,first_working", []string{
+		"first task case insensitivity": {"FiRsT_WoRkInG", []string{
 			"task first_working (0) succeeded",
-			"task Second Working (2) succeeded",
 		}},
-		"space insensitivity": {"first_working, Second Working", []string{
-			"task first_working (0) succeeded",
+		"second task case insensitivity": {"SECOND WORKING", []string{
 			"task Second Working (2) succeeded",
-		}},
-		"case insensitivity": {"FiRsT_WoRkInG", []string{
-			"task first_working (0) succeeded",
 		}},
 	}
 

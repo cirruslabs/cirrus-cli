@@ -1,7 +1,7 @@
 package executor
 
 import (
-	"github.com/cirruslabs/cirrus-cli/internal/executor/build/filter"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/sirupsen/logrus"
 )
 
@@ -13,7 +13,7 @@ func WithLogger(logger *logrus.Logger) Option {
 	}
 }
 
-func WithTaskFilter(taskFilter filter.TaskFilter) Option {
+func WithTaskFilter(taskFilter taskfilter.TaskFilter) Option {
 	return func(e *Executor) {
 		e.taskFilter = taskFilter
 	}

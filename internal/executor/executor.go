@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/build/filter"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 )
@@ -21,12 +21,12 @@ type Executor struct {
 	rpc   *rpc.RPC
 
 	logger     *logrus.Logger
-	taskFilter filter.TaskFilter
+	taskFilter taskfilter.TaskFilter
 }
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
 	e := &Executor{
-		taskFilter: filter.MatchAnyTask(),
+		taskFilter: taskfilter.MatchAnyTask(),
 	}
 
 	// Apply options
@@ -40,8 +40,11 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 		e.logger.Out = ioutil.Discard
 	}
 
+	// Filter tasks (e.g. if a user wants to run only a specific task without dependencies)
+	tasks = e.taskFilter(tasks)
+
 	// Create a build that describes what we're about to do
-	b, err := build.New(projectDir, tasks, build.WithTaskFilter(e.taskFilter))
+	b, err := build.New(projectDir, tasks)
 	if err != nil {
 		return nil, err
 	}

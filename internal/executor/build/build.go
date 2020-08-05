@@ -2,7 +2,6 @@ package build
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/build/filter"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
@@ -22,11 +21,9 @@ type Build struct {
 
 	// The actual tasks comprising this build
 	tasks map[int64]*Task
-
-	taskFilter filter.TaskFilter
 }
 
-func New(projectDir string, tasks []*api.Task, opts ...Option) (*Build, error) {
+func New(projectDir string, tasks []*api.Task) (*Build, error) {
 	// Normalize project directory path on host as it might be
 	// simply ".", which is not suitable for bind mounting it
 	// later to the container
@@ -50,24 +47,15 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Build, error) {
 		return nil, err
 	}
 
-	// Prepare a build structure
-	b := &Build{
+	return &Build{
 		ProjectDir: absoluteProjectDir,
 		Cache:      c,
 		Environment: map[string]string{
 			"CIRRUS_PROJECT_DIR": instance.ContainerProjectDir,
 			"CIRRUS_WORKING_DIR": "/tmp/cirrus-ci/working-dir",
 		},
-		tasks:      wrappedTasks,
-		taskFilter: filter.MatchAnyTask(),
-	}
-
-	// Apply options
-	for _, opt := range opts {
-		opt(b)
-	}
-
-	return b, nil
+		tasks: wrappedTasks,
+	}, nil
 }
 
 func (b *Build) GetTask(id int64) *Task {
@@ -106,10 +94,6 @@ func (b *Build) taskHasUnresolvedDependencies(task *Task) bool {
 
 func (b *Build) GetNextTask() *Task {
 	for _, task := range b.tasks {
-		if !b.taskFilter(task.ProtoTask.Name) {
-			continue
-		}
-
 		if b.taskHasUnresolvedDependencies(task) {
 			continue
 		}
