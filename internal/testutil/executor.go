@@ -26,9 +26,7 @@ func GetBasicContainerInstance(t *testing.T, image string) *api.Task_Instance {
 	}
 }
 
-func Execute(t *testing.T, projectDir string) {
-	dir := TempDirPopulatedWith(t, projectDir)
-
+func Execute(t *testing.T, dir string) {
 	p := parser.Parser{}
 	result, err := p.ParseFromFile(filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {

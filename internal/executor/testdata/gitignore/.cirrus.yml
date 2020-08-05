@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+task:
+  script:
+    - test -d copied-directory
+    - test -e copied-directory/copied-file.txt
+    - test ! -e copied-directory/ignored-file.txt
+    - test ! -d ignored-directory
