@@ -67,3 +67,15 @@ func TestRunSpecificTask(t *testing.T) {
 		})
 	}
 }
+
+// TestRunTaskDependencyRemoval ensures that dependencies for the task
+// selected by the task filtering mechanism are removed properly.
+func TestRunTaskDependencyRemoval(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-task-dependency-removal")
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "bar"})
+	err := command.Execute()
+
+	require.Nil(t, err)
+}

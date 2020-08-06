@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+foo_task:
+  script: echo 'Foo'
+
+bar_task:
+  depends_on: foo
+  script: echo 'Bar'

@@ -19,6 +19,9 @@ func MatchExactTask(desiredTaskName string) TaskFilter {
 
 		for _, task := range tasks {
 			if strings.EqualFold(desiredTaskName, task.Name) {
+				// Clear task's dependencies
+				task.RequiredGroups = task.RequiredGroups[:0]
+
 				filteredTasks = append(filteredTasks, task)
 			}
 		}
