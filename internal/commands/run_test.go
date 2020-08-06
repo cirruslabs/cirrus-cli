@@ -26,8 +26,9 @@ func TestRun(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestRunSpecificTask(t *testing.T) {
-	testutil.TempChdirPopulatedWith(t, "testdata/task-pattern")
+// TestRunTaskFiltering ensures that the task filtering mechanism only runs the task specified by the user.
+func TestRunTaskFiltering(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-task-filtering")
 
 	var examples = map[string]struct {
 		Pattern         string
