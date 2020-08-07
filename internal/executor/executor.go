@@ -99,7 +99,14 @@ func (e *Executor) Run(ctx context.Context) error {
 			task.SetStatus(taskstatus.TimedOut)
 		}
 
-		e.logger.Infof("task %s %s", task.String(), task.Status().String())
+		switch task.Status() {
+		case taskstatus.Succeeded:
+			e.logger.Infof("task %s %s", task.String(), task.Status().String())
+		case taskstatus.New:
+			return fmt.Errorf("%w: instance terminated before the task %s had a chance to run", ErrBuildFailed, task.String())
+		default:
+			return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
+		}
 
 		// Bail-out if the task has failed
 		if task.Status() != taskstatus.Succeeded {
