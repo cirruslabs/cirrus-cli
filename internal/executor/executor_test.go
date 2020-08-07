@@ -170,6 +170,12 @@ func TestCache(t *testing.T) {
 	testutil.Execute(t, dir)
 }
 
+// Check that override ENTRYPOINT.
+func TestEntrypoint(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/entrypoint")
+	testutil.Execute(t, dir)
+}
+
 func TestGitignore(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/gitignore")
 
