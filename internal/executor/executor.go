@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 )
@@ -19,11 +20,14 @@ type Executor struct {
 	build *build.Build
 	rpc   *rpc.RPC
 
-	logger *logrus.Logger
+	logger     *logrus.Logger
+	taskFilter taskfilter.TaskFilter
 }
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
-	e := &Executor{}
+	e := &Executor{
+		taskFilter: taskfilter.MatchAnyTask(),
+	}
 
 	// Apply options
 	for _, opt := range opts {
@@ -35,6 +39,9 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 		e.logger = logrus.New()
 		e.logger.Out = ioutil.Discard
 	}
+
+	// Filter tasks (e.g. if a user wants to run only a specific task without dependencies)
+	tasks = e.taskFilter(tasks)
 
 	// Create a build that describes what we're about to do
 	b, err := build.New(projectDir, tasks)

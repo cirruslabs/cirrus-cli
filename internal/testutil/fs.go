@@ -8,6 +8,18 @@ import (
 	"testing"
 )
 
+func RestoreDirLater(t *testing.T) {
+	savedDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Chdir(savedDir); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
+
 // tempDir supplements an alternative to TB.TempDir()[1], which is only available in 1.15.
 // [1]: https://github.com/golang/go/issues/35998
 func TempDir(t *testing.T) string {
@@ -35,6 +47,8 @@ func TempDir(t *testing.T) string {
 
 // TempChdir switches to a temporary per-test directory.
 func TempChdir(t *testing.T) {
+	RestoreDirLater(t)
+
 	if err := os.Chdir(TempDir(t)); err != nil {
 		t.Fatal(err)
 	}
@@ -55,6 +69,8 @@ func TempDirPopulatedWith(t *testing.T, sourceDir string) string {
 // TempChdirPopulatedWith creates a temporary per-test directory
 // filled with sourceDir contents and switches to it.
 func TempChdirPopulatedWith(t *testing.T, sourceDir string) {
+	RestoreDirLater(t)
+
 	if err := os.Chdir(TempDirPopulatedWith(t, sourceDir)); err != nil {
 		t.Fatal(err)
 	}

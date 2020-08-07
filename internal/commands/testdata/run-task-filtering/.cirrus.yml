@@ -1,0 +1,16 @@
+container:
+  image: debian:latest
+
+first_working_task:
+  script: true
+
+task:
+  name: First Failing
+  script: false
+
+task:
+  name: Second Working
+  script: true
+
+second_failing_task:
+  script: false
