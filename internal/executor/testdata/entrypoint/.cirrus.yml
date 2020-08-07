@@ -1,0 +1,6 @@
+container:
+  # has custom ENTRYPOINT
+  image: squidfunk/mkdocs-material:5.5.0
+
+test_task:
+  script: echo "Works!"

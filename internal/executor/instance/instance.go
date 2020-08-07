@@ -94,7 +94,7 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 	logger.WithContext(ctx).Debug("creating container")
 	containerConfig := container.Config{
 		Image: inst.image,
-		Cmd: []string{
+		Entrypoint: []string{
 			path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent),
 			"-api-endpoint",
 			config.Endpoint,
