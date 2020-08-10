@@ -186,3 +186,16 @@ func TestGitignore(t *testing.T) {
 
 	testutil.Execute(t, dir)
 }
+
+// TestEnvironmentPropagation ensures that the environment variables declared in the
+// configuration are propagated to the execution environment.
+func TestEnvironmentPropagation(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/environment-propagation")
+	testutil.Execute(t, dir)
+}
+
+// TestEnvironment ensures that environment variables emitted by the CLI are set.
+func TestEnvironmentAutomaticVariables(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/environment-automatic-variables")
+	testutil.Execute(t, dir)
+}

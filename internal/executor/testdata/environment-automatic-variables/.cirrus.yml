@@ -1,0 +1,18 @@
+container:
+  image: debian:latest
+
+task:
+  print_env_script:
+    - env
+  check_static_script:
+    - test "$CIRRUS_WORKING_DIR" = "/tmp/cirrus-ci/working-dir"
+    - test "$CI" = "true"
+    - test "$CONTINUOUS_INTEGRATION" = "true"
+    - test "$CIRRUS_CI" = "true"
+    - test "$CIRRUS_ENVIRONMENT" = "CLI"
+  check_node_info_script:
+    - test "$CI_NODE_INDEX" = "0"
+    - test "$CI_NODE_TOTAL" = "1"
+  check_task_info_script:
+    - test "$CIRRUS_TASK_NAME" = "main"
+    - test "$CIRRUS_TASK_ID" = "0"

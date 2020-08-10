@@ -8,12 +8,14 @@ fill_cache_task:
       - mkdir cache
       - cd cache
       - dd if=/dev/urandom of=from-populate-script bs=10M count=10
+    fingerprint_script: echo "key that's similar between tasks"
   script: touch cache/from-main-script
 
 check_cache_task:
   depends_on: fill_cache
   test_cache:
     folder: cache
+    fingerprint_script: echo "key that's similar between tasks"
   script:
     - test -e cache/from-populate-script
     - test -e cache/from-main-script

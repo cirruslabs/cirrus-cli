@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+dummy_task:
+  script: true
+
+failing_task:
+  only_if: $PLEASE_DONT_FAIL != "okay"
+  script: false

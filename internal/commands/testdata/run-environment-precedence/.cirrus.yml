@@ -1,0 +1,13 @@
+container:
+  image: debian:latest
+
+env:
+  SOMEKEY: "bad value"
+
+task:
+  env:
+    SOMEKEY: "bad value"
+
+  script:
+    - env
+    - test "$SOMEKEY" = "good value"
