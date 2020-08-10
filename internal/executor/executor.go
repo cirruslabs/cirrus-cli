@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
@@ -20,13 +21,16 @@ type Executor struct {
 	build *build.Build
 	rpc   *rpc.RPC
 
-	logger     *logrus.Logger
-	taskFilter taskfilter.TaskFilter
+	// Options
+	logger                   *logrus.Logger
+	taskFilter               taskfilter.TaskFilter
+	userSpecifiedEnvironment map[string]string
 }
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
 	e := &Executor{
-		taskFilter: taskfilter.MatchAnyTask(),
+		taskFilter:               taskfilter.MatchAnyTask(),
+		userSpecifiedEnvironment: make(map[string]string),
 	}
 
 	// Apply options
@@ -42,6 +46,23 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 
 	// Filter tasks (e.g. if a user wants to run only a specific task without dependencies)
 	tasks = e.taskFilter(tasks)
+
+	// Enrich task environments
+	commonToAllTasks := environment.Merge(environment.Static(), environment.BuildID())
+	for _, task := range tasks {
+		task.Environment = environment.Merge(
+			// Lowest priority
+			commonToAllTasks,
+			environment.NodeInfo(task.LocalGroupId, int64(len(tasks))),
+			environment.TaskInfo(task.Name, task.LocalGroupId),
+
+			// Medium priority
+			task.Environment,
+
+			// Highest priority
+			e.userSpecifiedEnvironment,
+		)
+	}
 
 	// Create a build that describes what we're about to do
 	b, err := build.New(projectDir, tasks)

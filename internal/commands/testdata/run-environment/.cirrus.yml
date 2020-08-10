@@ -1,0 +1,7 @@
+container:
+  image: debian:latest
+
+task:
+  script:
+    - env
+    - test "$SOMEKEY" = "good value"

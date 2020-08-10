@@ -23,6 +23,9 @@ var (
 type Parser struct {
 	// RPCEndpoint specifies an alternative RPC endpoint to use. If empty, DefaultRPCEndpoint is used.
 	RPCEndpoint string
+
+	// Environment to take into account when expanding variables.
+	Environment map[string]string
 }
 
 const (
@@ -74,8 +77,13 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	// Send config for parsing by the Cirrus CI RPC and retrieve results
 	client := api.NewCirrusCIServiceClient(conn)
 
+	if p.Environment == nil {
+		p.Environment = make(map[string]string)
+	}
+
 	request := api.ParseConfigRequest{
-		Config: config,
+		Config:      config,
+		Environment: p.Environment,
 	}
 
 	response, err := client.ParseConfig(ctx, &request)

@@ -160,7 +160,7 @@ func (r *RPC) InitialCommands(
 	}
 
 	return &api.CommandsResponse{
-		Environment:      r.build.Environment,
+		Environment:      task.ProtoTask.Environment,
 		Commands:         task.ProtoTask.Commands,
 		ServerToken:      r.serverSecret,
 		TimeoutInSeconds: int64(task.Timeout.Seconds()),

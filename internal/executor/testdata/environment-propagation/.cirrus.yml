@@ -1,0 +1,13 @@
+container:
+  image: debian:latest
+
+env:
+  GLOBAL: "some global value"
+
+task:
+  script:
+    - env
+    - test "$GLOBAL" = "some global value"
+    - test "$LOCAL" = "some local value"
+  env:
+    LOCAL: "some local value"

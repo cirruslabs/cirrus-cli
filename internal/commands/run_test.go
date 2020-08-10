@@ -12,6 +12,7 @@ import (
 	"testing"
 )
 
+// TestRun ensures that the run command can handle the simplest possible configuration without problems.
 func TestRun(t *testing.T) {
 	testutil.TempChdir(t)
 
@@ -76,6 +77,58 @@ func TestRunTaskDependencyRemoval(t *testing.T) {
 
 	command := commands.NewRootCmd()
 	command.SetArgs([]string{"run", "bar"})
+	err := command.Execute()
+
+	require.Nil(t, err)
+}
+
+// TestRunEnvironmentSet ensures that the user can set environment variables.
+func TestRunEnvironmentSet(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-environment")
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-e", "SOMEKEY=good value"})
+	err := command.Execute()
+
+	require.Nil(t, err)
+}
+
+// TestRunEnvironmentPassThrough ensures that the user can pass-through environment variables
+// from the environment where CLI runs.
+func TestRunEnvironmentPassThrough(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-environment")
+
+	// Set a variable to be picked up and passed through
+	if err := os.Setenv("SOMEKEY", "good value"); err != nil {
+		t.Fatal(err)
+	}
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-e", "SOMEKEY"})
+	err := command.Execute()
+
+	require.Nil(t, err)
+}
+
+// TestRunEnvironmentPrecedence ensures that user-specified environment variables
+// take precedence over variables defined in the configuration.
+func TestRunEnvironmentPrecedence(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-precedence")
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-e", "SOMEKEY=good value"})
+	err := command.Execute()
+
+	require.Nil(t, err)
+}
+
+// TestRunEnvironmentOnlyIf ensures that user-specified environment variables
+// are propagated to the configuration parser.
+func TestRunEnvironmentOnlyIf(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-only-if")
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-e", "PLEASE_DONT_FAIL=okay"})
 	err := command.Execute()
 
 	require.Nil(t, err)

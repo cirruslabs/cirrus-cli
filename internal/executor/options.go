@@ -18,3 +18,9 @@ func WithTaskFilter(taskFilter taskfilter.TaskFilter) Option {
 		e.taskFilter = taskFilter
 	}
 }
+
+func WithEnvironment(environment map[string]string) Option {
+	return func(e *Executor) {
+		e.userSpecifiedEnvironment = environment
+	}
+}
