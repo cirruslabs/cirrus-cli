@@ -9,8 +9,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // https://github.com/cirruslabs/cirrus-ci-agent/issues/14
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"io/ioutil"
 	"path"
