@@ -19,13 +19,6 @@ import (
 	"sync"
 )
 
-type Instance struct {
-	image                string
-	cpu                  float32
-	memory               uint32
-	additionalContainers []*api.AdditionalContainer
-}
-
 var (
 	ErrUnsupportedInstance       = errors.New("unsupported instance type")
 	ErrAdditionalContainerFailed = errors.New("additional container failed")
@@ -36,22 +29,43 @@ const (
 	nano = 1_000_000_000
 )
 
-func NewFromProto(instance *api.Task_Instance) (*Instance, error) {
+type Instance interface {
+	Run(context.Context, *RunConfig) error
+}
+
+func NewFromProto(instance *api.Task_Instance, commands []*api.Command) (Instance, error) {
 	// Validate and unmarshal the instance descriptor
-	if instance.Type != "container" {
+	switch instance.Type {
+	case "container":
+		var taskContainer api.ContainerInstance
+		if err := proto.Unmarshal(instance.Payload, &taskContainer); err != nil {
+			return nil, err
+		}
+		return &ContainerInstance{
+			Image:                taskContainer.Image,
+			CPU:                  taskContainer.Cpu,
+			Memory:               taskContainer.Memory,
+			AdditionalContainers: taskContainer.AdditionalContainers,
+		}, nil
+	case "pipe":
+		var pipe api.PipeInstance
+		if err := proto.Unmarshal(instance.Payload, &pipe); err != nil {
+			return nil, err
+		}
+
+		stages, err := PipeStagesFromCommands(commands)
+		if err != nil {
+			return nil, err
+		}
+
+		return &PipeInstance{
+			CPU:    pipe.Cpu,
+			Memory: pipe.Memory,
+			Stages: stages,
+		}, nil
+	default:
 		return nil, ErrUnsupportedInstance
 	}
-	var taskContainer api.ContainerInstance
-	if err := proto.Unmarshal(instance.Payload, &taskContainer); err != nil {
-		return nil, err
-	}
-
-	return &Instance{
-		image:                taskContainer.Image,
-		cpu:                  taskContainer.Cpu,
-		memory:               taskContainer.Memory,
-		additionalContainers: taskContainer.AdditionalContainers,
-	}, nil
 }
 
 type RunConfig struct {
@@ -62,7 +76,16 @@ type RunConfig struct {
 	Logger                     *logrus.Logger
 }
 
-func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
+type Params struct {
+	Image                  string
+	CPU                    float32
+	Memory                 uint32
+	AdditionalContainers   []*api.AdditionalContainer
+	CommandFrom, CommandTo string
+	WorkingVolumeName      string
+}
+
+func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) error {
 	logger := config.Logger
 	if logger == nil {
 		logger = logrus.New()
@@ -75,8 +98,8 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 		return err
 	}
 
-	logger.WithContext(ctx).Debugf("pulling image %s", inst.image)
-	progress, err := cli.ImagePull(ctx, inst.image, types.ImagePullOptions{})
+	logger.WithContext(ctx).Debugf("pulling image %s", params.Image)
+	progress, err := cli.ImagePull(ctx, params.Image, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}
@@ -85,15 +108,9 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 		return err
 	}
 
-	workingVolumeName, err := CreateWorkingVolume(ctx, cli, config.ProjectDir)
-	if err != nil {
-		return err
-	}
-	logger.WithContext(ctx).Debugf("using working volume %s", workingVolumeName)
-
-	logger.WithContext(ctx).Debug("creating container")
+	logger.WithContext(ctx).Debugf("creating container using working volume %s", params.WorkingVolumeName)
 	containerConfig := container.Config{
-		Image: inst.image,
+		Image: params.Image,
 		Entrypoint: []string{
 			path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent),
 			"-api-endpoint",
@@ -104,26 +121,30 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 			config.ClientSecret,
 			"-task-id",
 			strconv.FormatInt(config.TaskID, 10),
+			"-command-from",
+			params.CommandFrom,
+			"-command-to",
+			params.CommandTo,
 		},
 	}
 	hostConfig := container.HostConfig{
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeVolume,
-				Source: workingVolumeName,
+				Source: params.WorkingVolumeName,
 				Target: WorkingVolumeMountpoint,
 			},
 		},
 		Resources: container.Resources{
-			NanoCPUs: int64(inst.cpu * nano),
-			Memory:   int64(inst.memory * mebi),
+			NanoCPUs: int64(params.CPU * nano),
+			Memory:   int64(params.Memory * mebi),
 		},
 	}
 
 	// In case the additional containers are used, tell the agent to wait for them
-	if len(inst.additionalContainers) > 0 {
+	if len(params.AdditionalContainers) > 0 {
 		var ports []string
-		for _, additionalContainer := range inst.additionalContainers {
+		for _, additionalContainer := range params.AdditionalContainers {
 			ports = append(ports, strconv.FormatUint(uint64(additionalContainer.ContainerPort), 10))
 		}
 		commaDelimitedPorts := strings.Join(ports, ",")
@@ -152,19 +173,13 @@ func (inst *Instance) Run(ctx context.Context, config *RunConfig) error {
 			logger.WithContext(ctx).WithError(err).Warn("while removing container")
 		}
 
-		logger.WithContext(ctx).Debugf("cleaning up working volume %s", workingVolumeName)
-		err = cli.VolumeRemove(context.Background(), workingVolumeName, false)
-		if err != nil {
-			logger.WithContext(ctx).WithError(err).Warn("while removing working volume")
-		}
-
 		additionalContainersCancel()
 		additionalContainersWG.Wait()
 	}()
 
 	// Start additional containers (if any)
-	additionalContainersErrChan := make(chan error, len(inst.additionalContainers))
-	for _, additionalContainer := range inst.additionalContainers {
+	additionalContainersErrChan := make(chan error, len(params.AdditionalContainers))
+	for _, additionalContainer := range params.AdditionalContainers {
 		additionalContainer := additionalContainer
 
 		additionalContainersWG.Add(1)

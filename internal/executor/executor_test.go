@@ -199,3 +199,8 @@ func TestEnvironmentAutomaticVariables(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/environment-automatic-variables")
 	testutil.Execute(t, dir)
 }
+
+func TestDockerPipe(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/docker-pipe")
+	testutil.Execute(t, dir)
+}
