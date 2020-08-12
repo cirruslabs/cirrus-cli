@@ -26,7 +26,15 @@ func GetBasicContainerInstance(t *testing.T, image string) *api.Task_Instance {
 	}
 }
 
-func Execute(t *testing.T, dir string) {
+func Execute(t *testing.T, dir string) error {
+	// Create a logger with the maximum verbosity
+	logger := logrus.New()
+	logger.Level = logrus.TraceLevel
+
+	return ExecuteWithLogger(t, dir, logger)
+}
+
+func ExecuteWithLogger(t *testing.T, dir string, logger *logrus.Logger) error {
 	p := parser.Parser{}
 	result, err := p.ParseFromFile(filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
@@ -36,16 +44,10 @@ func Execute(t *testing.T, dir string) {
 	require.Empty(t, result.Errors)
 	require.NotEmpty(t, result.Tasks)
 
-	// Create a logger with the maximum verbosity
-	logger := logrus.New()
-	logger.Level = logrus.TraceLevel
-
 	e, err := executor.New(dir, result.Tasks, executor.WithLogger(logger))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := e.Run(context.Background()); err != nil {
-		t.Fatal(err)
-	}
+	return e.Run(context.Background())
 }

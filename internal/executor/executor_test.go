@@ -1,6 +1,7 @@
 package executor_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -155,25 +157,29 @@ func TestExecutorFails(t *testing.T) {
 // TestResourceLimits ensures that the desired CPU and memory limits are enforced for instances.
 func TestResourceLimits(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/resource-limits")
-	testutil.Execute(t, dir)
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
 }
 
 // TestAdditionalContainers ensures that the services created in the additional containers
 // are reachable from the main container.
 func TestAdditionalContainers(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/additional-containers")
-	testutil.Execute(t, dir)
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
 }
 
 func TestCache(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/cache")
-	testutil.Execute(t, dir)
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
 }
 
 // Check that override ENTRYPOINT.
 func TestEntrypoint(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/entrypoint")
-	testutil.Execute(t, dir)
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
 }
 
 func TestGitignore(t *testing.T) {
@@ -184,23 +190,48 @@ func TestGitignore(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testutil.Execute(t, dir)
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
 }
 
 // TestEnvironmentPropagation ensures that the environment variables declared in the
 // configuration are propagated to the execution environment.
 func TestEnvironmentPropagation(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/environment-propagation")
-	testutil.Execute(t, dir)
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
 }
 
 // TestEnvironment ensures that environment variables emitted by the CLI are set.
 func TestEnvironmentAutomaticVariables(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/environment-automatic-variables")
-	testutil.Execute(t, dir)
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
 }
 
+// TestDockerPipe ensures that the Docker Pipe commands can communicate through the shared volume.
 func TestDockerPipe(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/docker-pipe")
-	testutil.Execute(t, dir)
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
+}
+
+// TestDockerPipeTermination ensures that the failure in some stage
+// of the Docker Pipe is propagated to the next stages.
+func TestDockerPipeTermination(t *testing.T) {
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	// Create a logger and attach it to writer
+	logger := logrus.New()
+	logger.Level = logrus.TraceLevel
+	logger.Out = writer
+
+	dir := testutil.TempDirPopulatedWith(t, "testdata/docker-pipe-fail-propagation")
+	err := testutil.ExecuteWithLogger(t, dir, logger)
+	assert.Error(t, err)
+	assert.Contains(t, buf.String(), "failing")
+	assert.Contains(t, buf.String(), "validate")
+	assert.NotContains(t, buf.String(), "never")
 }
