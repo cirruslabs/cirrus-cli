@@ -1,0 +1,14 @@
+pipe:
+  steps:
+    - image: alpine:latest
+      failing_script: false
+    - image: debian:latest
+      never_before_first_script: echo "Should never happen!"
+      on_failure:
+        validate_first_script: true
+      never_after_first_script: echo "Should never happen!"
+    - image: ubuntu:latest
+      never_before_second_script: echo "Should never happen!"
+      on_failure:
+        validate_second_script: true
+      never_after_second_script: echo "Should never happen!"

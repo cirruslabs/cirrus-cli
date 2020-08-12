@@ -14,11 +14,14 @@ import (
 	"path"
 )
 
-var ErrVolumeCreationFailed = errors.New("working volume creation failed")
+var (
+	ErrVolumeCreationFailed = errors.New("working volume creation failed")
+	ErrVolumeCleanupFailed  = errors.New("failed to clean up working volume")
+)
 
 const (
 	// AgentImage is the image we'll use to create a working volume.
-	AgentImage = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v1.3.0"
+	AgentImage = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v1.6.0"
 
 	// Where working volume is mounted to.
 	WorkingVolumeMountpoint = "/tmp/cirrus-ci"
@@ -30,21 +33,32 @@ const (
 	WorkingVolumeWorkingDir = "working-dir"
 )
 
+type Volume struct {
+	name string
+}
+
 // CreateWorkingVolume returns a Docker volume name with the agent and copied projectDir.
-func CreateWorkingVolume(ctx context.Context, cli *client.Client, projectDir string) (string, error) {
+func CreateWorkingVolume(ctx context.Context, projectDir string) (*Volume, error) {
+	// Create Docker client
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
+	}
+	defer cli.Close()
+
 	// Retrieve the latest agent image
 	pullResult, err := cli.ImagePull(ctx, AgentImage, types.ImagePullOptions{})
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 	_, err = io.Copy(ioutil.Discard, pullResult)
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
 	vol, err := cli.VolumeCreate(ctx, volume.VolumeCreateBody{})
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
 	// Where we will mount the project directory for further copying into a working volume
@@ -76,11 +90,11 @@ func CreateWorkingVolume(ctx context.Context, cli *client.Client, projectDir str
 	}
 	cont, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 	err = cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{})
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
 	// Wait for the container to finish copying
@@ -88,18 +102,40 @@ func CreateWorkingVolume(ctx context.Context, cli *client.Client, projectDir str
 	select {
 	case res := <-waitChan:
 		if res.StatusCode != 0 {
-			return "", fmt.Errorf("%w: container exited with %v error and exit code %d",
+			return nil, fmt.Errorf("%w: container exited with %v error and exit code %d",
 				ErrVolumeCreationFailed, res.Error, res.StatusCode)
 		}
 	case err := <-errChan:
-		return "", err
+		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
 	// Remove the helper container
 	err = cli.ContainerRemove(ctx, cont.ID, types.ContainerRemoveOptions{})
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
-	return vol.Name, nil
+	return &Volume{
+		name: vol.Name,
+	}, nil
+}
+
+func (volume *Volume) Name() string {
+	return volume.name
+}
+
+func (volume *Volume) Close() error {
+	// Create Docker client
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrVolumeCleanupFailed, err)
+	}
+	defer cli.Close()
+
+	err = cli.VolumeRemove(context.Background(), volume.name, false)
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrVolumeCleanupFailed, err)
+	}
+
+	return nil
 }

@@ -160,10 +160,11 @@ func (r *RPC) InitialCommands(
 	}
 
 	return &api.CommandsResponse{
-		Environment:      task.ProtoTask.Environment,
-		Commands:         task.ProtoTask.Commands,
-		ServerToken:      r.serverSecret,
-		TimeoutInSeconds: int64(task.Timeout.Seconds()),
+		Environment:       task.ProtoTask.Environment,
+		Commands:          task.ProtoTask.Commands,
+		ServerToken:       r.serverSecret,
+		TimeoutInSeconds:  int64(task.Timeout.Seconds()),
+		FailedAtLeastOnce: task.Status() == taskstatus.Failed,
 	}, nil
 }
 

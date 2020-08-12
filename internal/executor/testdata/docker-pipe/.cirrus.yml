@@ -1,0 +1,8 @@
+pipe:
+  steps:
+    - image: python:latest
+      first_script: python -c 'import os; open("message-in-a-bottle.txt", "w").write(os.environ.get("MESSAGE"))'
+    - image: ruby:latest
+      second_script: ruby -e 'exit File.open("message-in-a-bottle.txt").read == ENV["MESSAGE"]'
+  env:
+    MESSAGE: "It's snaky out here!"

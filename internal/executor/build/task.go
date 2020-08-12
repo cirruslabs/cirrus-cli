@@ -15,7 +15,7 @@ const defaultTaskTimeout = 60 * time.Minute
 type Task struct {
 	ID       int64
 	status   taskstatus.Status
-	Instance *instance.Instance
+	Instance instance.Instance
 	Timeout  time.Duration
 
 	// Original Protocol Buffers structure for reference
@@ -27,7 +27,7 @@ type Task struct {
 
 func NewFromProto(protoTask *api.Task) (*Task, error) {
 	// Create an instance that this task will run on
-	inst, err := instance.NewFromProto(protoTask.Instance)
+	inst, err := instance.NewFromProto(protoTask.Instance, protoTask.Commands)
 	if err != nil {
 		return nil, err
 	}
