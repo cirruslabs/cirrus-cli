@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -192,10 +192,10 @@ func (r *RPC) ReportSingleCommand(
 	}
 
 	if req.Succeded {
-		command.SetStatus(taskstatus.Succeeded)
+		command.SetStatus(commandstatus.Success)
 		logEntry.Debug("command succeeded")
 	} else {
-		command.SetStatus(taskstatus.Failed)
+		command.SetStatus(commandstatus.Failure)
 		logEntry.Debug("command failed")
 	}
 

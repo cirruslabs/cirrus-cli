@@ -3,6 +3,7 @@ package build
 import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"strconv"
@@ -83,7 +84,7 @@ func (task *Task) ProtoCommands() []*api.Command {
 
 func (task *Task) FailedAtLeastOnce() bool {
 	for _, command := range task.Commands {
-		if command.Status() == taskstatus.Failed {
+		if command.Status() == commandstatus.Failure {
 			return true
 		}
 	}
@@ -108,7 +109,7 @@ func (task *Task) Status() taskstatus.Status {
 			(command.ProtoCommand.ExecutionBehaviour == api.Command_ON_FAILURE && failedAtLeastOnce) ||
 			(command.ProtoCommand.ExecutionBehaviour == api.Command_ALWAYS)
 
-		if command.Status() == taskstatus.New && shouldRun {
+		if command.Status() == commandstatus.Undefined && shouldRun {
 			return taskstatus.New
 		}
 	}
