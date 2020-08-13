@@ -64,7 +64,7 @@ func NewFromProto(instance *api.Task_Instance, commands []*api.Command) (Instanc
 			Stages: stages,
 		}, nil
 	default:
-		return nil, ErrUnsupportedInstance
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedInstance, instance.Type)
 	}
 }
 
