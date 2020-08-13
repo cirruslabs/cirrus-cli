@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -160,28 +160,12 @@ func (r *RPC) InitialCommands(
 	}
 
 	return &api.CommandsResponse{
-		Environment:       task.ProtoTask.Environment,
-		Commands:          task.ProtoTask.Commands,
+		Environment:       task.Environment,
+		Commands:          task.ProtoCommands(),
 		ServerToken:       r.serverSecret,
 		TimeoutInSeconds:  int64(task.Timeout.Seconds()),
-		FailedAtLeastOnce: task.Status() == taskstatus.Failed,
+		FailedAtLeastOnce: task.FailedAtLeastOnce(),
 	}, nil
-}
-
-func getCommandAfter(commands []*api.Command, currentCommand string) string {
-	var doReturn bool
-
-	for _, command := range commands {
-		if doReturn {
-			return command.Name
-		}
-
-		if command.Name == currentCommand {
-			doReturn = true
-		}
-	}
-
-	return ""
 }
 
 func (r *RPC) ReportSingleCommand(
@@ -193,34 +177,29 @@ func (r *RPC) ReportSingleCommand(
 		return nil, err
 	}
 
-	var nextCommand string
-
 	logEntry := r.logger.WithFields(map[string]interface{}{
-		"task":    task.ProtoTask.Name,
+		"task":    task.Name,
 		"command": req.CommandName,
 	})
 
 	// Register whether the current command succeeded or failed
 	// so that the main loop can make the decision whether
 	// to proceed with the execution or not.
-	if req.Succeded {
-		logEntry.Debug("command succeeded")
-
-		nextCommand = getCommandAfter(task.ProtoTask.Commands, req.CommandName)
-		if nextCommand == "" {
-			task.SetStatus(taskstatus.Succeeded)
-		}
-	} else {
-		logEntry.Debug("command failed")
-
-		// An empty string instructs the agent to do nothing and terminate
-		nextCommand = ""
-		task.SetStatus(taskstatus.Failed)
+	command := task.GetCommand(req.CommandName)
+	if command == nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "attempt to set status for non-existent command %s",
+			req.CommandName)
 	}
 
-	return &api.ReportSingleCommandResponse{
-		NextCommandName: nextCommand,
-	}, nil
+	if req.Succeded {
+		command.SetStatus(commandstatus.Success)
+		logEntry.Debug("command succeeded")
+	} else {
+		command.SetStatus(commandstatus.Failure)
+		logEntry.Debug("command failed")
+	}
+
+	return &api.ReportSingleCommandResponse{}, nil
 }
 
 func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
@@ -243,7 +222,7 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			if err != nil {
 				return err
 			}
-			currentTaskName = task.ProtoTask.Name
+			currentTaskName = task.Name
 			currentCommand = x.Key.CommandName
 
 			r.logger.WithFields(map[string]interface{}{
@@ -281,7 +260,7 @@ func (r *RPC) Heartbeat(ctx context.Context, req *api.HeartbeatRequest) (*api.He
 		return nil, err
 	}
 
-	r.logger.WithField("task", task.ProtoTask.Name).Debug("received heartbeat")
+	r.logger.WithField("task", task.Name).Debug("received heartbeat")
 
 	return &api.HeartbeatResponse{}, nil
 }
@@ -292,7 +271,7 @@ func (r *RPC) ReportAgentError(ctx context.Context, req *api.ReportAgentProblemR
 		return nil, err
 	}
 
-	r.logger.WithField("task", task.ProtoTask.Name).Debugf("agent error: %s", req.Message)
+	r.logger.WithField("task", task.Name).Debugf("agent error: %s", req.Message)
 
 	return &empty.Empty{}, nil
 }
@@ -303,7 +282,7 @@ func (r *RPC) ReportAgentWarning(ctx context.Context, req *api.ReportAgentProble
 		return nil, err
 	}
 
-	r.logger.WithField("task", task.ProtoTask.Name).Debugf("agent warning: %s", req.Message)
+	r.logger.WithField("task", task.Name).Debugf("agent warning: %s", req.Message)
 
 	return &empty.Empty{}, nil
 }
@@ -314,7 +293,7 @@ func (r *RPC) ReportAgentSignal(ctx context.Context, req *api.ReportAgentSignalR
 		return nil, err
 	}
 
-	r.logger.WithField("task", task.ProtoTask.Name).Debugf("agent signal: %s", req.Signal)
+	r.logger.WithField("task", task.Name).Debugf("agent signal: %s", req.Signal)
 
 	return &empty.Empty{}, nil
 }

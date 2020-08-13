@@ -73,7 +73,7 @@ func (b *Build) GetTaskFromIdentification(tid *api.TaskIdentification, clientSec
 }
 
 func (b *Build) taskHasUnresolvedDependencies(task *Task) bool {
-	for _, requiredGroup := range task.ProtoTask.RequiredGroups {
+	for _, requiredGroup := range task.RequiredIDs {
 		requiredTask := b.GetTask(requiredGroup)
 
 		if requiredTask.Status() == taskstatus.New {

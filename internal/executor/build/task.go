@@ -3,6 +3,7 @@ package build
 import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"strconv"
@@ -13,13 +14,14 @@ import (
 const defaultTaskTimeout = 60 * time.Minute
 
 type Task struct {
-	ID       int64
-	status   taskstatus.Status
-	Instance instance.Instance
-	Timeout  time.Duration
-
-	// Original Protocol Buffers structure for reference
-	ProtoTask *api.Task
+	ID          int64
+	RequiredIDs []int64
+	Name        string
+	status      taskstatus.Status
+	Instance    instance.Instance
+	Timeout     time.Duration
+	Environment map[string]string
+	Commands    []*Command
 
 	// A mutex to guarantee safe accesses from both the main loop and gRPC server handlers
 	Mutex sync.RWMutex
@@ -40,6 +42,13 @@ func NewFromProto(protoTask *api.Task) (*Task, error) {
 		}
 	}
 
+	var wrappedCommands []*Command
+	for _, command := range protoTask.Commands {
+		wrappedCommands = append(wrappedCommands, &Command{
+			ProtoCommand: command,
+		})
+	}
+
 	timeout := defaultTaskTimeout
 	if protoTask.Metadata != nil {
 		metadataTimeout, found := protoTask.Metadata.Properties["timeoutInSeconds"]
@@ -53,18 +62,63 @@ func NewFromProto(protoTask *api.Task) (*Task, error) {
 	}
 
 	return &Task{
-		ID:        protoTask.LocalGroupId,
-		Instance:  inst,
-		Timeout:   timeout,
-		ProtoTask: protoTask,
+		ID:          protoTask.LocalGroupId,
+		RequiredIDs: protoTask.RequiredGroups,
+		Name:        protoTask.Name,
+		Instance:    inst,
+		Timeout:     timeout,
+		Environment: protoTask.Environment,
+		Commands:    wrappedCommands,
 	}, nil
+}
+
+func (task *Task) ProtoCommands() []*api.Command {
+	var result []*api.Command
+
+	for _, command := range task.Commands {
+		result = append(result, command.ProtoCommand)
+	}
+
+	return result
+}
+
+func (task *Task) FailedAtLeastOnce() bool {
+	for _, command := range task.Commands {
+		if command.Status() == commandstatus.Failure {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (task *Task) Status() taskstatus.Status {
 	task.Mutex.RLock()
 	defer task.Mutex.RUnlock()
 
-	return task.status
+	// Task status is normally composed of it's command statuses, but if someone alters the default
+	// value through Task.SetStatus() — we'll skip the calculation and return that value instead
+	if task.status != taskstatus.New {
+		return task.status
+	}
+
+	failedAtLeastOnce := task.FailedAtLeastOnce()
+
+	for _, command := range task.Commands {
+		shouldRun := (command.ProtoCommand.ExecutionBehaviour == api.Command_ON_SUCCESS && !failedAtLeastOnce) ||
+			(command.ProtoCommand.ExecutionBehaviour == api.Command_ON_FAILURE && failedAtLeastOnce) ||
+			(command.ProtoCommand.ExecutionBehaviour == api.Command_ALWAYS)
+
+		if command.Status() == commandstatus.Undefined && shouldRun {
+			return taskstatus.New
+		}
+	}
+
+	if failedAtLeastOnce {
+		return taskstatus.Failed
+	}
+
+	return taskstatus.Succeeded
 }
 
 func (task *Task) SetStatus(status taskstatus.Status) {
@@ -74,6 +128,16 @@ func (task *Task) SetStatus(status taskstatus.Status) {
 	task.status = status
 }
 
+func (task *Task) GetCommand(name string) *Command {
+	for _, command := range task.Commands {
+		if command.ProtoCommand.Name == name {
+			return command
+		}
+	}
+
+	return nil
+}
+
 func (task *Task) String() string {
-	return fmt.Sprintf("%s (%d)", task.ProtoTask.Name, task.ID)
+	return fmt.Sprintf("%s (%d)", task.Name, task.ID)
 }
