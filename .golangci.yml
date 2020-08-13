@@ -6,6 +6,15 @@ linters-settings:
     default-signifies-exhaustive: true
 
 linters:
+  # Selecting all available presets effectively enables all linters.
+  presets:
+    - bugs
+    - complexity
+    - format
+    - performance
+    - style
+    - unused
+
   disable:
     # Messages like "struct of size 104 bytes could be of size 96 bytes" from a package
     # that was last updated 2 years ago[1] are barely helpful.
@@ -22,3 +31,17 @@ linters:
 
     # New linters that require a lot of codebase churn and noise, but perhaps we can enable them in the future.
     - nlreturn
+
+    # Unfortunately, we use globals due to how spf13/cobra works.
+    - gochecknoglobals
+
+    # Style linters that are total nuts.
+    - wsl
+    - gofumpt
+    - goimports
+    - funlen
+
+issues:
+  # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.
+  max-issues-per-linter: 0
+  max-same-issues: 0
