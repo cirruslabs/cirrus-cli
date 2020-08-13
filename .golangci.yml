@@ -6,7 +6,7 @@ linters-settings:
     default-signifies-exhaustive: true
 
 linters:
-  # Selecting all available presets effectively enables all linters
+  # Selecting all available presets effectively enables all linters.
   presets:
     - bugs
     - complexity
