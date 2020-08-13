@@ -41,9 +41,6 @@ linters:
     - goimports
     - funlen
 
-    # We've been sending HTTP requests without context.Context before when validating configurations via GraphQL.
-    - noctx
-
 issues:
   # Don't hide multiple issues that belong to one class. since GitHub annotations can handle them all nicely.
   max-issues-per-linter: 0
