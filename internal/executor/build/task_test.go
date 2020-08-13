@@ -47,7 +47,7 @@ func TestCloneInterception(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			assert.Empty(t, task.ProtoTask.Commands)
+			assert.Empty(t, task.Commands)
 		})
 	}
 }

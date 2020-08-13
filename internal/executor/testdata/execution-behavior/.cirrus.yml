@@ -1,0 +1,10 @@
+container:
+  image: debian:latest
+
+task:
+  script: false
+  on_failure:
+    should_run_because_on_failure_script: true
+  always:
+    should_run_because_always_script: true
+  should_not_run_because_on_success_script: true

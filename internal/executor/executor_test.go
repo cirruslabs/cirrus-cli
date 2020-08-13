@@ -235,3 +235,22 @@ func TestDockerPipeTermination(t *testing.T) {
 	assert.Contains(t, buf.String(), "validate")
 	assert.NotContains(t, buf.String(), "never")
 }
+
+// TestExecutionBehavior ensures that individual command's execution behavior is respected.
+func TestExecutionBehavior(t *testing.T) {
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	// Create a logger and attach it to writer
+	logger := logrus.New()
+	logger.Level = logrus.TraceLevel
+	logger.Out = writer
+
+	dir := testutil.TempDirPopulatedWith(t, "testdata/execution-behavior")
+	err := testutil.ExecuteWithLogger(t, dir, logger)
+	assert.Error(t, err)
+	assert.Contains(t, buf.String(), "should_run_because_on_failure")
+	assert.Contains(t, buf.String(), "should_run_because_always")
+	assert.NotContains(t, buf.String(), "should_not_run_because_on_success")
+}
