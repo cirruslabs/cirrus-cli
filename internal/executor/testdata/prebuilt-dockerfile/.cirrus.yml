@@ -1,0 +1,10 @@
+container:
+  dockerfile: docker/Dockerfile
+  docker_arguments:
+    SOME_ARGUMENT: SOME_VALUE
+
+task:
+  working_directory_test_script:
+    - test -e some-directory/some-file.txt
+  argument_passing_test_script:
+    - test "$(cat /etc/some-argument-value)" = "SOME_VALUE"

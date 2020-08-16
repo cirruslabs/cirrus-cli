@@ -269,3 +269,12 @@ func TestDirtyMode(t *testing.T) {
 	_, err = os.Stat(filepath.Join(dir, "file.txt"))
 	assert.NoError(t, err)
 }
+
+// TestPrebuiltDockerfile ensures that Dockerfile as CI environment[1] feature works properly.
+//
+// [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
+func TestPrebuiltDockerfile(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/prebuilt-dockerfile")
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
+}
