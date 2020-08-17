@@ -103,10 +103,15 @@ func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *RunConfig) er
 	if err != nil {
 		return err
 	}
-	if err := os.Remove(archivePath); err != nil {
-		return err
-	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			logger.Warnf("while closing temporary archive file: %v", err)
+		}
+
+		if err := os.Remove(archivePath); err != nil {
+			logger.Warnf("while removing temporary archive file: %v", err)
+		}
+	}()
 
 	// Deal with ImageBuildOptions's BuildArgs field quirks
 	// since we don't differentiate between empty and missing
