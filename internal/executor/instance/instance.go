@@ -112,14 +112,19 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		return err
 	}
 
-	var noPull bool
+	// Check if the image is missing and pull it if needed
+	var needToPull bool
 
-	// Handle prebuilt instance images being available only locally
-	if strings.HasPrefix(params.Image, "gcr.io/cirrus-ci-community/") {
-		noPull = true
+	_, _, err = cli.ImageInspectWithRaw(ctx, params.Image)
+	if err != nil {
+		if client.IsErrNotFound(err) {
+			needToPull = true
+		} else {
+			return err
+		}
 	}
 
-	if !noPull {
+	if needToPull {
 		logger.Debugf("pulling image %s", params.Image)
 		progress, err := cli.ImagePull(ctx, params.Image, types.ImagePullOptions{})
 		if err != nil {
