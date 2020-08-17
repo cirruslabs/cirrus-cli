@@ -8,7 +8,8 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
-	"github.com/sirupsen/logrus"
+	"github.com/cirruslabs/echelon"
+	"github.com/cirruslabs/echelon/renderers"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
@@ -80,8 +81,8 @@ func TestExecutorClone(t *testing.T) {
 func TestExecutorScript(t *testing.T) {
 	dir := testutil.TempDir(t)
 
-	logger := logrus.New()
-	logger.Level = logrus.TraceLevel
+	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
 
 	e, err := executor.New(dir, []*api.Task{
 		{
@@ -224,9 +225,8 @@ func TestDockerPipeTermination(t *testing.T) {
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	// Create a logger and attach it to writer
-	logger := logrus.New()
-	logger.Level = logrus.TraceLevel
-	logger.Out = writer
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
 
 	dir := testutil.TempDirPopulatedWith(t, "testdata/docker-pipe-fail-propagation")
 	err := testutil.ExecuteWithOptions(t, dir, executor.WithLogger(logger))
@@ -243,9 +243,9 @@ func TestExecutionBehavior(t *testing.T) {
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	// Create a logger and attach it to writer
-	logger := logrus.New()
-	logger.Level = logrus.TraceLevel
-	logger.Out = writer
+
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
 
 	dir := testutil.TempDirPopulatedWith(t, "testdata/execution-behavior")
 	err := testutil.ExecuteWithOptions(t, dir, executor.WithLogger(logger))

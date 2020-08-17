@@ -21,14 +21,14 @@ func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
 			break
 		}
 		if err != nil {
-			r.logger.WithContext(stream.Context()).WithError(err).Warn("stream errored out while uploading cache")
+			r.logger.Warnf("error stream errored out while uploading cache: %v", err)
 			return err
 		}
 
 		switch x := cacheEntry.Value.(type) {
 		case *api.CacheEntry_Key:
 			if putOp != nil {
-				r.logger.WithContext(stream.Context()).Warn("received multiple cache entries in a single method call")
+				r.logger.Warnf("received multiple cache entries in a single method call")
 				return status.Error(codes.FailedPrecondition, "received multiple cache entries in a single method call")
 			}
 			_, err := r.build.GetTaskFromIdentification(x.Key.TaskIdentification, r.clientSecret)
@@ -37,17 +37,17 @@ func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
 			}
 			putOp, err = r.build.Cache.Put(x.Key.CacheKey)
 			if err != nil {
-				r.logger.WithContext(stream.Context()).WithError(err).Debug("while initializing cache put operation")
+				r.logger.Debugf("error while initializing cache put operation: %v", err)
 				return status.Error(codes.Internal, "failed to initialize cache put operation")
 			}
-			r.logger.WithContext(stream.Context()).Debugf("receiving cache with key %s", x.Key.CacheKey)
+			r.logger.Debugf("receiving cache with key %s", x.Key.CacheKey)
 		case *api.CacheEntry_Chunk:
 			if putOp == nil {
 				return status.Error(codes.PermissionDenied, "not authenticated")
 			}
 			n, err := putOp.Write(x.Chunk.Data)
 			if err != nil {
-				r.logger.WithContext(stream.Context()).WithError(err).Debug("while processing cache chunk")
+				r.logger.Debugf("error while processing cache chunk: %v", err)
 				return status.Error(codes.Internal, "failed to process cache chunk")
 			}
 			bytesSaved += int64(n)
@@ -55,12 +55,12 @@ func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
 	}
 
 	if putOp == nil {
-		r.logger.Warn("attempted to upload cache without actually sending anything")
+		r.logger.Warnf("attempted to upload cache without actually sending anything")
 		return status.Error(codes.FailedPrecondition, "attempted to upload cache without actually sending anything")
 	}
 
 	if err := putOp.Finalize(); err != nil {
-		r.logger.WithError(err).Debugf("while finalizing cache put operation")
+		r.logger.Debugf("while finalizing cache put operation")
 		return status.Error(codes.Internal, "failed to finalize cache put operation")
 	}
 
@@ -68,7 +68,7 @@ func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
 		BytesSaved: bytesSaved,
 	}
 	if err := stream.SendAndClose(&response); err != nil {
-		r.logger.WithContext(stream.Context()).WithError(err).Warn("while closing cache upload stream")
+		r.logger.Warnf("error while closing cache upload stream: %v", err)
 		return err
 	}
 
@@ -83,12 +83,12 @@ func (r *RPC) DownloadCache(req *api.DownloadCacheRequest, stream api.CirrusCISe
 
 	file, err := r.build.Cache.Get(req.CacheKey)
 	if err != nil {
-		r.logger.WithContext(stream.Context()).WithError(err).Debugf("while getting cache blob with key %s", req.CacheKey)
+		r.logger.Debugf("error while getting cache blob with key %s: %v", req.CacheKey, err)
 		return status.Errorf(codes.NotFound, "cache blob with the specified key not found")
 	}
 	defer file.Close()
 
-	r.logger.WithContext(stream.Context()).Debugf("sending cache with key %s", req.CacheKey)
+	r.logger.Debugf("sending cache with key %s", req.CacheKey)
 
 	buf := make([]byte, sendBufSize)
 
@@ -109,7 +109,7 @@ func (r *RPC) DownloadCache(req *api.DownloadCacheRequest, stream api.CirrusCISe
 			break
 		}
 		if err != nil {
-			r.logger.WithContext(stream.Context()).WithError(err).Warnf("while sending cache chunk of size %d", n)
+			r.logger.Warnf("error while sending cache chunk of size %d: %v", n, err)
 			return err
 		}
 	}

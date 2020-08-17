@@ -7,9 +7,10 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
+	"github.com/cirruslabs/echelon"
+	"github.com/cirruslabs/echelon/renderers"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -32,7 +33,7 @@ type RPC struct {
 
 	build *build.Build
 
-	logger *logrus.Logger
+	logger *echelon.Logger
 
 	api.UnimplementedCirrusCIServiceServer
 }
@@ -55,8 +56,8 @@ func New(build *build.Build, opts ...Option) *RPC {
 
 	// Apply default options (to cover those that weren't specified)
 	if r.logger == nil {
-		r.logger = logrus.New()
-		r.logger.Out = ioutil.Discard
+		renderer := renderers.NewSimpleRenderer(ioutil.Discard, nil)
+		r.logger = echelon.NewLogger(echelon.InfoLevel, renderer)
 	}
 
 	return r
@@ -123,7 +124,7 @@ func (r *RPC) Start() {
 	go func() {
 		if err := r.server.Serve(listener); err != nil {
 			if !errors.Is(err, grpc.ErrServerStopped) {
-				r.logger.WithError(err).Error("RPC server failed")
+				r.logger.Errorf("RPC server failed: %v", err)
 			}
 		}
 		r.serverWaitGroup.Done()
@@ -177,10 +178,7 @@ func (r *RPC) ReportSingleCommand(
 		return nil, err
 	}
 
-	logEntry := r.logger.WithFields(map[string]interface{}{
-		"task":    task.Name,
-		"command": req.CommandName,
-	})
+	commandLogger := r.logger.Scoped(task.Name).Scoped(req.CommandName)
 
 	// Register whether the current command succeeded or failed
 	// so that the main loop can make the decision whether
@@ -193,11 +191,12 @@ func (r *RPC) ReportSingleCommand(
 
 	if req.Succeded {
 		command.SetStatus(commandstatus.Success)
-		logEntry.Debug("command succeeded")
+		commandLogger.Debugf("command succeeded")
 	} else {
 		command.SetStatus(commandstatus.Failure)
-		logEntry.Debug("command failed")
+		commandLogger.Debugf("command failed")
 	}
+	commandLogger.Finish(req.Succeded)
 
 	return &api.ReportSingleCommandResponse{}, nil
 }
@@ -205,6 +204,7 @@ func (r *RPC) ReportSingleCommand(
 func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 	var currentTaskName string
 	var currentCommand string
+	streamLogger := r.logger
 
 	for {
 		logEntry, err := stream.Recv()
@@ -212,7 +212,7 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			break
 		}
 		if err != nil {
-			r.logger.WithContext(stream.Context()).Warn(err)
+			streamLogger.Warnf("Error while receivieng logs: %v", err)
 			return err
 		}
 
@@ -225,29 +225,24 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			currentTaskName = task.Name
 			currentCommand = x.Key.CommandName
 
-			r.logger.WithFields(map[string]interface{}{
-				"task":    currentTaskName,
-				"command": currentCommand,
-			}).Debug("begin streaming logs")
+			streamLogger = r.logger.Scoped(currentTaskName).Scoped(currentCommand)
+			streamLogger.Debugf("begin streaming logs")
 		case *api.LogEntry_Chunk:
 			if currentTaskName == "" {
 				return status.Error(codes.PermissionDenied, "not authenticated")
 			}
 
-			r.logger.WithFields(map[string]interface{}{
-				"task":    currentTaskName,
-				"command": currentCommand,
-			}).Debugf("received log chunk of %d bytes", len(x.Chunk.Data))
+			streamLogger.Debugf("received log chunk of %d bytes", len(x.Chunk.Data))
 
 			logLines := strings.Split(string(x.Chunk.Data), "\n")
 			for _, logLine := range logLines {
-				r.logger.WithContext(stream.Context()).Info(logLine)
+				streamLogger.Infof(logLine)
 			}
 		}
 	}
 
 	if err := stream.SendAndClose(&api.UploadLogsResponse{}); err != nil {
-		r.logger.WithContext(stream.Context()).WithError(err).Warn("while closing log stream")
+		streamLogger.Warnf("Error while closing log stream: %v", err)
 		return err
 	}
 
@@ -260,7 +255,7 @@ func (r *RPC) Heartbeat(ctx context.Context, req *api.HeartbeatRequest) (*api.He
 		return nil, err
 	}
 
-	r.logger.WithField("task", task.Name).Debug("received heartbeat")
+	r.logger.Scoped(task.Name).Debugf("received heartbeat")
 
 	return &api.HeartbeatResponse{}, nil
 }
@@ -271,7 +266,7 @@ func (r *RPC) ReportAgentError(ctx context.Context, req *api.ReportAgentProblemR
 		return nil, err
 	}
 
-	r.logger.WithField("task", task.Name).Debugf("agent error: %s", req.Message)
+	r.logger.Scoped(task.Name).Debugf("agent error: %s", req.Message)
 
 	return &empty.Empty{}, nil
 }
@@ -282,7 +277,7 @@ func (r *RPC) ReportAgentWarning(ctx context.Context, req *api.ReportAgentProble
 		return nil, err
 	}
 
-	r.logger.WithField("task", task.Name).Debugf("agent warning: %s", req.Message)
+	r.logger.Scoped(task.Name).Debugf("agent warning: %s", req.Message)
 
 	return &empty.Empty{}, nil
 }
@@ -293,7 +288,7 @@ func (r *RPC) ReportAgentSignal(ctx context.Context, req *api.ReportAgentSignalR
 		return nil, err
 	}
 
-	r.logger.WithField("task", task.Name).Debugf("agent signal: %s", req.Signal)
+	r.logger.Scoped(task.Name).Debugf("agent signal: %s", req.Signal)
 
 	return &empty.Empty{}, nil
 }

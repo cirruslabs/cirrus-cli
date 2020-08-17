@@ -11,7 +11,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
-	"github.com/sirupsen/logrus"
+	"github.com/cirruslabs/echelon"
+	"github.com/cirruslabs/echelon/renderers"
 	"io/ioutil"
 )
 
@@ -22,7 +23,7 @@ type Executor struct {
 	rpc   *rpc.RPC
 
 	// Options
-	logger                   *logrus.Logger
+	logger                   *echelon.Logger
 	taskFilter               taskfilter.TaskFilter
 	userSpecifiedEnvironment map[string]string
 	dirtyMode                bool
@@ -41,8 +42,8 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 
 	// Apply default options (to cover those that weren't specified)
 	if e.logger == nil {
-		e.logger = logrus.New()
-		e.logger.Out = ioutil.Discard
+		renderer := renderers.NewSimpleRenderer(ioutil.Discard, nil)
+		e.logger = echelon.NewLogger(echelon.InfoLevel, renderer)
 	}
 
 	// Filter tasks (e.g. if a user wants to run only a specific task without dependencies)
@@ -89,6 +90,7 @@ func (e *Executor) Run(ctx context.Context) error {
 		}
 
 		e.logger.Infof("running task %s", task.String())
+		taskLogger := e.logger.Scoped(task.Name)
 
 		// Prepare task's instance
 		taskInstance := task.Instance
@@ -98,7 +100,7 @@ func (e *Executor) Run(ctx context.Context) error {
 			ServerSecret: e.rpc.ServerSecret(),
 			ClientSecret: e.rpc.ClientSecret(),
 			TaskID:       task.ID,
-			Logger:       e.logger,
+			Logger:       taskLogger,
 			DirtyMode:    e.dirtyMode,
 		}
 
@@ -125,14 +127,18 @@ func (e *Executor) Run(ctx context.Context) error {
 		switch task.Status() {
 		case taskstatus.Succeeded:
 			e.logger.Infof("task %s %s", task.String(), task.Status().String())
+			taskLogger.Finish(true)
 		case taskstatus.New:
+			taskLogger.Finish(false)
 			return fmt.Errorf("%w: instance terminated before the task %s had a chance to run", ErrBuildFailed, task.String())
 		default:
+			taskLogger.Finish(false)
 			return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
 		}
 
 		// Bail-out if the task has failed
 		if task.Status() != taskstatus.Succeeded {
+			taskLogger.Finish(false)
 			return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
 		}
 	}

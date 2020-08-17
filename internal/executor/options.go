@@ -2,12 +2,12 @@ package executor
 
 import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
-	"github.com/sirupsen/logrus"
+	"github.com/cirruslabs/echelon"
 )
 
 type Option func(*Executor)
 
-func WithLogger(logger *logrus.Logger) Option {
+func WithLogger(logger *echelon.Logger) Option {
 	return func(e *Executor) {
 		e.logger = logger
 	}

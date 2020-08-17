@@ -57,7 +57,7 @@ func TestRunTaskFiltering(t *testing.T) {
 			writer := io.MultiWriter(os.Stderr, buf)
 
 			command := commands.NewRootCmd()
-			command.SetArgs([]string{"run", example.Pattern})
+			command.SetArgs([]string{"run", "--verbose", example.Pattern})
 			command.SetOut(writer)
 			command.SetErr(writer)
 			err := command.Execute()
