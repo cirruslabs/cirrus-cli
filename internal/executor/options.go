@@ -24,3 +24,9 @@ func WithEnvironment(environment map[string]string) Option {
 		e.userSpecifiedEnvironment = environment
 	}
 }
+
+func WithDirtyMode() Option {
+	return func(e *Executor) {
+		e.dirtyMode = true
+	}
+}

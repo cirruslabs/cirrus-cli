@@ -38,7 +38,7 @@ type Volume struct {
 }
 
 // CreateWorkingVolume returns a Docker volume name with the agent and copied projectDir.
-func CreateWorkingVolume(ctx context.Context, projectDir string) (*Volume, error) {
+func CreateWorkingVolume(ctx context.Context, projectDir string, dontPopulate bool) (*Volume, error) {
 	// Create Docker client
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -64,15 +64,20 @@ func CreateWorkingVolume(ctx context.Context, projectDir string) (*Volume, error
 	// Where we will mount the project directory for further copying into a working volume
 	const projectDirMountpoint = "/project-dir"
 
-	// Create and start a helper container that will copy the agent and project directory to the working volume
+	// Create and start a helper container that will copy the agent and project directory
+	// (if not specified otherwise) into the working volume
+	copyCmd := fmt.Sprintf("cp /bin/cirrus-ci-agent %s", path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent))
+
+	if !dontPopulate {
+		copyCmd += fmt.Sprintf(" && rsync -r --filter=':- .gitignore' %s/ %s",
+			projectDirMountpoint, path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir))
+	}
+
 	containerConfig := &container.Config{
 		Image: AgentImage,
-		Cmd: []string{
-			"/bin/sh", "-c", fmt.Sprintf("rsync -r --filter=':- .gitignore' %s/ %s && cp /bin/cirrus-ci-agent %s",
-				projectDirMountpoint, path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir),
-				path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent)),
-		},
+		Cmd:   []string{"/bin/sh", "-c", copyCmd},
 	}
+
 	hostConfig := &container.HostConfig{
 		Mounts: []mount.Mount{
 			{
@@ -80,14 +85,18 @@ func CreateWorkingVolume(ctx context.Context, projectDir string) (*Volume, error
 				Source: vol.Name,
 				Target: WorkingVolumeMountpoint,
 			},
-			{
-				Type:     mount.TypeBind,
-				Source:   projectDir,
-				Target:   projectDirMountpoint,
-				ReadOnly: true,
-			},
 		},
 	}
+
+	if !dontPopulate {
+		hostConfig.Mounts = append(hostConfig.Mounts, mount.Mount{
+			Type:     mount.TypeBind,
+			Source:   projectDir,
+			Target:   projectDirMountpoint,
+			ReadOnly: true,
+		})
+	}
+
 	cont, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)

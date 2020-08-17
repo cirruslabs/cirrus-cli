@@ -50,7 +50,7 @@ func PipeStagesFromCommands(commands []*api.Command) ([]PipeStage, error) {
 }
 
 func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) error {
-	workingVolume, err := CreateWorkingVolume(ctx, config.ProjectDir)
+	workingVolume, err := CreateWorkingVolume(ctx, config.ProjectDir, config.DirtyMode)
 	if err != nil {
 		return err
 	}

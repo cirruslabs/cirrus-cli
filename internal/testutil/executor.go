@@ -31,10 +31,10 @@ func Execute(t *testing.T, dir string) error {
 	logger := logrus.New()
 	logger.Level = logrus.TraceLevel
 
-	return ExecuteWithLogger(t, dir, logger)
+	return ExecuteWithOptions(t, dir, executor.WithLogger(logger))
 }
 
-func ExecuteWithLogger(t *testing.T, dir string, logger *logrus.Logger) error {
+func ExecuteWithOptions(t *testing.T, dir string, opts ...executor.Option) error {
 	p := parser.Parser{}
 	result, err := p.ParseFromFile(filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
@@ -44,7 +44,7 @@ func ExecuteWithLogger(t *testing.T, dir string, logger *logrus.Logger) error {
 	require.Empty(t, result.Errors)
 	require.NotEmpty(t, result.Tasks)
 
-	e, err := executor.New(dir, result.Tasks, executor.WithLogger(logger))
+	e, err := executor.New(dir, result.Tasks, opts...)
 	if err != nil {
 		t.Fatal(err)
 	}

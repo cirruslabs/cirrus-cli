@@ -1,0 +1,7 @@
+container:
+  image: debian:latest
+
+task:
+  script:
+    - test ! -e file.txt
+    - touch file.txt
