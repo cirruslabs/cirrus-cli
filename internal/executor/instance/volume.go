@@ -38,6 +38,20 @@ type Volume struct {
 }
 
 // CreateWorkingVolume returns a Docker volume name with the agent and copied projectDir.
+func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Volume, error) {
+	initLogger := config.Logger.Scoped("Preparing execution environment...")
+	initLogger.Infof("Preparing volume to work with...")
+	v, err := CreateWorkingVolume(ctx, config.ProjectDir, config.DirtyMode)
+	if err != nil {
+		initLogger.Warnf("Failed to create a volume from working directory: %v", err)
+		initLogger.Finish(false)
+		return nil, err
+	}
+	initLogger.Finish(true)
+	return v, err
+}
+
+// CreateWorkingVolume returns a Docker volume name with the agent and copied projectDir.
 func CreateWorkingVolume(ctx context.Context, projectDir string, dontPopulate bool) (*Volume, error) {
 	// Create Docker client
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())

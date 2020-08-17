@@ -13,7 +13,7 @@ type ContainerInstance struct {
 }
 
 func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) error {
-	workingVolume, err := CreateWorkingVolume(ctx, config.ProjectDir, config.DirtyMode)
+	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config)
 	if err != nil {
 		return err
 	}

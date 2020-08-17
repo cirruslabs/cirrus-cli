@@ -5,9 +5,11 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
-	"github.com/sirupsen/logrus"
+	"github.com/cirruslabs/echelon"
+	"github.com/cirruslabs/echelon/renderers"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -28,8 +30,8 @@ func GetBasicContainerInstance(t *testing.T, image string) *api.Task_Instance {
 
 func Execute(t *testing.T, dir string) error {
 	// Create a logger with the maximum verbosity
-	logger := logrus.New()
-	logger.Level = logrus.TraceLevel
+	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
 
 	return ExecuteWithOptions(t, dir, executor.WithLogger(logger))
 }

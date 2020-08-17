@@ -1,10 +1,12 @@
 package rpc
 
-import "github.com/sirupsen/logrus"
+import (
+	"github.com/cirruslabs/echelon"
+)
 
 type Option func(*RPC)
 
-func WithLogger(logger *logrus.Logger) Option {
+func WithLogger(logger *echelon.Logger) Option {
 	return func(r *RPC) {
 		r.logger = logger
 	}

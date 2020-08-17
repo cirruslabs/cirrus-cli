@@ -5,7 +5,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
-	"github.com/sirupsen/logrus"
+	"github.com/cirruslabs/echelon"
+	"github.com/cirruslabs/echelon/renderers"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -73,10 +74,17 @@ func run(cmd *cobra.Command, args []string) error {
 	var executorOpts []executor.Option
 
 	// Enable logging
-	logger := logrus.New()
-	logger.Out = cmd.OutOrStderr()
+	shouldUseSimpleRenderer := verbose || os.Getenv("CI") == "true"
+	var renderer echelon.LogRendered = renderers.NewSimpleRenderer(cmd.OutOrStdout(), nil)
+	if !shouldUseSimpleRenderer {
+		interactiveRenderer := renderers.NewInteractiveRenderer(cmd.OutOrStdout(), nil)
+		go interactiveRenderer.StartDrawing()
+		defer interactiveRenderer.StopDrawing()
+		renderer = interactiveRenderer
+	}
+	logger := echelon.NewLogger(echelon.InfoLevel, renderer)
 	if verbose {
-		logger.Level = logrus.DebugLevel
+		logger = echelon.NewLogger(echelon.DebugLevel, renderer)
 	}
 	executorOpts = append(executorOpts, executor.WithLogger(logger))
 

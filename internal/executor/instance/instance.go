@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/echelon"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"io"
 	"io/ioutil"
@@ -73,7 +73,7 @@ type RunConfig struct {
 	Endpoint                   string
 	ServerSecret, ClientSecret string
 	TaskID                     int64
-	Logger                     *logrus.Logger
+	Logger                     *echelon.Logger
 	DirtyMode                  bool
 }
 
@@ -88,18 +88,13 @@ type Params struct {
 
 func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) error {
 	logger := config.Logger
-	if logger == nil {
-		logger = logrus.New()
-		logger.Out = ioutil.Discard
-	}
-
-	logger.WithContext(ctx).Debug("creating Docker client")
+	logger.Debugf("creating Docker client")
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
 	}
 
-	logger.WithContext(ctx).Debugf("pulling image %s", params.Image)
+	logger.Debugf("pulling image %s", params.Image)
 	progress, err := cli.ImagePull(ctx, params.Image, types.ImagePullOptions{})
 	if err != nil {
 		return err
@@ -109,7 +104,7 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		return err
 	}
 
-	logger.WithContext(ctx).Debugf("creating container using working volume %s", params.WorkingVolumeName)
+	logger.Debugf("creating container using working volume %s", params.WorkingVolumeName)
 	containerConfig := container.Config{
 		Image: params.Image,
 		Entrypoint: []string{
@@ -177,10 +172,10 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 
 	// Schedule all containers for removal
 	defer func() {
-		logger.WithContext(ctx).Debugf("cleaning up container %s", cont.ID)
+		logger.Debugf("cleaning up container %s", cont.ID)
 		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{Force: true})
 		if err != nil {
-			logger.WithContext(ctx).WithError(err).Warn("while removing container")
+			logger.Warnf("error while removing container: %v", err)
 		}
 
 		additionalContainersCancel()
@@ -201,16 +196,16 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		}()
 	}
 
-	logger.WithContext(ctx).Debugf("starting container %s", cont.ID)
+	logger.Debugf("starting container %s", cont.ID)
 	if err := cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{}); err != nil {
 		return err
 	}
 
-	logger.WithContext(ctx).Debugf("waiting for container %s to finish", cont.ID)
+	logger.Debugf("waiting for container %s to finish", cont.ID)
 	waitChan, errChan := cli.ContainerWait(ctx, cont.ID, container.WaitConditionNotRunning)
 	select {
 	case res := <-waitChan:
-		logger.WithContext(ctx).Debugf("container exited with %v error and exit code %d", res.Error, res.StatusCode)
+		logger.Debugf("container exited with %v error and exit code %d", res.Error, res.StatusCode)
 	case err := <-errChan:
 		return err
 	case acErr := <-additionalContainersErrChan:
@@ -222,12 +217,12 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 
 func runAdditionalContainer(
 	ctx context.Context,
-	logger *logrus.Logger,
+	logger *echelon.Logger,
 	additionalContainer *api.AdditionalContainer,
 	cli *client.Client,
 	connectToContainer string,
 ) error {
-	logger.WithContext(ctx).Debugf("pulling image %s", additionalContainer.Image)
+	logger.Debugf("pulling image %s", additionalContainer.Image)
 	progress, err := cli.ImagePull(ctx, additionalContainer.Image, types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
@@ -237,7 +232,7 @@ func runAdditionalContainer(
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
 
-	logger.WithContext(ctx).Debug("creating container")
+	logger.Debugf("creating container")
 	containerConfig := container.Config{
 		Image: additionalContainer.Image,
 		Cmd:   additionalContainer.Command,
@@ -256,10 +251,10 @@ func runAdditionalContainer(
 	}
 
 	defer func() {
-		logger.WithContext(ctx).Debugf("cleaning up container %s", cont.ID)
+		logger.Debugf("cleaning up container %s", cont.ID)
 		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{Force: true})
 		if err != nil {
-			logger.WithContext(ctx).WithError(err).Warn("while removing container")
+			logger.Warnf("Error while removing container: %v", err)
 		}
 	}()
 
@@ -272,16 +267,16 @@ func runAdditionalContainer(
 			"running in the additional container '%s' to use a different port", additionalContainer.Name)
 	}
 
-	logger.WithContext(ctx).Debugf("starting container %s", cont.ID)
+	logger.Debugf("starting container %s", cont.ID)
 	if err := cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
 
-	logger.WithContext(ctx).Debugf("waiting for container %s to finish", cont.ID)
+	logger.Debugf("waiting for container %s to finish", cont.ID)
 	waitChan, errChan := cli.ContainerWait(ctx, cont.ID, container.WaitConditionNotRunning)
 	select {
 	case res := <-waitChan:
-		logger.WithContext(ctx).Debugf("container exited with %v error and exit code %d", res.Error, res.StatusCode)
+		logger.Debugf("container exited with %v error and exit code %d", res.Error, res.StatusCode)
 	case err := <-errChan:
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
