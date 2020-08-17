@@ -11,7 +11,7 @@ import (
 func TestWorkingVolumeSmoke(t *testing.T) {
 	dir := testutil.TempDir(t)
 
-	volume, err := instance.CreateWorkingVolume(context.Background(), dir)
+	volume, err := instance.CreateWorkingVolume(context.Background(), dir, false)
 	if err != nil {
 		t.Fatal(err)
 	}

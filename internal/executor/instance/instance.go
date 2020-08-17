@@ -74,6 +74,7 @@ type RunConfig struct {
 	ServerSecret, ClientSecret string
 	TaskID                     int64
 	Logger                     *logrus.Logger
+	DirtyMode                  bool
 }
 
 type Params struct {
@@ -139,6 +140,15 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 			NanoCPUs: int64(params.CPU * nano),
 			Memory:   int64(params.Memory * mebi),
 		},
+	}
+
+	// In dirty mode we mount the project directory in read-write mode
+	if config.DirtyMode {
+		hostConfig.Mounts = append(hostConfig.Mounts, mount.Mount{
+			Type:   mount.TypeBind,
+			Source: config.ProjectDir,
+			Target: path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir),
+		})
 	}
 
 	// In case the additional containers are used, tell the agent to wait for them

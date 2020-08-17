@@ -15,6 +15,7 @@ import (
 
 var ErrRun = errors.New("run failed")
 
+var dirty bool
 var environment []string
 var runFile string
 var verbose bool
@@ -85,6 +86,11 @@ func run(cmd *cobra.Command, args []string) error {
 		executorOpts = append(executorOpts, executor.WithTaskFilter(taskFilter))
 	}
 
+	// Dirty mode
+	if dirty {
+		executorOpts = append(executorOpts, executor.WithDirtyMode())
+	}
+
 	// Environment
 	executorOpts = append(executorOpts, executor.WithEnvironment(envMap))
 
@@ -105,6 +111,8 @@ func newRunCmd() *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 	}
 
+	cmd.PersistentFlags().BoolVar(&dirty, "dirty", false, "if set the project directory will be mounted"+
+		"in read-write mode, otherwise the project directory files are copied, taking .gitignore into account")
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
 	cmd.PersistentFlags().StringVarP(&runFile, "file", "f", ".cirrus.yml", "use file as the configuration file")

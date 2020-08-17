@@ -229,7 +229,7 @@ func TestDockerPipeTermination(t *testing.T) {
 	logger.Out = writer
 
 	dir := testutil.TempDirPopulatedWith(t, "testdata/docker-pipe-fail-propagation")
-	err := testutil.ExecuteWithLogger(t, dir, logger)
+	err := testutil.ExecuteWithOptions(t, dir, executor.WithLogger(logger))
 	assert.Error(t, err)
 	assert.Contains(t, buf.String(), "failing")
 	assert.Contains(t, buf.String(), "validate")
@@ -248,9 +248,24 @@ func TestExecutionBehavior(t *testing.T) {
 	logger.Out = writer
 
 	dir := testutil.TempDirPopulatedWith(t, "testdata/execution-behavior")
-	err := testutil.ExecuteWithLogger(t, dir, logger)
+	err := testutil.ExecuteWithOptions(t, dir, executor.WithLogger(logger))
 	assert.Error(t, err)
 	assert.Contains(t, buf.String(), "should_run_because_on_failure")
 	assert.Contains(t, buf.String(), "should_run_because_always")
 	assert.NotContains(t, buf.String(), "should_not_run_because_on_success")
+}
+
+// TestDirtyMode ensures that files created in dirty mode exist on the host.
+func TestDirtyMode(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/dirty-mode")
+
+	logger := logrus.New()
+	logger.Level = logrus.TraceLevel
+
+	err := testutil.ExecuteWithOptions(t, dir, executor.WithLogger(logger), executor.WithDirtyMode())
+	assert.NoError(t, err)
+
+	// Check that the file was created
+	_, err = os.Stat(filepath.Join(dir, "file.txt"))
+	assert.NoError(t, err)
 }

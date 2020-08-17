@@ -25,6 +25,7 @@ type Executor struct {
 	logger                   *logrus.Logger
 	taskFilter               taskfilter.TaskFilter
 	userSpecifiedEnvironment map[string]string
+	dirtyMode                bool
 }
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
@@ -98,6 +99,7 @@ func (e *Executor) Run(ctx context.Context) error {
 			ClientSecret: e.rpc.ClientSecret(),
 			TaskID:       task.ID,
 			Logger:       e.logger,
+			DirtyMode:    e.dirtyMode,
 		}
 
 		// Wrap the context to enforce a timeout for this task
