@@ -259,8 +259,8 @@ func TestExecutionBehavior(t *testing.T) {
 func TestDirtyMode(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/dirty-mode")
 
-	logger := logrus.New()
-	logger.Level = logrus.TraceLevel
+	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
 
 	err := testutil.ExecuteWithOptions(t, dir, executor.WithLogger(logger), executor.WithDirtyMode())
 	assert.NoError(t, err)
