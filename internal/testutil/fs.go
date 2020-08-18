@@ -8,11 +8,12 @@ import (
 	"testing"
 )
 
-func RestoreDirLater(t *testing.T) {
+func RestoreDirLater(t *testing.T, f func()) {
 	savedDir, err := os.Getwd()
 	if err != nil {
 		t.Fatal(err)
 	}
+	f()
 	t.Cleanup(func() {
 		if err := os.Chdir(savedDir); err != nil {
 			t.Fatal(err)
@@ -47,11 +48,11 @@ func TempDir(t *testing.T) string {
 
 // TempChdir switches to a temporary per-test directory.
 func TempChdir(t *testing.T) {
-	RestoreDirLater(t)
-
-	if err := os.Chdir(TempDir(t)); err != nil {
-		t.Fatal(err)
-	}
+	RestoreDirLater(t, func() {
+		if err := os.Chdir(TempDir(t)); err != nil {
+			t.Fatal(err)
+		}
+	})
 }
 
 // TempChdirPopulatedWith creates a temporary per-test directory
@@ -69,9 +70,9 @@ func TempDirPopulatedWith(t *testing.T, sourceDir string) string {
 // TempChdirPopulatedWith creates a temporary per-test directory
 // filled with sourceDir contents and switches to it.
 func TempChdirPopulatedWith(t *testing.T, sourceDir string) {
-	RestoreDirLater(t)
-
-	if err := os.Chdir(TempDirPopulatedWith(t, sourceDir)); err != nil {
-		t.Fatal(err)
-	}
+	RestoreDirLater(t, func() {
+		if err := os.Chdir(TempDirPopulatedWith(t, sourceDir)); err != nil {
+			t.Fatal(err)
+		}
+	})
 }
