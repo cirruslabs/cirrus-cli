@@ -148,6 +148,11 @@ func (p *Parser) ParseFromFile(path string) (*Result, error) {
 		filesContents[prebuilt.Dockerfile] = string(contents)
 	}
 
+	// Short-circuit if we've found no special files
+	if len(filesContents) == 0 {
+		return result, nil
+	}
+
 	// Parse again with the file contents supplied
 	p.FilesContents = filesContents
 	return p.Parse(string(config))
