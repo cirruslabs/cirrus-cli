@@ -6,7 +6,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894
-	github.com/cirruslabs/cirrus-ci-agent v1.6.0
+	github.com/cirruslabs/cirrus-ci-agent v1.7.0
 	github.com/cirruslabs/echelon v1.1.2
 	github.com/containerd/containerd v1.3.6 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect

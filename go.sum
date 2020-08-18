@@ -23,8 +23,8 @@ github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894 h1:JLaf/iINcLyjw
 github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894/go.mod h1:sGbDF6GwGcLpkNXPUTkMRoywsNa/ol15pxFe6ERfguA=
 github.com/cespare/xxhash v1.1.0 h1:a6HrQnmkObjyL+Gs60czilIUGqrzKutQD6XZog3p+ko=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
-github.com/cirruslabs/cirrus-ci-agent v1.6.0 h1:Jvwjf16u+ZlomwmtSMI/4JijdJjrLgV9qrb8Anzarsg=
-github.com/cirruslabs/cirrus-ci-agent v1.6.0/go.mod h1:gx+B38qqOeK6MMlXYpKkuamrG/LxSpnhWx5/pMvUaAc=
+github.com/cirruslabs/cirrus-ci-agent v1.7.0 h1:YyWvlGVE3T7i9zE5Enk/bFurQjCCYSjO5fyfBOcmotg=
+github.com/cirruslabs/cirrus-ci-agent v1.7.0/go.mod h1:gx+B38qqOeK6MMlXYpKkuamrG/LxSpnhWx5/pMvUaAc=
 github.com/cirruslabs/cirrus-ci-annotations v0.0.0-20200716124710-e1adb4748203/go.mod h1:98qD7HLlBx5aNqWiCH80OTTqTTsbXT69wxnlnrnoL0E=
 github.com/cirruslabs/echelon v1.1.2 h1:715qznBkbAUyN8sYEngerDQzwpxaKE2pODhiRz5znqM=
 github.com/cirruslabs/echelon v1.1.2/go.mod h1:UhKEYRgma5rEMkrapp5VOfYln1aSoPSV/3BMd8sqG+o=

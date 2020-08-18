@@ -21,7 +21,7 @@ func TestRun(t *testing.T) {
 	}
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", ""})
+	command.SetArgs([]string{"run", "-v"})
 	err := command.Execute()
 
 	assert.Nil(t, err)
@@ -57,7 +57,7 @@ func TestRunTaskFiltering(t *testing.T) {
 			writer := io.MultiWriter(os.Stderr, buf)
 
 			command := commands.NewRootCmd()
-			command.SetArgs([]string{"run", "--verbose", example.Pattern})
+			command.SetArgs([]string{"run", "-v", example.Pattern})
 			command.SetOut(writer)
 			command.SetErr(writer)
 			err := command.Execute()
@@ -76,7 +76,7 @@ func TestRunTaskDependencyRemoval(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-task-dependency-removal")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "bar"})
+	command.SetArgs([]string{"run", "-v", "bar"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -87,7 +87,7 @@ func TestRunEnvironmentSet(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-e", "SOMEKEY=good value"})
+	command.SetArgs([]string{"run", "-v", "-e", "SOMEKEY=good value"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -104,7 +104,7 @@ func TestRunEnvironmentPassThrough(t *testing.T) {
 	}
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-e", "SOMEKEY"})
+	command.SetArgs([]string{"run", "-v", "-e", "SOMEKEY"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -116,7 +116,7 @@ func TestRunEnvironmentPrecedence(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-precedence")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-e", "SOMEKEY=good value"})
+	command.SetArgs([]string{"run", "-v", "-e", "SOMEKEY=good value"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -128,7 +128,7 @@ func TestRunEnvironmentOnlyIf(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-only-if")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-e", "PLEASE_DONT_FAIL=okay"})
+	command.SetArgs([]string{"run", "-v", "-e", "PLEASE_DONT_FAIL=okay"})
 	err := command.Execute()
 
 	require.Nil(t, err)

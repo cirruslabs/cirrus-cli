@@ -124,6 +124,12 @@ func (e *Executor) Run(ctx context.Context) error {
 			task.SetStatus(taskstatus.TimedOut)
 		}
 
+		// Handle prebuilt instance which doesn't require any tasks to be run to be considered successful
+		_, isPrebuilt := task.Instance.(*instance.PrebuiltInstance)
+		if isPrebuilt && task.Status() == taskstatus.New {
+			task.SetStatus(taskstatus.Succeeded)
+		}
+
 		switch task.Status() {
 		case taskstatus.Succeeded:
 			e.logger.Infof("task %s %s", task.String(), task.Status().String())

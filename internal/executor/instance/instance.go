@@ -63,8 +63,26 @@ func NewFromProto(instance *api.Task_Instance, commands []*api.Command) (Instanc
 			Memory: pipe.Memory,
 			Stages: stages,
 		}, nil
+	case "prebuilt_image":
+		var prebuilt api.PrebuiltImageInstance
+		if err := proto.Unmarshal(instance.Payload, &prebuilt); err != nil {
+			return nil, err
+		}
+
+		// PrebuiltImageInstance is currently missing the domain part to craft the full image name
+		// used in the follow-up tasks.
+		//
+		// However, since currently the only possible value is "gcr.io",
+		// we simply craft the image name manually using that hardcoded value.
+		image := path.Join("gcr.io", prebuilt.Repository) + ":" + prebuilt.Reference
+
+		return &PrebuiltInstance{
+			Image:      image,
+			Dockerfile: prebuilt.DockerfilePath,
+			Arguments:  prebuilt.Arguments,
+		}, nil
 	default:
-		return nil, ErrUnsupportedInstance
+		return nil, fmt.Errorf("%w: %s", ErrUnsupportedInstance, instance.Type)
 	}
 }
 
@@ -94,14 +112,28 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		return err
 	}
 
-	logger.Debugf("pulling image %s", params.Image)
-	progress, err := cli.ImagePull(ctx, params.Image, types.ImagePullOptions{})
+	// Check if the image is missing and pull it if needed
+	var needToPull bool
+
+	_, _, err = cli.ImageInspectWithRaw(ctx, params.Image)
 	if err != nil {
-		return err
+		if client.IsErrNotFound(err) {
+			needToPull = true
+		} else {
+			return err
+		}
 	}
-	_, err = io.Copy(ioutil.Discard, progress)
-	if err != nil {
-		return err
+
+	if needToPull {
+		logger.Debugf("pulling image %s", params.Image)
+		progress, err := cli.ImagePull(ctx, params.Image, types.ImagePullOptions{})
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(ioutil.Discard, progress)
+		if err != nil {
+			return err
+		}
 	}
 
 	logger.Debugf("creating container using working volume %s", params.WorkingVolumeName)
