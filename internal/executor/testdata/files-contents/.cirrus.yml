@@ -1,0 +1,5 @@
+container:
+  dockerfile: Dockerfile
+
+task:
+  script: true

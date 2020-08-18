@@ -7,17 +7,20 @@ import (
 	"fmt"
 	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 	"io/ioutil"
+	"path/filepath"
 	"time"
 )
 
 var (
-	ErrRPC = errors.New("RPC error")
+	ErrRPC           = errors.New("RPC error")
+	ErrFilesContents = errors.New("failed to retrieve files contents")
 )
 
 type Parser struct {
@@ -26,6 +29,9 @@ type Parser struct {
 
 	// Environment to take into account when expanding variables.
 	Environment map[string]string
+
+	// Paths and contents of the files that might influence the parser.
+	FilesContents map[string]string
 }
 
 const (
@@ -81,9 +87,14 @@ func (p *Parser) Parse(config string) (*Result, error) {
 		p.Environment = make(map[string]string)
 	}
 
+	if p.FilesContents == nil {
+		p.FilesContents = make(map[string]string)
+	}
+
 	request := api.ParseConfigRequest{
-		Config:      config,
-		Environment: p.Environment,
+		Config:        config,
+		Environment:   p.Environment,
+		FilesContents: p.FilesContents,
 	}
 
 	response, err := client.ParseConfig(ctx, &request)
@@ -109,5 +120,35 @@ func (p *Parser) ParseFromFile(path string) (*Result, error) {
 		return nil, err
 	}
 
+	result, err := p.Parse(string(config))
+	if err != nil || len(result.Errors) != 0 {
+		return result, err
+	}
+
+	// Get the contents of files that might influence the parser results
+	//
+	// For example, when using Dockerfile as CI environment feature[1], the unique hash of the container
+	// image is calculated from the file specified in the "dockerfile" field.
+	//
+	// [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
+	filesContents := make(map[string]string)
+	for _, task := range result.Tasks {
+		inst, err := instance.NewFromProto(task.Instance, []*api.Command{})
+		if err != nil {
+			continue
+		}
+		prebuilt, ok := inst.(*instance.PrebuiltInstance)
+		if !ok {
+			continue
+		}
+		contents, err := ioutil.ReadFile(filepath.Join(filepath.Dir(path), prebuilt.Dockerfile))
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrFilesContents, err)
+		}
+		filesContents[prebuilt.Dockerfile] = string(contents)
+	}
+
+	// Parse again with the file contents supplied
+	p.FilesContents = filesContents
 	return p.Parse(string(config))
 }

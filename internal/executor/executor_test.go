@@ -7,11 +7,14 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/stretchr/testify/assert"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -277,4 +280,65 @@ func TestPrebuiltDockerfile(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/prebuilt-dockerfile")
 	err := testutil.Execute(t, dir)
 	assert.NoError(t, err)
+}
+
+// TestFilesContents ensures that special files (like the one in "dockerfile" field of the container instance)
+// actually influence the parsing result.
+func TestFilesContents(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/files-contents")
+
+	const (
+		debianDockerfile = "FROM debian:latest\n"
+		ubuntuDockerfile = "FROM ubuntu:latest\n"
+	)
+
+	imageBefore := filesContentsSingleVariation(t, dir, debianDockerfile)
+	imageAfter := filesContentsSingleVariation(t, dir, ubuntuDockerfile)
+	assert.NotEqual(t, imageBefore, imageAfter)
+
+	imageControl := filesContentsSingleVariation(t, dir, debianDockerfile)
+	assert.Equal(t, imageBefore, imageControl)
+}
+
+func filesContentsSingleVariation(t *testing.T, dir, dockerfileContents string) string {
+	// Re-create the Dockerfile
+	dockerfilePath := filepath.Join(dir, "Dockerfile")
+
+	if err := os.Remove(dockerfilePath); err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			t.Fatal(err)
+		}
+	}
+
+	err := ioutil.WriteFile(dockerfilePath, []byte(dockerfileContents), 0600)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Re-parse the configuration
+	p := parser.Parser{}
+	result, err := p.ParseFromFile(filepath.Join(dir, ".cirrus.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Errors) != 0 {
+		t.Fatal("got parse errors when parsing a known-good configuration")
+	}
+
+	// Extract the resulting container instance's image
+	for _, task := range result.Tasks {
+		inst, err := instance.NewFromProto(task.Instance, []*api.Command{})
+		if err != nil {
+			continue
+		}
+		container, ok := inst.(*instance.ContainerInstance)
+		if !ok {
+			continue
+		}
+
+		return container.Image
+	}
+
+	t.Fatal("wasn't able to find the container instance in the parsing result")
+	return ""
 }
