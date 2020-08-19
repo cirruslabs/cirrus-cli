@@ -6,7 +6,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"math"
 	"path/filepath"
 )
 
@@ -87,15 +86,13 @@ func (b *Build) taskHasUnresolvedDependencies(task *Task) bool {
 
 func (b *Build) GetNextTask() *Task {
 	var result *Task = nil
-	var minID int64 = math.MaxInt64
 	for _, task := range b.tasks {
-		if b.taskHasUnresolvedDependencies(task) {
+		if task.Status() != taskstatus.New || b.taskHasUnresolvedDependencies(task) {
 			continue
 		}
 
-		if task.Status() == taskstatus.New && task.ID < minID {
+		if result == nil || task.ID < result.ID {
 			result = task
-			minID = task.ID
 		}
 	}
 
