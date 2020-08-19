@@ -84,16 +84,16 @@ func (b *Build) taskHasUnresolvedDependencies(task *Task) bool {
 	return false
 }
 
-func (b *Build) GetNextTask() *Task {
+func (b *Build) GetNextTask() (result *Task) {
 	for _, task := range b.tasks {
-		if b.taskHasUnresolvedDependencies(task) {
+		if task.Status() != taskstatus.New || b.taskHasUnresolvedDependencies(task) {
 			continue
 		}
 
-		if task.Status() == taskstatus.New {
-			return task
+		if result == nil || task.ID < result.ID {
+			result = task
 		}
 	}
 
-	return nil
+	return
 }
