@@ -94,5 +94,6 @@ func (b *Build) GetNextTask() (result *Task) {
 			result = task
 		}
 	}
+
 	return
 }
