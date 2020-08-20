@@ -1,6 +1,6 @@
 # Cirrus CLI
 
-[![Build Status](https://api.cirrus-ci.com/github/cirruslabs/cirrus-cli.svg)](https://cirrus-ci.com/github/cirruslabs/cirrus-cli)
+[![Build Status](https://api.cirrus-ci.com/github/cirruslabs/cirrus-cli.svg?branch=master)](https://cirrus-ci.com/github/cirruslabs/cirrus-cli)
 
 Cirrus CLI is a tool for running containerized tasks reproducibly in any environment. Run your tasks locally the same way
 they are executed in CI or on your colleague's computer. Immutability of Docker containers ensures your project will compile
