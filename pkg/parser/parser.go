@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 	"io/ioutil"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -40,6 +41,43 @@ const (
 	defaultRetries     = 3
 )
 
+var clientsMutex sync.Mutex
+var clientsCache = make(map[string]api.CirrusCIServiceClient)
+
+func getRPCClient(ctx context.Context, endpoint string) (api.CirrusCIServiceClient, error) {
+	clientsMutex.Lock()
+	defer clientsMutex.Unlock()
+	if cachedClient, ok := clientsCache[endpoint]; ok {
+		return cachedClient, nil
+	}
+
+	// Setup Cirrus CI RPC connection
+	certPool, _ := gocertifi.CACerts()
+	tlsCredentials := credentials.NewTLS(&tls.Config{
+		MinVersion: tls.VersionTLS13,
+		RootCAs:    certPool,
+	})
+	conn, err := grpc.DialContext(
+		ctx,
+		endpoint,
+		grpc.WithBlock(),
+		grpc.WithTransportCredentials(tlsCredentials),
+		grpc.WithUnaryInterceptor(
+			grpcretry.UnaryClientInterceptor(
+				grpcretry.WithMax(defaultRetries),
+			),
+		),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%w: failed to dial with '%v'", ErrRPC, err)
+	}
+
+	// Send config for parsing by the Cirrus CI RPC and retrieve results
+	client := api.NewCirrusCIServiceClient(conn)
+	clientsCache[endpoint] = client
+	return client, nil
+}
+
 type Result struct {
 	Errors []string
 	Tasks  []*api.Task
@@ -57,31 +95,10 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	// Create a context to enforce the defaultTimeout
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-
-	// Setup Cirrus CI RPC connection
-	certPool, _ := gocertifi.CACerts()
-	tlsCredentials := credentials.NewTLS(&tls.Config{
-		MinVersion: tls.VersionTLS13,
-		RootCAs:    certPool,
-	})
-	conn, err := grpc.DialContext(
-		ctx,
-		p.rpcEndpoint(),
-		grpc.WithBlock(),
-		grpc.WithTransportCredentials(tlsCredentials),
-		grpc.WithUnaryInterceptor(
-			grpcretry.UnaryClientInterceptor(
-				grpcretry.WithMax(defaultRetries),
-			),
-		),
-	)
+	client, err := getRPCClient(ctx, p.rpcEndpoint())
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to dial with '%v'", ErrRPC, err)
+		return nil, err
 	}
-	defer conn.Close()
-
-	// Send config for parsing by the Cirrus CI RPC and retrieve results
-	client := api.NewCirrusCIServiceClient(conn)
 
 	if p.Environment == nil {
 		p.Environment = make(map[string]string)
