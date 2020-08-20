@@ -14,12 +14,14 @@ task:
 
 docker_builder:
   name: Test
+  env:
+    GRPC_GO_LOG_SEVERITY_LEVEL: debug
+    GRPC_GO_LOG_VERBOSITY_LEVEL: 99
+    HOME: /root
   test_script:
     - wget --no-verbose -O - https://golang.org/dl/go1.14.6.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
-    - go test ./...
-  env:
-    HOME: /root
+    - go test -v ./...
 
 task:
   name: Release
