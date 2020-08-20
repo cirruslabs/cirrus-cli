@@ -15,7 +15,7 @@ task:
 docker_builder:
   name: Test
   env:
-    GRPC_GO_LOG_SEVERITY_LEVEL: debug
+    GRPC_GO_LOG_SEVERITY_LEVEL: info
     GRPC_GO_LOG_VERBOSITY_LEVEL: 99
     HOME: /root
   test_script:
