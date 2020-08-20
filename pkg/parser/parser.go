@@ -44,6 +44,19 @@ const (
 var clientsMutex sync.Mutex
 var clientsCache = make(map[string]api.CirrusCIServiceClient)
 
+type Result struct {
+	Errors []string
+	Tasks  []*api.Task
+}
+
+func (p *Parser) rpcEndpoint() string {
+	if p.RPCEndpoint == "" {
+		return DefaultRPCEndpoint
+	}
+
+	return p.RPCEndpoint
+}
+
 func getRPCClient(ctx context.Context, endpoint string) (api.CirrusCIServiceClient, error) {
 	clientsMutex.Lock()
 	defer clientsMutex.Unlock()
@@ -76,19 +89,6 @@ func getRPCClient(ctx context.Context, endpoint string) (api.CirrusCIServiceClie
 	client := api.NewCirrusCIServiceClient(conn)
 	clientsCache[endpoint] = client
 	return client, nil
-}
-
-type Result struct {
-	Errors []string
-	Tasks  []*api.Task
-}
-
-func (p *Parser) rpcEndpoint() string {
-	if p.RPCEndpoint == "" {
-		return DefaultRPCEndpoint
-	}
-
-	return p.RPCEndpoint
 }
 
 func (p *Parser) Parse(config string) (*Result, error) {
