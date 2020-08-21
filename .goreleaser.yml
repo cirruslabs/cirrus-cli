@@ -16,4 +16,4 @@ builds:
       - amd64
 
 archives:
-  - format: zip
+  - format: binary
