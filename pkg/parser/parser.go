@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 	"io/ioutil"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -40,6 +41,9 @@ const (
 	defaultRetries     = 3
 )
 
+var clientsMutex sync.Mutex
+var clientsCache = make(map[string]api.CirrusCIServiceClient)
+
 type Result struct {
 	Errors []string
 	Tasks  []*api.Task
@@ -53,10 +57,12 @@ func (p *Parser) rpcEndpoint() string {
 	return p.RPCEndpoint
 }
 
-func (p *Parser) Parse(config string) (*Result, error) {
-	// Create a context to enforce the defaultTimeout
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
-	defer cancel()
+func getRPCClient(ctx context.Context, endpoint string) (api.CirrusCIServiceClient, error) {
+	clientsMutex.Lock()
+	defer clientsMutex.Unlock()
+	if cachedClient, ok := clientsCache[endpoint]; ok {
+		return cachedClient, nil
+	}
 
 	// Setup Cirrus CI RPC connection
 	certPool, _ := gocertifi.CACerts()
@@ -66,7 +72,7 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	})
 	conn, err := grpc.DialContext(
 		ctx,
-		p.rpcEndpoint(),
+		endpoint,
 		grpc.WithBlock(),
 		grpc.WithTransportCredentials(tlsCredentials),
 		grpc.WithUnaryInterceptor(
@@ -78,10 +84,21 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to dial with '%v'", ErrRPC, err)
 	}
-	defer conn.Close()
 
 	// Send config for parsing by the Cirrus CI RPC and retrieve results
 	client := api.NewCirrusCIServiceClient(conn)
+	clientsCache[endpoint] = client
+	return client, nil
+}
+
+func (p *Parser) Parse(config string) (*Result, error) {
+	// Create a context to enforce the defaultTimeout
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+	client, err := getRPCClient(ctx, p.rpcEndpoint())
+	if err != nil {
+		return nil, err
+	}
 
 	if p.Environment == nil {
 		p.Environment = make(map[string]string)
