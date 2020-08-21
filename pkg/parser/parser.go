@@ -36,7 +36,7 @@ type Parser struct {
 
 const (
 	DefaultRPCEndpoint = "grpc.cirrus-ci.com:443"
-	defaultTimeout     = time.Second * 5
+	defaultTimeout     = time.Second * 15
 	defaultRetries     = 3
 )
 
