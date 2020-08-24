@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -18,7 +17,6 @@ var ErrRun = errors.New("run failed")
 
 var dirty bool
 var environment []string
-var runFile string
 var verbose bool
 
 // envArgsToMap parses and expands environment arguments like "A=B" (set operation)
@@ -59,7 +57,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Parse
 	p := parser.Parser{Environment: envMap}
-	result, err := p.ParseFromFile(runFile)
+	result, err := p.ParseFromFile(".cirrus.yml")
 	if err != nil {
 		return err
 	}
@@ -103,7 +101,7 @@ func run(cmd *cobra.Command, args []string) error {
 	executorOpts = append(executorOpts, executor.WithEnvironment(envMap))
 
 	// Run
-	e, err := executor.New(filepath.Dir(runFile), result.Tasks, executorOpts...)
+	e, err := executor.New(".", result.Tasks, executorOpts...)
 	if err != nil {
 		return err
 	}
@@ -123,7 +121,6 @@ func newRunCmd() *cobra.Command {
 		"in read-write mode, otherwise the project directory files are copied, taking .gitignore into account")
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
-	cmd.PersistentFlags().StringVarP(&runFile, "file", "f", ".cirrus.yml", "use file as the configuration file")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 
 	return cmd
