@@ -5,9 +5,9 @@ task:
   container:
     image: golangci/golangci-lint:latest
   name: Lint
-  script: golangci-lint run -v --out-format json > golangci.json
+  lint_script: golangci-lint run -v --out-format json > golangci.json
   always:
-    artifacts:
+    report_artifacts:
       path: golangci.json
       type: text/json
       format: golangci
