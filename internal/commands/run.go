@@ -1,13 +1,17 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -49,15 +53,53 @@ func envArgsToMap(arguments []string) map[string]string {
 	return result
 }
 
+func readYAMLConfig() (string, error) {
+	yamlConfig, err := ioutil.ReadFile(".cirrus.yml")
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	return string(yamlConfig), nil
+}
+
+func readStarlarkConfig(ctx context.Context) (string, error) {
+	starlarkSource, err := ioutil.ReadFile(".cirrus.star")
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(".")))
+	return lrk.Main(ctx, string(starlarkSource))
+}
+
 func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
 	envMap := envArgsToMap(environment)
 
+	// Retrieve configurations and merge them
+	yamlConfig, err := readYAMLConfig()
+	if err != nil {
+		return err
+	}
+
+	starlarkConfig, err := readStarlarkConfig(cmd.Context())
+	if err != nil {
+		return err
+	}
+
+	mergedYAML := yamlConfig + "\n" + starlarkConfig
+
 	// Parse
 	p := parser.Parser{Environment: envMap}
-	result, err := p.ParseFromFile(".cirrus.yml")
+	result, err := p.Parse(mergedYAML)
 	if err != nil {
 		return err
 	}

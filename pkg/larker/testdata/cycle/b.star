@@ -1,0 +1,1 @@
+load("a.star", "a")

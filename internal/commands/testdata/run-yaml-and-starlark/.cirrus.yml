@@ -1,0 +1,5 @@
+container:
+  image: debian:latest
+
+task:
+  from_yaml_script: true
