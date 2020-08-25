@@ -28,6 +28,7 @@ func New(opts ...Option) *Larker {
 	}
 
 	// weird global init by Starlark
+	// we need floats at least for configuring CPUs for containers
 	resolve.AllowFloat = true
 
 	// Apply options
