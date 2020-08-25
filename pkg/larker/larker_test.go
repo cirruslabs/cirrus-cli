@@ -18,7 +18,7 @@ func TestSimpleTask(t *testing.T) {
 	validateExpected(t, "testdata/simple-task")
 }
 
-// TestSugarCoatedTask ensures that .cirrus.star is able to use global functions for task generation.
+// TestSugarCoatedTask ensures that .cirrus.star is able to use imported functions for task generation.
 func TestSugarCoatedTask(t *testing.T) {
 	validateExpected(t, "testdata/sugar-coated-task")
 }
