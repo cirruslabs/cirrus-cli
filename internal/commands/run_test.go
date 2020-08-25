@@ -133,3 +133,24 @@ func TestRunEnvironmentOnlyIf(t *testing.T) {
 
 	require.Nil(t, err)
 }
+
+// TestRunYAMLAndStarlarkMerged ensures that CLI merges multiple configurations.
+func TestRunYAMLAndStarlarkMerged(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-yaml-and-starlark")
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-v"})
+	command.SetOut(writer)
+	command.SetErr(writer)
+	err := command.Execute()
+
+	require.Nil(t, err)
+	// nolint:misspell // https://github.com/cirruslabs/echelon/pull/7
+	assert.Contains(t, buf.String(), "'from_yaml' succeded")
+	// nolint:misspell // https://github.com/cirruslabs/echelon/pull/7
+	assert.Contains(t, buf.String(), "'from_starlark' succeded")
+}

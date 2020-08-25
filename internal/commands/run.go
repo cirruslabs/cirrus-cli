@@ -1,16 +1,19 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -18,7 +21,6 @@ var ErrRun = errors.New("run failed")
 
 var dirty bool
 var environment []string
-var runFile string
 var verbose bool
 
 // envArgsToMap parses and expands environment arguments like "A=B" (set operation)
@@ -51,15 +53,53 @@ func envArgsToMap(arguments []string) map[string]string {
 	return result
 }
 
+func readYAMLConfig() (string, error) {
+	yamlConfig, err := ioutil.ReadFile(".cirrus.yml")
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	return string(yamlConfig), nil
+}
+
+func readStarlarkConfig(ctx context.Context) (string, error) {
+	starlarkSource, err := ioutil.ReadFile(".cirrus.star")
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(".")))
+	return lrk.Main(ctx, string(starlarkSource))
+}
+
 func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
 	envMap := envArgsToMap(environment)
 
+	// Retrieve configurations and merge them
+	yamlConfig, err := readYAMLConfig()
+	if err != nil {
+		return err
+	}
+
+	starlarkConfig, err := readStarlarkConfig(cmd.Context())
+	if err != nil {
+		return err
+	}
+
+	mergedYAML := yamlConfig + "\n" + starlarkConfig
+
 	// Parse
 	p := parser.Parser{Environment: envMap}
-	result, err := p.ParseFromFile(runFile)
+	result, err := p.Parse(mergedYAML)
 	if err != nil {
 		return err
 	}
@@ -103,7 +143,7 @@ func run(cmd *cobra.Command, args []string) error {
 	executorOpts = append(executorOpts, executor.WithEnvironment(envMap))
 
 	// Run
-	e, err := executor.New(filepath.Dir(runFile), result.Tasks, executorOpts...)
+	e, err := executor.New(".", result.Tasks, executorOpts...)
 	if err != nil {
 		return err
 	}
@@ -123,7 +163,6 @@ func newRunCmd() *cobra.Command {
 		"in read-write mode, otherwise the project directory files are copied, taking .gitignore into account")
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
-	cmd.PersistentFlags().StringVarP(&runFile, "file", "f", ".cirrus.yml", "use file as the configuration file")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 
 	return cmd
