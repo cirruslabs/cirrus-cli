@@ -5,7 +5,7 @@ task:
   container:
     image: golangci/golangci-lint:latest
     cpu: 1
-    memory: 512Mb
+    memory: 512
   lint_script:
     - echo $STARLARK
     - golangci-lint run -v --out-format json > golangci.json

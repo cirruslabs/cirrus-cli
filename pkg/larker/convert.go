@@ -18,7 +18,7 @@ func convertList(l *starlark.List) (result []interface{}) {
 		case *starlark.Dict:
 			result = append(result, convertDict(value))
 		default:
-			result = append(result, value)
+			result = append(result, convertPrimitive(value))
 		}
 	}
 
@@ -39,11 +39,21 @@ func convertDict(d *starlark.Dict) yaml.MapSlice {
 		case *starlark.Dict:
 			sliceItem = yaml.MapItem{Key: key, Value: convertDict(value)}
 		default:
-			sliceItem = yaml.MapItem{Key: key, Value: value}
+			sliceItem = yaml.MapItem{Key: key, Value: convertPrimitive(value)}
 		}
 
 		slice = append(slice, sliceItem)
 	}
 
 	return slice
+}
+
+func convertPrimitive(value starlark.Value) interface{} {
+	switch typedValue := value.(type) {
+	case starlark.Int:
+		res, _ := typedValue.Int64()
+		return res
+	default:
+		return typedValue
+	}
 }

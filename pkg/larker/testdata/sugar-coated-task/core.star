@@ -35,7 +35,7 @@ def container(image="", dockerfile="", cpu=2.0, memory=4096):
     if dockerfile != "":
         result['dockerfile'] = dockerfile
     result['cpu'] = cpu
-    result['memory'] = str(memory) + "Mb"
+    result['memory'] = memory
     return {
         'container': result
     }
