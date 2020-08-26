@@ -5,7 +5,7 @@ def main(ctx):
                 "image": "debian:latest",
             },
             "script": [
-                "true",
+                "printenv",
             ],
         },
     ]

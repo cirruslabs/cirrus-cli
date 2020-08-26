@@ -3,11 +3,9 @@ package larker_test
 import (
 	"context"
 	"errors"
-	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"path/filepath"
@@ -15,10 +13,18 @@ import (
 	"time"
 )
 
-// TestSimpleTask ensures that .cirrus.star is able to generate the simplest possible configuration
-// that gets executed without any problems.
+// TestSimpleTask ensures that .cirrus.star is able to generate the simplest possible configuration.
 func TestSimpleTask(t *testing.T) {
-	dir := testutil.TempDirPopulatedWith(t, "testdata/simple-task")
+	validateExpected(t, "testdata/simple-task")
+}
+
+// TestSugarCoatedTask ensures that .cirrus.star is able to use imported functions for task generation.
+func TestSugarCoatedTask(t *testing.T) {
+	validateExpected(t, "testdata/sugar-coated-task")
+}
+
+func validateExpected(t *testing.T, testDir string) {
+	dir := testutil.TempDirPopulatedWith(t, testDir)
 
 	// Read the source code
 	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
@@ -27,30 +33,18 @@ func TestSimpleTask(t *testing.T) {
 	}
 
 	// Run the source code to produce a YAML configuration
-	lrk := larker.New()
+	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(dir)))
 	configuration, err := lrk.Main(context.Background(), string(source))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Parse YAML
-	p := parser.Parser{}
-	result, err := p.Parse(configuration)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(result.Errors) != 0 {
-		t.Fatal(result.Errors[0])
-	}
-
-	e, err := executor.New(dir, result.Tasks)
+	expectedConfiguration, err := ioutil.ReadFile(filepath.Join(dir, "expected.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := e.Run(context.Background()); err != nil {
-		t.Fatal(err)
-	}
+	assert.YAMLEq(t, string(expectedConfiguration), configuration)
 }
 
 // TestLoadFileSystemLocal ensures that modules can be loaded from the local file system.

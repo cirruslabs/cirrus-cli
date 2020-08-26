@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v2"
 )
@@ -25,6 +26,10 @@ func New(opts ...Option) *Larker {
 	lrk := &Larker{
 		fs: fs.NewDummyFileSystem(),
 	}
+
+	// weird global init by Starlark
+	// we need floats at least for configuring CPUs for containers
+	resolve.AllowFloat = true
 
 	// Apply options
 	for _, opt := range opts {
