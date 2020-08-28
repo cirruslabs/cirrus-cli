@@ -18,6 +18,19 @@ docker_builder:
   env:
     HOME: /root
 
+
+task:
+  name: Release (Dry Run)
+  only_if: $CIRRUS_PR != ''
+  depends_on:
+    - Lint
+    - Test
+  container:
+    image: goreleaser/goreleaser:latest
+  release_script: goreleaser build --snapshot
+  binaries_artifacts:
+    path: "dist/cirrus_*/cirrus*"
+
 task:
   name: Release
   only_if: $CIRRUS_TAG != ''
