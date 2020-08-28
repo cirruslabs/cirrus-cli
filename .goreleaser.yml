@@ -17,3 +17,4 @@ builds:
 
 archives:
   - format: binary
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
