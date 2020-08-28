@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"errors"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
@@ -121,6 +122,8 @@ func run(cmd *cobra.Command, args []string) error {
 		go interactiveRenderer.StartDrawing()
 		defer interactiveRenderer.StopDrawing()
 		renderer = interactiveRenderer
+	} else if os.Getenv("TRAVIS") == "true" {
+		renderer = logs.NewTravisCILogsRenderer(renderer)
 	}
 	logger := echelon.NewLogger(echelon.InfoLevel, renderer)
 	if verbose {
