@@ -5,7 +5,7 @@ import (
 )
 
 func NewTravisCILogsRenderer(renderer echelon.LogRendered) echelon.LogRendered {
-	return &FordableLogsRenderer{
+	return &FoldableLogsRenderer{
 		delegate:          renderer,
 		startFoldTemplate: "travis_fold:start:%s",
 		endFoldTemplate:   "travis_fold:end:%s",

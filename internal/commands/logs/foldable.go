@@ -4,34 +4,32 @@ import (
 	"github.com/cirruslabs/echelon"
 )
 
-type FordableLogsRenderer struct {
+// Foldable log renderer prints start and end messages when a scope is started and finished respectevly
+type FoldableLogsRenderer struct {
 	delegate          echelon.LogRendered
 	startFoldTemplate string
 	endFoldTemplate   string
 }
 
-func (r FordableLogsRenderer) RenderScopeStarted(entry *echelon.LogScopeStarted) {
-	scopes := entry.GetScopes()
-	scopesCount := len(scopes)
-	if scopesCount > 0 {
-		lastScope := scopes[scopesCount-1]
-		startFoldingMessage := echelon.NewLogEntryMessage(scopes, echelon.InfoLevel, r.startFoldTemplate, lastScope)
-		r.delegate.RenderMessage(startFoldingMessage)
-	}
+func (r FoldableLogsRenderer) RenderScopeStarted(entry *echelon.LogScopeStarted) {
+	r.printFoldMessage(entry.GetScopes(), r.startFoldTemplate)
 	r.delegate.RenderScopeStarted(entry)
 }
 
-func (r FordableLogsRenderer) RenderScopeFinished(entry *echelon.LogScopeFinished) {
+func (r FoldableLogsRenderer) RenderScopeFinished(entry *echelon.LogScopeFinished) {
 	r.delegate.RenderScopeFinished(entry)
-	scopes := entry.GetScopes()
+	r.printFoldMessage(entry.GetScopes(), r.endFoldTemplate)
+}
+
+func (r FoldableLogsRenderer) RenderMessage(entry *echelon.LogEntryMessage) {
+	r.delegate.RenderMessage(entry)
+}
+
+func (r FoldableLogsRenderer) printFoldMessage(scopes []string, template string) {
 	scopesCount := len(scopes)
 	if scopesCount > 0 {
 		lastScope := scopes[scopesCount-1]
-		endFoldingMessage := echelon.NewLogEntryMessage(scopes, echelon.InfoLevel, r.endFoldTemplate, lastScope)
-		r.delegate.RenderMessage(endFoldingMessage)
+		foldingMessage := echelon.NewLogEntryMessage(scopes, echelon.InfoLevel, template, lastScope)
+		r.delegate.RenderMessage(foldingMessage)
 	}
-}
-
-func (r FordableLogsRenderer) RenderMessage(entry *echelon.LogEntryMessage) {
-	r.delegate.RenderMessage(entry)
 }
