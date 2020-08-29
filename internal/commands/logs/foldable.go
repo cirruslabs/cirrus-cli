@@ -2,17 +2,20 @@ package logs
 
 import (
 	"github.com/cirruslabs/echelon"
+	"github.com/cirruslabs/echelon/renderers"
 )
 
 // Foldable log renderer prints start and end messages when a scope is started and finished respectevly
 type FoldableLogsRenderer struct {
-	delegate          echelon.LogRendered
+	delegate          *renderers.SimpleRenderer
 	startFoldTemplate string
 	endFoldTemplate   string
 }
 
 func (r FoldableLogsRenderer) RenderScopeStarted(entry *echelon.LogScopeStarted) {
-	r.printFoldMessage(entry.GetScopes(), r.startFoldTemplate)
+	if !r.delegate.ScopeHasStarted(entry.GetScopes()) {
+		r.printFoldMessage(entry.GetScopes(), r.startFoldTemplate)
+	}
 	r.delegate.RenderScopeStarted(entry)
 }
 

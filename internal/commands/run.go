@@ -116,14 +116,15 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Enable logging
 	shouldUseSimpleRenderer := verbose || os.Getenv("CI") == "true"
-	var renderer echelon.LogRendered = renderers.NewSimpleRenderer(cmd.OutOrStdout(), nil)
+	var verboseRenderer = renderers.NewSimpleRenderer(cmd.OutOrStdout(), nil)
+	var renderer echelon.LogRendered = verboseRenderer
 	if !shouldUseSimpleRenderer {
-		interactiveRenderer := renderers.NewInteractiveRenderer(cmd.OutOrStdout(), nil)
+		interactiveRenderer := renderers.NewInteractiveRenderer(os.Stdout, nil)
 		go interactiveRenderer.StartDrawing()
 		defer interactiveRenderer.StopDrawing()
 		renderer = interactiveRenderer
 	} else if os.Getenv("TRAVIS") == "true" {
-		renderer = logs.NewTravisCILogsRenderer(renderer)
+		renderer = logs.NewTravisCILogsRenderer(verboseRenderer)
 	}
 	logger := echelon.NewLogger(echelon.InfoLevel, renderer)
 	if verbose {

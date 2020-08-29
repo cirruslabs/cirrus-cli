@@ -7,7 +7,7 @@ require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894
 	github.com/cirruslabs/cirrus-ci-agent v1.7.0
-	github.com/cirruslabs/echelon v1.2.0
+	github.com/cirruslabs/echelon v1.2.1
 	github.com/containerd/containerd v1.4.0 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible
