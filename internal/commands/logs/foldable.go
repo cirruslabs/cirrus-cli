@@ -5,7 +5,7 @@ import (
 	"github.com/cirruslabs/echelon/renderers"
 )
 
-// Foldable log renderer prints start and end messages when a scope is started and finished respectevly
+// Foldable log renderer prints start and end messages when a scope is started and finished respectively.
 type FoldableLogsRenderer struct {
 	delegate          *renderers.SimpleRenderer
 	startFoldTemplate string
