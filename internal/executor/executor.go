@@ -89,7 +89,7 @@ func (e *Executor) Run(ctx context.Context) error {
 			break
 		}
 
-		e.logger.Infof("running task %s", task.String())
+		e.logger.Debugf("running task %s", task.String())
 		taskLogger := e.logger.Scoped(task.Name)
 
 		// Prepare task's instance
@@ -132,7 +132,7 @@ func (e *Executor) Run(ctx context.Context) error {
 
 		switch task.Status() {
 		case taskstatus.Succeeded:
-			e.logger.Infof("task %s %s", task.String(), task.Status().String())
+			e.logger.Debugf("task %s %s", task.String(), task.Status().String())
 			taskLogger.Finish(true)
 		case taskstatus.New:
 			taskLogger.Finish(false)
