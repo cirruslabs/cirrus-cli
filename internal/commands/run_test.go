@@ -149,8 +149,6 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 	err := command.Execute()
 
 	require.Nil(t, err)
-	// nolint:misspell // https://github.com/cirruslabs/echelon/pull/7
-	assert.Contains(t, buf.String(), "'from_yaml' succeded")
-	// nolint:misspell // https://github.com/cirruslabs/echelon/pull/7
-	assert.Contains(t, buf.String(), "'from_starlark' succeded")
+	assert.Contains(t, buf.String(), "'from_yaml' succeeded")
+	assert.Contains(t, buf.String(), "'from_starlark' succeeded")
 }
