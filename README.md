@@ -74,6 +74,7 @@ cirrus validate
 
 <details>
  <summary>What is the relationship between Cirrus CI and Cirrus CLI?</summary>
+ 
  Cirrus CI was [released in the early 2018](https://medium.com/cirruslabs/introducing-cirrus-ci-a75cd1f49af0) with an idea
  to bring some innovation to CI space. A lot of things have changed in CI-as-a-service space since then but Cirrus CI
  pioneered many ideas in CI-as-a-service space including per-second billing and support for Linux, Windows and macOS all together.
