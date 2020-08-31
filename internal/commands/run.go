@@ -115,16 +115,19 @@ func run(cmd *cobra.Command, args []string) error {
 	var executorOpts []executor.Option
 
 	// Enable logging
-	shouldUseSimpleRenderer := verbose || os.Getenv("CI") == "true"
+	shouldUseSimpleRenderer := verbose || envVariableIsTrue("CI")
 	var verboseRenderer = renderers.NewSimpleRenderer(cmd.OutOrStdout(), nil)
 	var renderer echelon.LogRendered = verboseRenderer
-	if !shouldUseSimpleRenderer {
+	switch {
+	case !shouldUseSimpleRenderer:
 		interactiveRenderer := renderers.NewInteractiveRenderer(os.Stdout, nil)
 		go interactiveRenderer.StartDrawing()
 		defer interactiveRenderer.StopDrawing()
 		renderer = interactiveRenderer
-	} else if os.Getenv("TRAVIS") == "true" {
+	case envVariableIsTrue("TRAVIS"):
 		renderer = logs.NewTravisCILogsRenderer(verboseRenderer)
+	case envVariableIsTrue("GITHUB_ACTIONS"):
+		renderer = logs.NewGithubActionsLogsRenderer(verboseRenderer)
 	}
 	logger := echelon.NewLogger(echelon.InfoLevel, renderer)
 	if verbose {
@@ -153,6 +156,10 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	return e.Run(cmd.Context())
+}
+
+func envVariableIsTrue(name string) bool {
+	return os.Getenv(name) == "true"
 }
 
 func newRunCmd() *cobra.Command {
