@@ -31,8 +31,6 @@ github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMn
 github.com/cirruslabs/cirrus-ci-agent v1.7.0 h1:YyWvlGVE3T7i9zE5Enk/bFurQjCCYSjO5fyfBOcmotg=
 github.com/cirruslabs/cirrus-ci-agent v1.7.0/go.mod h1:gx+B38qqOeK6MMlXYpKkuamrG/LxSpnhWx5/pMvUaAc=
 github.com/cirruslabs/cirrus-ci-annotations v0.0.0-20200716124710-e1adb4748203/go.mod h1:98qD7HLlBx5aNqWiCH80OTTqTTsbXT69wxnlnrnoL0E=
-github.com/cirruslabs/echelon v1.2.1 h1:ErAXXbcJb88rHipBQFa/FNnVedQX3rdeknbiU2j+w3Y=
-github.com/cirruslabs/echelon v1.2.1/go.mod h1:1jFBACMy3tzodXyTtNNLN9bw6UUU7Xpq9tYMRydehtY=
 github.com/cirruslabs/echelon v1.2.2 h1:MDxR6E+ARV/EIpf8uDrkSrwPQmxeRgAhMRGVnWgTx1Y=
 github.com/cirruslabs/echelon v1.2.2/go.mod h1:1jFBACMy3tzodXyTtNNLN9bw6UUU7Xpq9tYMRydehtY=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
