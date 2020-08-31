@@ -88,7 +88,8 @@ cirrus validate
  With Cirrus CLI we are trying to solve the "vendor lock" problem by popularizing Cirrus configuration format and building
  community around it. Stay tuned for the upcoming option to use [Starlark templates instead of YAML](https://github.com/cirruslabs/cirrus-cli/issues/53)!
  
- Think of Cirrus CLI as a local executor of Cirrus Tasks on a single machine only in Docker containers and Cirrus CI as
- a remote executor of the same Cirrus Tasks in containers and VMs using a [variety of supported compute services](https://cirrus-ci.org/guide/supported-computing-services/)
- or using a [managed infrastructure with per-second billing](https://cirrus-ci.org/pricing/#compute-credits).
+ Think of Cirrus CLI as an executor of Cirrus Tasks on a single machine only in Docker containers for simple CI scenarious.
+ And Cirrus CI as an option for more specific cases where Cirrus Tasks can be executed in containers and VMs using 
+ a [variety of supported compute services](https://cirrus-ci.org/guide/supported-computing-services/) or
+ using a [managed infrastructure with per-second billing](https://cirrus-ci.org/pricing/#compute-credits).
 </details>
