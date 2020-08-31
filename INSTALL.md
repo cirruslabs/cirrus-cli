@@ -2,10 +2,11 @@
 
 * [Prebuilt Binary](#prebuilt-binary)
 * [Golang](#golang)
-* [Github Actions](#github-actions)
-* [Travis CI](#travis-ci)
-* [Circle CI](#circle-ci)
-* [Cirrus CI](#cirrus-ci)
+* CI integrations
+  * [Github Actions](#github-actions)
+  * [Travis CI](#travis-ci)
+  * [Circle CI](#circle-ci)
+  * [Cirrus CI](#cirrus-ci)
 
 ## Prebuilt Binary
 

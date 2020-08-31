@@ -10,12 +10,13 @@ years from now regardless what versions of packages you'll have locally.
 
 ## Installation
 
-* [Prebuilt Binary](intallation.md#prebuilt-binary)
-* [Golang](intallation.md#golang)
-* [Github Actions](intallation.md#github-actions)
-* [Travis CI](intallation.md#travis-ci)
-* [Circle CI](intallation.md#circle-ci)
-* [Cirrus CI](intallation.md#cirrus-ci)
+* [Prebuilt Binary](INSTALL.md#prebuilt-binary)
+* [Golang](INSTALL.md#golang)
+* CI integrations
+  * [Github Actions](INSTALL.md#github-actions)
+  * [Travis CI](INSTALL.md#travis-ci)
+  * [Circle CI](INSTALL.md#circle-ci)
+  * [Cirrus CI](INSTALL.md#cirrus-ci)
 
 ## Usage
 
