@@ -85,8 +85,8 @@ cirrus validate
  Another feedback we heard from users was that it's hard to migrate from one CI to another. There is a need to rewrite CI configurations
  from one format into another that basically still locks into another vendor.
  
- With Cirrus CLI we are trying to solve the "vendor lock" problem by popularizing Cirrus configuration format and building
- community around it. Stay tuned for the upcoming option to use [Starlark templates instead of YAML](https://github.com/cirruslabs/cirrus-cli/issues/53)!
+ And now in 2020 with Cirrus CLI we are trying to solve the "vendor lock" problem by popularizing Cirrus configuration format
+ and building community around it. Stay tuned for the upcoming option to use [Starlark templates instead of YAML](https://github.com/cirruslabs/cirrus-cli/issues/53)!
  
  Think of Cirrus CLI as an executor of Cirrus Tasks on a single machine only in Docker containers for simple CI scenarious.
  And Cirrus CI as an option for more specific cases where Cirrus Tasks can be executed in containers and VMs using 
