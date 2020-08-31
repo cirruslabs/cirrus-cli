@@ -65,7 +65,11 @@ Here is an example of `.travis.yml` configuration file that runs Cirrus Tasks us
 ```yaml
 services:
   - docker
-  
+
+cache:
+  directories:
+    - /home/travis/.cache/cirrus/
+
 before_install:
   - curl -L -o cirrus https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-amd64
   - sudo mv cirrus /usr/local/bin/cirrus
