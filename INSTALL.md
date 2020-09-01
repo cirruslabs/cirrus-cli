@@ -50,13 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Install Cirrus CLI
-      run: |
-        curl -L -o cirrus https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-amd64
-        sudo mv cirrus /usr/local/bin/cirrus
-        sudo chmod +x /usr/local/bin/cirrus
-    - name: Cirrus Run
-      run: cirrus run
+    - uses: cirruslabs/cirrus-action@v1
 ```
 
 ## Travis CI
