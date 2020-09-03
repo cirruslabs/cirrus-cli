@@ -1,0 +1,12 @@
+temperature_task:
+  matrix:
+    - degrees: true
+    - celsius: true
+  stray: sibling
+---
+temperature_task:
+  degrees: true
+  stray: sibling
+temperature_task:
+  celsius: true
+  stray: sibling

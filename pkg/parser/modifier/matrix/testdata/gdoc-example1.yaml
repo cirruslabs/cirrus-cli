@@ -1,0 +1,9 @@
+foo_task:
+  matrix:
+    name: bar
+    name: baz
+---
+foo_task:
+  name: bar
+foo_task:
+  name: baz

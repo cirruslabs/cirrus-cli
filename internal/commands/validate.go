@@ -16,7 +16,7 @@ func validate(cmd *cobra.Command, args []string) error {
 	cmd.SilenceUsage = true
 
 	// Parse
-	p := parser.Parser{}
+	p := parser.New()
 	result, err := p.ParseFromFile(validateFile)
 	if err != nil {
 		return err

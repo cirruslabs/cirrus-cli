@@ -316,7 +316,7 @@ func filesContentsSingleVariation(t *testing.T, dir, dockerfileContents string) 
 	}
 
 	// Re-parse the configuration
-	p := parser.Parser{}
+	p := parser.New()
 	result, err := p.ParseFromFile(filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
 		t.Fatal(err)

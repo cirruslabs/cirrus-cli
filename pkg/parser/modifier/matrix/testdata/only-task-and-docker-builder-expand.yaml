@@ -1,0 +1,31 @@
+env:
+  matrix:
+    A: B
+    C: D
+
+megatask:
+  matrix:
+    - color: black
+    - color: white
+
+uberdocker_builder:
+  matrix:
+    - temperature: hot
+    - temperature: cold
+---
+env:
+  matrix:
+    A: B
+    C: D
+
+megatask:
+  color: black
+
+megatask:
+  color: white
+
+uberdocker_builder:
+  temperature: hot
+
+uberdocker_builder:
+  temperature: cold

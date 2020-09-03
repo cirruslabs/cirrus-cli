@@ -1,0 +1,23 @@
+task:
+  matrix:
+    image:
+      matrix:
+        a: b
+        c: d
+    image:
+      matrix:
+        e: f
+        g: h
+---
+task:
+  image:
+    a: b
+task:
+  image:
+    c: d
+task:
+  image:
+    e: f
+task:
+  image:
+    g: h

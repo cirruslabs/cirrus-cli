@@ -1,0 +1,9 @@
+color_task:
+  matrix:
+    green: 80
+    black: 90
+---
+color_task:
+  green: 80
+color_task:
+  black: 90

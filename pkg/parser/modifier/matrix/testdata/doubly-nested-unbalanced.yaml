@@ -1,0 +1,20 @@
+environment_task:
+  language:
+    matrix:
+      - name: go
+        matrix:
+          - version: "1.10"
+          - version: "1.14"
+      - name: python
+---
+environment_task:
+  language:
+    name: go
+    version: "1.10"
+environment_task:
+  language:
+    name: go
+    version: "1.14"
+environment_task:
+  language:
+    name: python

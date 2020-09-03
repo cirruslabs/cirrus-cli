@@ -37,7 +37,7 @@ func Execute(t *testing.T, dir string) error {
 }
 
 func ExecuteWithOptions(t *testing.T, dir string, opts ...executor.Option) error {
-	p := parser.Parser{}
+	p := parser.New()
 	result, err := p.ParseFromFile(filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
 		t.Fatal(err)

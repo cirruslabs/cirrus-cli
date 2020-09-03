@@ -118,7 +118,7 @@ func run(cmd *cobra.Command, args []string) error {
 	mergedYAML := yamlConfig + "\n" + starlarkConfig
 
 	// Parse
-	p := parser.Parser{Environment: envMap}
+	p := parser.New(parser.WithEnvironment(envMap))
 	result, err := p.Parse(mergedYAML)
 	if err != nil {
 		return err
