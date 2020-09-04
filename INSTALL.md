@@ -1,5 +1,6 @@
 # Index
 
+* [Homebrew](#homebrew)
 * [Prebuilt Binary](#prebuilt-binary)
 * [Golang](#golang)
 * CI integrations
@@ -7,6 +8,12 @@
   * [Travis CI](#travis-ci)
   * [Circle CI](#circle-ci)
   * [Cirrus CI](#cirrus-ci)
+
+## Homebrew
+
+```bash
+brew install cirruslabs/cli/cirrus
+```
 
 ## Prebuilt Binary
 
