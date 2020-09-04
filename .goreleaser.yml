@@ -20,7 +20,7 @@ archives:
     name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
 
 brews:
-  -
+  - name: cirrus
     tap:
       owner: cirruslabs
       name: homebrew-cli
