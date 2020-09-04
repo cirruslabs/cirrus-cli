@@ -27,4 +27,3 @@ brews:
     caveats: See the Github repository for more information
     homepage: https://github.com/cirruslabs/cirrus-cli
     description: CLI for running Cirrus Tasks locally in Docker containers
-
