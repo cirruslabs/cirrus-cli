@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
@@ -11,6 +12,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
+	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
@@ -79,9 +81,26 @@ func readStarlarkConfig(ctx context.Context) (string, error) {
 	return lrk.Main(ctx, string(starlarkSource))
 }
 
+func preflightCheck() error {
+	// Since all of the instance types we currently support use Docker,
+	// check that it's actually installed as early as possible
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("%w: cannot connect to Docker daemon: %v, make sure the Docker is installed",
+			ErrRun, err)
+	}
+	defer cli.Close()
+
+	return nil
+}
+
 func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
+
+	if err := preflightCheck(); err != nil {
+		return err
+	}
 
 	envMap := envArgsToMap(environment)
 
