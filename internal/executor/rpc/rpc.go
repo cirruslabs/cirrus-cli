@@ -116,7 +116,7 @@ func (r *RPC) Start() {
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
-		panic(fmt.Sprintf("failed to start RPC service on %s:0 with '%v'. do ", host, err))
+		panic(fmt.Sprintf("failed to start RPC service on %s: %v", address, err))
 	}
 	r.listener = listener
 
