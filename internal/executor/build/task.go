@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -17,6 +18,7 @@ type Task struct {
 	ID          int64
 	RequiredIDs []int64
 	Name        string
+	Labels      []string
 	status      taskstatus.Status
 	Instance    instance.Instance
 	Timeout     time.Duration
@@ -65,6 +67,7 @@ func NewFromProto(protoTask *api.Task) (*Task, error) {
 		ID:          protoTask.LocalGroupId,
 		RequiredIDs: protoTask.RequiredGroups,
 		Name:        protoTask.Name,
+		Labels:      protoTask.Metadata.UniqueLabels,
 		Instance:    inst,
 		Timeout:     timeout,
 		Environment: protoTask.Environment,
@@ -80,6 +83,13 @@ func (task *Task) ProtoCommands() []*api.Command {
 	}
 
 	return result
+}
+
+func (task *Task) UniqueName() string {
+	if len(task.Labels) == 0 {
+		return task.Name
+	}
+	return task.Name + " " + strings.Join(task.Labels, " ")
 }
 
 func (task *Task) FailedAtLeastOnce() bool {
