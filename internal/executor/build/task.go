@@ -63,11 +63,15 @@ func NewFromProto(protoTask *api.Task) (*Task, error) {
 		}
 	}
 
+	var uniqueLabels []string
+	if protoTask.Metadata != nil {
+		uniqueLabels = protoTask.Metadata.UniqueLabels
+	}
 	return &Task{
 		ID:          protoTask.LocalGroupId,
 		RequiredIDs: protoTask.RequiredGroups,
 		Name:        protoTask.Name,
-		Labels:      protoTask.Metadata.UniqueLabels,
+		Labels:      uniqueLabels,
 		Instance:    inst,
 		Timeout:     timeout,
 		Environment: protoTask.Environment,
