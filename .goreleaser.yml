@@ -19,3 +19,12 @@ builds:
 archives:
   - format: binary
     name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+
+brews:
+  - name: cirrus
+    tap:
+      owner: cirruslabs
+      name: homebrew-cli
+    caveats: See the Github repository for more information
+    homepage: https://github.com/cirruslabs/cirrus-cli
+    description: CLI for running Cirrus Tasks locally in Docker containers

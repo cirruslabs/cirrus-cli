@@ -10,6 +10,7 @@ years from now regardless what versions of packages you'll have locally.
 
 ## Installation
 
+* [Homebrew](INSTALL.md#homebrew)
 * [Prebuilt Binary](INSTALL.md#prebuilt-binary)
 * [Golang](INSTALL.md#golang)
 * CI integrations
