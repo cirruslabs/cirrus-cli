@@ -79,7 +79,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 }
 
 func (e *Executor) Run(ctx context.Context) error {
-	if err := e.rpc.Start(); err != nil {
+	if err := e.rpc.Start(ctx); err != nil {
 		return err
 	}
 	defer e.rpc.Stop()

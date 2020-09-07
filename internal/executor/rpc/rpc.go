@@ -9,6 +9,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -73,13 +75,35 @@ func (r *RPC) ClientSecret() string {
 	return r.clientSecret
 }
 
-func getDockerBridgeIP() string {
+func getDockerBridgeInterface(ctx context.Context) string {
+	const assumedBridgeInterface = "bridge0"
+
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return assumedBridgeInterface
+	}
+	defer cli.Close()
+
+	network, err := cli.NetworkInspect(ctx, "bridge", types.NetworkInspectOptions{})
+	if err != nil {
+		return assumedBridgeInterface
+	}
+
+	bridgeInterface, ok := network.Options["com.docker.network.bridge.name"]
+	if !ok {
+		return assumedBridgeInterface
+	}
+
+	return bridgeInterface
+}
+
+func getDockerBridgeIP(ctx context.Context) string {
 	// Worst-case scenario, but still better than nothing
 	// since there's still a chance this would work with
 	// a Docker daemon configured by default.
 	const assumedBridgeIP = "172.17.0.1"
 
-	iface, err := net.InterfaceByName("bridge0")
+	iface, err := net.InterfaceByName(getDockerBridgeInterface(ctx))
 	if err != nil {
 		return assumedBridgeIP
 	}
@@ -102,7 +126,7 @@ func getDockerBridgeIP() string {
 }
 
 // Start creates the listener and starts RPC server in a separate goroutine.
-func (r *RPC) Start() error {
+func (r *RPC) Start(ctx context.Context) error {
 	host := "localhost"
 
 	// Work around host.docker.internal missing on Linux
@@ -111,7 +135,7 @@ func (r *RPC) Start() error {
 	// * https://github.com/docker/for-linux/issues/264
 	// * https://github.com/moby/moby/pull/40007
 	if runtime.GOOS == "linux" {
-		host = getDockerBridgeIP()
+		host = getDockerBridgeIP(ctx)
 	}
 
 	address := fmt.Sprintf("%s:0", host)
