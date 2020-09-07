@@ -101,7 +101,6 @@ func NewTask(env map[string]string) *Task {
 
 	scriptNameable := nameable.NewRegexNameable("(.*)script")
 	task.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
-		fmt.Println("adding script")
 		scripts, err := node.GetSliceOfNonEmptyStrings()
 		if err != nil {
 			return err
@@ -119,7 +118,6 @@ func NewTask(env map[string]string) *Task {
 
 	cacheNameable := nameable.NewRegexNameable("(.*)cache")
 	task.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
-		fmt.Println("adding cache")
 		cache := NewCacheCommand()
 		if err := cache.Parse(node); err != nil {
 			return err
