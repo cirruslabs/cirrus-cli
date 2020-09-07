@@ -113,7 +113,7 @@ func getDockerBridgeIP(ctx context.Context) string {
 		return assumedBridgeIP
 	}
 
-	if len(addrs) > 1 {
+	if len(addrs) != 0 {
 		ip, _, err := net.ParseCIDR(addrs[0].String())
 		if err != nil {
 			return assumedBridgeIP
