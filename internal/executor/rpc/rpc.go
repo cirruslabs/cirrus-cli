@@ -9,6 +9,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -24,6 +26,8 @@ import (
 	// Registers a gzip compressor needed for streaming logs from the agent.
 	_ "google.golang.org/grpc/encoding/gzip"
 )
+
+var ErrRPCFailed = errors.New("RPC server failed")
 
 type RPC struct {
 	listener                   net.Listener
@@ -71,13 +75,35 @@ func (r *RPC) ClientSecret() string {
 	return r.clientSecret
 }
 
-func getDockerBridgeIP() string {
+func getDockerBridgeInterface(ctx context.Context) string {
+	const assumedBridgeInterface = "docker0"
+
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return assumedBridgeInterface
+	}
+	defer cli.Close()
+
+	network, err := cli.NetworkInspect(ctx, "bridge", types.NetworkInspectOptions{})
+	if err != nil {
+		return assumedBridgeInterface
+	}
+
+	bridgeInterface, ok := network.Options["com.docker.network.bridge.name"]
+	if !ok {
+		return assumedBridgeInterface
+	}
+
+	return bridgeInterface
+}
+
+func getDockerBridgeIP(ctx context.Context) string {
 	// Worst-case scenario, but still better than nothing
 	// since there's still a chance this would work with
 	// a Docker daemon configured by default.
 	const assumedBridgeIP = "172.17.0.1"
 
-	iface, err := net.InterfaceByName("bridge0")
+	iface, err := net.InterfaceByName(getDockerBridgeInterface(ctx))
 	if err != nil {
 		return assumedBridgeIP
 	}
@@ -100,7 +126,7 @@ func getDockerBridgeIP() string {
 }
 
 // Start creates the listener and starts RPC server in a separate goroutine.
-func (r *RPC) Start() {
+func (r *RPC) Start(ctx context.Context) error {
 	host := "localhost"
 
 	// Work around host.docker.internal missing on Linux
@@ -109,14 +135,14 @@ func (r *RPC) Start() {
 	// * https://github.com/docker/for-linux/issues/264
 	// * https://github.com/moby/moby/pull/40007
 	if runtime.GOOS == "linux" {
-		host = getDockerBridgeIP()
+		host = getDockerBridgeIP(ctx)
 	}
 
 	address := fmt.Sprintf("%s:0", host)
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
-		panic(fmt.Sprintf("failed to start RPC service on %s: %v", address, err))
+		return fmt.Errorf("%w: failed to start RPC service on %s: %v", ErrRPCFailed, address, err)
 	}
 	r.listener = listener
 
@@ -131,6 +157,8 @@ func (r *RPC) Start() {
 	}()
 
 	r.logger.Debugf("gRPC server is listening at %s", r.Endpoint())
+
+	return nil
 }
 
 // Endpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag.
