@@ -21,7 +21,7 @@ var (
 
 const (
 	// AgentImage is the image we'll use to create a working volume.
-	AgentImage = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v1.6.0"
+	AgentImage = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v1.8.0"
 
 	// Where working volume is mounted to.
 	WorkingVolumeMountpoint = "/tmp/cirrus-ci"
