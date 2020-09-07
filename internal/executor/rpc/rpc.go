@@ -25,6 +25,8 @@ import (
 	_ "google.golang.org/grpc/encoding/gzip"
 )
 
+var ErrRPCFailed = errors.New("RPC server failed")
+
 type RPC struct {
 	listener                   net.Listener
 	server                     *grpc.Server
@@ -100,7 +102,7 @@ func getDockerBridgeIP() string {
 }
 
 // Start creates the listener and starts RPC server in a separate goroutine.
-func (r *RPC) Start() {
+func (r *RPC) Start() error {
 	host := "localhost"
 
 	// Work around host.docker.internal missing on Linux
@@ -116,7 +118,7 @@ func (r *RPC) Start() {
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
-		panic(fmt.Sprintf("failed to start RPC service on %s: %v", address, err))
+		return fmt.Errorf("%w: failed to start RPC service on %s: %v", ErrRPCFailed, address, err)
 	}
 	r.listener = listener
 
@@ -131,6 +133,8 @@ func (r *RPC) Start() {
 	}()
 
 	r.logger.Debugf("gRPC server is listening at %s", r.Endpoint())
+
+	return nil
 }
 
 // Endpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag.
