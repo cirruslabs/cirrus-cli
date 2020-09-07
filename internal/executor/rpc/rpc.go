@@ -76,7 +76,7 @@ func (r *RPC) ClientSecret() string {
 }
 
 func getDockerBridgeInterface(ctx context.Context) string {
-	const assumedBridgeInterface = "bridge0"
+	const assumedBridgeInterface = "docker0"
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
