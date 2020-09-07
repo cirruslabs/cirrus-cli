@@ -206,19 +206,12 @@ func (p *Parser) ParseFromFile(path string) (*Result, error) {
 	return p.Parse(string(config))
 }
 
-func (p *Parser) ContentHash() string {
-	digest := sha256.New()
+func (p *Parser) ContentHash(filePath string) string {
+	// Note that this will be empty if we don't know anything about the file,
+	// so we'll return SHA256(""), but that's OK since the purpose is caching
+	fileContents := p.filesContents[filePath]
 
-	for key, value := range p.filesContents {
-		if _, err := digest.Write([]byte(key)); err != nil {
-			panic(err)
-		}
-		if _, err := digest.Write([]byte(value)); err != nil {
-			panic(err)
-		}
-	}
-
-	return fmt.Sprintf("%x", digest.Sum(nil))
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(fileContents)))
 }
 
 func (p *Parser) NextTaskID() int64 {
@@ -291,8 +284,10 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 			continue
 		}
 
+		dockerfileHash := p.ContentHash(taskContainer.DockerfilePath)
+
 		prebuiltInstance := &api.PrebuiltImageInstance{
-			Repository:     fmt.Sprintf("cirrus-ci-community/%s", p.ContentHash()),
+			Repository:     fmt.Sprintf("cirrus-ci-community/%s", dockerfileHash),
 			Reference:      "latest",
 			Platform:       taskContainer.Platform,
 			DockerfilePath: taskContainer.DockerfilePath,
@@ -327,7 +322,7 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 
 		task.RequiredGroups = append(task.RequiredGroups, newTask.LocalGroupId)
 
-		taskContainer.Image = fmt.Sprintf("gcr.io/cirrus-ci-community/%s:latest", p.ContentHash())
+		taskContainer.Image = fmt.Sprintf("gcr.io/cirrus-ci-community/%s:latest", dockerfileHash)
 		instanceBytes, err = proto.Marshal(&taskContainer)
 		if err != nil {
 			return nil, err
