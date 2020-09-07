@@ -27,8 +27,8 @@ type CollectibleField struct {
 	schema  *schema.Schema
 }
 
-func (collectible *DefaultParser) Parse(node *node.Node) error {
-	for _, field := range collectible.collectibleFields {
+func (parser *DefaultParser) Parse(node *node.Node) error {
+	for _, field := range parser.collectibleFields {
 		children := node.DeepFindChild(field.name)
 
 		if children == nil {
@@ -43,7 +43,7 @@ func (collectible *DefaultParser) Parse(node *node.Node) error {
 	// Check required fields
 
 	for _, child := range node.Children {
-		for _, field := range collectible.fields {
+		for _, field := range parser.fields {
 			if field.name.Matches(child.Name) {
 				if err := field.onFound(child); err != nil {
 					return err
@@ -55,6 +55,6 @@ func (collectible *DefaultParser) Parse(node *node.Node) error {
 	return nil
 }
 
-func (collectible *DefaultParser) Schema() *schema.Schema {
+func (parser *DefaultParser) Schema() *schema.Schema {
 	return &schema.Schema{}
 }

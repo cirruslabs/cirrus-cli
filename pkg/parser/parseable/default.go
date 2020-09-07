@@ -10,16 +10,16 @@ type DefaultParser struct {
 	collectibleFields []CollectibleField
 }
 
-func (collectible *DefaultParser) OptionalField(name nameable.Nameable, schema *schema.Schema, onFound nodeFunc) {
-	collectible.fields = append(collectible.fields, Field{
+func (parser *DefaultParser) OptionalField(name nameable.Nameable, schema *schema.Schema, onFound nodeFunc) {
+	parser.fields = append(parser.fields, Field{
 		name:    name,
 		onFound: onFound,
 		schema:  schema,
 	})
 }
 
-func (collectible *DefaultParser) RequiredField(nameable nameable.Nameable, schema *schema.Schema, onFound nodeFunc) {
-	collectible.fields = append(collectible.fields, Field{
+func (parser *DefaultParser) RequiredField(nameable nameable.Nameable, schema *schema.Schema, onFound nodeFunc) {
+	parser.fields = append(parser.fields, Field{
 		name:     nameable,
 		required: true,
 		onFound:  onFound,
@@ -27,8 +27,8 @@ func (collectible *DefaultParser) RequiredField(nameable nameable.Nameable, sche
 	})
 }
 
-func (collectible *DefaultParser) CollectibleField(name string, schema *schema.Schema, onFound nodeFunc) {
-	collectible.collectibleFields = append(collectible.collectibleFields, CollectibleField{
+func (parser *DefaultParser) CollectibleField(name string, schema *schema.Schema, onFound nodeFunc) {
+	parser.collectibleFields = append(parser.collectibleFields, CollectibleField{
 		name:    name,
 		onFound: onFound,
 		schema:  schema,
