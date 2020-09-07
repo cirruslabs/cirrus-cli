@@ -6,6 +6,15 @@ import (
 	"os"
 )
 
+func (node *Node) GetStringValue() (string, error) {
+	valueNode, ok := node.Value.(*ScalarValue)
+	if !ok {
+		return "", fmt.Errorf("%w: not a scalar value", parsererror.ErrParsing)
+	}
+
+	return valueNode.Value, nil
+}
+
 func (node *Node) GetExpandedStringValue(env map[string]string) (string, error) {
 	valueNode, ok := node.Value.(*ScalarValue)
 	if !ok {

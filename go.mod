@@ -2,9 +2,12 @@ module github.com/cirruslabs/cirrus-cli
 
 go 1.14
 
+replace github.com/PaesslerAG/gval => github.com/edigaryev/gval v1.0.2-0.20200907180935-109d9b43618a
+
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
+	github.com/PaesslerAG/gval v0.0.0-00010101000000-000000000000
 	github.com/cirruslabs/cirrus-ci-agent v1.7.0
 	github.com/cirruslabs/echelon v1.2.2
 	github.com/containerd/containerd v1.4.0 // indirect

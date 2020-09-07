@@ -20,11 +20,15 @@ type Task struct {
 	alias     string
 	dependsOn []string
 
+	enabled bool
+
 	parseable.DefaultParser
 }
 
 func NewTask(env map[string]string) *Task {
-	task := &Task{}
+	task := &Task{
+		enabled: true,
+	}
 
 	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		taskEnv, err := node.GetStringMapping()
@@ -152,6 +156,15 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
+	task.OptionalField(nameable.NewSimpleNameable("only_if"), schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := handleOnlyIf(node, environment.Merge(env, task.proto.Environment))
+		if err != nil {
+			return err
+		}
+		task.enabled = evaluation
+		return nil
+	})
+
 	return task
 }
 
@@ -211,4 +224,8 @@ func (task *Task) SetDependsOnIDs(ids []int64) { task.proto.RequiredGroups = ids
 
 func (task *Task) Proto() interface{} {
 	return &task.proto
+}
+
+func (task *Task) Enabled() bool {
+	return task.enabled
 }

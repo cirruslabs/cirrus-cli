@@ -3,6 +3,7 @@ package task
 import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -22,11 +23,15 @@ type DockerPipe struct {
 	alias     string
 	dependsOn []string
 
+	enabled bool
+
 	parseable.DefaultParser
 }
 
 func NewDockerPipe(env map[string]string) *DockerPipe {
-	pipe := &DockerPipe{}
+	pipe := &DockerPipe{
+		enabled: true,
+	}
 
 	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		environment, err := node.GetStringMapping()
@@ -58,6 +63,15 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 			pipe.proto.Commands = append(pipe.proto.Commands, step.protoCommands...)
 		}
 
+		return nil
+	})
+
+	pipe.OptionalField(nameable.NewSimpleNameable("only_if"), schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := handleOnlyIf(node, environment.Merge(env, pipe.proto.Environment))
+		if err != nil {
+			return err
+		}
+		pipe.enabled = evaluation
 		return nil
 	})
 
@@ -111,4 +125,8 @@ func (pipe *DockerPipe) SetDependsOnIDs(ids []int64) { pipe.proto.RequiredGroups
 
 func (pipe *DockerPipe) Proto() interface{} {
 	return &pipe.proto
+}
+
+func (pipe *DockerPipe) Enabled() bool {
+	return pipe.enabled
 }

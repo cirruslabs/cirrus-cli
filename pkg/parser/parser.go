@@ -116,6 +116,11 @@ func (p *Parser) Parse(config string) (*Result, error) {
 				}
 			}
 
+			// Filtering based on "only_if" expression evaluation
+			if !taskLike.Enabled() {
+				continue
+			}
+
 			tasks = append(tasks, taskLike)
 		}
 	}
