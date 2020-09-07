@@ -1,6 +1,6 @@
 package node
 
-func (node *Node) DeepFindChildren(name string) *Node {
+func (node *Node) DeepFindChild(name string) *Node {
 	var fulfilledAtLeastOnce bool
 	var virtualNode Node
 
@@ -14,7 +14,7 @@ func (node *Node) DeepFindChildren(name string) *Node {
 
 				for _, subChild := range child.Children {
 					// Append fields from child that we don't have
-					if !virtualNode.HasChildren(subChild.Name) {
+					if !virtualNode.HasChild(subChild.Name) {
 						virtualNode.Children = append(virtualNode.Children, subChild)
 					}
 				}
@@ -30,7 +30,7 @@ func (node *Node) DeepFindChildren(name string) *Node {
 	return &virtualNode
 }
 
-func (node *Node) HasChildren(name string) bool {
+func (node *Node) HasChild(name string) bool {
 	for _, child := range node.Children {
 		if child.Name == name {
 			return true

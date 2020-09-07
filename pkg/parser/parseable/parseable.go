@@ -29,7 +29,7 @@ type CollectibleField struct {
 
 func (collectible *DefaultParser) Parse(node *node.Node) error {
 	for _, field := range collectible.collectibleFields {
-		children := node.DeepFindChildren(field.name)
+		children := node.DeepFindChild(field.name)
 
 		if children == nil {
 			continue

@@ -26,7 +26,7 @@ func TestDeepFindChildren(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	virtualNode := tree.Children[1].DeepFindChildren("env")
+	virtualNode := tree.Children[1].DeepFindChild("env")
 	assert.Equal(t, "KEY2", virtualNode.Children[0].Name)
 	assert.Equal(t, "KEY1", virtualNode.Children[1].Name)
 }
@@ -41,5 +41,5 @@ func TestHasChildren(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.True(t, tree.HasChildren("some name"))
+	assert.True(t, tree.HasChild("some name"))
 }
