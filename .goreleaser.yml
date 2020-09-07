@@ -17,11 +17,16 @@ builds:
       - amd64
 
 archives:
-  - format: binary
+  - id: binary
+    format: binary
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+  - id: regular
     name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
 
 brews:
   - name: cirrus
+    ids:
+      - regular
     tap:
       owner: cirruslabs
       name: homebrew-cli
