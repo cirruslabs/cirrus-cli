@@ -15,14 +15,14 @@ type CacheCommand struct {
 	parseable.DefaultParser
 }
 
-func NewCacheCommand() *CacheCommand {
+func NewCacheCommand(mergedEnv map[string]string) *CacheCommand {
 	cache := &CacheCommand{
 		proto:       &api.Command{},
 		instruction: &api.CacheInstruction{},
 	}
 
 	cache.RequiredField(nameable.NewSimpleNameable("folder"), schema.TodoSchema, func(node *node.Node) error {
-		folder, err := node.GetExpandedStringValue(nil)
+		folder, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}

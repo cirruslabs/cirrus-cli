@@ -19,11 +19,11 @@ type PipeStep struct {
 	parseable.DefaultParser
 }
 
-func NewPipeStep() *PipeStep {
+func NewPipeStep(mergedEnv map[string]string) *PipeStep {
 	step := &PipeStep{}
 
 	step.RequiredField(nameable.NewSimpleNameable("image"), schema.TodoSchema, func(node *node.Node) error {
-		image, err := node.GetExpandedStringValue(nil)
+		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}

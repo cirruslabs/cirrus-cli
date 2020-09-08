@@ -5,13 +5,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 )
 
-func handleOnlyIf(node *node.Node, env map[string]string) (bool, error) {
+func handleOnlyIf(node *node.Node, mergedEnv map[string]string) (bool, error) {
 	onlyIfExpression, err := node.GetStringValue()
 	if err != nil {
 		return false, err
 	}
 
-	evaluation, err := boolevator.Eval(onlyIfExpression, env, nil)
+	evaluation, err := boolevator.Eval(onlyIfExpression, mergedEnv, nil)
 	if err != nil {
 		return false, err
 	}

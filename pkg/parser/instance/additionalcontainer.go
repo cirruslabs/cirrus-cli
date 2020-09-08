@@ -15,7 +15,7 @@ type AdditionalContainer struct {
 	parseable.DefaultParser
 }
 
-func NewAdditionalContainer() *AdditionalContainer {
+func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 	ac := &AdditionalContainer{
 		proto: &api.AdditionalContainer{},
 	}
@@ -38,7 +38,7 @@ func NewAdditionalContainer() *AdditionalContainer {
 	})
 
 	ac.OptionalField(nameable.NewSimpleNameable("image"), schema.TodoSchema, func(node *node.Node) error {
-		image, err := node.GetExpandedStringValue(nil)
+		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
@@ -47,7 +47,7 @@ func NewAdditionalContainer() *AdditionalContainer {
 	})
 
 	ac.OptionalField(nameable.NewSimpleNameable("port"), schema.TodoSchema, func(node *node.Node) error {
-		port, err := node.GetExpandedStringValue(nil)
+		port, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}

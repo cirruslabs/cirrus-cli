@@ -56,7 +56,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 		}
 
 		for _, child := range stepsNode.Children {
-			step := NewPipeStep()
+			step := NewPipeStep(environment.Merge(pipe.proto.Environment, env))
 			if err := step.Parse(child); err != nil {
 				return err
 			}
@@ -67,7 +67,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 	})
 
 	pipe.OptionalField(nameable.NewSimpleNameable("only_if"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleOnlyIf(node, environment.Merge(env, pipe.proto.Environment))
+		evaluation, err := handleOnlyIf(node, environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}

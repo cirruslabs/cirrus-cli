@@ -47,26 +47,28 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
-	task.CollectibleField("container", instance.NewCommunityContainer().Schema(), func(node *node.Node) error {
-		inst := instance.NewCommunityContainer()
-		protoInstance, err := inst.Parse(node)
-		if err != nil {
-			return err
-		}
-		task.proto.Instance = protoInstance
+	task.CollectibleField("container",
+		instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env)).Schema(),
+		func(node *node.Node) error {
+			inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env))
+			protoInstance, err := inst.Parse(node)
+			if err != nil {
+				return err
+			}
+			task.proto.Instance = protoInstance
 
-		// Retrieve the platform to update the base environment
-		var taskContainer api.ContainerInstance
-		if err := proto.Unmarshal(protoInstance.Payload, &taskContainer); err != nil {
-			return err
-		}
-		env["CIRRUS_OS"] = strings.ToLower(taskContainer.Platform.String())
+			// Retrieve the platform to update the base environment
+			var taskContainer api.ContainerInstance
+			if err := proto.Unmarshal(protoInstance.Payload, &taskContainer); err != nil {
+				return err
+			}
+			env["CIRRUS_OS"] = strings.ToLower(taskContainer.Platform.String())
 
-		return nil
-	})
+			return nil
+		})
 
 	task.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
-		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment))
+		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}
@@ -74,7 +76,7 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 	task.OptionalField(nameable.NewSimpleNameable("alias"), schema.TodoSchema, func(node *node.Node) error {
-		name, err := node.GetExpandedStringValue(make(map[string]string))
+		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}
@@ -118,7 +120,7 @@ func NewTask(env map[string]string) *Task {
 
 	cacheNameable := nameable.NewRegexNameable("(.*)cache")
 	task.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
-		cache := NewCacheCommand()
+		cache := NewCacheCommand(environment.Merge(task.proto.Environment, env))
 		if err := cache.Parse(node); err != nil {
 			return err
 		}
@@ -155,7 +157,7 @@ func NewTask(env map[string]string) *Task {
 	})
 
 	task.OptionalField(nameable.NewSimpleNameable("only_if"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleOnlyIf(node, environment.Merge(env, task.proto.Environment))
+		evaluation, err := handleOnlyIf(node, environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}

@@ -16,13 +16,13 @@ type Container struct {
 	parseable.DefaultParser
 }
 
-func NewCommunityContainer() *Container {
+func NewCommunityContainer(mergedEnv map[string]string) *Container {
 	container := &Container{
 		proto: &api.ContainerInstance{},
 	}
 
 	container.OptionalField(nameable.NewSimpleNameable("image"), schema.TodoSchema, func(node *node.Node) error {
-		image, err := node.GetExpandedStringValue(nil)
+		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
@@ -31,7 +31,7 @@ func NewCommunityContainer() *Container {
 	})
 
 	container.OptionalField(nameable.NewSimpleNameable("dockerfile"), schema.TodoSchema, func(node *node.Node) error {
-		dockerfile, err := node.GetExpandedStringValue(nil)
+		dockerfile, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
@@ -50,7 +50,7 @@ func NewCommunityContainer() *Container {
 	})
 
 	container.OptionalField(nameable.NewSimpleNameable("cpu"), schema.TodoSchema, func(node *node.Node) error {
-		cpu, err := node.GetExpandedStringValue(nil)
+		cpu, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
@@ -63,7 +63,7 @@ func NewCommunityContainer() *Container {
 	})
 
 	container.OptionalField(nameable.NewSimpleNameable("memory"), schema.TodoSchema, func(node *node.Node) error {
-		memory, err := node.GetExpandedStringValue(nil)
+		memory, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func NewCommunityContainer() *Container {
 	additionalContainersNameable := nameable.NewSimpleNameable("additional_containers")
 	container.OptionalField(additionalContainersNameable, schema.TodoSchema, func(node *node.Node) error {
 		for _, child := range node.Children {
-			ac := NewAdditionalContainer()
+			ac := NewAdditionalContainer(mergedEnv)
 			additionalContainer, err := ac.Parse(child)
 			if err != nil {
 				return err
