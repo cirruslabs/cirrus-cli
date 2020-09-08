@@ -9,7 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser"
+	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/docker/docker/client"
@@ -118,7 +118,7 @@ func run(cmd *cobra.Command, args []string) error {
 	mergedYAML := yamlConfig + "\n" + starlarkConfig
 
 	// Parse
-	p := parser.Parser{Environment: envMap}
+	p := rpcparser.Parser{Environment: envMap}
 	result, err := p.Parse(mergedYAML)
 	if err != nil {
 		return err

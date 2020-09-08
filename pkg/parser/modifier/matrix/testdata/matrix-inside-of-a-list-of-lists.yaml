@@ -1,0 +1,12 @@
+nestedList_task:
+  - - color:
+        matrix:
+          - black: true
+          - white: true
+---
+nestedList_task:
+  - - color:
+        black: true
+nestedList_task:
+  - - color:
+        white: true

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser"
+	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/stretchr/testify/require"
@@ -37,7 +37,7 @@ func Execute(t *testing.T, dir string) error {
 }
 
 func ExecuteWithOptions(t *testing.T, dir string, opts ...executor.Option) error {
-	p := parser.Parser{}
+	p := rpcparser.Parser{}
 	result, err := p.ParseFromFile(filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
 		t.Fatal(err)

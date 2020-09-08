@@ -1,0 +1,13 @@
+color_task:
+  matrix:
+    - green: 80
+      liquid: water
+    - black: 90
+      liquid: milk
+---
+color_task:
+  green: 80
+  liquid: water
+color_task:
+  black: 90
+  liquid: milk

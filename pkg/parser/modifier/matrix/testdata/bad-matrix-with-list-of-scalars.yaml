@@ -1,0 +1,5 @@
+color_task:
+  matrix:
+    - red
+    - green
+    - blue

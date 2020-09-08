@@ -22,6 +22,16 @@ func Merge(opts ...map[string]string) map[string]string {
 	return result
 }
 
+func Copy(env map[string]string) (result map[string]string) {
+	result = make(map[string]string)
+
+	for key, value := range env {
+		result[key] = value
+	}
+
+	return
+}
+
 func Static() map[string]string {
 	return map[string]string{
 		"CIRRUS_WORKING_DIR": path.Join(instance.WorkingVolumeMountpoint, instance.WorkingVolumeWorkingDir),

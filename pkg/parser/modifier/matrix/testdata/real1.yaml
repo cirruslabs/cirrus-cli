@@ -1,0 +1,72 @@
+# global default
+container:
+  image: node:latest
+
+task:
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: cat yarn.lock
+    populate_script: yarn install
+
+  matrix:
+    - name: Lint
+      lint_script: yarn run lint
+    - name: Test
+      container:
+        matrix:
+          - image: node:latest
+          - image: node:lts
+      test_script: yarn run test
+    - name: Publish
+      depends_on:
+        - Lint
+        - Test
+      only_if: $BRANCH == "master"
+      publish_script: yarn run publish
+---
+container:
+  image: node:latest
+
+task:
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: cat yarn.lock
+    populate_script: yarn install
+
+  name: Lint
+  lint_script: yarn run lint
+
+task:
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: cat yarn.lock
+    populate_script: yarn install
+
+  name: Test
+  container:
+    image: node:latest
+  test_script: yarn run test
+
+task:
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: cat yarn.lock
+    populate_script: yarn install
+
+  name: Test
+  container:
+    image: node:lts
+  test_script: yarn run test
+
+task:
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: cat yarn.lock
+    populate_script: yarn install
+
+  name: Publish
+  depends_on:
+    - Lint
+    - Test
+  only_if: $BRANCH == "master"
+  publish_script: yarn run publish

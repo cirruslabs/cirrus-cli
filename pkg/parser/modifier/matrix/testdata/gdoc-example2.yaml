@@ -1,0 +1,11 @@
+node_task:
+  matrix:
+    - config:
+        foo: bar
+    - key: value
+---
+node_task:
+  config:
+    foo: bar
+node_task:
+  key: value
