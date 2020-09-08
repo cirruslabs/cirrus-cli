@@ -2,7 +2,7 @@ package commands
 
 import (
 	"errors"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser"
+	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/spf13/cobra"
 	"log"
 )
@@ -16,7 +16,7 @@ func validate(cmd *cobra.Command, args []string) error {
 	cmd.SilenceUsage = true
 
 	// Parse
-	p := parser.New()
+	p := rpcparser.Parser{}
 	result, err := p.ParseFromFile(validateFile)
 	if err != nil {
 		return err

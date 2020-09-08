@@ -6,6 +6,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/PaesslerAG/gval v1.1.0
+	github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894
 	github.com/cirruslabs/cirrus-ci-agent v1.7.0
 	github.com/cirruslabs/echelon v1.2.2
 	github.com/containerd/containerd v1.4.0 // indirect
@@ -19,6 +20,7 @@ require (
 	github.com/golang/protobuf v1.4.2
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/lestrrat-go/jspointer v0.0.0-20181205001929-82fadba7561c // indirect
 	github.com/lestrrat-go/jsref v0.0.0-20181205001954-1b590508f37d // indirect
 	github.com/lestrrat-go/jsschema v0.0.0-20181205002244-5c81c58ffcc3
