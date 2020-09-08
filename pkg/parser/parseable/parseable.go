@@ -43,12 +43,23 @@ func (parser *DefaultParser) Parse(node *node.Node) error {
 	// Check required fields
 
 	for _, child := range node.Children {
-		for _, field := range parser.fields {
-			if field.name.Matches(child.Name) {
-				if err := field.onFound(child); err != nil {
-					return err
-				}
+		// Avoid processing the same node by different field handlers
+		// and possibly generating multiple scripts from a single
+		// script field
+		var firstMatchedField *Field
+		for i := range parser.fields {
+			if parser.fields[i].name.Matches(child.Name) {
+				firstMatchedField = &parser.fields[i]
+				break
 			}
+		}
+
+		if firstMatchedField == nil {
+			continue
+		}
+
+		if err := firstMatchedField.onFound(child); err != nil {
+			return err
 		}
 	}
 
