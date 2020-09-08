@@ -1,0 +1,157 @@
+[
+  {
+    "name": "test",
+    "metadata": {
+      "unique_labels": [
+        "container:rust:latest"
+      ],
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "instance": {
+      "type": "container",
+      "payload": "CgtydXN0OmxhdGVzdBUAAABAGIAg"
+    },
+    "commands": [
+      {
+        "name": "clone",
+        "Instruction": {
+          "CloneInstruction": {}
+        }
+      },
+      {
+        "name": "cargo",
+        "Instruction": {
+          "CacheInstruction": {
+            "folder": "$CARGO_HOME/registry",
+            "fingerprint_scripts": [
+              "cat Cargo.lock"
+            ]
+          }
+        }
+      },
+      {
+        "name": "build",
+        "Instruction": {
+          "ScriptInstruction": {
+            "scripts": [
+              "cargo build"
+            ]
+          }
+        }
+      },
+      {
+        "name": "test",
+        "Instruction": {
+          "ScriptInstruction": {
+            "scripts": [
+              "cargo test"
+            ]
+          }
+        }
+      },
+      {
+        "name": "before_cache",
+        "Instruction": {
+          "ScriptInstruction": {
+            "scripts": [
+              "rm -rf $CARGO_HOME/registry/index"
+            ]
+          }
+        }
+      },
+      {
+        "name": "Upload 'cargo' cache",
+        "Instruction": {
+          "UploadCacheInstruction": {
+            "cache_name": "cargo"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "local_group_id": 1,
+    "name": "test",
+    "metadata": {
+      "unique_labels": [
+        "container:rustlang/rust:nightly"
+      ],
+      "properties": {
+        "allowFailures": "true",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "instance": {
+      "type": "container",
+      "payload": "ChVydXN0bGFuZy9ydXN0Om5pZ2h0bHkVAAAAQBiAIA=="
+    },
+    "commands": [
+      {
+        "name": "clone",
+        "Instruction": {
+          "CloneInstruction": {}
+        }
+      },
+      {
+        "name": "cargo",
+        "Instruction": {
+          "CacheInstruction": {
+            "folder": "$CARGO_HOME/registry",
+            "fingerprint_scripts": [
+              "cat Cargo.lock"
+            ]
+          }
+        }
+      },
+      {
+        "name": "build",
+        "Instruction": {
+          "ScriptInstruction": {
+            "scripts": [
+              "cargo build"
+            ]
+          }
+        }
+      },
+      {
+        "name": "test",
+        "Instruction": {
+          "ScriptInstruction": {
+            "scripts": [
+              "cargo test"
+            ]
+          }
+        }
+      },
+      {
+        "name": "before_cache",
+        "Instruction": {
+          "ScriptInstruction": {
+            "scripts": [
+              "rm -rf $CARGO_HOME/registry/index"
+            ]
+          }
+        }
+      },
+      {
+        "name": "Upload 'cargo' cache",
+        "Instruction": {
+          "UploadCacheInstruction": {
+            "cache_name": "cargo"
+          }
+        }
+      }
+    ]
+  }
+]

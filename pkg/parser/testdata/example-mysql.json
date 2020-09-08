@@ -1,0 +1,37 @@
+[
+  {
+    "name": "main",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "instance": {
+      "type": "container",
+      "payload": "Cg1nb2xhbmc6bGF0ZXN0FQAAAEAYgCAiOQoFbXlzcWwSDG15c3FsOmxhdGVzdB0AAAA/IIAEKOoZMhcKE01ZU1FMX1JPT1RfUEFTU1dPUkQSAA=="
+    },
+    "commands": [
+      {
+        "name": "clone",
+        "Instruction": {
+          "CloneInstruction": {}
+        }
+      },
+      {
+        "name": "main",
+        "Instruction": {
+          "ScriptInstruction": {
+            "scripts": [
+              "true"
+            ]
+          }
+        }
+      }
+    ]
+  }
+]

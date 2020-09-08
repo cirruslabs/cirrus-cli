@@ -1,0 +1,68 @@
+[
+  {
+    "name": "check_android",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "instance": {
+      "type": "container",
+      "payload": "ChdjaXJydXNjaS9hbmRyb2lkLXNkazoyORUAAIBAGIBQ"
+    },
+    "commands": [
+      {
+        "name": "clone",
+        "Instruction": {
+          "CloneInstruction": {}
+        }
+      },
+      {
+        "name": "create_device",
+        "Instruction": {
+          "ScriptInstruction": {
+            "scripts": [
+              "echo no | avdmanager create avd --force -n test -k \"system-images;android-29;default;armeabi-v7a\""
+            ]
+          }
+        }
+      },
+      {
+        "name": "start_emulator",
+        "Instruction": {
+          "BackgroundScriptInstruction": {
+            "scripts": [
+              "$ANDROID_HOME/emulator/emulator -avd test -no-audio -no-window"
+            ]
+          }
+        }
+      },
+      {
+        "name": "wait_for_emulator",
+        "Instruction": {
+          "ScriptInstruction": {
+            "scripts": [
+              "adb wait-for-device",
+              "adb shell input keyevent 82"
+            ]
+          }
+        }
+      },
+      {
+        "name": "check",
+        "Instruction": {
+          "ScriptInstruction": {
+            "scripts": [
+              "./gradlew check connectedCheck"
+            ]
+          }
+        }
+      }
+    ]
+  }
+]
