@@ -157,6 +157,11 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	}
 	protoTasks = append(protoTasks, serviceTasks...)
 
+	// Final pass over resulting tasks in Protocol Buffers format
+	for _, protoTask := range protoTasks {
+		ensureCloneInstruction(protoTask)
+	}
+
 	return &Result{
 		Tasks: protoTasks,
 	}, nil
@@ -331,4 +336,37 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 	}
 
 	return serviceTasks, nil
+}
+
+func ensureCloneInstruction(task *api.Task) {
+	if len(task.Commands) == 0 {
+		return
+	}
+
+	for _, command := range task.Commands {
+		if command.Name == "clone" {
+			return
+		}
+	}
+
+	// Inherit "image" property from the first task (if any),
+	// or otherwise we might break Docker Pipe
+	var properties map[string]string
+	image, ok := task.Commands[0].Properties["image"]
+	if ok {
+		properties = map[string]string{
+			"image": image,
+		}
+		delete(task.Commands[0].Properties, "image")
+	}
+
+	cloneCommand := &api.Command{
+		Name: "clone",
+		Instruction: &api.Command_CloneInstruction{
+			CloneInstruction: &api.CloneInstruction{},
+		},
+		Properties: properties,
+	}
+
+	task.Commands = append([]*api.Command{cloneCommand}, task.Commands...)
 }
