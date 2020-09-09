@@ -28,10 +28,10 @@ curl -L -o cirrus https://github.com/cirruslabs/cirrus-cli/releases/latest/downl
 
 ## Golang
 
-If you have [Go](https://golang.org/) installed, you can run:
+If you have [Go](https://golang.org/) 1.15 or later installed, you can run:
 
 ```
-go get github.com/cirruslabs/cirrus-cli/...
+(cd && GO111MODULE=on go get github.com/cirruslabs/cirrus-cli/...)
 ```
 
 This will build and place the `cirrus` binary in `$GOPATH/bin`.
