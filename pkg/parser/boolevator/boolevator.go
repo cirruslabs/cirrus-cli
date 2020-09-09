@@ -49,6 +49,9 @@ func Eval(expr string, env map[string]string, functions map[string]Function) (bo
 	}
 
 	languageBases := []gval.Language{
+		// Constants
+		gval.Constant("true", "true"),
+		gval.Constant("false", "false"),
 		// gval-provided prefixes and meta prefixes
 		gval.Parentheses(),
 		gval.Ident(),
