@@ -13,8 +13,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/lestrrat-go/jsschema"
-	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"path/filepath"
@@ -276,13 +276,14 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 	var serviceTasks []*api.Task
 
 	for _, task := range protoTasks {
-		if task.Instance.Type != "container" {
-			continue
+		var dynamicInstance ptypes.DynamicAny
+		if err := ptypes.UnmarshalAny(task.Instance, &dynamicInstance); err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
 
-		var taskContainer api.ContainerInstance
-		if err := proto.Unmarshal(task.Instance.Payload, &taskContainer); err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+		taskContainer, ok := dynamicInstance.Message.(*api.ContainerInstance)
+		if !ok {
+			continue
 		}
 
 		if taskContainer.DockerfilePath == "" {
@@ -299,18 +300,15 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 			Arguments:      taskContainer.DockerArguments,
 		}
 
-		instanceBytes, err := proto.Marshal(prebuiltInstance)
+		anyInstance, err := ptypes.MarshalAny(prebuiltInstance)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
 
 		newTask := &api.Task{
 			Name:         fmt.Sprintf("Prebuild %s", taskContainer.DockerfilePath),
 			LocalGroupId: p.NextTaskID(),
-			Instance: &api.Task_Instance{
-				Type:    "prebuilt_image",
-				Payload: instanceBytes,
-			},
+			Instance:     anyInstance,
 			Commands: []*api.Command{
 				{
 					Name: "dummy",
@@ -327,12 +325,13 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 
 		task.RequiredGroups = append(task.RequiredGroups, newTask.LocalGroupId)
 
+		// Ensure that the task will use our to-be-created image
 		taskContainer.Image = fmt.Sprintf("gcr.io/cirrus-ci-community/%s:latest", dockerfileHash)
-		instanceBytes, err = proto.Marshal(&taskContainer)
+		updatedInstance, err := ptypes.MarshalAny(taskContainer)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
-		task.Instance.Payload = instanceBytes
+		task.Instance = updatedInstance
 	}
 
 	return serviceTasks, nil

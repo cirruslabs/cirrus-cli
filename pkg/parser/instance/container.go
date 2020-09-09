@@ -6,7 +6,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
-	"google.golang.org/protobuf/proto"
 	"strconv"
 )
 
@@ -91,18 +90,10 @@ func NewCommunityContainer(mergedEnv map[string]string) *Container {
 	return container
 }
 
-func (container *Container) Parse(node *node.Node) (*api.Task_Instance, error) {
+func (container *Container) Parse(node *node.Node) (*api.ContainerInstance, error) {
 	if err := container.DefaultParser.Parse(node); err != nil {
 		return nil, err
 	}
 
-	payload, err := proto.Marshal(container.proto)
-	if err != nil {
-		return nil, err
-	}
-
-	return &api.Task_Instance{
-		Type:    "container",
-		Payload: payload,
-	}, nil
+	return container.proto, nil
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 )
 
 const (
@@ -88,15 +88,12 @@ func (pipe *DockerPipe) Parse(node *node.Node) error {
 		Memory: DefaultMemory,
 	}
 
-	instanceBytes, err := proto.Marshal(instance)
+	anyInstance, err := ptypes.MarshalAny(instance)
 	if err != nil {
 		return err
 	}
 
-	pipe.proto.Instance = &api.Task_Instance{
-		Type:    "pipe",
-		Payload: instanceBytes,
-	}
+	pipe.proto.Instance = anyInstance
 
 	return nil
 }

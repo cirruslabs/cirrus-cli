@@ -10,7 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	"strings"
 )
 
@@ -51,18 +51,19 @@ func NewTask(env map[string]string) *Task {
 		instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env)).Schema(),
 		func(node *node.Node) error {
 			inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env))
-			protoInstance, err := inst.Parse(node)
+			containerInstance, err := inst.Parse(node)
 			if err != nil {
 				return err
 			}
-			task.proto.Instance = protoInstance
 
 			// Retrieve the platform to update the base environment
-			var taskContainer api.ContainerInstance
-			if err := proto.Unmarshal(protoInstance.Payload, &taskContainer); err != nil {
+			env["CIRRUS_OS"] = strings.ToLower(containerInstance.Platform.String())
+
+			anyInstance, err := ptypes.MarshalAny(containerInstance)
+			if err != nil {
 				return err
 			}
-			env["CIRRUS_OS"] = strings.ToLower(taskContainer.Platform.String())
+			task.proto.Instance = anyInstance
 
 			return nil
 		})
