@@ -1,6 +1,25 @@
 [
   {
-    "name": "main",
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "true"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
     "metadata": {
       "properties": {
         "allowFailures": "false",
@@ -11,27 +30,6 @@
         "triggerType": "AUTOMATIC"
       }
     },
-    "instance": {
-      "type": "container",
-      "payload": "Cg1kZWJpYW46bGF0ZXN0FQAAAEAYgCA="
-    },
-    "commands": [
-      {
-        "name": "clone",
-        "Instruction": {
-          "CloneInstruction": {}
-        }
-      },
-      {
-        "name": "main",
-        "Instruction": {
-          "ScriptInstruction": {
-            "scripts": [
-              "true"
-            ]
-          }
-        }
-      }
-    ]
+    "name": "main"
   }
 ]

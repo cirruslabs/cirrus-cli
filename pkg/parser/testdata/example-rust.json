@@ -1,10 +1,57 @@
 [
   {
-    "name": "test",
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "cat Cargo.lock"
+          ],
+          "folder": "$CARGO_HOME/registry"
+        },
+        "name": "cargo"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "cargo build"
+          ]
+        }
+      },
+      {
+        "name": "test",
+        "scriptInstruction": {
+          "scripts": [
+            "cargo test"
+          ]
+        }
+      },
+      {
+        "name": "before_cache",
+        "scriptInstruction": {
+          "scripts": [
+            "rm -rf $CARGO_HOME/registry/index"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'cargo' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "cargo"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "rust:latest",
+      "memory": 4096
+    },
     "metadata": {
-      "unique_labels": [
-        "container:rust:latest"
-      ],
       "properties": {
         "allowFailures": "false",
         "executionLock": "null",
@@ -12,77 +59,67 @@
         "indexWithinBuild": "0",
         "timeoutInSeconds": "3600",
         "triggerType": "AUTOMATIC"
-      }
+      },
+      "uniqueLabels": [
+        "container:rust:latest"
+      ]
     },
-    "instance": {
-      "type": "container",
-      "payload": "CgtydXN0OmxhdGVzdBUAAABAGIAg"
-    },
+    "name": "test"
+  },
+  {
     "commands": [
       {
-        "name": "clone",
-        "Instruction": {
-          "CloneInstruction": {}
-        }
+        "cloneInstruction": {},
+        "name": "clone"
       },
       {
-        "name": "cargo",
-        "Instruction": {
-          "CacheInstruction": {
-            "folder": "$CARGO_HOME/registry",
-            "fingerprint_scripts": [
-              "cat Cargo.lock"
-            ]
-          }
-        }
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "cat Cargo.lock"
+          ],
+          "folder": "$CARGO_HOME/registry"
+        },
+        "name": "cargo"
       },
       {
         "name": "build",
-        "Instruction": {
-          "ScriptInstruction": {
-            "scripts": [
-              "cargo build"
-            ]
-          }
+        "scriptInstruction": {
+          "scripts": [
+            "cargo build"
+          ]
         }
       },
       {
         "name": "test",
-        "Instruction": {
-          "ScriptInstruction": {
-            "scripts": [
-              "cargo test"
-            ]
-          }
+        "scriptInstruction": {
+          "scripts": [
+            "cargo test"
+          ]
         }
       },
       {
         "name": "before_cache",
-        "Instruction": {
-          "ScriptInstruction": {
-            "scripts": [
-              "rm -rf $CARGO_HOME/registry/index"
-            ]
-          }
+        "scriptInstruction": {
+          "scripts": [
+            "rm -rf $CARGO_HOME/registry/index"
+          ]
         }
       },
       {
         "name": "Upload 'cargo' cache",
-        "Instruction": {
-          "UploadCacheInstruction": {
-            "cache_name": "cargo"
-          }
+        "uploadCacheInstruction": {
+          "cacheName": "cargo"
         }
       }
-    ]
-  },
-  {
-    "local_group_id": 1,
-    "name": "test",
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "rustlang/rust:nightly",
+      "memory": 4096
+    },
+    "localGroupId": "1",
     "metadata": {
-      "unique_labels": [
-        "container:rustlang/rust:nightly"
-      ],
       "properties": {
         "allowFailures": "true",
         "executionLock": "null",
@@ -90,68 +127,11 @@
         "indexWithinBuild": "1",
         "timeoutInSeconds": "3600",
         "triggerType": "AUTOMATIC"
-      }
+      },
+      "uniqueLabels": [
+        "container:rustlang/rust:nightly"
+      ]
     },
-    "instance": {
-      "type": "container",
-      "payload": "ChVydXN0bGFuZy9ydXN0Om5pZ2h0bHkVAAAAQBiAIA=="
-    },
-    "commands": [
-      {
-        "name": "clone",
-        "Instruction": {
-          "CloneInstruction": {}
-        }
-      },
-      {
-        "name": "cargo",
-        "Instruction": {
-          "CacheInstruction": {
-            "folder": "$CARGO_HOME/registry",
-            "fingerprint_scripts": [
-              "cat Cargo.lock"
-            ]
-          }
-        }
-      },
-      {
-        "name": "build",
-        "Instruction": {
-          "ScriptInstruction": {
-            "scripts": [
-              "cargo build"
-            ]
-          }
-        }
-      },
-      {
-        "name": "test",
-        "Instruction": {
-          "ScriptInstruction": {
-            "scripts": [
-              "cargo test"
-            ]
-          }
-        }
-      },
-      {
-        "name": "before_cache",
-        "Instruction": {
-          "ScriptInstruction": {
-            "scripts": [
-              "rm -rf $CARGO_HOME/registry/index"
-            ]
-          }
-        }
-      },
-      {
-        "name": "Upload 'cargo' cache",
-        "Instruction": {
-          "UploadCacheInstruction": {
-            "cache_name": "cargo"
-          }
-        }
-      }
-    ]
+    "name": "test"
   }
 ]
