@@ -22,7 +22,7 @@ func TasksToJSON(t *testing.T, tasks []*api.Task) []byte {
 			t.Fatal(err)
 		}
 
-		unmarshalledTasks = append(unmarshalledTasks, task)
+		unmarshalledTasks = append(unmarshalledTasks, unmarshalledTask)
 	}
 
 	res, err := json.MarshalIndent(unmarshalledTasks, "", "  ")
