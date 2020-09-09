@@ -3,7 +3,7 @@ package node
 import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
-	"os"
+	"strings"
 )
 
 func (node *Node) GetStringValue() (string, error) {
@@ -21,13 +21,7 @@ func (node *Node) GetExpandedStringValue(env map[string]string) (string, error) 
 		return "", fmt.Errorf("%w: not a scalar value", parsererror.ErrParsing)
 	}
 
-	return os.Expand(valueNode.Value, func(key string) string {
-		result, ok := env[key]
-		if !ok {
-			return ""
-		}
-		return result
-	}), nil
+	return expandEnvironmentVariables(valueNode.Value, env), nil
 }
 
 func (node *Node) GetStringMapping() (map[string]string, error) {
@@ -67,4 +61,25 @@ func (node *Node) GetSliceOfNonEmptyStrings() ([]string, error) {
 	default:
 		return nil, fmt.Errorf("%w: field should be a string or a list of values", parsererror.ErrParsing)
 	}
+}
+
+func expandEnvironmentVariables(s string, env map[string]string) string {
+	const maxExpansionIterations = 10
+
+	for i := 0; i < maxExpansionIterations; i++ {
+		beforeExpansion := s
+
+		for key, value := range env {
+			s = strings.ReplaceAll(s, fmt.Sprintf("$%s", key), value)
+			s = strings.ReplaceAll(s, fmt.Sprintf("${%s}", key), value)
+			s = strings.ReplaceAll(s, fmt.Sprintf("%%%s%%", key), value)
+		}
+
+		// Don't wait till the end of the loop if we are not progressing
+		if s == beforeExpansion {
+			break
+		}
+	}
+
+	return s
 }
