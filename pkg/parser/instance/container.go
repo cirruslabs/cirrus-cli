@@ -9,6 +9,11 @@ import (
 	"strconv"
 )
 
+const (
+	defaultCPU    = 2.0
+	defaultMemory = 4096
+)
+
 type Container struct {
 	proto *api.ContainerInstance
 
@@ -93,6 +98,14 @@ func NewCommunityContainer(mergedEnv map[string]string) *Container {
 func (container *Container) Parse(node *node.Node) (*api.ContainerInstance, error) {
 	if err := container.DefaultParser.Parse(node); err != nil {
 		return nil, err
+	}
+
+	// Resource defaults
+	if container.proto.Cpu == 0 {
+		container.proto.Cpu = defaultCPU
+	}
+	if container.proto.Memory == 0 {
+		container.proto.Memory = defaultMemory
 	}
 
 	return container.proto, nil

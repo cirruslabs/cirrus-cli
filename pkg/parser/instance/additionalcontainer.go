@@ -9,6 +9,11 @@ import (
 	"strconv"
 )
 
+const (
+	defaultAdditionalCPU    = 0.5
+	defaultAdditionalMemory = 512
+)
+
 type AdditionalContainer struct {
 	proto *api.AdditionalContainer
 
@@ -65,6 +70,14 @@ func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 func (ac *AdditionalContainer) Parse(node *node.Node) (*api.AdditionalContainer, error) {
 	if err := ac.DefaultParser.Parse(node); err != nil {
 		return nil, err
+	}
+
+	// Resource defaults
+	if ac.proto.Cpu == 0 {
+		ac.proto.Cpu = defaultAdditionalCPU
+	}
+	if ac.proto.Memory == 0 {
+		ac.proto.Memory = defaultAdditionalMemory
 	}
 
 	return ac.proto, nil

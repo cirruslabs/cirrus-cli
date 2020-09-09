@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	DefaultCPU    = 2.0
-	DefaultMemory = 4096
+	defaultCPU    = 2.0
+	defaultMemory = 4096
 )
 
 type DockerPipe struct {
@@ -94,8 +94,8 @@ func (pipe *DockerPipe) Parse(node *node.Node) error {
 	}
 
 	instance := &api.PipeInstance{
-		Cpu:    DefaultCPU,
-		Memory: DefaultMemory,
+		Cpu:    defaultCPU,
+		Memory: defaultMemory,
 	}
 
 	anyInstance, err := ptypes.MarshalAny(instance)
