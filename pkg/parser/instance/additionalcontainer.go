@@ -1,12 +1,16 @@
 package instance
 
 import (
+	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"strconv"
+	"strings"
+	"unicode"
 )
 
 const (
@@ -24,6 +28,31 @@ func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 	ac := &AdditionalContainer{
 		proto: &api.AdditionalContainer{},
 	}
+
+	ac.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
+		name, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		if name == "main" {
+			return fmt.Errorf("%w: use of reserved name '%s' for an additional container, please choose another one",
+				parsererror.ErrParsing, name)
+		}
+
+		isNotLetter := func(r rune) bool {
+			return !unicode.IsLetter(r)
+		}
+
+		if strings.IndexFunc(name, isNotLetter) != -1 {
+			return fmt.Errorf("%w: additional container name '%s' is invalid, please only use letters without special symbols",
+				parsererror.ErrParsing, name)
+		}
+
+		ac.proto.Name = name
+
+		return nil
+	})
 
 	ac.OptionalField(nameable.NewSimpleNameable("environment"), schema.TodoSchema, func(node *node.Node) error {
 		environment, err := node.GetStringMapping()
