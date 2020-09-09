@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/golang/protobuf/ptypes"
+	"strconv"
 )
 
 const (
@@ -32,6 +33,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 	pipe := &DockerPipe{
 		enabled: true,
 	}
+	pipe.proto.Metadata = &api.Task_Metadata{Properties: map[string]string{}}
 
 	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		environment, err := node.GetStringMapping()
@@ -67,11 +69,19 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 	})
 
 	pipe.OptionalField(nameable.NewSimpleNameable("only_if"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleOnlyIf(node, environment.Merge(pipe.proto.Environment, env))
+		evaluation, err := handleBoolevatorField(node, environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 		pipe.enabled = evaluation
+		return nil
+	})
+	pipe.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := handleBoolevatorField(node, environment.Merge(pipe.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["allowFailures"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 

@@ -11,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/golang/protobuf/ptypes"
+	"strconv"
 	"strings"
 )
 
@@ -29,6 +30,7 @@ func NewTask(env map[string]string) *Task {
 	task := &Task{
 		enabled: true,
 	}
+	task.proto.Metadata = &api.Task_Metadata{Properties: map[string]string{}}
 
 	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		taskEnv, err := node.GetStringMapping()
@@ -158,11 +160,19 @@ func NewTask(env map[string]string) *Task {
 	})
 
 	task.OptionalField(nameable.NewSimpleNameable("only_if"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleOnlyIf(node, environment.Merge(task.proto.Environment, env))
+		evaluation, err := handleBoolevatorField(node, environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 		task.enabled = evaluation
+		return nil
+	})
+	task.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := handleBoolevatorField(node, environment.Merge(task.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["allowFailures"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
