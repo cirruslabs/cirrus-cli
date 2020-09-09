@@ -10,7 +10,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-	"google.golang.org/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 	"io"
 	"io/ioutil"
 	"path"
@@ -33,56 +34,46 @@ type Instance interface {
 	Run(context.Context, *RunConfig) error
 }
 
-func NewFromProto(instance *api.Task_Instance, commands []*api.Command) (Instance, error) {
-	// Validate and unmarshal the instance descriptor
-	switch instance.Type {
-	case "container":
-		var taskContainer api.ContainerInstance
-		if err := proto.Unmarshal(instance.Payload, &taskContainer); err != nil {
-			return nil, err
-		}
-		return &ContainerInstance{
-			Image:                taskContainer.Image,
-			CPU:                  taskContainer.Cpu,
-			Memory:               taskContainer.Memory,
-			AdditionalContainers: taskContainer.AdditionalContainers,
-		}, nil
-	case "pipe":
-		var pipe api.PipeInstance
-		if err := proto.Unmarshal(instance.Payload, &pipe); err != nil {
-			return nil, err
-		}
+func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, error) {
+	var dynamicInstance ptypes.DynamicAny
+	if err := ptypes.UnmarshalAny(anyInstance, &dynamicInstance); err != nil {
+		return nil, err
+	}
 
+	switch instance := dynamicInstance.Message.(type) {
+	case *api.ContainerInstance:
+		return &ContainerInstance{
+			Image:                instance.Image,
+			CPU:                  instance.Cpu,
+			Memory:               instance.Memory,
+			AdditionalContainers: instance.AdditionalContainers,
+		}, nil
+	case *api.PipeInstance:
 		stages, err := PipeStagesFromCommands(commands)
 		if err != nil {
 			return nil, err
 		}
 
 		return &PipeInstance{
-			CPU:    pipe.Cpu,
-			Memory: pipe.Memory,
+			CPU:    instance.Cpu,
+			Memory: instance.Memory,
 			Stages: stages,
 		}, nil
-	case "prebuilt_image":
-		var prebuilt api.PrebuiltImageInstance
-		if err := proto.Unmarshal(instance.Payload, &prebuilt); err != nil {
-			return nil, err
-		}
-
+	case *api.PrebuiltImageInstance:
 		// PrebuiltImageInstance is currently missing the domain part to craft the full image name
 		// used in the follow-up tasks.
 		//
 		// However, since currently the only possible value is "gcr.io",
 		// we simply craft the image name manually using that hardcoded value.
-		image := path.Join("gcr.io", prebuilt.Repository) + ":" + prebuilt.Reference
+		image := path.Join("gcr.io", instance.Repository) + ":" + instance.Reference
 
 		return &PrebuiltInstance{
 			Image:      image,
-			Dockerfile: prebuilt.DockerfilePath,
-			Arguments:  prebuilt.Arguments,
+			Dockerfile: instance.DockerfilePath,
+			Arguments:  instance.Arguments,
 		}, nil
 	default:
-		return nil, fmt.Errorf("%w: %s", ErrUnsupportedInstance, instance.Type)
+		return nil, fmt.Errorf("%w: %T", ErrUnsupportedInstance, instance)
 	}
 }
 

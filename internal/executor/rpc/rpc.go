@@ -38,8 +38,6 @@ type RPC struct {
 	build *build.Build
 
 	logger *echelon.Logger
-
-	api.UnimplementedCirrusCIServiceServer
 }
 
 func New(build *build.Build, opts ...Option) *RPC {
@@ -51,7 +49,7 @@ func New(build *build.Build, opts ...Option) *RPC {
 	}
 
 	// Register itself
-	api.RegisterCirrusCIServiceServer(r.server, r)
+	api.RegisterCirrusCIServiceService(r.server, api.NewCirrusCIServiceService(r))
 
 	// Apply options
 	for _, opt := range opts {

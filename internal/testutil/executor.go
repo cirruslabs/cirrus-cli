@@ -7,25 +7,23 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
-func GetBasicContainerInstance(t *testing.T, image string) *api.Task_Instance {
-	instancePayload, err := proto.Marshal(&api.ContainerInstance{
+func GetBasicContainerInstance(t *testing.T, image string) *any.Any {
+	anyInstance, err := ptypes.MarshalAny(&api.ContainerInstance{
 		Image: image,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return &api.Task_Instance{
-		Type:    "container",
-		Payload: instancePayload,
-	}
+	return anyInstance
 }
 
 func Execute(t *testing.T, dir string) error {
