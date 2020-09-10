@@ -104,7 +104,7 @@ func (e *Executor) Run(ctx context.Context) error {
 		}
 
 		e.logger.Debugf("running task %s", task.String())
-		taskLogger := e.logger.Scoped(task.UniqueName())
+		taskLogger := e.logger.Scoped(task.UniqueDescription())
 
 		// Prepare task's instance
 		taskInstance := task.Instance

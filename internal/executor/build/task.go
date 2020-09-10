@@ -89,11 +89,11 @@ func (task *Task) ProtoCommands() []*api.Command {
 	return result
 }
 
-func (task *Task) UniqueName() string {
+func (task *Task) UniqueDescription() string {
 	if len(task.Labels) == 0 {
-		return task.Name
+		return fmt.Sprintf("%s Task", task.Name)
 	}
-	return task.Name + " " + strings.Join(task.Labels, " ")
+	return fmt.Sprintf("%s Task (%s)", task.Name, strings.Join(task.Labels, " "))
 }
 
 func (task *Task) FailedAtLeastOnce() bool {
