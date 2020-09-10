@@ -121,24 +121,7 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
-	for id, name := range api.Command_CommandExecutionBehavior_name {
-		idCopy := id
-		task.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {
-			behavior := NewBehavior()
-			if err := behavior.Parse(node); err != nil {
-				return err
-			}
-
-			commands := behavior.Proto()
-
-			for _, command := range commands {
-				command.ExecutionBehaviour = api.Command_CommandExecutionBehavior(idCopy)
-				task.proto.Commands = append(task.proto.Commands, command)
-			}
-
-			return nil
-		})
-	}
+	registerExecutionBehaviorFields(task)
 
 	task.OptionalField(nameable.NewSimpleNameable("depends_on"), schema.TodoSchema, func(node *node.Node) error {
 		dependsOn, err := node.GetSliceOfNonEmptyStrings()
@@ -232,4 +215,25 @@ func (task *Task) Proto() interface{} {
 
 func (task *Task) Enabled() bool {
 	return task.enabled
+}
+
+func registerExecutionBehaviorFields(task *Task) {
+	for id, name := range api.Command_CommandExecutionBehavior_name {
+		idCopy := id
+		task.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {
+			behavior := NewBehavior()
+			if err := behavior.Parse(node); err != nil {
+				return err
+			}
+
+			commands := behavior.Proto()
+
+			for _, command := range commands {
+				command.ExecutionBehaviour = api.Command_CommandExecutionBehavior(idCopy)
+				task.proto.Commands = append(task.proto.Commands, command)
+			}
+
+			return nil
+		})
+	}
 }
