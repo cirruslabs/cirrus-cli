@@ -124,8 +124,11 @@ func (pipe *DockerPipe) DependsOnNames() []string {
 	return pipe.dependsOn
 }
 
-func (pipe *DockerPipe) ID() int64      { return pipe.proto.LocalGroupId }
-func (pipe *DockerPipe) SetID(id int64) { pipe.proto.LocalGroupId = id }
+func (pipe *DockerPipe) ID() int64 { return pipe.proto.LocalGroupId }
+func (pipe *DockerPipe) SetID(id int64) {
+	pipe.proto.LocalGroupId = id
+	pipe.proto.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(id, 10)
+}
 
 func (pipe *DockerPipe) DependsOnIDs() []int64       { return pipe.proto.RequiredGroups }
 func (pipe *DockerPipe) SetDependsOnIDs(ids []int64) { pipe.proto.RequiredGroups = ids }

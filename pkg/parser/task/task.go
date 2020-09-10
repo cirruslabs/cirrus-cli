@@ -227,8 +227,11 @@ func (task *Task) DependsOnNames() []string {
 	return task.dependsOn
 }
 
-func (task *Task) ID() int64      { return task.proto.LocalGroupId }
-func (task *Task) SetID(id int64) { task.proto.LocalGroupId = id }
+func (task *Task) ID() int64 { return task.proto.LocalGroupId }
+func (task *Task) SetID(id int64) {
+	task.proto.LocalGroupId = id
+	task.proto.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(id, 10)
+}
 
 func (task *Task) DependsOnIDs() []int64       { return task.proto.RequiredGroups }
 func (task *Task) SetDependsOnIDs(ids []int64) { task.proto.RequiredGroups = ids }
