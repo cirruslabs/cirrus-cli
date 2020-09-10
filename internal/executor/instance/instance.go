@@ -14,7 +14,9 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"io"
 	"io/ioutil"
+	"math"
 	"path"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -155,7 +157,7 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 			},
 		},
 		Resources: container.Resources{
-			NanoCPUs: int64(params.CPU * nano),
+			NanoCPUs: int64(clampCPU(params.CPU) * nano),
 			Memory:   int64(params.Memory * mebi),
 		},
 	}
@@ -263,7 +265,7 @@ func runAdditionalContainer(
 	}
 	hostConfig := container.HostConfig{
 		Resources: container.Resources{
-			NanoCPUs: int64(additionalContainer.Cpu * nano),
+			NanoCPUs: int64(clampCPU(additionalContainer.Cpu) * nano),
 			Memory:   int64(additionalContainer.Memory * mebi),
 		},
 		NetworkMode: container.NetworkMode(fmt.Sprintf("container:%s", connectToContainer)),
@@ -313,4 +315,8 @@ func envMapToSlice(envMap map[string]string) (envSlice []string) {
 	}
 
 	return
+}
+
+func clampCPU(requested float32) float32 {
+	return float32(math.Min(float64(runtime.NumCPU()), float64(requested)))
 }
