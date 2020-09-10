@@ -10,11 +10,12 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/golang/protobuf/ptypes"
+	"strconv"
 )
 
 const (
-	DefaultCPU    = 2.0
-	DefaultMemory = 4096
+	defaultCPU    = 2.0
+	defaultMemory = 4096
 )
 
 type DockerPipe struct {
@@ -32,6 +33,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 	pipe := &DockerPipe{
 		enabled: true,
 	}
+	pipe.proto.Metadata = &api.Task_Metadata{Properties: getDefaultProperties()}
 
 	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		environment, err := node.GetStringMapping()
@@ -67,11 +69,19 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 	})
 
 	pipe.OptionalField(nameable.NewSimpleNameable("only_if"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleOnlyIf(node, environment.Merge(pipe.proto.Environment, env))
+		evaluation, err := handleBoolevatorField(node, environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 		pipe.enabled = evaluation
+		return nil
+	})
+	pipe.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := handleBoolevatorField(node, environment.Merge(pipe.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["allowFailures"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
@@ -84,8 +94,8 @@ func (pipe *DockerPipe) Parse(node *node.Node) error {
 	}
 
 	instance := &api.PipeInstance{
-		Cpu:    DefaultCPU,
-		Memory: DefaultMemory,
+		Cpu:    defaultCPU,
+		Memory: defaultMemory,
 	}
 
 	anyInstance, err := ptypes.MarshalAny(instance)
@@ -114,8 +124,11 @@ func (pipe *DockerPipe) DependsOnNames() []string {
 	return pipe.dependsOn
 }
 
-func (pipe *DockerPipe) ID() int64      { return pipe.proto.LocalGroupId }
-func (pipe *DockerPipe) SetID(id int64) { pipe.proto.LocalGroupId = id }
+func (pipe *DockerPipe) ID() int64 { return pipe.proto.LocalGroupId }
+func (pipe *DockerPipe) SetID(id int64) {
+	pipe.proto.LocalGroupId = id
+	pipe.proto.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(id, 10)
+}
 
 func (pipe *DockerPipe) DependsOnIDs() []int64       { return pipe.proto.RequiredGroups }
 func (pipe *DockerPipe) SetDependsOnIDs(ids []int64) { pipe.proto.RequiredGroups = ids }

@@ -3,7 +3,9 @@ package parser_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/stretchr/testify/require"
+	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -12,10 +14,10 @@ import (
 )
 
 var validCases = []string{
-	"example-android.yml",
-	"example-flutter-web.yml",
-	"example-mysql.yml",
-	"example-rust.yml",
+	"example-android",
+	"example-flutter-web",
+	"example-mysql",
+	"example-rust",
 }
 
 var invalidCases = []string{
@@ -31,10 +33,19 @@ func TestValidConfigs(t *testing.T) {
 		file := validCase
 		t.Run(file, func(t *testing.T) {
 			p := parser.New()
-			result, err := p.ParseFromFile(absolutize(file))
+			result, err := p.ParseFromFile(absolutize(file + ".yml"))
 
 			require.Nil(t, err)
-			assert.Empty(t, result.Errors)
+			require.Empty(t, result.Errors)
+
+			expected, err := ioutil.ReadFile(absolutize(file + ".json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			actual := testutil.TasksToJSON(t, result.Tasks)
+
+			assert.JSONEq(t, string(expected), string(actual))
 		})
 	}
 }

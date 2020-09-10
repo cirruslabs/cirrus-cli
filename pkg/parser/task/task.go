@@ -11,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/golang/protobuf/ptypes"
+	"strconv"
 	"strings"
 )
 
@@ -29,6 +30,7 @@ func NewTask(env map[string]string) *Task {
 	task := &Task{
 		enabled: true,
 	}
+	task.proto.Metadata = &api.Task_Metadata{Properties: getDefaultProperties()}
 
 	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		taskEnv, err := node.GetStringMapping()
@@ -87,35 +89,25 @@ func NewTask(env map[string]string) *Task {
 
 	bgNameable := nameable.NewRegexNameable("(.*)background_script")
 	task.OptionalField(bgNameable, schema.TodoSchema, func(node *node.Node) error {
-		scripts, err := node.GetSliceOfNonEmptyStrings()
+		command, err := handleBackgroundScript(node, bgNameable)
 		if err != nil {
 			return err
 		}
-		task.proto.Commands = append(task.proto.Commands, &api.Command{
-			Name: bgNameable.FirstGroupOrDefault(node.Name, "main"),
-			Instruction: &api.Command_BackgroundScriptInstruction{
-				BackgroundScriptInstruction: &api.BackgroundScriptInstruction{
-					Scripts: scripts,
-				},
-			},
-		})
+
+		task.proto.Commands = append(task.proto.Commands, command)
+
 		return nil
 	})
 
 	scriptNameable := nameable.NewRegexNameable("(.*)script")
 	task.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
-		scripts, err := node.GetSliceOfNonEmptyStrings()
+		command, err := handleScript(node, scriptNameable)
 		if err != nil {
 			return err
 		}
-		task.proto.Commands = append(task.proto.Commands, &api.Command{
-			Name: scriptNameable.FirstGroupOrDefault(node.Name, "main"),
-			Instruction: &api.Command_ScriptInstruction{
-				ScriptInstruction: &api.ScriptInstruction{
-					Scripts: scripts,
-				},
-			},
-		})
+
+		task.proto.Commands = append(task.proto.Commands, command)
+
 		return nil
 	})
 
@@ -129,24 +121,7 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
-	for id, name := range api.Command_CommandExecutionBehavior_name {
-		idCopy := id
-		task.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {
-			behavior := NewBehavior()
-			if err := behavior.Parse(node); err != nil {
-				return err
-			}
-
-			commands := behavior.Proto()
-
-			for _, command := range commands {
-				command.ExecutionBehaviour = api.Command_CommandExecutionBehavior(idCopy)
-				task.proto.Commands = append(task.proto.Commands, command)
-			}
-
-			return nil
-		})
-	}
+	registerExecutionBehaviorFields(task)
 
 	task.OptionalField(nameable.NewSimpleNameable("depends_on"), schema.TodoSchema, func(node *node.Node) error {
 		dependsOn, err := node.GetSliceOfNonEmptyStrings()
@@ -158,11 +133,19 @@ func NewTask(env map[string]string) *Task {
 	})
 
 	task.OptionalField(nameable.NewSimpleNameable("only_if"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleOnlyIf(node, environment.Merge(task.proto.Environment, env))
+		evaluation, err := handleBoolevatorField(node, environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 		task.enabled = evaluation
+		return nil
+	})
+	task.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := handleBoolevatorField(node, environment.Merge(task.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["allowFailures"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
@@ -217,8 +200,11 @@ func (task *Task) DependsOnNames() []string {
 	return task.dependsOn
 }
 
-func (task *Task) ID() int64      { return task.proto.LocalGroupId }
-func (task *Task) SetID(id int64) { task.proto.LocalGroupId = id }
+func (task *Task) ID() int64 { return task.proto.LocalGroupId }
+func (task *Task) SetID(id int64) {
+	task.proto.LocalGroupId = id
+	task.proto.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(id, 10)
+}
 
 func (task *Task) DependsOnIDs() []int64       { return task.proto.RequiredGroups }
 func (task *Task) SetDependsOnIDs(ids []int64) { task.proto.RequiredGroups = ids }
@@ -229,4 +215,25 @@ func (task *Task) Proto() interface{} {
 
 func (task *Task) Enabled() bool {
 	return task.enabled
+}
+
+func registerExecutionBehaviorFields(task *Task) {
+	for id, name := range api.Command_CommandExecutionBehavior_name {
+		idCopy := id
+		task.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {
+			behavior := NewBehavior()
+			if err := behavior.Parse(node); err != nil {
+				return err
+			}
+
+			commands := behavior.Proto()
+
+			for _, command := range commands {
+				command.ExecutionBehaviour = api.Command_CommandExecutionBehavior(idCopy)
+				task.proto.Commands = append(task.proto.Commands, command)
+			}
+
+			return nil
+		})
+	}
 }

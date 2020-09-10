@@ -62,6 +62,49 @@ func New(opts ...Option) *Parser {
 	return parser
 }
 
+func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
+	var tasks []task.ParseableTaskLike
+
+	for _, treeItem := range tree.Children {
+		for key, value := range p.parsers {
+			var taskLike task.ParseableTaskLike
+			switch value.(type) {
+			case *task.Task:
+				taskLike = task.NewTask(environment.Copy(p.environment))
+			case *task.DockerPipe:
+				taskLike = task.NewDockerPipe(environment.Copy(p.environment))
+			default:
+				panic("unknown task-like object")
+			}
+
+			if !key.Matches(treeItem.Name) {
+				continue
+			}
+
+			err := taskLike.Parse(treeItem)
+			if err != nil {
+				return nil, err
+			}
+
+			// Set task's name if not set in the definition
+			if taskLike.Name() == "" {
+				if rn, ok := key.(*nameable.RegexNameable); ok {
+					taskLike.SetName(rn.FirstGroupOrDefault(treeItem.Name, "main"))
+				}
+			}
+
+			// Filtering based on "only_if" expression evaluation
+			if !taskLike.Enabled() {
+				continue
+			}
+
+			tasks = append(tasks, taskLike)
+		}
+	}
+
+	return tasks, nil
+}
+
 func (p *Parser) Parse(config string) (*Result, error) {
 	var parsed yaml.MapSlice
 
@@ -84,45 +127,11 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	}
 
 	// Run parsers on the top-level nodes
-	var tasks []task.ParseableTaskLike
-
-	for _, treeItem := range tree.Children {
-		for key, value := range p.parsers {
-			var taskLike task.ParseableTaskLike
-			switch value.(type) {
-			case *task.Task:
-				taskLike = task.NewTask(environment.Copy(p.environment))
-			case *task.DockerPipe:
-				taskLike = task.NewDockerPipe(environment.Copy(p.environment))
-			default:
-				panic("unknown task-like object")
-			}
-
-			if !key.Matches(treeItem.Name) {
-				continue
-			}
-
-			err := taskLike.Parse(treeItem)
-			if err != nil {
-				return &Result{
-					Errors: []string{err.Error()},
-				}, nil
-			}
-
-			// Set task's name if not set in the definition
-			if taskLike.Name() == "" {
-				if rn, ok := key.(*nameable.RegexNameable); ok {
-					taskLike.SetName(rn.FirstGroupOrDefault(treeItem.Name, "main"))
-				}
-			}
-
-			// Filtering based on "only_if" expression evaluation
-			if !taskLike.Enabled() {
-				continue
-			}
-
-			tasks = append(tasks, taskLike)
-		}
+	tasks, err := p.parseTasks(tree)
+	if err != nil {
+		return &Result{
+			Errors: []string{err.Error()},
+		}, nil
 	}
 
 	// Assign group IDs to tasks
@@ -159,7 +168,15 @@ func (p *Parser) Parse(config string) (*Result, error) {
 
 	// Final pass over resulting tasks in Protocol Buffers format
 	for _, protoTask := range protoTasks {
+		// Insert empty clone instruction if custom clone script wasn't provided by the user
 		ensureCloneInstruction(protoTask)
+
+		// Provide unique labels for identically named tasks
+		if countTasksWithName(protoTasks, protoTask.Name) > 1 {
+			if err := populateUniqueLabels(protoTask); err != nil {
+				return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+			}
+		}
 	}
 
 	return &Result{
@@ -368,4 +385,54 @@ func ensureCloneInstruction(task *api.Task) {
 	}
 
 	task.Commands = append([]*api.Command{cloneCommand}, task.Commands...)
+}
+
+func countTasksWithName(protoTasks []*api.Task, name string) (result int) {
+	for _, protoTask := range protoTasks {
+		if protoTask.Name == name {
+			result++
+		}
+	}
+
+	return
+}
+
+func populateUniqueLabels(task *api.Task) error {
+	// Unmarshal instance
+	var dynamicAny ptypes.DynamicAny
+
+	if err := ptypes.UnmarshalAny(task.Instance, &dynamicAny); err != nil {
+		return err
+	}
+
+	// Populate labels
+	var labels []string
+
+	switch instance := dynamicAny.Message.(type) {
+	case *api.ContainerInstance:
+		if instance.DockerfilePath == "" {
+			labels = append(labels, fmt.Sprintf("container:%s", instance.Image))
+
+			if instance.OperationSystemVersion != "" {
+				labels = append(labels, fmt.Sprintf("os:%s", instance.OperationSystemVersion))
+			}
+		} else {
+			labels = append(labels, fmt.Sprintf("Dockerfile:%s", instance.DockerfilePath))
+
+			for key, value := range instance.DockerArguments {
+				labels = append(labels, fmt.Sprintf("%s:%s", key, value))
+			}
+		}
+
+		for _, additionalContainer := range instance.AdditionalContainers {
+			labels = append(labels, fmt.Sprintf("%s:%s", additionalContainer.Name, additionalContainer.Image))
+		}
+	case *api.PipeInstance:
+		labels = append(labels, "pipe")
+	}
+
+	// Update task
+	task.Metadata.UniqueLabels = labels
+
+	return nil
 }
