@@ -3,6 +3,7 @@ package node
 import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
+	"sort"
 	"strings"
 )
 
@@ -21,7 +22,7 @@ func (node *Node) GetExpandedStringValue(env map[string]string) (string, error) 
 		return "", fmt.Errorf("%w: not a scalar value", parsererror.ErrParsing)
 	}
 
-	return expandEnvironmentVariables(valueNode.Value, env), nil
+	return ExpandEnvironmentVariables(valueNode.Value, env), nil
 }
 
 func (node *Node) GetStringMapping() (map[string]string, error) {
@@ -63,16 +64,27 @@ func (node *Node) GetSliceOfNonEmptyStrings() ([]string, error) {
 	}
 }
 
-func expandEnvironmentVariables(s string, env map[string]string) string {
+func ExpandEnvironmentVariables(s string, env map[string]string) string {
 	const maxExpansionIterations = 10
+
+	// Create a sorted view of the environment map keys to expand the longest keys first
+	// and avoid cases where "$CIRRUS_BRANCH" is expanded into "true_BRANCH", assuming
+	// env = map[string]string{"CIRRUS": "true", "CIRRUS_BRANCH": "main"})
+	var sortedKeys []string
+	for key := range env {
+		sortedKeys = append(sortedKeys, key)
+	}
+	sort.SliceStable(sortedKeys, func(i, j int) bool {
+		return !(sortedKeys[i] < sortedKeys[j])
+	})
 
 	for i := 0; i < maxExpansionIterations; i++ {
 		beforeExpansion := s
 
-		for key, value := range env {
-			s = strings.ReplaceAll(s, fmt.Sprintf("$%s", key), value)
-			s = strings.ReplaceAll(s, fmt.Sprintf("${%s}", key), value)
-			s = strings.ReplaceAll(s, fmt.Sprintf("%%%s%%", key), value)
+		for _, key := range sortedKeys {
+			s = strings.ReplaceAll(s, fmt.Sprintf("$%s", key), env[key])
+			s = strings.ReplaceAll(s, fmt.Sprintf("${%s}", key), env[key])
+			s = strings.ReplaceAll(s, fmt.Sprintf("%%%s%%", key), env[key])
 		}
 
 		// Don't wait till the end of the loop if we are not progressing
