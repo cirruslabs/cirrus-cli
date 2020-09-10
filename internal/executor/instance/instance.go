@@ -14,6 +14,7 @@ import (
 	"github.com/golang/protobuf/ptypes/any"
 	"io"
 	"io/ioutil"
+	"math"
 	"path"
 	"strconv"
 	"strings"
@@ -101,6 +102,21 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
+	}
+
+	// Clamp resources to those available for Docker daemon
+	info, err := cli.Info(ctx)
+	if err != nil {
+		return err
+	}
+	availableCPU := float32(info.NCPU)
+	availableMemory := uint32(info.MemTotal / mebi)
+
+	params.CPU = clampCPU(params.CPU, availableCPU)
+	params.Memory = clampMemory(params.Memory, availableMemory)
+	for _, additionalContainer := range params.AdditionalContainers {
+		additionalContainer.Cpu = clampCPU(additionalContainer.Cpu, availableCPU)
+		additionalContainer.Memory = clampMemory(additionalContainer.Memory, availableMemory)
 	}
 
 	// Check if the image is missing and pull it if needed
@@ -313,4 +329,16 @@ func envMapToSlice(envMap map[string]string) (envSlice []string) {
 	}
 
 	return
+}
+
+func clampCPU(requested float32, available float32) float32 {
+	return float32(math.Min(float64(requested), float64(available)))
+}
+
+func clampMemory(requested uint32, available uint32) uint32 {
+	if requested > available {
+		return available
+	}
+
+	return requested
 }
