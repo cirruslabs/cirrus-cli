@@ -62,6 +62,49 @@ func New(opts ...Option) *Parser {
 	return parser
 }
 
+func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
+	var tasks []task.ParseableTaskLike
+
+	for _, treeItem := range tree.Children {
+		for key, value := range p.parsers {
+			var taskLike task.ParseableTaskLike
+			switch value.(type) {
+			case *task.Task:
+				taskLike = task.NewTask(environment.Copy(p.environment))
+			case *task.DockerPipe:
+				taskLike = task.NewDockerPipe(environment.Copy(p.environment))
+			default:
+				panic("unknown task-like object")
+			}
+
+			if !key.Matches(treeItem.Name) {
+				continue
+			}
+
+			err := taskLike.Parse(treeItem)
+			if err != nil {
+				return nil, err
+			}
+
+			// Set task's name if not set in the definition
+			if taskLike.Name() == "" {
+				if rn, ok := key.(*nameable.RegexNameable); ok {
+					taskLike.SetName(rn.FirstGroupOrDefault(treeItem.Name, "main"))
+				}
+			}
+
+			// Filtering based on "only_if" expression evaluation
+			if !taskLike.Enabled() {
+				continue
+			}
+
+			tasks = append(tasks, taskLike)
+		}
+	}
+
+	return tasks, nil
+}
+
 func (p *Parser) Parse(config string) (*Result, error) {
 	var parsed yaml.MapSlice
 
@@ -84,45 +127,11 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	}
 
 	// Run parsers on the top-level nodes
-	var tasks []task.ParseableTaskLike
-
-	for _, treeItem := range tree.Children {
-		for key, value := range p.parsers {
-			var taskLike task.ParseableTaskLike
-			switch value.(type) {
-			case *task.Task:
-				taskLike = task.NewTask(environment.Copy(p.environment))
-			case *task.DockerPipe:
-				taskLike = task.NewDockerPipe(environment.Copy(p.environment))
-			default:
-				panic("unknown task-like object")
-			}
-
-			if !key.Matches(treeItem.Name) {
-				continue
-			}
-
-			err := taskLike.Parse(treeItem)
-			if err != nil {
-				return &Result{
-					Errors: []string{err.Error()},
-				}, nil
-			}
-
-			// Set task's name if not set in the definition
-			if taskLike.Name() == "" {
-				if rn, ok := key.(*nameable.RegexNameable); ok {
-					taskLike.SetName(rn.FirstGroupOrDefault(treeItem.Name, "main"))
-				}
-			}
-
-			// Filtering based on "only_if" expression evaluation
-			if !taskLike.Enabled() {
-				continue
-			}
-
-			tasks = append(tasks, taskLike)
-		}
+	tasks, err := p.parseTasks(tree)
+	if err != nil {
+		return &Result{
+			Errors: []string{err.Error()},
+		}, nil
 	}
 
 	// Assign group IDs to tasks
