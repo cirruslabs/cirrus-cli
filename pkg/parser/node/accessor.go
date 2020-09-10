@@ -74,7 +74,7 @@ func ExpandEnvironmentVariables(s string, env map[string]string) string {
 	for key := range env {
 		sortedKeys = append(sortedKeys, key)
 	}
-	sort.SliceStable(sortedKeys, func(i, j int) bool {
+	sort.Slice(sortedKeys, func(i, j int) bool {
 		return !(sortedKeys[i] < sortedKeys[j])
 	})
 
