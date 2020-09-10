@@ -33,7 +33,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 	pipe := &DockerPipe{
 		enabled: true,
 	}
-	pipe.proto.Metadata = &api.Task_Metadata{Properties: map[string]string{}}
+	pipe.proto.Metadata = &api.Task_Metadata{Properties: getDefaultProperties()}
 
 	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		environment, err := node.GetStringMapping()

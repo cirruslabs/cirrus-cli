@@ -30,7 +30,7 @@ func NewTask(env map[string]string) *Task {
 	task := &Task{
 		enabled: true,
 	}
-	task.proto.Metadata = &api.Task_Metadata{Properties: map[string]string{}}
+	task.proto.Metadata = &api.Task_Metadata{Properties: getDefaultProperties()}
 
 	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		taskEnv, err := node.GetStringMapping()
