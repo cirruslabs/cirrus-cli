@@ -159,7 +159,15 @@ func (p *Parser) Parse(config string) (*Result, error) {
 
 	// Final pass over resulting tasks in Protocol Buffers format
 	for _, protoTask := range protoTasks {
+		// Insert empty clone instruction if custom clone script wasn't provided by the user
 		ensureCloneInstruction(protoTask)
+
+		// Provide unique labels for identically named tasks
+		if countTasksWithName(protoTasks, protoTask.Name) > 1 {
+			if err := populateUniqueLabels(protoTask); err != nil {
+				return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+			}
+		}
 	}
 
 	return &Result{
@@ -368,4 +376,54 @@ func ensureCloneInstruction(task *api.Task) {
 	}
 
 	task.Commands = append([]*api.Command{cloneCommand}, task.Commands...)
+}
+
+func countTasksWithName(protoTasks []*api.Task, name string) (result int) {
+	for _, protoTask := range protoTasks {
+		if protoTask.Name == name {
+			result++
+		}
+	}
+
+	return
+}
+
+func populateUniqueLabels(task *api.Task) error {
+	// Unmarshal instance
+	var dynamicAny ptypes.DynamicAny
+
+	if err := ptypes.UnmarshalAny(task.Instance, &dynamicAny); err != nil {
+		return err
+	}
+
+	// Populate labels
+	var labels []string
+
+	switch instance := dynamicAny.Message.(type) {
+	case *api.ContainerInstance:
+		if instance.DockerfilePath == "" {
+			labels = append(labels, fmt.Sprintf("container:%s", instance.Image))
+
+			if instance.OperationSystemVersion != "" {
+				labels = append(labels, fmt.Sprintf("os:%s", instance.OperationSystemVersion))
+			}
+		} else {
+			labels = append(labels, fmt.Sprintf("Dockerfile:%s", instance.DockerfilePath))
+
+			for key, value := range instance.DockerArguments {
+				labels = append(labels, fmt.Sprintf("%s:%s", key, value))
+			}
+		}
+
+		for _, additionalContainer := range instance.AdditionalContainers {
+			labels = append(labels, fmt.Sprintf("%s:%s", additionalContainer.Name, additionalContainer.Image))
+		}
+	case *api.PipeInstance:
+		labels = append(labels, "pipe")
+	}
+
+	// Update task
+	task.Metadata.UniqueLabels = labels
+
+	return nil
 }
