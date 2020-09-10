@@ -19,18 +19,13 @@ func NewBehavior() *Behavior {
 
 	scriptNameable := nameable.NewRegexNameable("(.*)script")
 	b.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
-		scripts, err := node.GetSliceOfNonEmptyStrings()
+		command, err := handleScript(node, scriptNameable)
 		if err != nil {
 			return err
 		}
-		b.commands = append(b.commands, &api.Command{
-			Name: scriptNameable.FirstGroupOrDefault(node.Name, "main"),
-			Instruction: &api.Command_ScriptInstruction{
-				ScriptInstruction: &api.ScriptInstruction{
-					Scripts: scripts,
-				},
-			},
-		})
+
+		b.commands = append(b.commands, command)
+
 		return nil
 	})
 

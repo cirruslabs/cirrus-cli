@@ -89,35 +89,25 @@ func NewTask(env map[string]string) *Task {
 
 	bgNameable := nameable.NewRegexNameable("(.*)background_script")
 	task.OptionalField(bgNameable, schema.TodoSchema, func(node *node.Node) error {
-		scripts, err := node.GetSliceOfNonEmptyStrings()
+		command, err := handleBackgroundScript(node, bgNameable)
 		if err != nil {
 			return err
 		}
-		task.proto.Commands = append(task.proto.Commands, &api.Command{
-			Name: bgNameable.FirstGroupOrDefault(node.Name, "main"),
-			Instruction: &api.Command_BackgroundScriptInstruction{
-				BackgroundScriptInstruction: &api.BackgroundScriptInstruction{
-					Scripts: scripts,
-				},
-			},
-		})
+
+		task.proto.Commands = append(task.proto.Commands, command)
+
 		return nil
 	})
 
 	scriptNameable := nameable.NewRegexNameable("(.*)script")
 	task.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
-		scripts, err := node.GetSliceOfNonEmptyStrings()
+		command, err := handleScript(node, scriptNameable)
 		if err != nil {
 			return err
 		}
-		task.proto.Commands = append(task.proto.Commands, &api.Command{
-			Name: scriptNameable.FirstGroupOrDefault(node.Name, "main"),
-			Instruction: &api.Command_ScriptInstruction{
-				ScriptInstruction: &api.ScriptInstruction{
-					Scripts: scripts,
-				},
-			},
-		})
+
+		task.proto.Commands = append(task.proto.Commands, command)
+
 		return nil
 	})
 
