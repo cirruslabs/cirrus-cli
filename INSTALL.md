@@ -9,6 +9,12 @@
   * [Circle CI](#circle-ci)
   * [Cirrus CI](#cirrus-ci)
 
+# Prequisites
+
+Since currently CLI runs all of it's tasks in [Docker](https://www.docker.com/), make sure it's [installed](https://docs.docker.com/get-docker/).
+
+# Installation
+
 ## Homebrew
 
 ```bash
