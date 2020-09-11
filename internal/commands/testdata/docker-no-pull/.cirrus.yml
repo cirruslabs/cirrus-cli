@@ -1,0 +1,5 @@
+container:
+  image: nonexistent.invalid/does/it/really/exist:nope
+
+task:
+  script: true

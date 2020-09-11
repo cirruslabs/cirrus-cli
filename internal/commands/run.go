@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
@@ -22,9 +23,13 @@ import (
 
 var ErrRun = errors.New("run failed")
 
+// General flags.
 var dirty bool
 var environment []string
 var verbose bool
+
+// Docker-related flags.
+var dockerNoPull bool
 
 // envArgsToMap parses and expands environment arguments like "A=B" (set operation)
 // and "A" (pass-through operation) into a map suitable for use across the codebase.
@@ -165,6 +170,13 @@ func run(cmd *cobra.Command, args []string) error {
 		executorOpts = append(executorOpts, executor.WithDirtyMode())
 	}
 
+	// Docker-related options
+	if dockerNoPull {
+		executorOpts = append(executorOpts, executor.WithDockerOptions(options.DockerOptions{
+			NoPull: dockerNoPull,
+		}))
+	}
+
 	// Environment
 	executorOpts = append(executorOpts, executor.WithEnvironment(envMap))
 
@@ -189,11 +201,15 @@ func newRunCmd() *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 	}
 
+	// General flags
 	cmd.PersistentFlags().BoolVar(&dirty, "dirty", false, "if set the project directory will be mounted"+
 		"in read-write mode, otherwise the project directory files are copied, taking .gitignore into account")
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
+
+	// Docker-related flags
+	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false, "don't pull the images when starting containers")
 
 	return cmd
 }

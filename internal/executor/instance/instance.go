@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/echelon"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -85,6 +86,7 @@ type RunConfig struct {
 	TaskID                     int64
 	Logger                     *echelon.Logger
 	DirtyMode                  bool
+	DockerOptions              options.DockerOptions
 }
 
 type Params struct {
@@ -119,19 +121,7 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		additionalContainer.Memory = clampMemory(additionalContainer.Memory, availableMemory)
 	}
 
-	// Check if the image is missing and pull it if needed
-	var needToPull bool
-
-	_, _, err = cli.ImageInspectWithRaw(ctx, params.Image)
-	if err != nil {
-		if client.IsErrNotFound(err) {
-			needToPull = true
-		} else {
-			return err
-		}
-	}
-
-	if needToPull {
+	if config.DockerOptions.ShouldPullImage(params.Image) {
 		logger.Debugf("pulling image %s", params.Image)
 		progress, err := cli.ImagePull(ctx, params.Image, types.ImagePullOptions{})
 		if err != nil {

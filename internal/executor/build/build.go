@@ -50,6 +50,14 @@ func New(projectDir string, tasks []*api.Task) (*Build, error) {
 	}, nil
 }
 
+func (b *Build) Tasks() (result []*Task) {
+	for _, task := range b.tasks {
+		result = append(result, task)
+	}
+
+	return
+}
+
 func (b *Build) GetTask(id int64) *Task {
 	task, found := b.tasks[id]
 	if !found {

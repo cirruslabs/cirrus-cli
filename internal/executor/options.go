@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/echelon"
 )
@@ -28,5 +29,11 @@ func WithEnvironment(environment map[string]string) Option {
 func WithDirtyMode() Option {
 	return func(e *Executor) {
 		e.dirtyMode = true
+	}
+}
+
+func WithDockerOptions(dockerOptions options.DockerOptions) Option {
+	return func(e *Executor) {
+		e.dockerOptions = dockerOptions
 	}
 }

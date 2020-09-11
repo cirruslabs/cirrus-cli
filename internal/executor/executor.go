@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/echelon"
@@ -27,6 +28,7 @@ type Executor struct {
 	taskFilter               taskfilter.TaskFilter
 	userSpecifiedEnvironment map[string]string
 	dirtyMode                bool
+	dockerOptions            options.DockerOptions
 }
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
@@ -75,6 +77,16 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	e.build = b
 	e.rpc = rpc.New(b, rpc.WithLogger(e.logger))
 
+	// Collect images that shouldn't be pulled under any circumstances
+	for _, task := range b.Tasks() {
+		prebuiltInstance, ok := task.Instance.(*instance.PrebuiltInstance)
+		if !ok {
+			continue
+		}
+
+		e.dockerOptions.NoPullImages = append(e.dockerOptions.NoPullImages, prebuiltInstance.Image)
+	}
+
 	return e, nil
 }
 
@@ -97,13 +109,14 @@ func (e *Executor) Run(ctx context.Context) error {
 		// Prepare task's instance
 		taskInstance := task.Instance
 		instanceRunOpts := instance.RunConfig{
-			ProjectDir:   e.build.ProjectDir,
-			Endpoint:     e.rpc.Endpoint(),
-			ServerSecret: e.rpc.ServerSecret(),
-			ClientSecret: e.rpc.ClientSecret(),
-			TaskID:       task.ID,
-			Logger:       taskLogger,
-			DirtyMode:    e.dirtyMode,
+			ProjectDir:    e.build.ProjectDir,
+			Endpoint:      e.rpc.Endpoint(),
+			ServerSecret:  e.rpc.ServerSecret(),
+			ClientSecret:  e.rpc.ClientSecret(),
+			TaskID:        task.ID,
+			Logger:        taskLogger,
+			DirtyMode:     e.dirtyMode,
+			DockerOptions: e.dockerOptions,
 		}
 
 		// Wrap the context to enforce a timeout for this task
