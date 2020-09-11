@@ -152,3 +152,22 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 	assert.Contains(t, buf.String(), "'from_yaml' succeeded")
 	assert.Contains(t, buf.String(), "'from_starlark' succeeded")
 }
+
+// TestRunDockerNoPull ensures that --docker-no-pull argument actually disables the container image pulling.
+func TestRunDockerNoPull(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/docker-no-pull")
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-v", "--docker-no-pull"})
+	command.SetOut(writer)
+	command.SetErr(writer)
+	err := command.Execute()
+
+	require.NotNil(t, err)
+	assert.NotContains(t, buf.String(), "pulling image")
+	assert.Contains(t, buf.String(), "No such image")
+}
