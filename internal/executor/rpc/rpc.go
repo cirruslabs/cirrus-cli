@@ -236,13 +236,10 @@ func (r *RPC) getCommandLogger(task *build.Task, commandName string) *echelon.Lo
 		break
 	case command.ProtoCommand.GetScriptInstruction() != nil:
 		commandLoggerScope += " script"
-		break
 	case command.ProtoCommand.GetBackgroundScriptInstruction() != nil:
 		commandLoggerScope += " background script"
-		break
 	case command.ProtoCommand.GetCacheInstruction() != nil:
 		commandLoggerScope += " cache"
-		break
 	}
 	return r.logger.Scoped(task.UniqueDescription()).Scoped(commandLoggerScope)
 }
