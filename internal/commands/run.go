@@ -209,7 +209,8 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 
 	// Docker-related flags
-	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false, "don't attempt to pull the images before starting containers")
+	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false,
+		"don't attempt to pull the images before starting containers")
 
 	return cmd
 }
