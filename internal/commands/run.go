@@ -32,6 +32,14 @@ var verbose bool
 // Docker-related flags.
 var dockerNoPull bool
 
+const (
+	OutputAuto        = "auto"
+	OutputSimple      = "simple"
+	OutputInteractive = "interactive"
+	OutputTravis      = "travis"
+	OutputGA          = "github-actions"
+)
+
 // envArgsToMap parses and expands environment arguments like "A=B" (set operation)
 // and "A" (pass-through operation) into a map suitable for use across the codebase.
 func envArgsToMap(arguments []string) map[string]string {
@@ -139,32 +147,31 @@ func run(cmd *cobra.Command, args []string) error {
 
 	var executorOpts []executor.Option
 
-	tryToDetectOutput := output == "auto"
-	if tryToDetectOutput && envVariableIsTrue("TRAVIS") {
-		output = "travis"
+	if output == OutputAuto && envVariableIsTrue("TRAVIS") {
+		output = OutputTravis
 	}
-	if tryToDetectOutput && envVariableIsTrue("GITHUB_ACTIONS") {
-		output = "github-actions"
+	if output == OutputAuto && envVariableIsTrue("GITHUB_ACTIONS") {
+		output = OutputGA
 	}
-	if tryToDetectOutput && envVariableIsTrue("CI") {
-		output = "simple"
+	if output == OutputAuto && envVariableIsTrue("CI") {
+		output = OutputSimple
 	}
-	if tryToDetectOutput {
-		output = "interactive"
+	if output == OutputAuto {
+		output = OutputInteractive
 	}
 
 	// Enable logging
 	var defaultSimpleRenderer = renderers.NewSimpleRenderer(cmd.OutOrStdout(), nil)
 	var renderer echelon.LogRendered = defaultSimpleRenderer
 	switch output {
-	case "interactive":
+	case OutputInteractive:
 		interactiveRenderer := renderers.NewInteractiveRenderer(os.Stdout, nil)
 		go interactiveRenderer.StartDrawing()
 		defer interactiveRenderer.StopDrawing()
 		renderer = interactiveRenderer
-	case "travis":
+	case OutputTravis:
 		renderer = logs.NewTravisCILogsRenderer(defaultSimpleRenderer)
-	case "github-actions":
+	case OutputGA:
 		renderer = logs.NewGithubActionsLogsRenderer(defaultSimpleRenderer)
 	}
 	logger := echelon.NewLogger(echelon.InfoLevel, renderer)
@@ -221,8 +228,8 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
-	cmd.PersistentFlags().StringVarP(&output, "output", "o", "auto", "output format of logs, "+
-		"supported values: auto, interactive, simple, travis, github-actions")
+	cmd.PersistentFlags().StringVarP(&output, "output", "o", "auto", fmt.Sprintf("output format of logs, "+
+		"supported values: %s, %s, %s, %s, %s", OutputAuto, OutputInteractive, OutputSimple, OutputTravis, OutputGA))
 
 	// Docker-related flags
 	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false,
