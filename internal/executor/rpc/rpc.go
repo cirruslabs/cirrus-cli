@@ -203,8 +203,7 @@ func (r *RPC) ReportSingleCommand(
 	if err != nil {
 		return nil, err
 	}
-
-	commandLogger := r.logger.Scoped(task.UniqueDescription()).Scoped(req.CommandName)
+	commandLogger := r.getCommandLogger(task, req.CommandName)
 
 	// Register whether the current command succeeded or failed
 	// so that the main loop can make the decision whether
@@ -225,6 +224,22 @@ func (r *RPC) ReportSingleCommand(
 	commandLogger.Finish(req.Succeded)
 
 	return &api.ReportSingleCommandResponse{}, nil
+}
+
+func (r *RPC) getCommandLogger(task *build.Task, commandName string) *echelon.Logger {
+	commandLoggerScope := commandName
+	// make pretty names for some instruction types
+	command := task.GetCommand(commandName)
+	if command == nil {
+		// no found :-(
+	} else if command.ProtoCommand.GetScriptInstruction() != nil {
+		commandLoggerScope += " script"
+	} else if command.ProtoCommand.GetBackgroundScriptInstruction() != nil {
+		commandLoggerScope += " background script"
+	} else if command.ProtoCommand.GetCacheInstruction() != nil {
+		commandLoggerScope += " cache"
+	}
+	return r.logger.Scoped(task.UniqueDescription()).Scoped(commandLoggerScope)
 }
 
 func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
@@ -251,7 +266,7 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			currentTaskName = task.Name
 			currentCommand = x.Key.CommandName
 
-			streamLogger = r.logger.Scoped(task.UniqueDescription()).Scoped(currentCommand)
+			streamLogger := r.getCommandLogger(task, currentCommand)
 			streamLogger.Debugf("begin streaming logs")
 		case *api.LogEntry_Chunk:
 			if currentTaskName == "" {
