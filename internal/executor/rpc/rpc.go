@@ -230,14 +230,19 @@ func (r *RPC) getCommandLogger(task *build.Task, commandName string) *echelon.Lo
 	commandLoggerScope := commandName
 	// make pretty names for some instruction types
 	command := task.GetCommand(commandName)
-	if command == nil {
+	switch {
+	case command == nil:
 		// no found :-(
-	} else if command.ProtoCommand.GetScriptInstruction() != nil {
+		break
+	case command.ProtoCommand.GetScriptInstruction() != nil:
 		commandLoggerScope += " script"
-	} else if command.ProtoCommand.GetBackgroundScriptInstruction() != nil {
+		break
+	case command.ProtoCommand.GetBackgroundScriptInstruction() != nil:
 		commandLoggerScope += " background script"
-	} else if command.ProtoCommand.GetCacheInstruction() != nil {
+		break
+	case command.ProtoCommand.GetCacheInstruction() != nil:
 		commandLoggerScope += " cache"
+		break
 	}
 	return r.logger.Scoped(task.UniqueDescription()).Scoped(commandLoggerScope)
 }
