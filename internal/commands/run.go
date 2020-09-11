@@ -25,6 +25,7 @@ var ErrRun = errors.New("run failed")
 
 // General flags.
 var dirty bool
+var output string
 var environment []string
 var verbose bool
 
@@ -138,20 +139,33 @@ func run(cmd *cobra.Command, args []string) error {
 
 	var executorOpts []executor.Option
 
+	tryToDetectOutput := output == "auto"
+	if tryToDetectOutput && envVariableIsTrue("TRAVIS") {
+		output = "travis"
+	}
+	if tryToDetectOutput && envVariableIsTrue("GITHUB_ACTIONS") {
+		output = "github-actions"
+	}
+	if tryToDetectOutput && envVariableIsTrue("CI") {
+		output = "simple"
+	}
+	if tryToDetectOutput {
+		output = "interactive"
+	}
+
 	// Enable logging
-	shouldUseSimpleRenderer := verbose || envVariableIsTrue("CI")
-	var verboseRenderer = renderers.NewSimpleRenderer(cmd.OutOrStdout(), nil)
-	var renderer echelon.LogRendered = verboseRenderer
-	switch {
-	case !shouldUseSimpleRenderer:
+	var defaultSimpleRenderer = renderers.NewSimpleRenderer(cmd.OutOrStdout(), nil)
+	var renderer echelon.LogRendered = defaultSimpleRenderer
+	switch output {
+	case "interactive":
 		interactiveRenderer := renderers.NewInteractiveRenderer(os.Stdout, nil)
 		go interactiveRenderer.StartDrawing()
 		defer interactiveRenderer.StopDrawing()
 		renderer = interactiveRenderer
-	case envVariableIsTrue("TRAVIS"):
-		renderer = logs.NewTravisCILogsRenderer(verboseRenderer)
-	case envVariableIsTrue("GITHUB_ACTIONS"):
-		renderer = logs.NewGithubActionsLogsRenderer(verboseRenderer)
+	case "travis":
+		renderer = logs.NewTravisCILogsRenderer(defaultSimpleRenderer)
+	case "github-actions":
+		renderer = logs.NewGithubActionsLogsRenderer(defaultSimpleRenderer)
 	}
 	logger := echelon.NewLogger(echelon.InfoLevel, renderer)
 	if verbose {
@@ -207,6 +221,8 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
+	cmd.PersistentFlags().StringVarP(&output, "output", "o", "auto", "output format of logs, "+
+		"supported values: auto, interactive, simple, travis, github-actions")
 
 	// Docker-related flags
 	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false,
