@@ -227,7 +227,7 @@ func (r *RPC) ReportSingleCommand(
 }
 
 func (r *RPC) getCommandLogger(task *build.Task, commandName string) *echelon.Logger {
-	commandLoggerScope := commandName
+	commandLoggerScope := fmt.Sprintf("'%s'", commandName)
 	// make pretty names for some instruction types
 	command := task.GetCommand(commandName)
 	switch {
