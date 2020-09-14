@@ -1,4 +1,4 @@
-package larker
+package loader
 
 import (
 	"errors"
