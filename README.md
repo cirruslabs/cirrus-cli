@@ -47,7 +47,7 @@ task:
   test_script: go test ./...
 ```
 
-## Running Cirrus Tasks
+### Running Cirrus Tasks
 
 To run Cirrus tasks, simply switch to a directory where the `.cirrus.yml` is located and run:
                                 
@@ -64,12 +64,30 @@ cirrus run "Tests (Go 1.15)"
 **Note:** Cirrus CLI only support [Linux `container`s](https://cirrus-ci.org/guide/linux/#linux-containers) instances at the moment
 including [Dockerfile as a CI environment](https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment) feature.
 
-## Validating Cirrus Configuration
+### Validating Cirrus Configuration
 
 To validate a Cirrus configuration, simply switch to a directory where the `.cirrus.yml` is located and run:
 
 ```shell script
 cirrus validate
+```
+
+## Caching
+
+By default, Cirrus CLI uses [the default folder for user-specific cached data](https://golang.org/pkg/os/#UserCacheDir)
+for storing blob artifacts produced by [Cache Instruction](https://cirrus-ci.org/guide/writing-tasks/#cache-instruction).
+[Similar to Cirrus CI](https://cirrus-ci.org/guide/writing-tasks/#http-cache) the CLI can use a caching HTTP server for
+more efficient sharing of cached artifacts between tasks executed on different physical hosts.
+
+Caching HTTP server should support a single `/<key>` REST endpoint with `PUT`, `GET` and `HEAD` methods available for
+uploading, downloading and checking availability of a cached artifact under `<key>` key respectively. There are reference
+implementations of such HTTP servers for [Google Cloud Storage](https://github.com/cirruslabs/google-storage-proxy) and
+[AWS S3](https://github.com/cirruslabs/aws-s3-proxy) and [Azure's Blob Storage](https://github.com/cirruslabs/azure-blob-storage-proxy).
+
+To start using your own HTTP caching server simply pass it's hostname as `CIRRUS_HTTP_CACHE_HOST` to [`run` command](#running-cirrus-tasks):
+
+```bash
+cirrus run --environment CIRRUS_HTTP_CACHE_HOST=http-cache-host.internal:8080
 ```
 
 ## FAQ
