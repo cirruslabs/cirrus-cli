@@ -25,11 +25,20 @@ var ErrRun = errors.New("run failed")
 
 // General flags.
 var dirty bool
+var output string
 var environment []string
 var verbose bool
 
 // Docker-related flags.
 var dockerNoPull bool
+
+const (
+	OutputAuto        = "auto"
+	OutputSimple      = "simple"
+	OutputInteractive = "interactive"
+	OutputTravis      = "travis"
+	OutputGA          = "github-actions"
+)
 
 // envArgsToMap parses and expands environment arguments like "A=B" (set operation)
 // and "A" (pass-through operation) into a map suitable for use across the codebase.
@@ -138,20 +147,32 @@ func run(cmd *cobra.Command, args []string) error {
 
 	var executorOpts []executor.Option
 
+	if output == OutputAuto && envVariableIsTrue("TRAVIS") {
+		output = OutputTravis
+	}
+	if output == OutputAuto && envVariableIsTrue("GITHUB_ACTIONS") {
+		output = OutputGA
+	}
+	if output == OutputAuto && envVariableIsTrue("CI") {
+		output = OutputSimple
+	}
+	if output == OutputAuto {
+		output = OutputInteractive
+	}
+
 	// Enable logging
-	shouldUseSimpleRenderer := verbose || envVariableIsTrue("CI")
-	var verboseRenderer = renderers.NewSimpleRenderer(cmd.OutOrStdout(), nil)
-	var renderer echelon.LogRendered = verboseRenderer
-	switch {
-	case !shouldUseSimpleRenderer:
+	var defaultSimpleRenderer = renderers.NewSimpleRenderer(cmd.OutOrStdout(), nil)
+	var renderer echelon.LogRendered = defaultSimpleRenderer
+	switch output {
+	case OutputInteractive:
 		interactiveRenderer := renderers.NewInteractiveRenderer(os.Stdout, nil)
 		go interactiveRenderer.StartDrawing()
 		defer interactiveRenderer.StopDrawing()
 		renderer = interactiveRenderer
-	case envVariableIsTrue("TRAVIS"):
-		renderer = logs.NewTravisCILogsRenderer(verboseRenderer)
-	case envVariableIsTrue("GITHUB_ACTIONS"):
-		renderer = logs.NewGithubActionsLogsRenderer(verboseRenderer)
+	case OutputTravis:
+		renderer = logs.NewTravisCILogsRenderer(defaultSimpleRenderer)
+	case OutputGA:
+		renderer = logs.NewGithubActionsLogsRenderer(defaultSimpleRenderer)
 	}
 	logger := echelon.NewLogger(echelon.InfoLevel, renderer)
 	if verbose {
@@ -207,6 +228,8 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
+	cmd.PersistentFlags().StringVarP(&output, "output", "o", "auto", fmt.Sprintf("output format of logs, "+
+		"supported values: %s, %s, %s, %s, %s", OutputAuto, OutputInteractive, OutputSimple, OutputTravis, OutputGA))
 
 	// Docker-related flags
 	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false,
