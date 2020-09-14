@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
@@ -31,6 +32,9 @@ var verbose bool
 
 // Docker-related flags.
 var dockerNoPull bool
+
+// Experimental features flags.
+var experimentalParser bool
 
 const (
 	OutputAuto        = "auto"
@@ -132,10 +136,25 @@ func run(cmd *cobra.Command, args []string) error {
 	mergedYAML := yamlConfig + "\n" + starlarkConfig
 
 	// Parse
-	p := rpcparser.Parser{Environment: envMap}
-	result, err := p.Parse(mergedYAML)
-	if err != nil {
-		return err
+	var result *parser.Result
+	if experimentalParser {
+		p := parser.New(parser.WithEnvironment(envMap))
+		result, err = p.Parse(mergedYAML)
+		if err != nil {
+			return err
+		}
+	} else {
+		p := rpcparser.Parser{Environment: envMap}
+		r, err := p.Parse(mergedYAML)
+		if err != nil {
+			return err
+		}
+
+		// Convert into new parser result structure
+		result = &parser.Result{
+			Errors: r.Errors,
+			Tasks:  r.Tasks,
+		}
 	}
 
 	if len(result.Errors) > 0 {
@@ -234,6 +253,10 @@ func newRunCmd() *cobra.Command {
 	// Docker-related flags
 	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false,
 		"don't attempt to pull the images before starting containers")
+
+	// Experimental features flags
+	cmd.PersistentFlags().BoolVar(&experimentalParser, "experimental-parser", false,
+		"use local configuration parser instead of sending parse request to Cirrus Cloud")
 
 	return cmd
 }
