@@ -75,7 +75,7 @@ cirrus validate
 ## Caching
 
 By default, Cirrus CLI stores blob artifacts produced by the [cache instruction](https://cirrus-ci.org/guide/writing-tasks/#cache-instruction)
-in the [user-specific cached data folder](https://golang.org/pkg/os/#UserCacheDir). [Similar to Cirrus CI](https://cirrus-ci.org/guide/writing-tasks/#http-cache)
+in the [user-specific cached data folder](https://golang.org/pkg/os/#UserCacheDir). [Similar to Cirrus Cloud](https://cirrus-ci.org/guide/writing-tasks/#http-cache)
 the CLI can use a caching HTTP server for more efficient sharing of cached artifacts between tasks executed on different physical hosts.
 
 Caching HTTP server should support a single `/<key>` REST endpoint with `PUT`, `GET` and `HEAD` methods available for
