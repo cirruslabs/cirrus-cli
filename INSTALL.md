@@ -66,7 +66,7 @@ jobs:
     - uses: cirruslabs/cirrus-action@v2
 ```
 
-**Note:** Cirrus Action integrates natively with GitHub Actions' caching mechanism by using [HTTP Caching Proxy Action](https://github.com/cirruslabs/http-cache-action)
+**Note:** Cirrus Action integrates natively with GitHub Actions caching mechanism by using [HTTP Caching Proxy Action](https://github.com/cirruslabs/http-cache-action)
 
 ## Travis CI
 
