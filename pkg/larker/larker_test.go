@@ -102,3 +102,31 @@ func TestCycle(t *testing.T) {
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, larker.ErrLoadFailed))
 }
+
+// TestLoadGitHelpers ensures that we can use https://github.com/cirrus-templates/helpers
+// as demonstrated in it's README.md.
+//
+// Note that we lock the revision in the .cirrus.star's load statement to prevent failures in the future.
+func TestLoadGitHelpers(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/load-git-helpers")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the source code
+	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(dir)))
+	result, err := lrk.Main(context.Background(), string(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Compare the output
+	expected, err := ioutil.ReadFile(filepath.Join(dir, "expected.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.YAMLEq(t, string(expected), result)
+}

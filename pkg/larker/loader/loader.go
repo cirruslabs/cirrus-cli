@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git"
 	"go.starlark.net/starlark"
 	"path/filepath"
 )
@@ -29,6 +30,15 @@ func NewLoader(ctx context.Context, fs fs.FileSystem) *Loader {
 	}
 }
 
+func (loader *Loader) Retrieve(module string) ([]byte, error) {
+	gitLocator := git.Parse(module)
+	if gitLocator != nil {
+		return git.Retrieve(loader.ctx, gitLocator)
+	}
+
+	return loader.fs.Get(module)
+}
+
 func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
 	return func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
 		// Lookup cache
@@ -46,7 +56,7 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 		}
 
 		// Retrieve module source code
-		source, err := loader.fs.Get(module)
+		source, err := loader.Retrieve(module)
 		if err != nil {
 			return nil, err
 		}
