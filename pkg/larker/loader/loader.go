@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"go.starlark.net/starlark"
@@ -15,12 +16,14 @@ type CacheEntry struct {
 }
 
 type Loader struct {
+	ctx   context.Context
 	cache map[string]*CacheEntry
 	fs    fs.FileSystem
 }
 
-func NewLoader(fs fs.FileSystem) *Loader {
+func NewLoader(ctx context.Context, fs fs.FileSystem) *Loader {
 	return &Loader{
+		ctx:   ctx,
 		cache: make(map[string]*CacheEntry),
 		fs:    fs,
 	}
