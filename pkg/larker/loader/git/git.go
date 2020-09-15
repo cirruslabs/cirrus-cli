@@ -11,6 +11,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/storage/filesystem"
 	"io/ioutil"
+	"os"
 	"regexp"
 )
 
@@ -20,7 +21,10 @@ type Locator struct {
 	Revision string
 }
 
-var ErrRetrievalFailed = errors.New("failed to retrieve a file from Git repository")
+var (
+	ErrRetrievalFailed = errors.New("failed to retrieve a file from Git repository")
+	ErrFileNotFound    = errors.New("file not found in a Git repository")
+)
 
 const (
 	// Captures the path after / in non-greedy manner.
@@ -111,6 +115,10 @@ func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
 	// Read the file from the working tree
 	file, err := worktree.Filesystem.Open(locator.Path)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, fmt.Errorf("%w: %v", ErrFileNotFound, err)
+		}
+
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 

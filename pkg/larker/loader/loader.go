@@ -3,13 +3,19 @@ package loader
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git"
 	"go.starlark.net/starlark"
+	"os"
 	"path/filepath"
+	"strings"
 )
 
-var ErrCycle = errors.New("import cycle detected")
+var (
+	ErrCycle           = errors.New("import cycle detected")
+	ErrRetrievalFailed = errors.New("failed to retrieve module")
+)
 
 type CacheEntry struct {
 	globals starlark.StringDict
@@ -58,6 +64,16 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 		// Retrieve module source code
 		source, err := loader.Retrieve(module)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) || errors.Is(err, git.ErrFileNotFound) {
+				var hint string
+
+				if strings.Contains(module, ".start") {
+					hint = ", perhaps you've meant the .star extension instead of the .start?"
+				}
+
+				return nil, fmt.Errorf("%w: module '%s' not found%s", ErrRetrievalFailed, module, hint)
+			}
+
 			return nil, err
 		}
 
