@@ -2,10 +2,12 @@ package git
 
 import (
 	"context"
-	"github.com/go-git/go-billy/v5/memfs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git/bounded"
+	"github.com/docker/go-units"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/storage/memory"
+	"github.com/go-git/go-git/v5/plumbing/cache"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 	"io/ioutil"
 	"regexp"
 )
@@ -62,11 +64,22 @@ func Parse(module string) *Locator {
 }
 
 func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
-	storer := memory.NewStorage()
-	fs := memfs.New()
+	const (
+		cacheBytes = 1 * units.MiB
+
+		storageBytes = 4 * units.MiB
+		storageFiles = 512
+
+		filesystemBytes = 4 * units.MiB
+		filesystemFiles = 512
+	)
+
+	boundedCache := cache.NewObjectLRU(cacheBytes)
+	boundedStorage := filesystem.NewStorage(bounded.NewFilesystem(storageBytes, storageFiles), boundedCache)
+	boundedFilesystem := bounded.NewFilesystem(filesystemBytes, filesystemFiles)
 
 	// Clone the repository
-	repo, err := git.CloneContext(ctx, storer, fs, &git.CloneOptions{
+	repo, err := git.CloneContext(ctx, boundedStorage, boundedFilesystem, &git.CloneOptions{
 		URL:   locator.URL,
 		Depth: 1,
 	})
