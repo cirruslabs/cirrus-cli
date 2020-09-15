@@ -23,6 +23,9 @@ archives:
   - id: regular
     name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
 
+release:
+  prerelease: auto
+
 brews:
   - name: cirrus
     ids:
@@ -33,3 +36,4 @@ brews:
     caveats: See the Github repository for more information
     homepage: https://github.com/cirruslabs/cirrus-cli
     description: CLI for running Cirrus Tasks locally in Docker containers
+    skip_upload: auto
