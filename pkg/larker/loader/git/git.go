@@ -2,6 +2,8 @@ package git
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git/bounded"
 	"github.com/docker/go-units"
 	"github.com/go-git/go-git/v5"
@@ -17,6 +19,8 @@ type Locator struct {
 	Path     string
 	Revision string
 }
+
+var ErrRetrievalFailed = errors.New("failed to retrieve a file from Git repository")
 
 const (
 	// Captures the path after / in non-greedy manner.
@@ -84,35 +88,35 @@ func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
 		Depth: 1,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
 	// Checkout the working tree to the specified revision
 	worktree, err := repo.Worktree()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
 	hash, err := repo.ResolveRevision(plumbing.Revision(locator.Revision))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
 	if err := worktree.Checkout(&git.CheckoutOptions{
 		Hash: *hash,
 	}); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
 	// Read the file from the working tree
 	file, err := worktree.Filesystem.Open(locator.Path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
 	return fileBytes, nil
