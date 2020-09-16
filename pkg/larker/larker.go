@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
@@ -24,7 +25,7 @@ type Larker struct {
 
 func New(opts ...Option) *Larker {
 	lrk := &Larker{
-		fs: fs.NewDummyFileSystem(),
+		fs: dummy.New(),
 	}
 
 	// weird global init by Starlark
