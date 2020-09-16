@@ -10,7 +10,7 @@ var version string
 func NewRootCmd() *cobra.Command {
 	if version == "" {
 		info, ok := debug.ReadBuildInfo()
-		if ok && info != nil {
+		if ok {
 			version = info.Main.Version
 		}
 	}
