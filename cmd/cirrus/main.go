@@ -8,6 +8,11 @@ import (
 	"os/signal"
 )
 
+var (
+	version = "unknown"
+	commit = "unknown"
+)
+
 func main() {
 	// Set up signal interruptible context
 	ctx, cancel := context.WithCancel(context.Background())
@@ -24,7 +29,7 @@ func main() {
 	}()
 
 	// Run the command
-	if err := commands.NewRootCmd().ExecuteContext(ctx); err != nil {
+	if err := commands.NewRootCmd(version, commit).ExecuteContext(ctx); err != nil {
 		log.Fatal(err)
 	}
 }

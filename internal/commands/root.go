@@ -1,14 +1,13 @@
 package commands
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"runtime/debug"
 )
 
-var version string
-
-func NewRootCmd() *cobra.Command {
-	if version == "" {
+func NewRootCmd(version, commit string) *cobra.Command {
+	if version == "unknown" {
 		info, ok := debug.ReadBuildInfo()
 		if ok {
 			version = info.Main.Version
@@ -18,7 +17,7 @@ func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "cirrus",
 		Short:   "Cirrus CLI",
-		Version: version,
+		Version: fmt.Sprintf("%s-%s", version, commit),
 	}
 
 	cmd.AddCommand(
