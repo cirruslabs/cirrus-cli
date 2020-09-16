@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 const defaultTaskTimeout = 60 * time.Minute
@@ -90,10 +92,16 @@ func (task *Task) ProtoCommands() []*api.Command {
 }
 
 func (task *Task) UniqueDescription() string {
-	if len(task.Labels) == 0 {
-		return fmt.Sprintf("'%s' Task", task.Name)
+	name := task.Name
+	taskMessagePart := "task"
+	firstRune, _ := utf8.DecodeRuneInString(name)
+	if firstRune != utf8.RuneError && unicode.IsUpper(firstRune) {
+		taskMessagePart = "Task"
 	}
-	return fmt.Sprintf("'%s' Task (%s)", task.Name, strings.Join(task.Labels, " "))
+	if len(task.Labels) == 0 {
+		return fmt.Sprintf("'%s' %s", name, taskMessagePart)
+	}
+	return fmt.Sprintf("'%s' %s (%s)", name, taskMessagePart, strings.Join(task.Labels, " "))
 }
 
 func (task *Task) FailedAtLeastOnce() bool {

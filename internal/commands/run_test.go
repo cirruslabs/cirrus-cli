@@ -36,15 +36,19 @@ func TestRunTaskFiltering(t *testing.T) {
 		ExpectedStrings []string
 	}{
 		"first single task": {"first_working", []string{
+			"Started 'first_working' task",
 			"task first_working (0) succeeded",
 		}},
 		"second single task": {"Second Working", []string{
+			"Started 'Second Working' Task",
 			"task Second Working (2) succeeded",
 		}},
 		"first task case insensitivity": {"FiRsT_WoRkInG", []string{
+			"Started 'first_working' task",
 			"task first_working (0) succeeded",
 		}},
 		"second task case insensitivity": {"SECOND WORKING", []string{
+			"Started 'Second Working' Task",
 			"task Second Working (2) succeeded",
 		}},
 	}
