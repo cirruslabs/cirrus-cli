@@ -1,5 +1,5 @@
 container:
-  image: debian:latest
+  image: gophernet/netcat:latest
 
 task:
   container:
@@ -14,8 +14,6 @@ task:
         port: 5432
         env:
           POSTGRES_PASSWORD: insecure
-  prepare_script:
-    - apt-get update && apt-get -y install netcat-openbsd
   mysql_test_script:
     - nc -z 127.0.0.1 3306
   postgres_test_script:
