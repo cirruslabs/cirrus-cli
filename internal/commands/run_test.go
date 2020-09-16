@@ -21,7 +21,7 @@ func TestRun(t *testing.T) {
 	}
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v"})
+	command.SetArgs([]string{"run", "-v", "-o simple"})
 	err := command.Execute()
 
 	assert.Nil(t, err)
@@ -57,7 +57,7 @@ func TestRunTaskFiltering(t *testing.T) {
 			writer := io.MultiWriter(os.Stderr, buf)
 
 			command := commands.NewRootCmd()
-			command.SetArgs([]string{"run", "-v", example.Pattern})
+			command.SetArgs([]string{"run", "-v", "-o simple", example.Pattern})
 			command.SetOut(writer)
 			command.SetErr(writer)
 			err := command.Execute()
@@ -76,7 +76,7 @@ func TestRunTaskDependencyRemoval(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-task-dependency-removal")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "bar"})
+	command.SetArgs([]string{"run", "-v", "-o simple", "bar"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -87,7 +87,7 @@ func TestRunEnvironmentSet(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-e", "SOMEKEY=good value"})
+	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "SOMEKEY=good value"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -104,7 +104,7 @@ func TestRunEnvironmentPassThrough(t *testing.T) {
 	}
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-e", "SOMEKEY"})
+	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "SOMEKEY"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -116,7 +116,7 @@ func TestRunEnvironmentPrecedence(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-precedence")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-e", "SOMEKEY=good value"})
+	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "SOMEKEY=good value"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -128,7 +128,7 @@ func TestRunEnvironmentOnlyIf(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-only-if")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-e", "PLEASE_DONT_FAIL=okay"})
+	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "PLEASE_DONT_FAIL=okay"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -143,7 +143,7 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v"})
+	command.SetArgs([]string{"run", "-v", "-o simple"})
 	command.SetOut(writer)
 	command.SetErr(writer)
 	err := command.Execute()
@@ -162,7 +162,7 @@ func TestRunDockerNoPull(t *testing.T) {
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "--docker-no-pull"})
+	command.SetArgs([]string{"run", "-v", "-o simple", "--docker-no-pull"})
 	command.SetOut(writer)
 	command.SetErr(writer)
 	err := command.Execute()
