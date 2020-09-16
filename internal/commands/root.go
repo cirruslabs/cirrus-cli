@@ -7,7 +7,12 @@ import (
 	goversion "github.com/hashicorp/go-version"
 )
 
-func NewRootCmd(version, commit string) *cobra.Command {
+var (
+	version = "unknown"
+	commit  = "unknown"
+)
+
+func NewRootCmd() *cobra.Command {
 	if version == "unknown" {
 		info, ok := debug.ReadBuildInfo()
 		if ok {
