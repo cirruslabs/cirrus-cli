@@ -42,7 +42,7 @@ func (loader *Loader) Retrieve(module string) ([]byte, error) {
 		return git.Retrieve(loader.ctx, gitLocator)
 	}
 
-	return loader.fs.Get(module)
+	return loader.fs.Get(loader.ctx, module)
 }
 
 func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (starlark.StringDict, error) {

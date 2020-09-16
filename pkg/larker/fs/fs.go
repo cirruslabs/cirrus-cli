@@ -1,5 +1,7 @@
 package fs
 
+import "context"
+
 type FileSystem interface {
-	Get(path string) ([]byte, error)
+	Get(ctx context.Context, path string) ([]byte, error)
 }

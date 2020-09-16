@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"context"
 	"os"
 )
 
@@ -10,6 +11,6 @@ func NewDummyFileSystem() *Dummy {
 	return &Dummy{}
 }
 
-func (dfs *Dummy) Get(path string) ([]byte, error) {
+func (dfs *Dummy) Get(ctx context.Context, path string) ([]byte, error) {
 	return nil, os.ErrNotExist
 }

@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"context"
 	"io/ioutil"
 	"path/filepath"
 )
@@ -15,7 +16,7 @@ func NewLocalFileSystem(root string) *Local {
 	}
 }
 
-func (lfs *Local) Get(path string) ([]byte, error) {
+func (lfs *Local) Get(ctx context.Context, path string) ([]byte, error) {
 	// To make Starlark scripts cross-platform, load statements are expected to always use slashes,
 	// but to actually make this work on non-Unix platforms we need to adapt the path
 	// to the current platform
