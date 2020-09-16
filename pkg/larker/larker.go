@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v2"
@@ -18,8 +19,7 @@ var (
 )
 
 type Larker struct {
-	fs     fs.FileSystem
-	loader *Loader
+	fs fs.FileSystem
 }
 
 func New(opts ...Option) *Larker {
@@ -36,9 +36,6 @@ func New(opts ...Option) *Larker {
 		opt(lrk)
 	}
 
-	// Some fields can only be set after we apply the options
-	lrk.loader = NewLoader(lrk.fs)
-
 	return lrk
 }
 
@@ -46,7 +43,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 	discard := func(thread *starlark.Thread, msg string) {}
 
 	thread := &starlark.Thread{
-		Load:  larker.loader.LoadFunc(),
+		Load:  loader.NewLoader(ctx, larker.fs).LoadFunc(),
 		Print: discard,
 	}
 

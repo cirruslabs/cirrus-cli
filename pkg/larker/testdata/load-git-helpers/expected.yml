@@ -1,0 +1,16 @@
+task:
+  name: Lint
+  env:
+    STARLARK: true
+  container:
+    image: golangci/golangci-lint:latest
+    cpu: 1
+    memory: 512
+  lint_script:
+    - echo $STARLARK
+    - golangci-lint run -v --out-format json > golangci.json
+  always:
+    report_artifacts:
+      path: golangci.json
+      type: text/json
+      format: golangci

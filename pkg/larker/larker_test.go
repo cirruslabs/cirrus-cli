@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -101,4 +102,56 @@ func TestCycle(t *testing.T) {
 	_, err = lrk.Main(context.Background(), string(source))
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, larker.ErrLoadFailed))
+}
+
+// TestLoadGitHelpers ensures that we can use https://github.com/cirrus-templates/helpers
+// as demonstrated in it's README.md.
+//
+// Note that we lock the revision in the .cirrus.star's load statement to prevent failures in the future.
+func TestLoadGitHelpers(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/load-git-helpers")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the source code
+	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(dir)))
+	result, err := lrk.Main(context.Background(), string(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Compare the output
+	expected, err := ioutil.ReadFile(filepath.Join(dir, "expected.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.YAMLEq(t, string(expected), result)
+}
+
+// TestLoadTypoStarVsStart ensures that we return a user-friendly hint when loading of the module
+// that ends with ".start" fails.
+func TestLoadTypoStarVsStart(t *testing.T) {
+	dir := testutil.TempDir(t)
+
+	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(dir)))
+
+	// No hint
+	_, err := lrk.Main(context.Background(), "load(\"some/lib.star\", \"symbol\")\n")
+	require.Error(t, err)
+	assert.NotContains(t, err.Error(), "perhaps you've meant")
+
+	// Hint when loading from Git
+	_, err = lrk.Main(context.Background(),
+		"load(\"github.com/cirrus-templates/helpers/dir/lib.start@master\", \"symbol\")\n")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "instead of the .start?")
+
+	// Hint when loading from FS
+	_, err = lrk.Main(context.Background(), "load(\"dir/lib.start\", \"symbol\")\n")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "instead of the .start?")
 }
