@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-github/v32/github"
 	"golang.org/x/oauth2"
 	"net/http"
+	"os"
 	"syscall"
 )
 
@@ -30,12 +31,16 @@ func New(owner, repo, reference, token string) *GitHub {
 }
 
 func (gh *GitHub) Get(ctx context.Context, path string) ([]byte, error) {
-	fileContent, _, _, err := gh.client(ctx).Repositories.GetContents(ctx, gh.owner, gh.repo, path,
+	fileContent, _, resp, err := gh.client(ctx).Repositories.GetContents(ctx, gh.owner, gh.repo, path,
 		&github.RepositoryContentGetOptions{
 			Ref: gh.reference,
 		},
 	)
 	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusNotFound {
+			return nil, os.ErrNotExist
+		}
+
 		return nil, fmt.Errorf("%w: %v", ErrAPI, err)
 	}
 

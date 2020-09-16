@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
 	"syscall"
 	"testing"
 )
@@ -29,4 +30,11 @@ func TestGetDirectory(t *testing.T) {
 
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, syscall.EISDIR))
+}
+
+func TestGetNonExistentFile(t *testing.T) {
+	_, err := selfFS().Get(context.Background(), "the-file-that-should-not-exist.txt")
+
+	require.Error(t, err)
+	assert.True(t, errors.Is(err, os.ErrNotExist))
 }
