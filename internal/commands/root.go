@@ -2,9 +2,9 @@ package commands
 
 import (
 	"fmt"
+	goversion "github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 	"runtime/debug"
-	goversion "github.com/hashicorp/go-version"
 )
 
 var (
