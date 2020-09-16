@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"syscall"
 	"testing"
@@ -36,4 +37,14 @@ func TestGetDirectory(t *testing.T) {
 
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, syscall.EISDIR))
+}
+
+func TestGetNonExistentFile(t *testing.T) {
+	// Prepare temporary directory
+	dir := testutil.TempDir(t)
+
+	_, err := local.New(dir).Get(context.Background(), "the-file-that-should-not-exist.txt")
+
+	require.Error(t, err)
+	assert.True(t, errors.Is(err, os.ErrNotExist))
 }
