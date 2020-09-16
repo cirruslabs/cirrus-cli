@@ -240,6 +240,8 @@ func (r *RPC) getCommandLogger(task *build.Task, commandName string) *echelon.Lo
 		commandLoggerScope += " background script"
 	case command.ProtoCommand.GetCacheInstruction() != nil:
 		commandLoggerScope += " cache"
+	case command.ProtoCommand.GetArtifactsInstruction() != nil:
+		commandLoggerScope += " artifacts"
 	}
 	return r.logger.Scoped(task.UniqueDescription()).Scoped(commandLoggerScope)
 }
