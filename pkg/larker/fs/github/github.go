@@ -6,13 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/go-github/v32/github"
+	"golang.org/x/oauth2"
+	"net/http"
 	"syscall"
 )
 
 var ErrAPI = errors.New("failed to communicate with the GitHub API")
 
 type GitHub struct {
-	client    *github.Client
+	token     string
 	owner     string
 	repo      string
 	reference string
@@ -20,7 +22,7 @@ type GitHub struct {
 
 func New(owner, repo, reference, token string) *GitHub {
 	return &GitHub{
-		client:    github.NewClient(nil),
+		token:     token,
 		owner:     owner,
 		repo:      repo,
 		reference: reference,
@@ -28,7 +30,7 @@ func New(owner, repo, reference, token string) *GitHub {
 }
 
 func (gh *GitHub) Get(ctx context.Context, path string) ([]byte, error) {
-	fileContent, _, _, err := gh.client.Repositories.GetContents(ctx, gh.owner, gh.repo, path,
+	fileContent, _, _, err := gh.client(ctx).Repositories.GetContents(ctx, gh.owner, gh.repo, path,
 		&github.RepositoryContentGetOptions{
 			Ref: gh.reference,
 		},
@@ -48,4 +50,17 @@ func (gh *GitHub) Get(ctx context.Context, path string) ([]byte, error) {
 	}
 
 	return fileBytes, nil
+}
+
+func (gh *GitHub) client(ctx context.Context) *github.Client {
+	var client *http.Client
+
+	if gh.token != "" {
+		tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
+			AccessToken: gh.token,
+		})
+		client = oauth2.NewClient(ctx, tokenSource)
+	}
+
+	return github.NewClient(client)
 }

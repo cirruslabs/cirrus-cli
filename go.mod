@@ -41,6 +41,7 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	go.starlark.net v0.0.0-20200821142938-949cc6f4b097
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
+	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
 	golang.org/x/sys v0.0.0-20200819141100-7c7a22168250 // indirect
 	google.golang.org/genproto v0.0.0-20200815001618-f69a88009b70 // indirect
 	google.golang.org/grpc v1.32.0
