@@ -1,4 +1,4 @@
-package fs
+package dummy
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 type Dummy struct{}
 
-func NewDummyFileSystem() *Dummy {
+func New() *Dummy {
 	return &Dummy{}
 }
 

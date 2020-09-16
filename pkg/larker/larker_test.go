@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -34,7 +34,7 @@ func validateExpected(t *testing.T, testDir string) {
 	}
 
 	// Run the source code to produce a YAML configuration
-	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(dir)))
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
 	configuration, err := lrk.Main(context.Background(), string(source))
 	if err != nil {
 		t.Fatal(err)
@@ -59,7 +59,7 @@ func TestLoadFileSystemLocal(t *testing.T) {
 	}
 
 	// Run the source code
-	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(dir)))
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
 	_, err = lrk.Main(context.Background(), string(source))
 	if err != nil {
 		t.Fatal(err)
@@ -81,7 +81,7 @@ func TestTimeout(t *testing.T) {
 	defer cancel()
 
 	// Run the source code
-	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(dir)))
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
 	_, err = lrk.Main(ctx, string(source))
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, context.DeadlineExceeded))
@@ -98,7 +98,7 @@ func TestCycle(t *testing.T) {
 	}
 
 	// Run the source code
-	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(dir)))
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
 	_, err = lrk.Main(context.Background(), string(source))
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, larker.ErrLoadFailed))
@@ -118,7 +118,7 @@ func TestLoadGitHelpers(t *testing.T) {
 	}
 
 	// Run the source code
-	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(dir)))
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
 	result, err := lrk.Main(context.Background(), string(source))
 	if err != nil {
 		t.Fatal(err)
@@ -137,7 +137,7 @@ func TestLoadGitHelpers(t *testing.T) {
 func TestLoadTypoStarVsStart(t *testing.T) {
 	dir := testutil.TempDir(t)
 
-	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(dir)))
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
 
 	// No hint
 	_, err := lrk.Main(context.Background(), "load(\"some/lib.star\", \"symbol\")\n")

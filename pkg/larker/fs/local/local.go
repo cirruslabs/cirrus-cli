@@ -1,4 +1,4 @@
-package fs
+package local
 
 import (
 	"context"
@@ -10,7 +10,7 @@ type Local struct {
 	root string
 }
 
-func NewLocalFileSystem(root string) *Local {
+func New(root string) *Local {
 	return &Local{
 		root: root,
 	}

@@ -9,7 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/cirruslabs/echelon"
@@ -95,7 +95,7 @@ func readStarlarkConfig(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	lrk := larker.New(larker.WithFileSystem(fs.NewLocalFileSystem(".")))
+	lrk := larker.New(larker.WithFileSystem(local.New(".")))
 	return lrk.Main(ctx, string(starlarkSource))
 }
 
