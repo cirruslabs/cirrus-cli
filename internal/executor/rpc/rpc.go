@@ -203,7 +203,6 @@ func (r *RPC) ReportSingleCommand(
 	if err != nil {
 		return nil, err
 	}
-	commandLogger := r.getCommandLogger(task, req.CommandName)
 
 	// Register whether the current command succeeded or failed
 	// so that the main loop can make the decision whether
@@ -213,6 +212,7 @@ func (r *RPC) ReportSingleCommand(
 		return nil, status.Errorf(codes.FailedPrecondition, "attempt to set status for non-existent command %s",
 			req.CommandName)
 	}
+	commandLogger := r.getCommandLogger(task, command)
 
 	if req.Succeded {
 		command.SetStatus(commandstatus.Success)
@@ -226,21 +226,17 @@ func (r *RPC) ReportSingleCommand(
 	return &api.ReportSingleCommandResponse{}, nil
 }
 
-func (r *RPC) getCommandLogger(task *build.Task, commandName string) *echelon.Logger {
-	commandLoggerScope := fmt.Sprintf("'%s'", commandName)
-	// make pretty names for some instruction types
-	command := task.GetCommand(commandName)
-	switch {
-	case command == nil:
-		// no found :-(
-		break
-	case command.ProtoCommand.GetScriptInstruction() != nil:
+func (r *RPC) getCommandLogger(task *build.Task, command *build.Command) *echelon.Logger {
+	commandLoggerScope := fmt.Sprintf("'%s'", command.ProtoCommand.Name)
+	command.ProtoCommand.GetScriptInstruction()
+	switch command.ProtoCommand.Instruction.(type) {
+	case *api.Command_ScriptInstruction:
 		commandLoggerScope += " script"
-	case command.ProtoCommand.GetBackgroundScriptInstruction() != nil:
+	case *api.Command_BackgroundScriptInstruction:
 		commandLoggerScope += " background script"
-	case command.ProtoCommand.GetCacheInstruction() != nil:
+	case *api.Command_CacheInstruction:
 		commandLoggerScope += " cache"
-	case command.ProtoCommand.GetArtifactsInstruction() != nil:
+	case *api.Command_ArtifactsInstruction:
 		commandLoggerScope += " artifacts"
 	}
 	return r.logger.Scoped(task.UniqueDescription()).Scoped(commandLoggerScope)
@@ -270,7 +266,13 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			currentTaskName = task.Name
 			currentCommand = x.Key.CommandName
 
-			streamLogger := r.getCommandLogger(task, currentCommand)
+			command := task.GetCommand(currentCommand)
+			if command == nil {
+				return status.Errorf(codes.FailedPrecondition, "attempt to stream logs for non-existent command %s",
+					currentCommand)
+			}
+
+			streamLogger := r.getCommandLogger(task, command)
 			streamLogger.Debugf("begin streaming logs")
 		case *api.LogEntry_Chunk:
 			if currentTaskName == "" {
