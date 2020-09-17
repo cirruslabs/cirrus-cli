@@ -88,8 +88,7 @@ func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
 
 	// Clone the repository
 	repo, err := git.CloneContext(ctx, boundedStorage, boundedFilesystem, &git.CloneOptions{
-		URL:   locator.URL,
-		Depth: 1,
+		URL: locator.URL,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
