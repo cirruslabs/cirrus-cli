@@ -204,8 +204,6 @@ func (r *RPC) ReportSingleCommand(
 		return nil, err
 	}
 
-	commandLogger := r.logger.Scoped(task.UniqueName()).Scoped(req.CommandName)
-
 	// Register whether the current command succeeded or failed
 	// so that the main loop can make the decision whether
 	// to proceed with the execution or not.
@@ -214,6 +212,7 @@ func (r *RPC) ReportSingleCommand(
 		return nil, status.Errorf(codes.FailedPrecondition, "attempt to set status for non-existent command %s",
 			req.CommandName)
 	}
+	commandLogger := r.getCommandLogger(task, command)
 
 	if req.Succeded {
 		command.SetStatus(commandstatus.Success)
@@ -225,6 +224,22 @@ func (r *RPC) ReportSingleCommand(
 	commandLogger.Finish(req.Succeded)
 
 	return &api.ReportSingleCommandResponse{}, nil
+}
+
+func (r *RPC) getCommandLogger(task *build.Task, command *build.Command) *echelon.Logger {
+	commandLoggerScope := fmt.Sprintf("'%s'", command.ProtoCommand.Name)
+	command.ProtoCommand.GetScriptInstruction()
+	switch command.ProtoCommand.Instruction.(type) {
+	case *api.Command_ScriptInstruction:
+		commandLoggerScope += " script"
+	case *api.Command_BackgroundScriptInstruction:
+		commandLoggerScope += " background script"
+	case *api.Command_CacheInstruction:
+		commandLoggerScope += " cache"
+	case *api.Command_ArtifactsInstruction:
+		commandLoggerScope += " artifacts"
+	}
+	return r.logger.Scoped(task.UniqueDescription()).Scoped(commandLoggerScope)
 }
 
 func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
@@ -251,7 +266,13 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			currentTaskName = task.Name
 			currentCommand = x.Key.CommandName
 
-			streamLogger = r.logger.Scoped(task.UniqueName()).Scoped(currentCommand)
+			command := task.GetCommand(currentCommand)
+			if command == nil {
+				return status.Errorf(codes.FailedPrecondition, "attempt to stream logs for non-existent command %s",
+					currentCommand)
+			}
+
+			streamLogger := r.getCommandLogger(task, command)
 			streamLogger.Debugf("begin streaming logs")
 		case *api.LogEntry_Chunk:
 			if currentTaskName == "" {
@@ -281,7 +302,7 @@ func (r *RPC) Heartbeat(ctx context.Context, req *api.HeartbeatRequest) (*api.He
 		return nil, err
 	}
 
-	r.logger.Scoped(task.UniqueName()).Debugf("received heartbeat")
+	r.logger.Scoped(task.UniqueDescription()).Debugf("received heartbeat")
 
 	return &api.HeartbeatResponse{}, nil
 }
@@ -292,7 +313,7 @@ func (r *RPC) ReportAgentError(ctx context.Context, req *api.ReportAgentProblemR
 		return nil, err
 	}
 
-	r.logger.Scoped(task.UniqueName()).Debugf("agent error: %s", req.Message)
+	r.logger.Scoped(task.UniqueDescription()).Debugf("agent error: %s", req.Message)
 
 	return &empty.Empty{}, nil
 }
@@ -303,7 +324,7 @@ func (r *RPC) ReportAgentWarning(ctx context.Context, req *api.ReportAgentProble
 		return nil, err
 	}
 
-	r.logger.Scoped(task.UniqueName()).Debugf("agent warning: %s", req.Message)
+	r.logger.Scoped(task.UniqueDescription()).Debugf("agent warning: %s", req.Message)
 
 	return &empty.Empty{}, nil
 }
@@ -314,7 +335,7 @@ func (r *RPC) ReportAgentSignal(ctx context.Context, req *api.ReportAgentSignalR
 		return nil, err
 	}
 
-	r.logger.Scoped(task.UniqueName()).Debugf("agent signal: %s", req.Signal)
+	r.logger.Scoped(task.UniqueDescription()).Debugf("agent signal: %s", req.Signal)
 
 	return &empty.Empty{}, nil
 }

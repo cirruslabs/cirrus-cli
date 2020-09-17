@@ -36,15 +36,19 @@ func TestRunTaskFiltering(t *testing.T) {
 		ExpectedStrings []string
 	}{
 		"first single task": {"first_working", []string{
+			"Started 'first_working' task",
 			"task first_working (0) succeeded",
 		}},
 		"second single task": {"Second Working", []string{
+			"Started 'Second Working' Task",
 			"task Second Working (2) succeeded",
 		}},
 		"first task case insensitivity": {"FiRsT_WoRkInG", []string{
+			"Started 'first_working' task",
 			"task first_working (0) succeeded",
 		}},
 		"second task case insensitivity": {"SECOND WORKING", []string{
+			"Started 'Second Working' Task",
 			"task Second Working (2) succeeded",
 		}},
 	}
@@ -149,8 +153,8 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 	err := command.Execute()
 
 	require.Nil(t, err)
-	assert.Contains(t, buf.String(), "'from_yaml' succeeded")
-	assert.Contains(t, buf.String(), "'from_starlark' succeeded")
+	assert.Contains(t, buf.String(), "'from_yaml' script succeeded")
+	assert.Contains(t, buf.String(), "'from_starlark' script succeeded")
 }
 
 // TestRunDockerNoPull ensures that --docker-no-pull argument actually disables the container image pulling.
