@@ -14,9 +14,38 @@ import (
 	"testing"
 )
 
+func TestStatFile(t *testing.T) {
+	// Prepare temporary directory
+	dir := testutil.TempDir(t)
+
+	if err := ioutil.WriteFile(filepath.Join(dir, "some-file.txt"), []byte("some-contents"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	stat, err := local.New(dir).Stat(context.Background(), "some-file.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.False(t, stat.IsDir())
+}
+
+func TestStatDirectory(t *testing.T) {
+	// Prepare temporary directory
+	dir := testutil.TempDir(t)
+
+	stat, err := local.New(dir).Stat(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.True(t, stat.IsDir())
+}
+
 func TestGetFile(t *testing.T) {
 	// Prepare temporary directory
 	dir := testutil.TempDir(t)
+
 	if err := ioutil.WriteFile(filepath.Join(dir, "some-file.txt"), []byte("some-contents"), 0600); err != nil {
 		t.Fatal(err)
 	}

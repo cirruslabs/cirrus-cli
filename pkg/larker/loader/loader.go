@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/builtin"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git"
 	"go.starlark.net/starlark"
+	"go.starlark.net/starlarkstruct"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,6 +61,16 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 
 			// Return cached results
 			return entry.globals, entry.err
+		}
+
+		// A special case for loading Cirrus-provided builtins (e.g. load("cirrus", "fs"))
+		if module == "cirrus" {
+			return starlark.StringDict{
+				"fs": &starlarkstruct.Module{
+					Name:    "fs",
+					Members: builtin.FS(loader.ctx, loader.fs),
+				},
+			}, nil
 		}
 
 		// Retrieve module source code
