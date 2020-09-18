@@ -16,7 +16,7 @@ def test_exists():
 
     shouldNotExist = "exists-should-not-exist.txt"
     if fs.exists(shouldNotExist):
-        fail("%s exists, but shouldn't" % shouldNotExist)
+        fail("file %s should not exist" % shouldNotExist)
 
     if not fs.exists("."):
         fail("current directory does not exist, but should")
@@ -28,6 +28,10 @@ def test_read():
     if expectedContents != actualContents:
         fail("%s contains '%s' instead of '%s'" % (someFile, actualContents, expectedContents))
 
+    shouldNotExist = "read-should-not-exist.txt"
+    if fs.read(shouldNotExist) != None:
+        fail("non-existent file %s should not be readable" % shouldNotExist)
+
 def test_readdir():
     expectedFiles = [
         ".cirrus.star",
@@ -38,3 +42,7 @@ def test_readdir():
 
     if expectedFiles != actualFiles:
         fail("directory contains %s instead of %s" % (expectedFiles, actualFiles))
+
+    shouldNotExist = "readdir-should-not-exist"
+    if fs.readdir(shouldNotExist) != None:
+        fail("non-existent directory %s should not be readable" % shouldNotExist)

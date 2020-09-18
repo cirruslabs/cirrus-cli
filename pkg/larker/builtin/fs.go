@@ -49,6 +49,10 @@ func read(ctx context.Context, fs fs.FileSystem) starlark.Value {
 
 		fileBytes, err := fs.Get(ctx, path)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return starlark.None, nil
+			}
+
 			return nil, err
 		}
 
@@ -67,6 +71,10 @@ func readdir(ctx context.Context, fs fs.FileSystem) starlark.Value {
 
 		entries, err := fs.ReadDir(ctx, path)
 		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return starlark.None, nil
+			}
+
 			return nil, err
 		}
 
