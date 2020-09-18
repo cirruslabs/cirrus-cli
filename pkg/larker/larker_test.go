@@ -155,3 +155,21 @@ func TestLoadTypoStarVsStart(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "instead of the .start?")
 }
+
+// TestBuiltinFS ensures that filesystem-related builtins provided by the cirrus.fs module work correctly.
+func TestBuiltinFS(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-fs")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the source code
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
+	_, err = lrk.Main(context.Background(), string(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
