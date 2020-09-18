@@ -22,7 +22,7 @@ func TestStatFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.False(t, stat.IsDir())
+	assert.False(t, stat.IsDir)
 }
 
 func TestStatDirectory(t *testing.T) {
@@ -31,7 +31,7 @@ func TestStatDirectory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.True(t, stat.IsDir())
+	assert.True(t, stat.IsDir)
 }
 
 func TestGetFile(t *testing.T) {

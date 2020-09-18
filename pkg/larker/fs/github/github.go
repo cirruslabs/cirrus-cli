@@ -22,12 +22,6 @@ type GitHub struct {
 	reference string
 }
 
-type IsDir bool
-
-func (isDir IsDir) IsDir() bool {
-	return bool(isDir)
-}
-
 func New(owner, repo, reference, token string) *GitHub {
 	return &GitHub{
 		token:     token,
@@ -37,17 +31,17 @@ func New(owner, repo, reference, token string) *GitHub {
 	}
 }
 
-func (gh *GitHub) Stat(ctx context.Context, path string) (fs.FileInfo, error) {
+func (gh *GitHub) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
 	_, directoryContent, err := gh.getContentsWrapper(ctx, path)
 	if err != nil {
 		return nil, err
 	}
 
 	if directoryContent != nil {
-		return IsDir(true), nil
+		return &fs.FileInfo{IsDir: true}, nil
 	}
 
-	return IsDir(false), nil
+	return &fs.FileInfo{IsDir: false}, nil
 }
 
 func (gh *GitHub) Get(ctx context.Context, path string) ([]byte, error) {

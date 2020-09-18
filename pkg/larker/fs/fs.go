@@ -5,11 +5,11 @@ import (
 )
 
 type FileSystem interface {
-	Stat(ctx context.Context, path string) (FileInfo, error)
+	Stat(ctx context.Context, path string) (*FileInfo, error)
 	Get(ctx context.Context, path string) ([]byte, error)
 	ReadDir(ctx context.Context, path string) ([]string, error)
 }
 
-type FileInfo interface {
-	IsDir() bool
+type FileInfo struct {
+	IsDir bool
 }

@@ -18,8 +18,13 @@ func New(root string) *Local {
 	}
 }
 
-func (lfs *Local) Stat(ctx context.Context, path string) (fs.FileInfo, error) {
-	return os.Stat(lfs.pivot(path))
+func (lfs *Local) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
+	fileInfo, err := os.Stat(lfs.pivot(path))
+	if err != nil {
+		return nil, err
+	}
+
+	return &fs.FileInfo{IsDir: fileInfo.IsDir()}, nil
 }
 
 func (lfs *Local) Get(ctx context.Context, path string) ([]byte, error) {

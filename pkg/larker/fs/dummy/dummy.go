@@ -12,7 +12,7 @@ func New() *Dummy {
 	return &Dummy{}
 }
 
-func (dfs *Dummy) Stat(ctx context.Context, path string) (fs.FileInfo, error) {
+func (dfs *Dummy) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
 	return nil, os.ErrNotExist
 }
 
