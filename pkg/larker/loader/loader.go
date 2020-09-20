@@ -32,13 +32,15 @@ type Loader struct {
 	ctx   context.Context
 	cache map[string]*CacheEntry
 	fs    fs.FileSystem
+	env   map[string]string
 }
 
-func NewLoader(ctx context.Context, fs fs.FileSystem) *Loader {
+func NewLoader(ctx context.Context, fs fs.FileSystem, env map[string]string) *Loader {
 	return &Loader{
 		ctx:   ctx,
 		cache: make(map[string]*CacheEntry),
 		fs:    fs,
+		env:   env,
 	}
 }
 
@@ -74,11 +76,19 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 				return nil, err
 			}
 
+			starlarkEnv := starlark.NewDict(len(loader.env))
+			for key, value := range loader.env {
+				if err := starlarkEnv.SetKey(starlark.String(key), starlark.String(value)); err != nil {
+					return nil, err
+				}
+			}
+
 			return starlark.StringDict{
 				"fs": &starlarkstruct.Module{
 					Name:    "fs",
 					Members: builtin.FS(loader.ctx, loader.fs),
 				},
+				"env":  starlarkEnv,
 				"http": starlibModules["http"],
 				"hash": starlibModules["hash"],
 				"json": starlibModules["json"],
