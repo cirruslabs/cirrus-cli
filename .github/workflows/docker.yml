@@ -1,0 +1,22 @@
+name: Push Docker Image
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Docker Login
+        run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+      - name: Docker Build and Push
+        env:
+          TAG: {{ github.event.release.tag_name }}
+        run: |
+          docker build --tag ghcr.io/cirruslabs/cirrus-cli:$TAG --tag ghcr.io/cirruslabs/cirrus-cli:latest .
+          docker push ghcr.io/cirruslabs/cirrus-cli
