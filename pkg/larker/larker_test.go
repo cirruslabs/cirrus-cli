@@ -173,3 +173,21 @@ func TestBuiltinFS(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+// TestBuiltinStarlib ensures that Starlib's modules that we expose through cirrus.* are working properly.
+func TestBuiltinStarlib(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-starlib")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the source code
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
+	_, err = lrk.Main(context.Background(), string(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+}

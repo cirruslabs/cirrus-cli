@@ -7,6 +7,10 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/builtin"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git"
+	"github.com/qri-io/starlib/encoding/json"
+	"github.com/qri-io/starlib/encoding/yaml"
+	"github.com/qri-io/starlib/hash"
+	"github.com/qri-io/starlib/http"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 	"os"
@@ -65,11 +69,20 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 
 		// A special case for loading Cirrus-provided builtins (e.g. load("cirrus", "fs"))
 		if module == "cirrus" {
+			starlibModules, err := loadStarlibModules()
+			if err != nil {
+				return nil, err
+			}
+
 			return starlark.StringDict{
 				"fs": &starlarkstruct.Module{
 					Name:    "fs",
 					Members: builtin.FS(loader.ctx, loader.fs),
 				},
+				"http": starlibModules["http"],
+				"hash": starlibModules["hash"],
+				"json": starlibModules["json"],
+				"yaml": starlibModules["yaml"],
 			}, nil
 		}
 
@@ -102,4 +115,30 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 
 		return globals, err
 	}
+}
+
+func loadStarlibModules() (starlark.StringDict, error) {
+	httpModule, err := http.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	hashModule, err := hash.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	jsonModule, err := json.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	yamlModule, err := yaml.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+
+	return starlark.StringDict{
+		"http": httpModule["http"],
+		"hash": hashModule["hash"],
+		"json": jsonModule["json"],
+		"yaml": yamlModule["yaml"],
+	}, nil
 }
