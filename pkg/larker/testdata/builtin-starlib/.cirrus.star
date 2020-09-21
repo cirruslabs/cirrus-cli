@@ -1,10 +1,14 @@
-load("cirrus", "http", "hash", "json", "yaml")
+load("cirrus", "http", "hash", "base64", "json", "yaml", "re")
+load("cirrus", "zipfile", "fs")
 
 def main(ctx):
     test_http()
     test_hash()
+    test_base64()
     test_json()
     test_yaml()
+    test_re()
+    test_zipfile()
 
     return []
 
@@ -49,6 +53,18 @@ def test_hash():
     if sha256_result != "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592":
         fail("SHA-256(%s) returned unexpected value %s" % (test_vector, sha256_result))
 
+def test_base64():
+    plain = "foob"
+    encoded = "Zm9vYg=="
+
+    encode_result = base64.encode(plain)
+    if encode_result != encoded:
+        fail("base64 encoded %s into %s, but expected %s" % (plain, encode_result, encoded))
+
+    decode_result = base64.decode(encoded)
+    if decode_result != plain:
+        fail("base64 decoded %s into %s, but expected %s" % (encoded, decode_result, plain))
+
 def test_json():
     python_obj = {"key": 42}
     json_obj = "{\"key\":42}"
@@ -72,3 +88,32 @@ def test_yaml():
     unmarshalled = yaml.loads(yaml_obj)
     if unmarshalled != python_obj:
         fail("yaml unmarshalling failed, expected '%s', got '%s'" % (python_obj, unmarshalled))
+
+def test_re():
+    findall_expected = ("AAA", "BB")
+    findall_actual = re.findall("[ABC]{2,}", "AAAzzzBBzzzC")
+    if findall_actual != findall_expected:
+        fail("re.findall() returned %s instead of %s" % (findall_actual, findall_expected))
+
+    split_expected = ("abc", "def", "ghi")
+    split_actual = re.split("[^a-z]", "abc def\tghi")
+    if split_actual != split_expected:
+        fail("re.split() returned %s instead of %s" % (split_actual, split_expected))
+
+    sub_expected = "[snip][snip][snip]ABC"
+    sub_actual = re.sub("[0-9]", "[snip]", "123ABC")
+    if sub_actual != sub_expected:
+        fail("re.sub() returned %s instead of %s" % (sub_actual, sub_expected))
+
+def test_zipfile():
+    zf = zipfile.ZipFile(fs.read("test.zip"))
+
+    namelist_expected = ["test.txt"]
+    namelist_actual = zf.namelist()
+    if namelist_actual != namelist_expected:
+        fail("zf.namelist() returned %s instead of %s" % (namelist_actual, namelist_expected))
+
+    read_expected = "test\n"
+    read_actual = zf.open("test.txt").read()
+    if read_actual != read_expected:
+        fail("ZipInfo.read() returned %s instead of %s" % (read_actual, read_expected))

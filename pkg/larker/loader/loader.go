@@ -7,10 +7,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/builtin"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git"
+	"github.com/qri-io/starlib/encoding/base64"
 	"github.com/qri-io/starlib/encoding/json"
 	"github.com/qri-io/starlib/encoding/yaml"
 	"github.com/qri-io/starlib/hash"
 	"github.com/qri-io/starlib/http"
+	"github.com/qri-io/starlib/re"
+	"github.com/qri-io/starlib/zipfile"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 	"os"
@@ -133,6 +136,12 @@ func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
 	}
 	result["hash"] = hashModule["hash"]
 
+	base64Module, err := base64.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	result["base64"] = base64Module["base64"]
+
 	jsonModule, err := json.LoadModule()
 	if err != nil {
 		return nil, err
@@ -144,6 +153,21 @@ func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
 		return nil, err
 	}
 	result["yaml"] = yamlModule["yaml"]
+
+	reModule, err := re.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	result["re"] = reModule["re"]
+
+	zipfileModule, err := zipfile.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	result["zipfile"] = &starlarkstruct.Module{
+		Name:    "zipfile",
+		Members: zipfileModule,
+	}
 
 	return result, nil
 }
