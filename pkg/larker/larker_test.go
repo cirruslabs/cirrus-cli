@@ -1,6 +1,7 @@
 package larker_test
 
 import (
+	"archive/zip"
 	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
@@ -9,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -159,6 +161,67 @@ func TestLoadTypoStarVsStart(t *testing.T) {
 // TestBuiltinFS ensures that filesystem-related builtins provided by the cirrus.fs module work correctly.
 func TestBuiltinFS(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-fs")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the source code
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
+	_, err = lrk.Main(context.Background(), string(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestBuiltinEnv ensures that we expose the environment passed through options as the cirrus.env dict.
+func TestBuiltinEnv(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-env")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the source code
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)), larker.WithEnvironment(map[string]string{
+		"SOME_VARIABLE": "some value",
+	}))
+	_, err = lrk.Main(context.Background(), string(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestBuiltinStarlib ensures that Starlib's modules that we expose through cirrus.* are working properly.
+func TestBuiltinStarlib(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-starlib")
+
+	// Prepare a ZIP file for test_zipfile()
+	zipFile, err := os.Create(filepath.Join(dir, "test.zip"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	zipWriter := zip.NewWriter(zipFile)
+	txtFile, err := zipWriter.Create("test.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := txtFile.Write([]byte("test\n")); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := zipWriter.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := zipFile.Close(); err != nil {
+		t.Fatal(err)
+	}
 
 	// Read the source code
 	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))

@@ -11,3 +11,9 @@ func WithFileSystem(fs fs.FileSystem) Option {
 		e.fs = fs
 	}
 }
+
+func WithEnvironment(env map[string]string) Option {
+	return func(e *Larker) {
+		e.env = env
+	}
+}

@@ -7,6 +7,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/builtin"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git"
+	"github.com/qri-io/starlib/encoding/base64"
+	"github.com/qri-io/starlib/encoding/json"
+	"github.com/qri-io/starlib/encoding/yaml"
+	"github.com/qri-io/starlib/hash"
+	"github.com/qri-io/starlib/http"
+	"github.com/qri-io/starlib/re"
+	"github.com/qri-io/starlib/zipfile"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
 	"os"
@@ -28,13 +35,15 @@ type Loader struct {
 	ctx   context.Context
 	cache map[string]*CacheEntry
 	fs    fs.FileSystem
+	env   map[string]string
 }
 
-func NewLoader(ctx context.Context, fs fs.FileSystem) *Loader {
+func NewLoader(ctx context.Context, fs fs.FileSystem, env map[string]string) *Loader {
 	return &Loader{
 		ctx:   ctx,
 		cache: make(map[string]*CacheEntry),
 		fs:    fs,
+		env:   env,
 	}
 }
 
@@ -65,12 +74,7 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 
 		// A special case for loading Cirrus-provided builtins (e.g. load("cirrus", "fs"))
 		if module == "cirrus" {
-			return starlark.StringDict{
-				"fs": &starlarkstruct.Module{
-					Name:    "fs",
-					Members: builtin.FS(loader.ctx, loader.fs),
-				},
-			}, nil
+			return loader.loadCirrusModule()
 		}
 
 		// Retrieve module source code
@@ -102,4 +106,68 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 
 		return globals, err
 	}
+}
+
+func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
+	result := make(starlark.StringDict)
+
+	starlarkEnv := starlark.NewDict(len(loader.env))
+	for key, value := range loader.env {
+		if err := starlarkEnv.SetKey(starlark.String(key), starlark.String(value)); err != nil {
+			return nil, err
+		}
+	}
+	result["env"] = starlarkEnv
+
+	result["fs"] = &starlarkstruct.Module{
+		Name:    "fs",
+		Members: builtin.FS(loader.ctx, loader.fs),
+	}
+
+	httpModule, err := http.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	result["http"] = httpModule["http"]
+
+	hashModule, err := hash.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	result["hash"] = hashModule["hash"]
+
+	base64Module, err := base64.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	result["base64"] = base64Module["base64"]
+
+	jsonModule, err := json.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	result["json"] = jsonModule["json"]
+
+	yamlModule, err := yaml.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	result["yaml"] = yamlModule["yaml"]
+
+	reModule, err := re.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	result["re"] = reModule["re"]
+
+	zipfileModule, err := zipfile.LoadModule()
+	if err != nil {
+		return nil, err
+	}
+	result["zipfile"] = &starlarkstruct.Module{
+		Name:    "zipfile",
+		Members: zipfileModule,
+	}
+
+	return result, nil
 }

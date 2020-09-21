@@ -20,12 +20,14 @@ var (
 )
 
 type Larker struct {
-	fs fs.FileSystem
+	fs  fs.FileSystem
+	env map[string]string
 }
 
 func New(opts ...Option) *Larker {
 	lrk := &Larker{
-		fs: dummy.New(),
+		fs:  dummy.New(),
+		env: make(map[string]string),
 	}
 
 	// weird global init by Starlark
@@ -44,7 +46,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 	discard := func(thread *starlark.Thread, msg string) {}
 
 	thread := &starlark.Thread{
-		Load:  loader.NewLoader(ctx, larker.fs).LoadFunc(),
+		Load:  loader.NewLoader(ctx, larker.fs, larker.env).LoadFunc(),
 		Print: discard,
 	}
 
