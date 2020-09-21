@@ -60,6 +60,12 @@ func TestProjectSpecific(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Create a tag that points to the commit we've just created
+	_, err = repo.CreateTag("v1.2.3", commitHash, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Configure a GitHub remote
 	const repoOwner, repoName = "cirruslabs", "example"
 	cloneURL := fmt.Sprintf("git@github.com:%s/%s.git", repoOwner, repoName)
@@ -81,6 +87,8 @@ func TestProjectSpecific(t *testing.T) {
 
 		"CIRRUS_CHANGE_IN_REPO": commitHash.String(),
 		"CIRRUS_CHANGE_MESSAGE": commitMessage,
+
+		"CIRRUS_TAG": "v1.2.3",
 	}
 
 	assert.Equal(t, expectedEnv, environment.ProjectSpecific(dir))

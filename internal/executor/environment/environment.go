@@ -80,6 +80,7 @@ func ProjectSpecific(projectDir string) map[string]string {
 	addRemoteVariables(result, repo)
 	addBranchVariables(result, repo)
 	addCommitVariables(result, repo)
+	addTagVariables(result, repo)
 
 	return result
 }
@@ -155,4 +156,44 @@ func addCommitVariables(envMap map[string]string, repo *git.Repository) {
 
 	envMap["CIRRUS_CHANGE_IN_REPO"] = commit.Hash.String()
 	envMap["CIRRUS_CHANGE_MESSAGE"] = commit.Message
+}
+
+func addTagVariables(envMap map[string]string, repo *git.Repository) {
+	head, err := repo.Head()
+	if err != nil {
+		return
+	}
+
+	tags, err := repo.Tags()
+	if err != nil {
+		return
+	}
+	defer tags.Close()
+
+	for {
+		tag, err := tags.Next()
+		if err != nil {
+			return
+		}
+
+		// Lightweight tag: directly references HEAD
+		referencesHeadLightweight := tag.Hash() == head.Hash()
+
+		// Annotated tag: references HEAD via a special field
+		var referencesHeadAnnotated bool
+
+		tagObject, err := repo.TagObject(tag.Hash())
+		if err == nil {
+			referencesHeadAnnotated = tagObject.Target == head.Hash()
+		}
+
+		// Got reference?
+		if !referencesHeadLightweight && !referencesHeadAnnotated {
+			continue
+		}
+
+		// Found a tag that references HEAD
+		envMap["CIRRUS_TAG"] = tag.Name().Short()
+		break
+	}
 }
