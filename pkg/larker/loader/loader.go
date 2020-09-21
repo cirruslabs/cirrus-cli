@@ -71,29 +71,7 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 
 		// A special case for loading Cirrus-provided builtins (e.g. load("cirrus", "fs"))
 		if module == "cirrus" {
-			starlibModules, err := loadStarlibModules()
-			if err != nil {
-				return nil, err
-			}
-
-			starlarkEnv := starlark.NewDict(len(loader.env))
-			for key, value := range loader.env {
-				if err := starlarkEnv.SetKey(starlark.String(key), starlark.String(value)); err != nil {
-					return nil, err
-				}
-			}
-
-			return starlark.StringDict{
-				"fs": &starlarkstruct.Module{
-					Name:    "fs",
-					Members: builtin.FS(loader.ctx, loader.fs),
-				},
-				"env":  starlarkEnv,
-				"http": starlibModules["http"],
-				"hash": starlibModules["hash"],
-				"json": starlibModules["json"],
-				"yaml": starlibModules["yaml"],
-			}, nil
+			return loader.loadCirrusModule()
 		}
 
 		// Retrieve module source code
@@ -127,28 +105,45 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 	}
 }
 
-func loadStarlibModules() (starlark.StringDict, error) {
+func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
+	result := make(starlark.StringDict)
+
+	starlarkEnv := starlark.NewDict(len(loader.env))
+	for key, value := range loader.env {
+		if err := starlarkEnv.SetKey(starlark.String(key), starlark.String(value)); err != nil {
+			return nil, err
+		}
+	}
+	result["env"] = starlarkEnv
+
+	result["fs"] = &starlarkstruct.Module{
+		Name:    "fs",
+		Members: builtin.FS(loader.ctx, loader.fs),
+	}
+
 	httpModule, err := http.LoadModule()
 	if err != nil {
 		return nil, err
 	}
+	result["http"] = httpModule["http"]
+
 	hashModule, err := hash.LoadModule()
 	if err != nil {
 		return nil, err
 	}
+	result["hash"] = hashModule["hash"]
+
 	jsonModule, err := json.LoadModule()
 	if err != nil {
 		return nil, err
 	}
+	result["json"] = jsonModule["json"]
+
 	yamlModule, err := yaml.LoadModule()
 	if err != nil {
 		return nil, err
 	}
+	result["yaml"] = yamlModule["yaml"]
 
-	return starlark.StringDict{
-		"http": httpModule["http"],
-		"hash": hashModule["hash"],
-		"json": jsonModule["json"],
-		"yaml": yamlModule["yaml"],
-	}, nil
+	return result, nil
 }
