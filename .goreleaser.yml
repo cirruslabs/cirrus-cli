@@ -39,3 +39,10 @@ brews:
     homepage: https://github.com/cirruslabs/cirrus-cli
     description: CLI for running Cirrus Tasks locally in Docker containers
     skip_upload: auto
+
+dockers:
+  - image_templates:
+      - "ghcr.io/cirruslabs/cirrus-cli:{{ .Version }}"
+    goos: linux
+    goarch: amd64
+    skip_push: auto
