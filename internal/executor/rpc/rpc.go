@@ -142,7 +142,10 @@ func (r *RPC) Start(ctx context.Context) error {
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		if errors.Is(err, syscall.EADDRNOTAVAIL) {
-			return fmt.Errorf("%w: failed to assign Docker network bridge address %s (is Docker running?)", ErrRPCFailed, address)
+			return fmt.Errorf(
+				"%w: failed to assign Docker network bridge address %s (is Docker running?)",
+				ErrRPCFailed, address,
+			)
 		}
 		return fmt.Errorf("%w: failed to start RPC service on %s: %v", ErrRPCFailed, address, err)
 	}
