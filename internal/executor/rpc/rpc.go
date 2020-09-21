@@ -140,6 +140,9 @@ func (r *RPC) Start(ctx context.Context) error {
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
+		if strings.Contains(err.Error(), "bind: cannot assign requested address") {
+			return fmt.Errorf("%w: failed to connect to docker network bridge (is docker running?)", ErrRPCFailed)
+		}
 		return fmt.Errorf("%w: failed to start RPC service on %s: %v", ErrRPCFailed, address, err)
 	}
 	r.listener = listener
