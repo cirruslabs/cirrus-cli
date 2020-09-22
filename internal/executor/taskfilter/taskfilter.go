@@ -66,9 +66,9 @@ func extractLabels(s string) (result []string) {
 func containsAll(desiredLabels, actualLabels []string) bool {
 	var numMatchedLabels int
 
-	for _, soughtLabel := range desiredLabels {
+	for _, desiredLabel := range desiredLabels {
 		for _, actualLabel := range actualLabels {
-			if strings.EqualFold(soughtLabel, actualLabel) {
+			if strings.EqualFold(desiredLabel, actualLabel) {
 				numMatchedLabels++
 				break
 			}
