@@ -55,10 +55,21 @@ To run Cirrus tasks, simply switch to a directory where the `.cirrus.yml` is loc
 cirrus run
 ```
 
-It is also possible to run a task by name:
+By default, working directory will be `rsync`ed into a container while respecting `.gitignore`
+configuration. This makes sure Cirrus Tasks are execution from a clean state only with source code
+changes. There is an option to directly mount working directory as is with `--dirty` flag which
+might be useful for "read-only" tasks for purposes like linting or code analysis.
+
+It is also possible to run a particular task by name:
                           
 ```shell script
 cirrus run "Tests (Go 1.15)"
+```
+
+Or pass some extra environment variables with `-e` flag:
+
+```shell script
+cirrus run -e TEST_PATTER="*Integration*" "Tests (Go 1.15)"
 ```
 
 **Note:** Cirrus CLI only support [Linux `container`s](https://cirrus-ci.org/guide/linux/#linux-containers) instances at the moment
