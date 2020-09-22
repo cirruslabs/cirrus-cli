@@ -59,8 +59,15 @@ By default, working directory will be `rsync`ed into a container while respectin
 configuration. This makes sure Cirrus Tasks are executed from a clean state only with source code
 changes.
 
-There is an option to directly mount working directory as is with `--dirty` flag which
-might be useful for "read-only" tasks for purposes like linting or code analysis.
+In case `rsync`-ing the whole working directory is too costly, you can pass a `--dirty` flag which 
+will result in all operations being done against the actual working directory (and not it's `rsync`ed copy):
+
+```shell script
+cirrus run --dirty Lint
+```
+
+Since most linters and code-analysis tools are read-only by their nature there is no need in extra precautions and
+the potentially costly `rsync`-ing can be safely avoided.
 
 It is also possible to run a particular task by name:
                           
