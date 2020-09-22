@@ -57,7 +57,9 @@ cirrus run
 
 By default, working directory will be `rsync`ed into a container while respecting `.gitignore`
 configuration. This makes sure Cirrus Tasks are executed from a clean state only with source code
-changes. There is an option to directly mount working directory as is with `--dirty` flag which
+changes.
+
+There is an option to directly mount working directory as is with `--dirty` flag which
 might be useful for "read-only" tasks for purposes like linting or code analysis.
 
 It is also possible to run a particular task by name:
