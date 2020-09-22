@@ -29,13 +29,12 @@ func MatchExactTask(desiredTaskName string) TaskFilter {
 			// In case we're looking for a task with specific labels — extract them and ensure they all match
 			desiredLabels := extractLabels(strings.TrimPrefix(desiredTaskNameLower, taskNameLower))
 
-			var numMatchedLabels int
-
+			var actualLabels []string
 			if task.Metadata != nil {
-				numMatchedLabels = matchLabels(desiredLabels, task.Metadata.UniqueLabels)
+				actualLabels = task.Metadata.UniqueLabels
 			}
 
-			if numMatchedLabels != len(desiredLabels) {
+			if !containsAll(desiredLabels, actualLabels) {
 				continue
 			}
 
@@ -75,4 +74,8 @@ func matchLabels(soughtLabels, actualLabels []string) (numMatchedLabels int) {
 	}
 
 	return
+}
+
+func containsAll(desiredLabels, actualLabels []string) bool {
+	return matchLabels(desiredLabels, actualLabels) == len(desiredLabels)
 }
