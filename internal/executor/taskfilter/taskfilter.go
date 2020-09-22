@@ -63,8 +63,10 @@ func extractLabels(s string) (result []string) {
 	return
 }
 
-func matchLabels(soughtLabels, actualLabels []string) (numMatchedLabels int) {
-	for _, soughtLabel := range soughtLabels {
+func containsAll(desiredLabels, actualLabels []string) bool {
+	var numMatchedLabels int
+
+	for _, soughtLabel := range desiredLabels {
 		for _, actualLabel := range actualLabels {
 			if strings.EqualFold(soughtLabel, actualLabel) {
 				numMatchedLabels++
@@ -73,9 +75,5 @@ func matchLabels(soughtLabels, actualLabels []string) (numMatchedLabels int) {
 		}
 	}
 
-	return
-}
-
-func containsAll(desiredLabels, actualLabels []string) bool {
-	return matchLabels(desiredLabels, actualLabels) == len(desiredLabels)
+	return numMatchedLabels == len(desiredLabels)
 }
