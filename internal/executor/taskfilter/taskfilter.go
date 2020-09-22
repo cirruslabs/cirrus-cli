@@ -34,7 +34,7 @@ func MatchExactTask(desiredTaskName string) TaskFilter {
 				actualLabels = task.Metadata.UniqueLabels
 			}
 
-			if !containsAll(desiredLabels, actualLabels) {
+			if !containsAll(actualLabels, desiredLabels) {
 				continue
 			}
 
@@ -63,7 +63,7 @@ func extractLabels(s string) (result []string) {
 	return
 }
 
-func containsAll(desiredLabels, actualLabels []string) bool {
+func containsAll(actualLabels []string, desiredLabels []string) bool {
 	var numMatchedLabels int
 
 	for _, desiredLabel := range desiredLabels {
