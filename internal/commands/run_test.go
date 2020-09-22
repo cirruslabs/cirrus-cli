@@ -175,3 +175,22 @@ func TestRunDockerNoPull(t *testing.T) {
 	assert.NotContains(t, buf.String(), "pulling image")
 	assert.Contains(t, buf.String(), "No such image")
 }
+
+// TestRunTaskFilteringByLabel ensures that task filtering logic is label-aware.
+func TestRunTaskFilteringByLabel(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-task-filtering-by-label")
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-v", "-o simple", "test VERSION:1.14"})
+	command.SetOut(writer)
+	command.SetErr(writer)
+	err := command.Execute()
+
+	require.NoError(t, err)
+	assert.Contains(t, buf.String(), "VERSION:1.14")
+	assert.NotContains(t, buf.String(), "VERSION:1.15")
+}

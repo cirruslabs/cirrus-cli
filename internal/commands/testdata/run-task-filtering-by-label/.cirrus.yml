@@ -1,0 +1,8 @@
+test_task:
+  env:
+    matrix:
+      VERSION: 1.15
+      VERSION: 1.14
+  container:
+    image: golang:$VERSION
+  script: true
