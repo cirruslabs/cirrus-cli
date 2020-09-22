@@ -71,7 +71,7 @@ cirrus run "Tests (Go 1.15)"
 Or pass some extra environment variables with `-e` flag:
 
 ```shell script
-cirrus run -e TEST_PATTER="*Integration*" "Tests (Go 1.15)"
+cirrus run -e CIRRUS_TAG="test-release" Release
 ```
 
 **Note:** Cirrus CLI only support [Linux `container`s](https://cirrus-ci.org/guide/linux/#linux-containers) instances at the moment
