@@ -122,12 +122,16 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 	}
 
 	if config.DockerOptions.ShouldPullImage(params.Image) {
-		logger.Debugf("pulling image %s", params.Image)
+		dockerPullLogger := logger.Scoped("docker pull")
+		dockerPullLogger.Infof("Pulling image %s...", params.Image)
 		progress, err := cli.ImagePull(ctx, params.Image, types.ImagePullOptions{})
 		if err != nil {
+			dockerPullLogger.Errorf("Failed to pull %s: %v", params.Image, err)
+			dockerPullLogger.Finish(false)
 			return err
 		}
 		_, err = io.Copy(ioutil.Discard, progress)
+		dockerPullLogger.Finish(err == nil)
 		if err != nil {
 			return err
 		}
