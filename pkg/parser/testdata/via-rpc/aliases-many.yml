@@ -1,0 +1,136 @@
+container:
+  image: alpine:latest
+
+base: &base
+  timeout_in: 30m
+  env:
+    APP_NAME: test
+
+cache: &cache
+  deps_cache:
+    folder: deps
+    fingerprint_script:
+      - elixir --version
+      - cat mix.lock
+    populate_script: mix deps.get
+  build_cache:
+    folder: _build
+    fingerprint_script:
+      - elixir --version
+      - cat mix.lock
+    populate_script: mix deps.compile --long-compilation-threshold 999
+
+node_modules_cache: &node_modules_cache
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: cat yarn.lock
+    populate_script:
+      - yarn install --production=false
+
+compile_task:
+  <<: *base
+  <<: *cache
+  name: compile
+  container:
+    cpu: 8
+  compile_script:
+    - rm -rf _build/${MIX_ENV}/lib/control_room
+    - mix compile --warnings-as-errors --long-compilation-threshold 999
+
+base1_task_base: &base1
+  <<: *base
+  <<: *cache
+  <<: *node_modules_cache
+
+base2_task_base: &base2
+  <<: *base
+  <<: *cache
+  <<: *node_modules_cache
+
+base3_task_base: &base3
+  <<: *base
+  <<: *cache
+  <<: *node_modules_cache
+
+base4_task_base: &base4
+  <<: *base
+  <<: *cache
+  <<: *node_modules_cache
+
+base5_task_base: &base5
+  <<: *base
+  <<: *cache
+  <<: *node_modules_cache
+
+base6_task_base: &base6
+  <<: *base
+  <<: *cache
+  <<: *node_modules_cache
+
+base7_task_base: &base7
+  <<: *base
+  <<: *cache
+  <<: *node_modules_cache
+
+base8_task_base: &base8
+  <<: *base
+  <<: *cache
+  <<: *node_modules_cache
+
+base9_task_base: &base9
+  <<: *base
+  <<: *cache
+  <<: *node_modules_cache
+
+base10_task_base: &base10
+  <<: *base1
+  <<: *cache
+  <<: *node_modules_cache
+
+base11_task_base: &base11
+  <<: *base1
+  <<: *cache
+  <<: *node_modules_cache
+
+base12_task_base: &base12
+  <<: *base1
+  <<: *cache
+  <<: *node_modules_cache
+
+base13_task_base: &base13
+  <<: *base1
+  <<: *cache
+  <<: *node_modules_cache
+
+base14_task_base: &base14
+  <<: *base1
+  <<: *cache
+  <<: *node_modules_cache
+
+base15_task_base: &base15
+  <<: *base1
+  <<: *cache
+  <<: *node_modules_cache
+
+base16_task_base: &base16
+  <<: *base1
+  <<: *cache
+  <<: *node_modules_cache
+
+base17_task_base: &base17
+  <<: *base1
+  <<: *cache
+  <<: *node_modules_cache
+
+base18_task_base: &base18
+  <<: *base1
+  <<: *cache
+  <<: *node_modules_cache
+
+base19_task_base: &base19
+  <<: *base
+  <<: *cache
+  <<: *node_modules_cache
+
+task:
+  <<: *base

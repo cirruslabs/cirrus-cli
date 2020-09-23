@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
+	"github.com/go-test/deep"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"path/filepath"
@@ -59,6 +61,50 @@ func TestInvalidConfigs(t *testing.T) {
 
 			require.Nil(t, err)
 			assert.NotEmpty(t, result.Errors)
+		})
+	}
+}
+
+// TestViaRPC ensures that the parser produces results identical to rpcparser.
+func TestViaRPC(t *testing.T) {
+	cloudDir := absolutize("via-rpc")
+
+	fileInfos, err := ioutil.ReadDir(cloudDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, fileInfo := range fileInfos {
+		fileInfo := fileInfo
+
+		t.Run(fileInfo.Name(), func(t *testing.T) {
+			yamlConfigPath := filepath.Join(cloudDir, fileInfo.Name())
+
+			rpcParser := rpcparser.Parser{}
+			rpcResult, err := rpcParser.ParseFromFile(yamlConfigPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(rpcResult.Errors) != 0 {
+				t.Fatal(rpcResult.Errors)
+			}
+
+			localParser := parser.New()
+			localResult, err := localParser.ParseFromFile(yamlConfigPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(localResult.Errors) != 0 {
+				t.Fatal(localResult.Errors)
+			}
+
+			differences := deep.Equal(rpcResult.Tasks, localResult.Tasks)
+			for _, difference := range differences {
+				fmt.Println(difference)
+			}
+			if len(differences) != 0 {
+				t.Fatal("found differences")
+			}
 		})
 	}
 }
