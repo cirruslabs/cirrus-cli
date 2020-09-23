@@ -38,7 +38,7 @@ type Volume struct {
 	name string
 }
 
-// CreateWorkingVolume returns a Docker volume name with the agent and copied projectDir.
+// CreateWorkingVolumeFromConfig returns name of the working volume created according to the specification in config.
 func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Volume, error) {
 	initLogger := config.Logger.Scoped("Preparing execution environment...")
 	initLogger.Infof("Preparing volume to work with...")
@@ -53,7 +53,7 @@ func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Vol
 	return v, err
 }
 
-// CreateWorkingVolume returns a Docker volume name with the agent and copied projectDir.
+// CreateWorkingVolume returns name of the working volume created according to the specification in arguments.
 func CreateWorkingVolume(
 	ctx context.Context,
 	name string,
