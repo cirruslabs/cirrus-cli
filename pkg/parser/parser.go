@@ -355,10 +355,6 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 }
 
 func ensureCloneInstruction(task *api.Task) {
-	if len(task.Commands) == 0 {
-		return
-	}
-
 	for _, command := range task.Commands {
 		if command.Name == "clone" {
 			return
@@ -368,12 +364,15 @@ func ensureCloneInstruction(task *api.Task) {
 	// Inherit "image" property from the first task (if any),
 	// or otherwise we might break Docker Pipe
 	var properties map[string]string
-	image, ok := task.Commands[0].Properties["image"]
-	if ok {
-		properties = map[string]string{
-			"image": image,
+
+	if len(task.Commands) != 0 {
+		image, ok := task.Commands[0].Properties["image"]
+		if ok {
+			properties = map[string]string{
+				"image": image,
+			}
+			delete(task.Commands[0].Properties, "image")
 		}
-		delete(task.Commands[0].Properties, "image")
 	}
 
 	cloneCommand := &api.Command{
