@@ -5,6 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -160,7 +161,12 @@ func TestRunEnvironmentStarlark(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	commitHash, err := worktree.Commit("0.1.0 release", &git.CommitOptions{})
+	commitHash, err := worktree.Commit("0.1.0 release", &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "Charlie Root",
+			Email: "root@localhost",
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
