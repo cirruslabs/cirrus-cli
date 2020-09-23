@@ -149,6 +149,17 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
+	task.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
+		timeoutInSeconds, err := handleTimeoutIn(node, environment.Merge(task.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+
+		task.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
+
+		return nil
+	})
+
 	return task
 }
 
