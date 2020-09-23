@@ -206,7 +206,10 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 	// Schedule all containers for removal
 	defer func() {
 		logger.Debugf("cleaning up container %s", cont.ID)
-		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{Force: true})
+		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
+			RemoveVolumes: true,
+			Force:         true,
+		})
 		if err != nil {
 			logger.Warnf("error while removing container: %v", err)
 		}
@@ -285,7 +288,10 @@ func runAdditionalContainer(
 
 	defer func() {
 		logger.Debugf("cleaning up container %s", cont.ID)
-		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{Force: true})
+		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
+			RemoveVolumes: true,
+			Force:         true,
+		})
 		if err != nil {
 			logger.Warnf("Error while removing container: %v", err)
 		}
