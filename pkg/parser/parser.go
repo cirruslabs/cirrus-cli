@@ -55,8 +55,8 @@ func New(opts ...Option) *Parser {
 
 	// Register parsers
 	parser.parsers = map[nameable.Nameable]parseable.Parseable{
-		nameable.NewRegexNameable("(.*)task"): &task.Task{},
-		nameable.NewRegexNameable("(.*)pipe"): &task.DockerPipe{},
+		nameable.NewRegexNameable("^(.*)task$"): &task.Task{},
+		nameable.NewRegexNameable("^(.*)pipe$"): &task.DockerPipe{},
 	}
 
 	return parser

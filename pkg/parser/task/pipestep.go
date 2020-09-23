@@ -31,7 +31,7 @@ func NewPipeStep(mergedEnv map[string]string) *PipeStep {
 		return nil
 	})
 
-	scriptNameable := nameable.NewRegexNameable("(.*)script")
+	scriptNameable := nameable.NewRegexNameable("^(.*)script$")
 	step.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
 		scripts, err := node.GetSliceOfNonEmptyStrings()
 		if err != nil {
