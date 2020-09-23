@@ -258,7 +258,7 @@ func runAdditionalContainer(
 	cli *client.Client,
 	connectToContainer string,
 ) error {
-	logger.Debugf("pulling image %s", additionalContainer.Image)
+	logger.Debugf("pulling additional container image %s", additionalContainer.Image)
 	progress, err := cli.ImagePull(ctx, additionalContainer.Image, types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
@@ -268,7 +268,7 @@ func runAdditionalContainer(
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
 
-	logger.Debugf("creating container")
+	logger.Debugf("creating additional container")
 	containerConfig := container.Config{
 		Image: additionalContainer.Image,
 		Cmd:   additionalContainer.Command,
@@ -287,13 +287,13 @@ func runAdditionalContainer(
 	}
 
 	defer func() {
-		logger.Debugf("cleaning up container %s", cont.ID)
+		logger.Debugf("cleaning up additional container %s", cont.ID)
 		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
 			RemoveVolumes: true,
 			Force:         true,
 		})
 		if err != nil {
-			logger.Warnf("Error while removing container: %v", err)
+			logger.Warnf("Error while removing additional container: %v", err)
 		}
 	}()
 
@@ -306,16 +306,16 @@ func runAdditionalContainer(
 			"running in the additional container '%s' to use a different port", additionalContainer.Name)
 	}
 
-	logger.Debugf("starting container %s", cont.ID)
+	logger.Debugf("starting additional container %s", cont.ID)
 	if err := cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
 
-	logger.Debugf("waiting for container %s to finish", cont.ID)
+	logger.Debugf("waiting for additional container %s to finish", cont.ID)
 	waitChan, errChan := cli.ContainerWait(ctx, cont.ID, container.WaitConditionNotRunning)
 	select {
 	case res := <-waitChan:
-		logger.Debugf("container exited with %v error and exit code %d", res.Error, res.StatusCode)
+		logger.Debugf("additional container exited with %v error and exit code %d", res.Error, res.StatusCode)
 	case err := <-errChan:
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
