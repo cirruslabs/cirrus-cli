@@ -2,8 +2,8 @@ package node_test
 
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
+	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
 	"testing"
 )
 
