@@ -61,6 +61,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 		task.Environment = environment.Merge(
 			// Lowest priority
 			commonToAllTasks,
+			environment.ContainerSpecific(),
 			environment.NodeInfo(task.LocalGroupId, int64(len(tasks))),
 			environment.TaskInfo(task.Name, task.LocalGroupId),
 
