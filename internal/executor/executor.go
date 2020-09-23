@@ -52,7 +52,11 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	tasks = e.taskFilter(tasks)
 
 	// Enrich task environments
-	commonToAllTasks := environment.Merge(environment.Static(), environment.BuildID())
+	commonToAllTasks := environment.Merge(
+		environment.Static(),
+		environment.BuildID(),
+		environment.ProjectSpecific(projectDir),
+	)
 	for _, task := range tasks {
 		task.Environment = environment.Merge(
 			// Lowest priority
