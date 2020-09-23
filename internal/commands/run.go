@@ -218,7 +218,7 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Environment
-	executorOpts = append(executorOpts, executor.WithEnvironment(envMap))
+	executorOpts = append(executorOpts, executor.WithUserSpecifiedEnvironment(envMap))
 
 	// Run
 	e, err := executor.New(".", result.Tasks, executorOpts...)
