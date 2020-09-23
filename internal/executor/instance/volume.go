@@ -54,7 +54,12 @@ func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Vol
 }
 
 // CreateWorkingVolume returns a Docker volume name with the agent and copied projectDir.
-func CreateWorkingVolume(ctx context.Context, name string, projectDir string, dontPopulate bool) (vol *Volume, err error) {
+func CreateWorkingVolume(
+	ctx context.Context,
+	name string,
+	projectDir string,
+	dontPopulate bool,
+) (vol *Volume, err error) {
 	// Create Docker client
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
