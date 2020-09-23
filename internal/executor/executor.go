@@ -34,7 +34,12 @@ type Executor struct {
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
 	e := &Executor{
-		taskFilter:               taskfilter.MatchAnyTask(),
+		taskFilter: taskfilter.MatchAnyTask(),
+		baseEnvironment: environment.Merge(
+			environment.Static(),
+			environment.BuildID(),
+			environment.ProjectSpecific(projectDir),
+		),
 		userSpecifiedEnvironment: make(map[string]string),
 	}
 
@@ -47,13 +52,6 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	if e.logger == nil {
 		renderer := renderers.NewSimpleRenderer(ioutil.Discard, nil)
 		e.logger = echelon.NewLogger(echelon.InfoLevel, renderer)
-	}
-	if e.baseEnvironment == nil {
-		e.baseEnvironment = environment.Merge(
-			environment.Static(),
-			environment.BuildID(),
-			environment.ProjectSpecific(projectDir),
-		)
 	}
 
 	// Filter tasks (e.g. if a user wants to run only a specific task without dependencies)
