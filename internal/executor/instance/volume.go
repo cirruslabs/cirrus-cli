@@ -9,6 +9,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
+	"github.com/google/uuid"
 	"io"
 	"io/ioutil"
 	"path"
@@ -70,7 +71,9 @@ func CreateWorkingVolume(ctx context.Context, projectDir string, dontPopulate bo
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
-	vol, err := cli.VolumeCreate(ctx, volume.VolumeCreateBody{})
+	vol, err := cli.VolumeCreate(ctx, volume.VolumeCreateBody{
+		Name: fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String()),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
