@@ -49,11 +49,17 @@ func PipeStagesFromCommands(commands []*api.Command) ([]PipeStage, error) {
 	return stages, nil
 }
 
-func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) error {
+func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) (err error) {
 	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		cleanupErr := workingVolume.Close()
+		if err == nil {
+			err = cleanupErr
+		}
+	}()
 
 	for _, stage := range pi.Stages {
 		params := &Params{
@@ -68,10 +74,6 @@ func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) error {
 		if err := RunDockerizedAgent(ctx, config, params); err != nil {
 			return err
 		}
-	}
-
-	if err := workingVolume.Close(); err != nil {
-		return err
 	}
 
 	return nil

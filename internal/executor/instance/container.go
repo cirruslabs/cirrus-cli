@@ -12,11 +12,17 @@ type ContainerInstance struct {
 	AdditionalContainers []*api.AdditionalContainer
 }
 
-func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) error {
+func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err error) {
 	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		cleanupErr := workingVolume.Close()
+		if err == nil {
+			err = cleanupErr
+		}
+	}()
 
 	params := &Params{
 		Image:                inst.Image,
@@ -27,10 +33,6 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) error
 	}
 
 	if err := RunDockerizedAgent(ctx, config, params); err != nil {
-		return err
-	}
-
-	if err := workingVolume.Close(); err != nil {
 		return err
 	}
 
