@@ -42,7 +42,8 @@ type Volume struct {
 func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Volume, error) {
 	initLogger := config.Logger.Scoped("Preparing execution environment...")
 	initLogger.Infof("Preparing volume to work with...")
-	v, err := CreateWorkingVolume(ctx, config.ProjectDir, config.DirtyMode)
+	desiredVolumeName := fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String())
+	v, err := CreateWorkingVolume(ctx, desiredVolumeName, config.ProjectDir, config.DirtyMode)
 	if err != nil {
 		initLogger.Warnf("Failed to create a volume from working directory: %v", err)
 		initLogger.Finish(false)
@@ -53,7 +54,7 @@ func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Vol
 }
 
 // CreateWorkingVolume returns a Docker volume name with the agent and copied projectDir.
-func CreateWorkingVolume(ctx context.Context, projectDir string, dontPopulate bool) (*Volume, error) {
+func CreateWorkingVolume(ctx context.Context, name string, projectDir string, dontPopulate bool) (vol *Volume, err error) {
 	// Create Docker client
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -71,12 +72,15 @@ func CreateWorkingVolume(ctx context.Context, projectDir string, dontPopulate bo
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
-	vol, err := cli.VolumeCreate(ctx, volume.VolumeCreateBody{
-		Name: fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String()),
-	})
+	dockerVolume, err := cli.VolumeCreate(ctx, volume.VolumeCreateBody{Name: name})
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
+	defer func() {
+		if err != nil {
+			_ = cli.VolumeRemove(ctx, dockerVolume.Name, false)
+		}
+	}()
 
 	// Where we will mount the project directory for further copying into a working volume
 	const projectDirMountpoint = "/project-dir"
@@ -99,7 +103,7 @@ func CreateWorkingVolume(ctx context.Context, projectDir string, dontPopulate bo
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeVolume,
-				Source: vol.Name,
+				Source: dockerVolume.Name,
 				Target: WorkingVolumeMountpoint,
 			},
 		},
@@ -142,7 +146,7 @@ func CreateWorkingVolume(ctx context.Context, projectDir string, dontPopulate bo
 	}
 
 	return &Volume{
-		name: vol.Name,
+		name: dockerVolume.Name,
 	}, nil
 }
 
