@@ -12,12 +12,17 @@ type ContainerInstance struct {
 	AdditionalContainers []*api.AdditionalContainer
 }
 
-func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) error {
+func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err error) {
 	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config)
 	if err != nil {
 		return err
 	}
-	defer workingVolume.Close()
+	defer func() {
+		cleanupErr := workingVolume.Close()
+		if err == nil {
+			err = cleanupErr
+		}
+	}()
 
 	params := &Params{
 		Image:                inst.Image,

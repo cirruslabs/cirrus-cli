@@ -49,12 +49,17 @@ func PipeStagesFromCommands(commands []*api.Command) ([]PipeStage, error) {
 	return stages, nil
 }
 
-func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) error {
+func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) (err error) {
 	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config)
 	if err != nil {
 		return err
 	}
-	defer workingVolume.Close()
+	defer func() {
+		cleanupErr := workingVolume.Close()
+		if err == nil {
+			err = cleanupErr
+		}
+	}()
 
 	for _, stage := range pi.Stages {
 		params := &Params{
