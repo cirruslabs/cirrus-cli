@@ -20,7 +20,13 @@ func WithTaskFilter(taskFilter taskfilter.TaskFilter) Option {
 	}
 }
 
-func WithEnvironment(environment map[string]string) Option {
+func WithBaseEnvironmentOverride(environment map[string]string) Option {
+	return func(e *Executor) {
+		e.baseEnvironment = environment
+	}
+}
+
+func WithUserSpecifiedEnvironment(environment map[string]string) Option {
 	return func(e *Executor) {
 		e.userSpecifiedEnvironment = environment
 	}

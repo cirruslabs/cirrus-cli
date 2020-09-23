@@ -32,10 +32,14 @@ func Copy(env map[string]string) (result map[string]string) {
 	return
 }
 
-func Static() map[string]string {
+func ContainerSpecific() map[string]string {
 	return map[string]string{
 		"CIRRUS_WORKING_DIR": path.Join(instance.WorkingVolumeMountpoint, instance.WorkingVolumeWorkingDir),
+	}
+}
 
+func Static() map[string]string {
+	return map[string]string{
 		"CI":                     "true",
 		"CONTINUOUS_INTEGRATION": "true",
 		"CIRRUS_CI":              "true",

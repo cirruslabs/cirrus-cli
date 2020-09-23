@@ -26,6 +26,7 @@ type Executor struct {
 	// Options
 	logger                   *echelon.Logger
 	taskFilter               taskfilter.TaskFilter
+	baseEnvironment          map[string]string
 	userSpecifiedEnvironment map[string]string
 	dirtyMode                bool
 	dockerOptions            options.DockerOptions
@@ -33,7 +34,12 @@ type Executor struct {
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
 	e := &Executor{
-		taskFilter:               taskfilter.MatchAnyTask(),
+		taskFilter: taskfilter.MatchAnyTask(),
+		baseEnvironment: environment.Merge(
+			environment.Static(),
+			environment.BuildID(),
+			environment.ProjectSpecific(projectDir),
+		),
 		userSpecifiedEnvironment: make(map[string]string),
 	}
 
@@ -52,18 +58,20 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	tasks = e.taskFilter(tasks)
 
 	// Enrich task environments
-	commonToAllTasks := environment.Merge(environment.Static(), environment.BuildID())
 	for _, task := range tasks {
 		task.Environment = environment.Merge(
-			// Lowest priority
-			commonToAllTasks,
+			// Lowest priority: common to all tasks
+			e.baseEnvironment,
+			environment.ContainerSpecific(),
+
+			// Lowest priority: task-specific
 			environment.NodeInfo(task.LocalGroupId, int64(len(tasks))),
 			environment.TaskInfo(task.Name, task.LocalGroupId),
 
-			// Medium priority
+			// Medium priority: task-specific
 			task.Environment,
 
-			// Highest priority
+			// Highest priority: common to all tasks
 			e.userSpecifiedEnvironment,
 		)
 	}
