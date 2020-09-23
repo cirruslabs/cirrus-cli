@@ -205,13 +205,19 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 
 	// Schedule all containers for removal
 	defer func() {
-		logger.Debugf("cleaning up container %s", cont.ID)
-		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
-			RemoveVolumes: true,
-			Force:         true,
-		})
-		if err != nil {
-			logger.Warnf("error while removing container: %v", err)
+		if config.DockerOptions.NoCleanup {
+			logger.Debugf("not cleaning up container %s, don't forget to remove it with \"docker rm -v %s\"",
+				cont.ID, cont.ID)
+		} else {
+			logger.Debugf("cleaning up container %s", cont.ID)
+
+			err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
+				RemoveVolumes: true,
+				Force:         true,
+			})
+			if err != nil {
+				logger.Warnf("error while removing container: %v", err)
+			}
 		}
 
 		additionalContainersCancel()
@@ -225,7 +231,14 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 
 		additionalContainersWG.Add(1)
 		go func() {
-			if err := runAdditionalContainer(additionalContainersCtx, logger, additionalContainer, cli, cont.ID); err != nil {
+			if err := runAdditionalContainer(
+				additionalContainersCtx,
+				logger,
+				additionalContainer,
+				cli,
+				cont.ID,
+				config.DockerOptions,
+			); err != nil {
 				additionalContainersErrChan <- err
 			}
 			additionalContainersWG.Done()
@@ -257,6 +270,7 @@ func runAdditionalContainer(
 	additionalContainer *api.AdditionalContainer,
 	cli *client.Client,
 	connectToContainer string,
+	dockerOptions options.DockerOptions,
 ) error {
 	logger.Debugf("pulling additional container image %s", additionalContainer.Image)
 	progress, err := cli.ImagePull(ctx, additionalContainer.Image, types.ImagePullOptions{})
@@ -287,6 +301,13 @@ func runAdditionalContainer(
 	}
 
 	defer func() {
+		if dockerOptions.NoCleanup {
+			logger.Debugf("not cleaning up additional container %s, don't forget to remove it with \"docker rm -v %s\"",
+				cont.ID, cont.ID)
+
+			return
+		}
+
 		logger.Debugf("cleaning up additional container %s", cont.ID)
 		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
 			RemoveVolumes: true,

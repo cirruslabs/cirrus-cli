@@ -3,6 +3,7 @@ package options
 type DockerOptions struct {
 	NoPull       bool
 	NoPullImages []string
+	NoCleanup    bool
 }
 
 func (do DockerOptions) ShouldPullImage(image string) bool {

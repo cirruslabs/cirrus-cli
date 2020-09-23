@@ -55,6 +55,13 @@ func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) (err error) 
 		return err
 	}
 	defer func() {
+		if config.DockerOptions.NoCleanup {
+			config.Logger.Debugf("not cleaning up working volume %s, don't forget to remove it with \"docker volume rm %s\"",
+				workingVolume.Name(), workingVolume.Name())
+
+			return
+		}
+
 		cleanupErr := workingVolume.Close()
 		if err == nil {
 			err = cleanupErr
