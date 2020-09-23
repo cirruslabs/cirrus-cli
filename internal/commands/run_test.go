@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/go-git/go-git/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -134,6 +135,44 @@ func TestRunEnvironmentOnlyIf(t *testing.T) {
 	command := commands.NewRootCmd()
 	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "PLEASE_DONT_FAIL=okay"})
 	err := command.Execute()
+
+	require.Nil(t, err)
+}
+
+// TestRunEnvironmentOnlyIf ensures that base and user environment variables
+// are passed to the Starlark execution environment.
+func TestRunEnvironmentStarlark(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-starlark")
+
+	// Initialize Git and create a tag for CIRRUS_TAG to be available
+	repo, err := git.PlainInit(".", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	worktree, err := repo.Worktree()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = worktree.Add(".cirrus.star")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	commitHash, err := worktree.Commit("0.1.0 release", &git.CommitOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = repo.CreateTag("v0.1.0", commitHash, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "USER_VARIABLE=user variable value"})
+	err = command.Execute()
 
 	require.Nil(t, err)
 }

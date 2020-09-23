@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
+	eenvironment "github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
@@ -86,7 +87,7 @@ func readYAMLConfig() (string, error) {
 	return string(yamlConfig), nil
 }
 
-func readStarlarkConfig(ctx context.Context) (string, error) {
+func readStarlarkConfig(ctx context.Context, env map[string]string) (string, error) {
 	starlarkSource, err := ioutil.ReadFile(".cirrus.star")
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -95,7 +96,7 @@ func readStarlarkConfig(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	lrk := larker.New(larker.WithFileSystem(local.New(".")))
+	lrk := larker.New(larker.WithFileSystem(local.New(".")), larker.WithEnvironment(env))
 	return lrk.Main(ctx, string(starlarkSource))
 }
 
@@ -120,7 +121,13 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	envMap := envArgsToMap(environment)
+	projectDir := "."
+	baseEnvironment := eenvironment.Merge(
+		eenvironment.Static(),
+		eenvironment.BuildID(),
+		eenvironment.ProjectSpecific(projectDir),
+	)
+	userSpecifiedEnvironment := envArgsToMap(environment)
 
 	// Retrieve configurations and merge them
 	yamlConfig, err := readYAMLConfig()
@@ -128,7 +135,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	starlarkConfig, err := readStarlarkConfig(cmd.Context())
+	starlarkConfig, err := readStarlarkConfig(cmd.Context(), eenvironment.Merge(baseEnvironment, userSpecifiedEnvironment))
 	if err != nil {
 		return err
 	}
@@ -138,13 +145,13 @@ func run(cmd *cobra.Command, args []string) error {
 	// Parse
 	var result *parser.Result
 	if experimentalParser {
-		p := parser.New(parser.WithEnvironment(envMap))
+		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment))
 		result, err = p.Parse(mergedYAML)
 		if err != nil {
 			return err
 		}
 	} else {
-		p := rpcparser.Parser{Environment: envMap}
+		p := rpcparser.Parser{Environment: userSpecifiedEnvironment}
 		r, err := p.Parse(mergedYAML)
 		if err != nil {
 			return err
@@ -218,10 +225,13 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Environment
-	executorOpts = append(executorOpts, executor.WithUserSpecifiedEnvironment(envMap))
+	executorOpts = append(executorOpts,
+		executor.WithBaseEnvironmentOverride(baseEnvironment),
+		executor.WithUserSpecifiedEnvironment(userSpecifiedEnvironment),
+	)
 
 	// Run
-	e, err := executor.New(".", result.Tasks, executorOpts...)
+	e, err := executor.New(projectDir, result.Tasks, executorOpts...)
 	if err != nil {
 		return err
 	}
