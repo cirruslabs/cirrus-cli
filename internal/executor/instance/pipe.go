@@ -54,6 +54,7 @@ func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) error {
 	if err != nil {
 		return err
 	}
+	defer workingVolume.Close()
 
 	for _, stage := range pi.Stages {
 		params := &Params{
@@ -68,10 +69,6 @@ func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) error {
 		if err := RunDockerizedAgent(ctx, config, params); err != nil {
 			return err
 		}
-	}
-
-	if err := workingVolume.Close(); err != nil {
-		return err
 	}
 
 	return nil

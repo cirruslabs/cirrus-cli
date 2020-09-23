@@ -17,6 +17,7 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) error
 	if err != nil {
 		return err
 	}
+	defer workingVolume.Close()
 
 	params := &Params{
 		Image:                inst.Image,
@@ -27,10 +28,6 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) error
 	}
 
 	if err := RunDockerizedAgent(ctx, config, params); err != nil {
-		return err
-	}
-
-	if err := workingVolume.Close(); err != nil {
 		return err
 	}
 
