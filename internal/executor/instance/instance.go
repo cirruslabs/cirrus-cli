@@ -206,7 +206,7 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 	// Schedule all containers for removal
 	defer func() {
 		if config.DockerOptions.NoCleanup {
-			logger.Debugf("not cleaning up container %s, don't forget to remove it with \"docker rm -v %s\"",
+			logger.Infof("not cleaning up container %s, don't forget to remove it with \"docker rm -v %s\"",
 				cont.ID, cont.ID)
 		} else {
 			logger.Debugf("cleaning up container %s", cont.ID)
