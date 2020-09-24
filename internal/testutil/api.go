@@ -32,3 +32,28 @@ func TasksToJSON(t *testing.T, tasks []*api.Task) []byte {
 
 	return res
 }
+
+func TasksFromJSON(t *testing.T, jsonBytes []byte) (result []*api.Task) {
+	var jsonTasks []interface{}
+
+	if err := json.Unmarshal(jsonBytes, &jsonTasks); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, jsonTask := range jsonTasks {
+		jsonTaskBytes, err := json.Marshal(jsonTask)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var task api.Task
+
+		if err := protojson.Unmarshal(jsonTaskBytes, &task); err != nil {
+			t.Fatal(err)
+		}
+
+		result = append(result, &task)
+	}
+
+	return
+}
