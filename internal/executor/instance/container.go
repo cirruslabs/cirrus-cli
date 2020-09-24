@@ -19,7 +19,7 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err 
 	}
 	defer func() {
 		if config.DockerOptions.NoCleanup {
-			config.Logger.Debugf("not cleaning up working volume %s, don't forget to remove it with \"docker volume rm %s\"",
+			config.Logger.Infof("not cleaning up working volume %s, don't forget to remove it with \"docker volume rm %s\"",
 				workingVolume.Name(), workingVolume.Name())
 
 			return
