@@ -73,7 +73,7 @@ func TestErrInternal(t *testing.T) {
 	}
 
 	server := grpc.NewServer()
-	api.RegisterCirrusCIServiceService(server, api.NewCirrusCIServiceService(nil))
+	api.RegisterCirrusCIServiceService(server, &api.CirrusCIServiceService{})
 	go func() {
 		if err := server.Serve(listener); err != nil {
 			log.Fatal(err)

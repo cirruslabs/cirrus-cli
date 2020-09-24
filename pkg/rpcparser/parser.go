@@ -81,7 +81,7 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	defer conn.Close()
 
 	// Send config for parsing by the Cirrus CI RPC and retrieve results
-	client := api.NewCirrusCIServiceClient(conn)
+	client := api.NewCirrusConfigurationEvaluatorServiceClient(conn)
 
 	if p.Environment == nil {
 		p.Environment = make(map[string]string)
@@ -91,13 +91,13 @@ func (p *Parser) Parse(config string) (*Result, error) {
 		p.FilesContents = make(map[string]string)
 	}
 
-	request := api.ParseConfigRequest{
-		Config:        config,
+	request := api.EvaluateConfigRequest{
+		YamlConfig:    config,
 		Environment:   p.Environment,
 		FilesContents: p.FilesContents,
 	}
 
-	response, err := client.ParseConfig(ctx, &request)
+	response, err := client.EvaluateConfig(ctx, &request)
 	if err != nil {
 		s := status.Convert(err)
 
