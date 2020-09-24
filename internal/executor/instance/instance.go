@@ -302,7 +302,7 @@ func runAdditionalContainer(
 
 	defer func() {
 		if dockerOptions.NoCleanup {
-			logger.Debugf("not cleaning up additional container %s, don't forget to remove it with \"docker rm -v %s\"",
+			logger.Infof("not cleaning up additional container %s, don't forget to remove it with \"docker rm -v %s\"",
 				cont.ID, cont.ID)
 
 			return
