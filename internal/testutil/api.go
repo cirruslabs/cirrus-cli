@@ -30,6 +30,8 @@ func TasksToJSON(t *testing.T, tasks []*api.Task) []byte {
 		t.Fatal(err)
 	}
 
+	res = append(res, '\n')
+
 	return res
 }
 
