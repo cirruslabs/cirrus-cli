@@ -47,7 +47,7 @@ func ParseMegaBytes(s string) (uint32, error) {
 	case "g":
 		memoryResult *= kibi
 	default:
-		return 0, fmt.Errorf("%w: unsupported suffix: '%s'", parsererror.ErrParsing, suffixPart)
+		return 0, fmt.Errorf("%w: unsupported digital information unit suffix: '%s'", parsererror.ErrParsing, suffixPart)
 	}
 
 	return memoryResult, nil

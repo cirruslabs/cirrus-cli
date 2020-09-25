@@ -5,6 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
+	"strconv"
 )
 
 func handleBoolevatorField(node *node.Node, mergedEnv map[string]string) (bool, error) {
@@ -51,4 +52,19 @@ func handleScript(node *node.Node, nameable *nameable.RegexNameable) (*api.Comma
 			},
 		},
 	}, nil
+}
+
+func handleTimeoutIn(node *node.Node, mergedEnv map[string]string) (string, error) {
+	timeoutHumanized, err := node.GetExpandedStringValue(mergedEnv)
+	if err != nil {
+		return "", err
+	}
+
+	// Convert "humanized" value to seconds
+	timeoutSeconds, err := ParseSeconds(timeoutHumanized)
+	if err != nil {
+		return "", err
+	}
+
+	return strconv.FormatUint(uint64(timeoutSeconds), 10), nil
 }

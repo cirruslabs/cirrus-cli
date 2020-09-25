@@ -85,6 +85,17 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 		return nil
 	})
 
+	pipe.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
+		timeoutInSeconds, err := handleTimeoutIn(node, environment.Merge(pipe.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+
+		pipe.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
+
+		return nil
+	})
+
 	return pipe
 }
 

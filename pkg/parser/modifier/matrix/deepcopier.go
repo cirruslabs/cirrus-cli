@@ -3,11 +3,11 @@ package matrix
 import (
 	"bytes"
 	"encoding/gob"
-	"gopkg.in/yaml.v2"
+	"github.com/goccy/go-yaml"
 )
 
 // This is rather inefficient and error-prone (due to the need to manually register unknown types),
-// but nevertheless works flawlessly for yaml.v2 structures, compared to other alternatives.
+// but nevertheless works flawlessly for YAML structures, compared to other alternatives.
 func deepcopy(dst, src interface{}) error {
 	// Register unknown types
 	// https://golang.org/pkg/encoding/gob/#Register

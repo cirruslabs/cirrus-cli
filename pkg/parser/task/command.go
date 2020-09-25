@@ -56,7 +56,7 @@ func (cache *CacheCommand) Parse(node *node.Node) error {
 		return err
 	}
 
-	cacheNameable := nameable.NewRegexNameable("(.*)cache")
+	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
 	cache.proto.Name = cacheNameable.FirstGroupOrDefault(node.Name, "main")
 
 	return nil

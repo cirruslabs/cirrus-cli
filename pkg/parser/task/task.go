@@ -87,7 +87,7 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
-	bgNameable := nameable.NewRegexNameable("(.*)background_script")
+	bgNameable := nameable.NewRegexNameable("^(.*)background_script$")
 	task.OptionalField(bgNameable, schema.TodoSchema, func(node *node.Node) error {
 		command, err := handleBackgroundScript(node, bgNameable)
 		if err != nil {
@@ -99,7 +99,7 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
-	scriptNameable := nameable.NewRegexNameable("(.*)script")
+	scriptNameable := nameable.NewRegexNameable("^(.*)script$")
 	task.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
 		command, err := handleScript(node, scriptNameable)
 		if err != nil {
@@ -111,7 +111,7 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
-	cacheNameable := nameable.NewRegexNameable("(.*)cache")
+	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
 	task.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
 		cache := NewCacheCommand(environment.Merge(task.proto.Environment, env))
 		if err := cache.Parse(node); err != nil {
@@ -146,6 +146,17 @@ func NewTask(env map[string]string) *Task {
 			return err
 		}
 		task.proto.Metadata.Properties["allowFailures"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	task.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
+		timeoutInSeconds, err := handleTimeoutIn(node, environment.Merge(task.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+
+		task.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
+
 		return nil
 	})
 

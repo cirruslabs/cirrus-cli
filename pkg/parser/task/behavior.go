@@ -17,7 +17,7 @@ type Behavior struct {
 func NewBehavior() *Behavior {
 	b := &Behavior{}
 
-	scriptNameable := nameable.NewRegexNameable("(.*)script")
+	scriptNameable := nameable.NewRegexNameable("^(.*)script$")
 	b.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
 		command, err := handleScript(node, scriptNameable)
 		if err != nil {

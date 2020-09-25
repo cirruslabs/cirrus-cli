@@ -18,7 +18,7 @@ func TestRegexNameable(t *testing.T) {
 func TestFirstGroupOrDefault(t *testing.T) {
 	const defaultValue = "main"
 
-	name := nameable.NewRegexNameable("(.*)task")
+	name := nameable.NewRegexNameable("^(.*)task$")
 	assert.Equal(t, defaultValue, name.FirstGroupOrDefault("123", defaultValue))
 	assert.Equal(t, defaultValue, name.FirstGroupOrDefault("task", defaultValue))
 	assert.Equal(t, "a", name.FirstGroupOrDefault("a_task", defaultValue))

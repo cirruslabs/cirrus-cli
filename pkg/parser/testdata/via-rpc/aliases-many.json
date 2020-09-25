@@ -1,0 +1,106 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "elixir --version",
+            "cat mix.lock"
+          ],
+          "folder": "deps",
+          "populateScripts": [
+            "mix deps.get"
+          ]
+        },
+        "name": "deps"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "elixir --version",
+            "cat mix.lock"
+          ],
+          "folder": "_build",
+          "populateScripts": [
+            "mix deps.compile --long-compilation-threshold 999"
+          ]
+        },
+        "name": "build"
+      },
+      {
+        "name": "compile",
+        "scriptInstruction": {
+          "scripts": [
+            "rm -rf _build/${MIX_ENV}/lib/control_room",
+            "mix compile --warnings-as-errors --long-compilation-threshold 999"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'deps' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "deps"
+        }
+      },
+      {
+        "name": "Upload 'build' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "build"
+        }
+      }
+    ],
+    "environment": {
+      "APP_NAME": "test"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 8,
+      "image": "alpine:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "1800",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "compile"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      }
+    ],
+    "environment": {
+      "APP_NAME": "test"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "alpine:latest",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "1800",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  }
+]

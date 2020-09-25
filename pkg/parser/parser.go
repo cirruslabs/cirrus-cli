@@ -13,9 +13,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task"
+	"github.com/goccy/go-yaml"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/lestrrat-go/jsschema"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -55,8 +55,8 @@ func New(opts ...Option) *Parser {
 
 	// Register parsers
 	parser.parsers = map[nameable.Nameable]parseable.Parseable{
-		nameable.NewRegexNameable("(.*)task"): &task.Task{},
-		nameable.NewRegexNameable("(.*)pipe"): &task.DockerPipe{},
+		nameable.NewRegexNameable("^(.*)task$"): &task.Task{},
+		nameable.NewRegexNameable("^(.*)pipe$"): &task.DockerPipe{},
 	}
 
 	return parser
@@ -109,7 +109,7 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	var parsed yaml.MapSlice
 
 	// Unmarshal YAML
-	if err := yaml.Unmarshal([]byte(config), &parsed); err != nil {
+	if err := yaml.UnmarshalWithOptions([]byte(config), &parsed, yaml.UseOrderedMap()); err != nil {
 		return nil, err
 	}
 
@@ -355,10 +355,6 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 }
 
 func ensureCloneInstruction(task *api.Task) {
-	if len(task.Commands) == 0 {
-		return
-	}
-
 	for _, command := range task.Commands {
 		if command.Name == "clone" {
 			return
@@ -368,12 +364,15 @@ func ensureCloneInstruction(task *api.Task) {
 	// Inherit "image" property from the first task (if any),
 	// or otherwise we might break Docker Pipe
 	var properties map[string]string
-	image, ok := task.Commands[0].Properties["image"]
-	if ok {
-		properties = map[string]string{
-			"image": image,
+
+	if len(task.Commands) != 0 {
+		image, ok := task.Commands[0].Properties["image"]
+		if ok {
+			properties = map[string]string{
+				"image": image,
+			}
+			delete(task.Commands[0].Properties, "image")
 		}
-		delete(task.Commands[0].Properties, "image")
 	}
 
 	cloneCommand := &api.Command{
