@@ -2,8 +2,11 @@ package commands_test
 
 import (
 	"bytes"
+	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/stretchr/testify/assert"
@@ -11,6 +14,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -238,4 +243,55 @@ func TestRunTaskFilteringByLabel(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, buf.String(), "VERSION:1.14")
 	assert.NotContains(t, buf.String(), "VERSION:1.15")
+}
+
+// TestRunNoCleanup ensures that containers and volumes are kept intact
+// after execution ends and --debug-no-cleanup is used.
+func TestRunNoCleanup(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-no-cleanup")
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-v", "-o simple", "--debug-no-cleanup"})
+	command.SetOut(writer)
+	command.SetErr(writer)
+	err := command.Execute()
+
+	require.NoError(t, err)
+	assert.Contains(t, buf.String(), "not cleaning up container")
+	assert.Contains(t, buf.String(), "not cleaning up additional container")
+	assert.Contains(t, buf.String(), "not cleaning up working volume")
+
+	// The fun ends here since now we have to cleanup containers and volumes ourselves
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	containerRegex := regexp.MustCompile("not cleaning up (?:container|additional container) (?P<container_id>[^,]+)")
+	volumeRegex := regexp.MustCompile("not cleaning up working volume (?P<volume_id>[^,]+)")
+
+	for _, line := range strings.Split(buf.String(), "\n") {
+		matches := containerRegex.FindStringSubmatch(line)
+		if matches != nil {
+			containerID := matches[containerRegex.SubexpIndex("container_id")]
+			if err := cli.ContainerRemove(context.Background(), containerID, types.ContainerRemoveOptions{
+				RemoveVolumes: true,
+				Force:         true,
+			}); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		matches = volumeRegex.FindStringSubmatch(line)
+		if matches != nil {
+			volumeID := matches[volumeRegex.SubexpIndex("volume_id")]
+			if err := cli.VolumeRemove(context.Background(), volumeID, false); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
 }

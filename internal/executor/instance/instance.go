@@ -205,13 +205,19 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 
 	// Schedule all containers for removal
 	defer func() {
-		logger.Debugf("cleaning up container %s", cont.ID)
-		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
-			RemoveVolumes: true,
-			Force:         true,
-		})
-		if err != nil {
-			logger.Warnf("error while removing container: %v", err)
+		if config.DockerOptions.NoCleanup {
+			logger.Infof("not cleaning up container %s, don't forget to remove it with \"docker rm -v %s\"",
+				cont.ID, cont.ID)
+		} else {
+			logger.Debugf("cleaning up container %s", cont.ID)
+
+			err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
+				RemoveVolumes: true,
+				Force:         true,
+			})
+			if err != nil {
+				logger.Warnf("error while removing container: %v", err)
+			}
 		}
 
 		additionalContainersCancel()
@@ -225,7 +231,14 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 
 		additionalContainersWG.Add(1)
 		go func() {
-			if err := runAdditionalContainer(additionalContainersCtx, logger, additionalContainer, cli, cont.ID); err != nil {
+			if err := runAdditionalContainer(
+				additionalContainersCtx,
+				logger,
+				additionalContainer,
+				cli,
+				cont.ID,
+				config.DockerOptions,
+			); err != nil {
 				additionalContainersErrChan <- err
 			}
 			additionalContainersWG.Done()
@@ -257,8 +270,9 @@ func runAdditionalContainer(
 	additionalContainer *api.AdditionalContainer,
 	cli *client.Client,
 	connectToContainer string,
+	dockerOptions options.DockerOptions,
 ) error {
-	logger.Debugf("pulling image %s", additionalContainer.Image)
+	logger.Debugf("pulling additional container image %s", additionalContainer.Image)
 	progress, err := cli.ImagePull(ctx, additionalContainer.Image, types.ImagePullOptions{})
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
@@ -268,7 +282,7 @@ func runAdditionalContainer(
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
 
-	logger.Debugf("creating container")
+	logger.Debugf("creating additional container")
 	containerConfig := container.Config{
 		Image: additionalContainer.Image,
 		Cmd:   additionalContainer.Command,
@@ -287,13 +301,20 @@ func runAdditionalContainer(
 	}
 
 	defer func() {
-		logger.Debugf("cleaning up container %s", cont.ID)
+		if dockerOptions.NoCleanup {
+			logger.Infof("not cleaning up additional container %s, don't forget to remove it with \"docker rm -v %s\"",
+				cont.ID, cont.ID)
+
+			return
+		}
+
+		logger.Debugf("cleaning up additional container %s", cont.ID)
 		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
 			RemoveVolumes: true,
 			Force:         true,
 		})
 		if err != nil {
-			logger.Warnf("Error while removing container: %v", err)
+			logger.Warnf("Error while removing additional container: %v", err)
 		}
 	}()
 
@@ -306,16 +327,16 @@ func runAdditionalContainer(
 			"running in the additional container '%s' to use a different port", additionalContainer.Name)
 	}
 
-	logger.Debugf("starting container %s", cont.ID)
+	logger.Debugf("starting additional container %s", cont.ID)
 	if err := cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{}); err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
 
-	logger.Debugf("waiting for container %s to finish", cont.ID)
+	logger.Debugf("waiting for additional container %s to finish", cont.ID)
 	waitChan, errChan := cli.ContainerWait(ctx, cont.ID, container.WaitConditionNotRunning)
 	select {
 	case res := <-waitChan:
-		logger.Debugf("container exited with %v error and exit code %d", res.Error, res.StatusCode)
+		logger.Debugf("additional container exited with %v error and exit code %d", res.Error, res.StatusCode)
 	case err := <-errChan:
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}

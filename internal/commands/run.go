@@ -34,6 +34,9 @@ var verbose bool
 // Docker-related flags.
 var dockerNoPull bool
 
+// Flags useful for debugging.
+var debugNoCleanup bool
+
 // Experimental features flags.
 var experimentalParser bool
 
@@ -218,11 +221,10 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Docker-related options
-	if dockerNoPull {
-		executorOpts = append(executorOpts, executor.WithDockerOptions(options.DockerOptions{
-			NoPull: dockerNoPull,
-		}))
-	}
+	executorOpts = append(executorOpts, executor.WithDockerOptions(options.DockerOptions{
+		NoPull:    dockerNoPull,
+		NoCleanup: debugNoCleanup,
+	}))
 
 	// Environment
 	executorOpts = append(executorOpts,
@@ -263,6 +265,10 @@ func newRunCmd() *cobra.Command {
 	// Docker-related flags
 	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false,
 		"don't attempt to pull the images before starting containers")
+
+	// Flags useful for debugging
+	cmd.PersistentFlags().BoolVar(&debugNoCleanup, "debug-no-cleanup", false,
+		"don't remove containers and volumes after execution")
 
 	// Experimental features flags
 	cmd.PersistentFlags().BoolVar(&experimentalParser, "experimental-parser", false,
