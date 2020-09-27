@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/ptypes"
 	"strconv"
 	"strings"
@@ -118,6 +119,16 @@ func NewTask(env map[string]string) *Task {
 			return err
 		}
 		task.proto.Commands = append(task.proto.Commands, cache.Proto())
+		return nil
+	})
+
+	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts")
+	task.OptionalField(artifactsNameable, schema.TodoSchema, func(node *node.Node) error {
+		artifacts := command.NewArtifactsCommand(environment.Merge(task.proto.Environment, env))
+		if err := artifacts.Parse(node); err != nil {
+			return err
+		}
+		task.proto.Commands = append(task.proto.Commands, artifacts.Proto())
 		return nil
 	})
 

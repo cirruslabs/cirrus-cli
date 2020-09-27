@@ -25,6 +25,41 @@ func (node *Node) GetExpandedStringValue(env map[string]string) (string, error) 
 	return ExpandEnvironmentVariables(valueNode.Value, env), nil
 }
 
+func (node *Node) GetSliceOfStrings() ([]string, error) {
+	_, ok := node.Value.(*ListValue)
+	if !ok {
+		return nil, fmt.Errorf("%w: expected %s node to be a list", parsererror.ErrParsing, node.Name)
+	}
+
+	var result []string
+
+	for _, child := range node.Children {
+		scalar, ok := child.Value.(*ScalarValue)
+		if !ok {
+			return nil, fmt.Errorf("%w: %s node's list items should be scalars", parsererror.ErrParsing, node.Name)
+		}
+
+		result = append(result, scalar.Value)
+	}
+
+	return result, nil
+}
+
+func (node *Node) GetSliceOfExpandedStrings(env map[string]string) ([]string, error) {
+	sliceStrings, err := node.GetSliceOfStrings()
+	if err != nil {
+		return nil, err
+	}
+
+	var result []string
+
+	for _, sliceString := range sliceStrings {
+		result = append(result, ExpandEnvironmentVariables(sliceString, env))
+	}
+
+	return result, nil
+}
+
 func (node *Node) GetStringMapping() (map[string]string, error) {
 	result := make(map[string]string)
 
@@ -50,15 +85,7 @@ func (node *Node) GetSliceOfNonEmptyStrings() ([]string, error) {
 	case *ScalarValue:
 		return []string{value.Value}, nil
 	case *ListValue:
-		var result []string
-		for _, child := range node.Children {
-			value2, ok := child.Value.(*ScalarValue)
-			if !ok {
-				return nil, fmt.Errorf("%w: list items should be scalars", parsererror.ErrParsing)
-			}
-			result = append(result, value2.Value)
-		}
-		return result, nil
+		return node.GetSliceOfStrings()
 	default:
 		return nil, fmt.Errorf("%w: field should be a string or a list of values", parsererror.ErrParsing)
 	}
