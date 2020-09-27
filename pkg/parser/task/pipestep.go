@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"strings"
 )
 
@@ -45,6 +46,26 @@ func NewPipeStep(mergedEnv map[string]string) *PipeStep {
 				},
 			},
 		})
+		return nil
+	})
+
+	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
+	step.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
+		cache := NewCacheCommand(mergedEnv)
+		if err := cache.Parse(node); err != nil {
+			return err
+		}
+		step.protoCommands = append(step.protoCommands, cache.Proto())
+		return nil
+	})
+
+	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts")
+	step.OptionalField(artifactsNameable, schema.TodoSchema, func(node *node.Node) error {
+		artifacts := command.NewArtifactsCommand(mergedEnv)
+		if err := artifacts.Parse(node); err != nil {
+			return err
+		}
+		step.protoCommands = append(step.protoCommands, artifacts.Proto())
 		return nil
 	})
 
