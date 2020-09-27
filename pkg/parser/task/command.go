@@ -12,13 +12,17 @@ type CacheCommand struct {
 	proto       *api.Command
 	instruction *api.CacheInstruction
 
+	reuploadOnChangesExplicitlySet bool
+
 	parseable.DefaultParser
 }
 
 func NewCacheCommand(mergedEnv map[string]string) *CacheCommand {
 	cache := &CacheCommand{
-		proto:       &api.Command{},
-		instruction: &api.CacheInstruction{},
+		proto: &api.Command{},
+		instruction: &api.CacheInstruction{
+			ReuploadOnChanges: true,
+		},
 	}
 
 	cache.RequiredField(nameable.NewSimpleNameable("folder"), schema.TodoSchema, func(node *node.Node) error {
@@ -35,7 +39,15 @@ func NewCacheCommand(mergedEnv map[string]string) *CacheCommand {
 		if err != nil {
 			return err
 		}
+
 		cache.instruction.FingerprintScripts = scripts
+
+		// Disable the default "dumb" re-upload behavior unless otherwise specified by the user since
+		// we now have a better way of figuring out whether we need to upload the cache or not
+		if !cache.reuploadOnChangesExplicitlySet {
+			cache.instruction.ReuploadOnChanges = false
+		}
+
 		return nil
 	})
 
@@ -45,6 +57,18 @@ func NewCacheCommand(mergedEnv map[string]string) *CacheCommand {
 			return err
 		}
 		cache.instruction.PopulateScripts = scripts
+		return nil
+	})
+
+	cache.OptionalField(nameable.NewSimpleNameable("reupload_on_changes"), schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := handleBoolevatorField(node, mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		cache.instruction.ReuploadOnChanges = evaluation
+		cache.reuploadOnChangesExplicitlySet = true
+
 		return nil
 	})
 

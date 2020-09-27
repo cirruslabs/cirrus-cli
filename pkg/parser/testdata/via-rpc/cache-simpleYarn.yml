@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+task:
+  node_modules_cache:
+    folder: .gradle
+    fingerprint_script: cat yarn.lock
+    populate_script: yarn install
+  script: yarn run test
