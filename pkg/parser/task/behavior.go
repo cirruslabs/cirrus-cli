@@ -52,7 +52,7 @@ func NewBehavior(mergedEnv map[string]string) *Behavior {
 		return nil
 	})
 
-	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts")
+	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts$")
 	b.OptionalField(artifactsNameable, schema.TodoSchema, func(node *node.Node) error {
 		artifacts := command.NewArtifactsCommand(mergedEnv)
 		if err := artifacts.Parse(node); err != nil {

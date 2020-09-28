@@ -65,7 +65,7 @@ func (articom *ArtifactsCommand) Parse(node *node.Node) error {
 		return err
 	}
 
-	cacheNameable := nameable.NewRegexNameable("^(.*)artifacts")
+	cacheNameable := nameable.NewRegexNameable("^(.*)artifacts$")
 	articom.proto.Name = cacheNameable.FirstGroupOrDefault(node.Name, "binary")
 
 	return nil

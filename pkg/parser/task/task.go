@@ -121,7 +121,7 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
-	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts")
+	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts$")
 	task.OptionalField(artifactsNameable, schema.TodoSchema, func(node *node.Node) error {
 		artifacts := command.NewArtifactsCommand(environment.Merge(task.proto.Environment, env))
 		if err := artifacts.Parse(node); err != nil {

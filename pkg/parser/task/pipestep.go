@@ -59,7 +59,7 @@ func NewPipeStep(mergedEnv map[string]string) *PipeStep {
 		return nil
 	})
 
-	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts")
+	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts$")
 	step.OptionalField(artifactsNameable, schema.TodoSchema, func(node *node.Node) error {
 		artifacts := command.NewArtifactsCommand(mergedEnv)
 		if err := artifacts.Parse(node); err != nil {
