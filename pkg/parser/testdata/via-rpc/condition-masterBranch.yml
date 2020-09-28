@@ -1,0 +1,14 @@
+container:
+  image: debian:latest
+
+env:
+  DEST_BRANCH: "master"
+
+task:
+  script: "echo $FOO"
+  use_compute_credits: $CIRRUS_PR == ""
+
+master_only_task:
+  only_if: $CIRRUS_BRANCH == $DEST_BRANCH
+  use_compute_credits: $CIRRUS_PR == ""
+  script: "echo $FOO"
