@@ -13,7 +13,7 @@ type ParseableTaskLike interface {
 	DependsOnIDs() []int64
 	SetDependsOnIDs(ids []int64)
 
-	Enabled() bool
+	Enabled(env map[string]string) (bool, error)
 
 	parseable.Parseable
 }

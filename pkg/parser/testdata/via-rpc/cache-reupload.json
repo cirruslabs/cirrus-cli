@@ -1,0 +1,54 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "echo \"docs_${CIRRUS_CHANGE_IN_REPO}_${CIRRUS_BUILD_ID}\""
+          ],
+          "folder": "dev/docs",
+          "reuploadOnChanges": true
+        },
+        "name": "docs"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "./dev/bots/docs.sh docset"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'docs' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "docs"
+        }
+      }
+    ],
+    "environment": {
+      "CPU": "2"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "flutter:stable",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  }
+]

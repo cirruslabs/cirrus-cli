@@ -1,0 +1,10 @@
+container:
+  image: debian:latest
+
+only_if: $CIRRUS_TASK_NAME == "foo"
+
+foo_task:
+  script: "echo 'Foo'"
+
+bar_task:
+  script: "echo 'Bar'"

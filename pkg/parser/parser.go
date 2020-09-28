@@ -94,7 +94,16 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			}
 
 			// Filtering based on "only_if" expression evaluation
-			if !taskLike.Enabled() {
+			taskSpecificEnv := map[string]string{
+				"CIRRUS_TASK_NAME": taskLike.Name(),
+			}
+
+			enabled, err := taskLike.Enabled(environment.Merge(taskSpecificEnv, p.environment))
+			if err != nil {
+				return nil, err
+			}
+
+			if !enabled {
 				continue
 			}
 

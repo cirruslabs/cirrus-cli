@@ -1,0 +1,8 @@
+task:
+  container:
+    image: gradle:latest
+  test_script: gradle test
+  artifacts:
+    path: "**/*.xml"
+    type: xml
+    format: junit

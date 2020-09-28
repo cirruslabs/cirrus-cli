@@ -1,0 +1,12 @@
+task:
+  container:
+    image: flutter:stable
+  environment:
+    CPU: 2
+  docs_cache:
+    folder: dev/docs
+    reupload_on_changes: true
+    fingerprint_script:
+      - echo "docs_${CIRRUS_CHANGE_IN_REPO}_${CIRRUS_BUILD_ID}"
+  script:
+    - ./dev/bots/docs.sh docset

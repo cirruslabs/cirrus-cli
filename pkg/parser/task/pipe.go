@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -24,15 +25,13 @@ type DockerPipe struct {
 	alias     string
 	dependsOn []string
 
-	enabled bool
+	onlyIfExpression string
 
 	parseable.DefaultParser
 }
 
 func NewDockerPipe(env map[string]string) *DockerPipe {
-	pipe := &DockerPipe{
-		enabled: true,
-	}
+	pipe := &DockerPipe{}
 	pipe.proto.Metadata = &api.Task_Metadata{Properties: getDefaultProperties()}
 
 	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
@@ -68,12 +67,12 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 		return nil
 	})
 
-	pipe.OptionalField(nameable.NewSimpleNameable("only_if"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleBoolevatorField(node, environment.Merge(pipe.proto.Environment, env))
+	pipe.CollectibleField("only_if", schema.TodoSchema, func(node *node.Node) error {
+		onlyIfExpression, err := node.GetStringValue()
 		if err != nil {
 			return err
 		}
-		pipe.enabled = evaluation
+		pipe.onlyIfExpression = onlyIfExpression
 		return nil
 	})
 	pipe.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
@@ -148,6 +147,15 @@ func (pipe *DockerPipe) Proto() interface{} {
 	return &pipe.proto
 }
 
-func (pipe *DockerPipe) Enabled() bool {
-	return pipe.enabled
+func (pipe *DockerPipe) Enabled(env map[string]string) (bool, error) {
+	if pipe.onlyIfExpression == "" {
+		return true, nil
+	}
+
+	evaluation, err := boolevator.Eval(pipe.onlyIfExpression, environment.Merge(pipe.proto.Environment, env), nil)
+	if err != nil {
+		return false, err
+	}
+
+	return evaluation, nil
 }

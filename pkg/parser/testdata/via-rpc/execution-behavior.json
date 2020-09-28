@@ -1,0 +1,86 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "exit",
+        "scriptInstruction": {
+          "scripts": [
+            "exit 1"
+          ]
+        }
+      },
+      {
+        "cacheInstruction": {
+          "folder": "node_modules",
+          "reuploadOnChanges": true
+        },
+        "executionBehaviour": "ALWAYS",
+        "name": "node"
+      },
+      {
+        "executionBehaviour": "ON_FAILURE",
+        "name": "debug1",
+        "scriptInstruction": {
+          "scripts": [
+            "echo \"Handle failure!\""
+          ]
+        }
+      },
+      {
+        "executionBehaviour": "ON_FAILURE",
+        "name": "debug2",
+        "scriptInstruction": {
+          "scripts": [
+            "echo \"Handle failure once again!\""
+          ]
+        }
+      },
+      {
+        "executionBehaviour": "ALWAYS",
+        "name": "echo1",
+        "scriptInstruction": {
+          "scripts": [
+            "echo \"Foo!\""
+          ]
+        }
+      },
+      {
+        "executionBehaviour": "ALWAYS",
+        "name": "echo2",
+        "scriptInstruction": {
+          "scripts": [
+            "echo \"Bar!\""
+          ]
+        }
+      },
+      {
+        "executionBehaviour": "ALWAYS",
+        "name": "Upload 'node' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "alpine:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "master",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  }
+]

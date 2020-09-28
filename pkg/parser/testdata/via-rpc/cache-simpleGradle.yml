@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+task:
+  script: ./gradlew check
+  gradle_local_cache:
+    folder: .gradle
+  gradle_global_cache:
+    folder: $HOME/.gradle

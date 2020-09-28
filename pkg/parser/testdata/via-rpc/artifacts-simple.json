@@ -1,0 +1,45 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "test",
+        "scriptInstruction": {
+          "scripts": [
+            "gradle test"
+          ]
+        }
+      },
+      {
+        "artifactsInstruction": {
+          "format": "junit",
+          "paths": [
+            "**/*.xml"
+          ],
+          "type": "xml"
+        },
+        "name": "binary"
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "gradle:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  }
+]
