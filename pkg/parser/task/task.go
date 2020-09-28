@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
@@ -22,15 +23,13 @@ type Task struct {
 	alias     string
 	dependsOn []string
 
-	enabled bool
+	onlyIfExpression string
 
 	parseable.DefaultParser
 }
 
 func NewTask(env map[string]string) *Task {
-	task := &Task{
-		enabled: true,
-	}
+	task := &Task{}
 	task.proto.Metadata = &api.Task_Metadata{Properties: getDefaultProperties()}
 
 	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
@@ -143,12 +142,12 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
-	task.OptionalField(nameable.NewSimpleNameable("only_if"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleBoolevatorField(node, environment.Merge(task.proto.Environment, env))
+	task.CollectibleField("only_if", schema.TodoSchema, func(node *node.Node) error {
+		onlyIfExpression, err := node.GetStringValue()
 		if err != nil {
 			return err
 		}
-		task.enabled = evaluation
+		task.onlyIfExpression = onlyIfExpression
 		return nil
 	})
 	task.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
@@ -235,8 +234,17 @@ func (task *Task) Proto() interface{} {
 	return &task.proto
 }
 
-func (task *Task) Enabled() bool {
-	return task.enabled
+func (task *Task) Enabled(env map[string]string) (bool, error) {
+	if task.onlyIfExpression == "" {
+		return true, nil
+	}
+
+	evaluation, err := boolevator.Eval(task.onlyIfExpression, environment.Merge(task.proto.Environment, env), nil)
+	if err != nil {
+		return false, err
+	}
+
+	return evaluation, nil
 }
 
 func registerExecutionBehaviorFields(task *Task) {
