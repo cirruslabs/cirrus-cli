@@ -61,7 +61,7 @@ func NewCacheCommand(mergedEnv map[string]string) *CacheCommand {
 	})
 
 	cache.OptionalField(nameable.NewSimpleNameable("reupload_on_changes"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleBoolevatorField(node, mergedEnv)
+		evaluation, err := node.GetBoolValue(mergedEnv)
 		if err != nil {
 			return err
 		}

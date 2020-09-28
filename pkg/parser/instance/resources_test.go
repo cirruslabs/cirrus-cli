@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func parseMegaBytesHelper(t *testing.T, s string) uint32 {
+func parseMegaBytesHelper(t *testing.T, s string) int64 {
 	result, err := instance.ParseMegaBytes(s)
 	if err != nil {
 		t.Fatal(err)

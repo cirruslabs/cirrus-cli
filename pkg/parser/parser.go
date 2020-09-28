@@ -16,6 +16,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/lestrrat-go/jsschema"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
@@ -33,8 +34,9 @@ type Parser struct {
 	// Paths and contents of the files that might influence the parser.
 	filesContents map[string]string
 
-	parsers   map[nameable.Nameable]parseable.Parseable
-	numbering int64
+	parsers             map[nameable.Nameable]parseable.Parseable
+	numbering           int64
+	additionalInstances map[string]protoreflect.MessageDescriptor
 }
 
 type Result struct {
@@ -70,7 +72,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			var taskLike task.ParseableTaskLike
 			switch value.(type) {
 			case *task.Task:
-				taskLike = task.NewTask(environment.Copy(p.environment))
+				taskLike = task.NewTask(environment.Copy(p.environment), p.additionalInstances)
 			case *task.DockerPipe:
 				taskLike = task.NewDockerPipe(environment.Copy(p.environment))
 			default:

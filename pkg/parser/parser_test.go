@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/go-test/deep"
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -54,6 +56,27 @@ func TestValidConfigs(t *testing.T) {
 			assert.JSONEq(t, string(expected), string(actual))
 		})
 	}
+}
+
+func TestAdditionalInstances(t *testing.T) {
+	containerInstanceReflect := (&api.ContainerInstance{}).ProtoReflect()
+	p := parser.New(parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
+		"proto_container": containerInstanceReflect.Descriptor(),
+	}))
+	result, err := p.ParseFromFile(absolutize("proto-instance.yml"))
+
+	require.Nil(t, err)
+	require.Empty(t, result.Errors)
+	require.NotEmpty(t, result.Tasks)
+
+	expected, err := ioutil.ReadFile(absolutize("proto-instance.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actual := testutil.TasksToJSON(t, result.Tasks)
+
+	assert.JSONEq(t, string(expected), string(actual))
 }
 
 func TestInvalidConfigs(t *testing.T) {

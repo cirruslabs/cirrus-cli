@@ -13,7 +13,7 @@ const (
 	kibi                    = 1024
 )
 
-func ParseMegaBytes(s string) (uint32, error) {
+func ParseMegaBytes(s string) (int64, error) {
 	// Split the string into two parts
 	sLower := strings.ToLower(s)
 	cutAfter := strings.LastIndexFunc(sLower, unicode.IsDigit)
@@ -21,11 +21,10 @@ func ParseMegaBytes(s string) (uint32, error) {
 	suffixPart := sLower[cutAfter+1:]
 
 	// Parse the digits part
-	memory, err := strconv.ParseUint(digitsPart, 10, 32)
+	memoryResult, err := strconv.ParseUint(digitsPart, 10, 32)
 	if err != nil {
 		return 0, err
 	}
-	memoryResult := uint32(memory)
 
 	// Modify the digits part depending on the suffix part
 	switch suffixPart {
@@ -50,5 +49,5 @@ func ParseMegaBytes(s string) (uint32, error) {
 		return 0, fmt.Errorf("%w: unsupported digital information unit suffix: '%s'", parsererror.ErrParsing, suffixPart)
 	}
 
-	return memoryResult, nil
+	return int64(memoryResult), nil
 }

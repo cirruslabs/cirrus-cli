@@ -13,6 +13,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/ptypes"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
 	"strconv"
 	"strings"
 )
@@ -28,7 +30,8 @@ type Task struct {
 	parseable.DefaultParser
 }
 
-func NewTask(env map[string]string) *Task {
+//nolint:gocognit // it's a parser, there is a lot of boilerplate
+func NewTask(env map[string]string, additionalInstances map[string]protoreflect.MessageDescriptor) *Task {
 	task := &Task{}
 	task.proto.Metadata = &api.Task_Metadata{Properties: getDefaultProperties()}
 
@@ -69,6 +72,24 @@ func NewTask(env map[string]string) *Task {
 
 			return nil
 		})
+
+	for instanceName, descriptor := range additionalInstances {
+		additionalInstanceParser := instance.NewProtoParser(descriptor, environment.Merge(task.proto.Environment, env))
+		task.CollectibleField(instanceName,
+			additionalInstanceParser.Schema(),
+			func(node *node.Node) error {
+				parserInstance, err := additionalInstanceParser.Parse(node)
+				if err != nil {
+					return err
+				}
+				anyInstance, err := anypb.New(parserInstance)
+				if err != nil {
+					return err
+				}
+				task.proto.Instance = anyInstance
+				return nil
+			})
+	}
 
 	task.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
@@ -151,7 +172,7 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 	task.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleBoolevatorField(node, environment.Merge(task.proto.Environment, env))
+		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}

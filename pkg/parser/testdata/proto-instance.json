@@ -1,0 +1,75 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "additionalContainers": [
+        {
+          "cpu": 1,
+          "environment": {
+            "MYSQL_ROOT_PASSWORD": ""
+          },
+          "image": "mysql:latest",
+          "memory": 1024,
+          "name": "mysql"
+        }
+      ],
+      "cpu": 2.5,
+      "image": "alpine:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "regular"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "additionalContainers": [
+        {
+          "cpu": 1,
+          "environment": {
+            "MYSQL_ROOT_PASSWORD": ""
+          },
+          "image": "mysql:latest",
+          "memory": 1024,
+          "name": "mysql"
+        }
+      ],
+      "cpu": 2.5,
+      "image": "alpine:latest",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "proto"
+  }
+]

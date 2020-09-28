@@ -1,0 +1,20 @@
+aliases: &container_body
+  image: alpine:latest
+  platform: linux
+  cpu: 2.5
+  memory: 4G
+  additional_containers:
+    - name: mysql
+      image: mysql:latest
+      cpu: 1
+      memory: 1024
+      environment:
+        MYSQL_ROOT_PASSWORD: ""
+
+regular_task:
+  container:
+    <<: *container_body
+
+proto_task:
+  proto_container:
+    <<: *container_body
