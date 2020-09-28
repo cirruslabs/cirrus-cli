@@ -17,7 +17,7 @@ type ProtoInstance struct {
 	parseable.DefaultParser
 }
 
-//nolint:gocognit // it's a parser, there is a lot of boilerplate
+//nolint:gocognit,gocyclo // it's a parser, there is a lot of boilerplate
 func NewProtoParser(desc protoreflect.MessageDescriptor, mergedEnv map[string]string) *ProtoInstance {
 	instance := &ProtoInstance{
 		proto: dynamicpb.NewMessage(desc),
@@ -30,7 +30,8 @@ func NewProtoParser(desc protoreflect.MessageDescriptor, mergedEnv map[string]st
 		switch field.Kind() {
 		case protoreflect.MessageKind:
 			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
-				if field.IsMap() {
+				switch {
+				case field.IsMap():
 					fieldInstance := instance.proto.NewField(field)
 					mapping, err := node.GetStringMapping()
 					if err != nil {
@@ -44,7 +45,7 @@ func NewProtoParser(desc protoreflect.MessageDescriptor, mergedEnv map[string]st
 					}
 					instance.proto.Set(field, fieldInstance)
 					return nil
-				} else if field.IsList() {
+				case field.IsList():
 					fieldInstance := instance.proto.NewField(field)
 					for _, child := range node.Children {
 						childParser := NewProtoParser(field.Message(), mergedEnv)
@@ -56,7 +57,7 @@ func NewProtoParser(desc protoreflect.MessageDescriptor, mergedEnv map[string]st
 					}
 					instance.proto.Set(field, fieldInstance)
 					return nil
-				} else {
+				default:
 					childParser := NewProtoParser(field.Message(), mergedEnv)
 					parserChild, err := childParser.Parse(node)
 					if err != nil {
