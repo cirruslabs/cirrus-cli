@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"sort"
 	"strings"
@@ -14,6 +15,20 @@ func (node *Node) GetStringValue() (string, error) {
 	}
 
 	return valueNode.Value, nil
+}
+
+func (node *Node) GetBoolValue(env map[string]string) (bool, error) {
+	expression, err := node.GetStringValue()
+	if err != nil {
+		return false, err
+	}
+
+	evaluation, err := boolevator.Eval(expression, env, nil)
+	if err != nil {
+		return false, err
+	}
+
+	return evaluation, nil
 }
 
 func (node *Node) GetExpandedStringValue(env map[string]string) (string, error) {

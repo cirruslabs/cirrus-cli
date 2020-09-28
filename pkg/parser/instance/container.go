@@ -75,7 +75,7 @@ func NewCommunityContainer(mergedEnv map[string]string) *Container {
 		if err != nil {
 			return err
 		}
-		container.proto.Memory = memoryParsed
+		container.proto.Memory = uint32(memoryParsed)
 		return nil
 	})
 

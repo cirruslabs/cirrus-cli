@@ -76,7 +76,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 		return nil
 	})
 	pipe.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := handleBoolevatorField(node, environment.Merge(pipe.proto.Environment, env))
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}

@@ -93,6 +93,32 @@ func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 		return nil
 	})
 
+	ac.OptionalField(nameable.NewSimpleNameable("cpu"), schema.TodoSchema, func(node *node.Node) error {
+		cpu, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+		cpuFloat, err := strconv.ParseFloat(cpu, 32)
+		if err != nil {
+			return err
+		}
+		ac.proto.Cpu = float32(cpuFloat)
+		return nil
+	})
+
+	ac.OptionalField(nameable.NewSimpleNameable("memory"), schema.TodoSchema, func(node *node.Node) error {
+		memory, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+		memoryParsed, err := ParseMegaBytes(memory)
+		if err != nil {
+			return err
+		}
+		ac.proto.Memory = uint32(memoryParsed)
+		return nil
+	})
+
 	return ac
 }
 
