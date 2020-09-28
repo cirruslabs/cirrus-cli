@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 )
 
 type Behavior struct {
@@ -14,8 +15,20 @@ type Behavior struct {
 	parseable.DefaultParser
 }
 
-func NewBehavior() *Behavior {
+func NewBehavior(mergedEnv map[string]string) *Behavior {
 	b := &Behavior{}
+
+	bgNameable := nameable.NewRegexNameable("^(.*)background_script$")
+	b.OptionalField(bgNameable, schema.TodoSchema, func(node *node.Node) error {
+		command, err := handleBackgroundScript(node, bgNameable)
+		if err != nil {
+			return err
+		}
+
+		b.commands = append(b.commands, command)
+
+		return nil
+	})
 
 	scriptNameable := nameable.NewRegexNameable("^(.*)script$")
 	b.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
@@ -26,6 +39,26 @@ func NewBehavior() *Behavior {
 
 		b.commands = append(b.commands, command)
 
+		return nil
+	})
+
+	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
+	b.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
+		cache := NewCacheCommand(mergedEnv)
+		if err := cache.Parse(node); err != nil {
+			return err
+		}
+		b.commands = append(b.commands, cache.Proto())
+		return nil
+	})
+
+	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts")
+	b.OptionalField(artifactsNameable, schema.TodoSchema, func(node *node.Node) error {
+		artifacts := command.NewArtifactsCommand(mergedEnv)
+		if err := artifacts.Parse(node); err != nil {
+			return err
+		}
+		b.commands = append(b.commands, artifacts.Proto())
 		return nil
 	})
 

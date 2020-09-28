@@ -1,0 +1,16 @@
+container:
+  image: alpine:latest
+
+task:
+  execution_lock: $CIRRUS_BRANCH
+  exit_script: exit 1
+  always:
+    node_cache:
+      folder: node_modules
+  on_failure:
+    debug1_script: echo "Handle failure!"
+  on_failure:
+    debug2_script: echo "Handle failure once again!"
+  always:
+    echo1_script: echo "Foo!"
+    echo2_script: echo "Bar!"

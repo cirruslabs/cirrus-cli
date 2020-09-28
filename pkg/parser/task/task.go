@@ -131,7 +131,7 @@ func NewTask(env map[string]string) *Task {
 		return nil
 	})
 
-	registerExecutionBehaviorFields(task)
+	task.registerExecutionBehaviorFields(env)
 
 	task.OptionalField(nameable.NewSimpleNameable("depends_on"), schema.TodoSchema, func(node *node.Node) error {
 		dependsOn, err := node.GetSliceOfNonEmptyStrings()
@@ -166,6 +166,17 @@ func NewTask(env map[string]string) *Task {
 		}
 
 		task.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
+
+		return nil
+	})
+
+	task.OptionalField(nameable.NewSimpleNameable("execution_lock"), schema.TodoSchema, func(node *node.Node) error {
+		lockName, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+
+		task.proto.Metadata.Properties["executionLock"] = lockName
 
 		return nil
 	})
@@ -247,11 +258,11 @@ func (task *Task) Enabled(env map[string]string) (bool, error) {
 	return evaluation, nil
 }
 
-func registerExecutionBehaviorFields(task *Task) {
+func (task *Task) registerExecutionBehaviorFields(env map[string]string) {
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
 		task.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {
-			behavior := NewBehavior()
+			behavior := NewBehavior(environment.Merge(task.proto.Environment, env))
 			if err := behavior.Parse(node); err != nil {
 				return err
 			}

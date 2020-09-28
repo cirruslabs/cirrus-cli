@@ -72,7 +72,7 @@ func NewPipeStep(mergedEnv map[string]string) *PipeStep {
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
 		step.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {
-			behavior := NewBehavior()
+			behavior := NewBehavior(mergedEnv)
 			if err := behavior.Parse(node); err != nil {
 				return err
 			}
