@@ -14,6 +14,10 @@ var ErrMatrixNeedsCollection = errors.New("matrix should contain a collection")
 // something other than maps (e.g. lists or scalars) as it's items.
 var ErrMatrixNeedsListOfMaps = errors.New("matrix with a list can only contain maps as it's items")
 
+// errExpansionCommenced is returned when the matrix modifier gets expanded
+// and we need to do another pass to see if there's more.
+var errExpansionCommenced = errors.New("single expansion commenced")
+
 // Recursively processes each "outer" map key of the loaded YAML document
 // in an attempt to produce multiple keys as a result of matrix expansion.
 func singlePass(inputTree yaml.MapSlice) (yaml.MapSlice, error) {
@@ -38,17 +42,18 @@ func singlePass(inputTree yaml.MapSlice) (yaml.MapSlice, error) {
 		}
 
 		var expandedTrees []yaml.MapItem
-		expandedTreesCollector := func(item *yaml.MapItem) (bool, error) {
+		expandedTreesCollector := func(item *yaml.MapItem) error {
 			newTrees, expandErr := expandIfMatrix(&treeToExpand, item)
 			// stop once found any expansion
 			if len(newTrees) != 0 {
 				expandedTrees = newTrees
-				return true, nil
+				return errExpansionCommenced
 			}
-			return false, expandErr
+			return expandErr
 		}
 
-		if err := traverse(&treeToExpand, expandedTreesCollector); err != nil {
+		err := traverse(&treeToExpand, expandedTreesCollector)
+		if err != nil && !errors.Is(err, errExpansionCommenced) {
 			return nil, err
 		}
 

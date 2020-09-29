@@ -1,0 +1,45 @@
+task:
+  container:
+    matrix:
+      image: node:8.3.0
+      image: node:8.2.0
+  environment:
+    matrix:
+      COMMAND: lint
+      COMMAND: test
+  env:
+    TEST: true
+  script: true
+---
+task:
+  container:
+    image: node:8.3.0
+  environment:
+    COMMAND: lint
+  env:
+    TEST: true
+  script: true
+task:
+  container:
+    image: node:8.3.0
+  environment:
+    COMMAND: test
+  env:
+    TEST: true
+  script: true
+task:
+  container:
+    image: node:8.2.0
+  environment:
+    COMMAND: lint
+  env:
+    TEST: true
+  script: true
+task:
+  container:
+    image: node:8.2.0
+  environment:
+    COMMAND: test
+  env:
+    TEST: true
+  script: true
