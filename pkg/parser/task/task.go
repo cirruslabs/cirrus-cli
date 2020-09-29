@@ -40,7 +40,7 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 		if err != nil {
 			return err
 		}
-		task.proto.Environment = taskEnv
+		task.proto.Environment = environment.Merge(task.proto.Environment, taskEnv)
 		return nil
 	})
 	task.CollectibleField("env", schema.TodoSchema, func(node *node.Node) error {
@@ -48,7 +48,7 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 		if err != nil {
 			return err
 		}
-		task.proto.Environment = taskEnv
+		task.proto.Environment = environment.Merge(task.proto.Environment, taskEnv)
 		return nil
 	})
 
