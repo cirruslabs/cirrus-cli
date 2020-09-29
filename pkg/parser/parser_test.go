@@ -120,11 +120,16 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 	fixturePath := filepath.Join(cloudDir, baseName+".json")
 	envPath := filepath.Join(cloudDir, baseName+".env")
 
+	yamlBytes, err := ioutil.ReadFile(yamlConfigPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Obtain expected result by loading JSON fixture
 	fixtureBytes, err := ioutil.ReadFile(fixturePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			viaRPCCreateJSONFixture(t, yamlConfigPath, fixturePath, envPath)
+			viaRPCCreateJSONFixture(t, yamlBytes, fixturePath, envPath)
 			t.Fatalf("created new fixture: %s, don't forget to commit it", fixturePath)
 		}
 
@@ -135,7 +140,7 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 
 	// Obtain the actual result by parsing YAML configuration using the local parser
 	localParser := parser.New(parser.WithEnvironment(viaRPCLoadEnv(t, envPath)))
-	localResult, err := localParser.ParseFromFile(yamlConfigPath)
+	localResult, err := localParser.Parse(string(yamlBytes))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -152,10 +157,10 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 	}
 }
 
-func viaRPCCreateJSONFixture(t *testing.T, yamlConfigPath string, fixturePath string, envPath string) {
+func viaRPCCreateJSONFixture(t *testing.T, yamlBytes []byte, fixturePath string, envPath string) {
 	// Aid in migration by automatically creating new JSON fixture using the RPC parser
 	rpcParser := rpcparser.Parser{Environment: viaRPCLoadEnv(t, envPath)}
-	rpcResult, err := rpcParser.ParseFromFile(yamlConfigPath)
+	rpcResult, err := rpcParser.Parse(string(yamlBytes))
 	if err != nil {
 		t.Fatal(err)
 	}
