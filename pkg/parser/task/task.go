@@ -33,7 +33,7 @@ type Task struct {
 //nolint:gocognit // it's a parser, there is a lot of boilerplate
 func NewTask(env map[string]string, additionalInstances map[string]protoreflect.MessageDescriptor) *Task {
 	task := &Task{}
-	task.proto.Metadata = &api.Task_Metadata{Properties: getDefaultProperties()}
+	task.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
 	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		taskEnv, err := node.GetStringMapping()

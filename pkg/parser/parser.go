@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 )
 
 var (
@@ -310,15 +311,20 @@ func resolveDependencies(tasks []task.ParseableTaskLike) error {
 func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error) {
 	var serviceTasks []*api.Task
 
-	for _, task := range protoTasks {
+	for _, protoTask := range protoTasks {
 		var dynamicInstance ptypes.DynamicAny
-		if err := ptypes.UnmarshalAny(task.Instance, &dynamicInstance); err != nil {
+		if err := ptypes.UnmarshalAny(protoTask.Instance, &dynamicInstance); err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
 
 		taskContainer, ok := dynamicInstance.Message.(*api.ContainerInstance)
 		if !ok {
 			continue
+		}
+
+		if taskContainer.Platform != api.Platform_LINUX {
+			return nil, fmt.Errorf("%w: unsupported platform for building Dockerfile: %s",
+				parsererror.ErrParsing, taskContainer.Platform.String())
 		}
 
 		if taskContainer.DockerfilePath == "" {
@@ -340,25 +346,52 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
 
+		// Craft Docker build arguments
+		var buildArgs string
+		for key, value := range taskContainer.DockerArguments {
+			buildArgs += fmt.Sprintf(" %s=%s", key, value)
+		}
+
 		newTask := &api.Task{
 			Name:         fmt.Sprintf("Prebuild %s", taskContainer.DockerfilePath),
 			LocalGroupId: p.NextTaskID(),
 			Instance:     anyInstance,
 			Commands: []*api.Command{
 				{
-					Name: "dummy",
+					Name: "build",
 					Instruction: &api.Command_ScriptInstruction{
 						ScriptInstruction: &api.ScriptInstruction{
-							Scripts: []string{"true"},
+							Scripts: []string{fmt.Sprintf("docker build "+
+								"--tag gcr.io/%s:%s "+
+								"--file %s%s "+
+								"${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}",
+								prebuiltInstance.Repository, prebuiltInstance.Reference,
+								buildArgs, taskContainer.DockerfilePath)},
+						},
+					},
+				},
+				{
+					Name: "push",
+					Instruction: &api.Command_ScriptInstruction{
+						ScriptInstruction: &api.ScriptInstruction{
+							Scripts: []string{fmt.Sprintf("gcloud docker -- push gcr.io/cirrus-ci-community/%s:latest",
+								dockerfileHash)},
 						},
 					},
 				},
 			},
+			Environment: map[string]string{
+				"DISPLAY": ":99.0",
+			},
+			Metadata: &api.Task_Metadata{
+				Properties: task.DefaultTaskProperties(),
+			},
 		}
+		newTask.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(newTask.LocalGroupId, 10)
 
 		serviceTasks = append(serviceTasks, newTask)
 
-		task.RequiredGroups = append(task.RequiredGroups, newTask.LocalGroupId)
+		protoTask.RequiredGroups = append(protoTask.RequiredGroups, newTask.LocalGroupId)
 
 		// Ensure that the task will use our to-be-created image
 		taskContainer.Image = fmt.Sprintf("gcr.io/cirrus-ci-community/%s:latest", dockerfileHash)
@@ -366,7 +399,7 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
-		task.Instance = updatedInstance
+		protoTask.Instance = updatedInstance
 	}
 
 	return serviceTasks, nil

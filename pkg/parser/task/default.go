@@ -1,6 +1,6 @@
 package task
 
-func getDefaultProperties() map[string]string {
+func DefaultTaskProperties() map[string]string {
 	return map[string]string{
 		"allowFailures":               "false",
 		"executionLock":               "null",
