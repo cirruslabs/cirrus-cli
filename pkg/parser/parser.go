@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
+	"sort"
 )
 
 var (
@@ -177,7 +178,7 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	}
 	protoTasks = append(protoTasks, serviceTasks...)
 
-	// Final pass over resulting tasks in Protocol Buffers format
+	// Postprocess individual tasks
 	for _, protoTask := range protoTasks {
 		// Insert empty clone instruction if custom clone script wasn't provided by the user
 		ensureCloneInstruction(protoTask)
@@ -189,6 +190,9 @@ func (p *Parser) Parse(config string) (*Result, error) {
 			}
 		}
 	}
+
+	// Postprocess individual tasks to remove common labels
+	removeCommonLabels(protoTasks)
 
 	return &Result{
 		Tasks: protoTasks,
@@ -441,8 +445,45 @@ func populateUniqueLabels(task *api.Task) error {
 		labels = append(labels, "pipe")
 	}
 
+	// Environment-specific labels
+	for key, value := range task.Environment {
+		labels = append(labels, fmt.Sprintf("%s:%s", key, value))
+	}
+
+	// Sort labels to make them comparable
+	sort.Strings(labels)
+
 	// Update task
 	task.Metadata.UniqueLabels = labels
 
 	return nil
+}
+
+func removeCommonLabels(tasks []*api.Task) {
+	// Count how many times a label occurs for each group of similarly named tasks
+	perTaskLabelStats := make(map[string]int)
+
+	for _, protoTask := range tasks {
+		for _, label := range protoTask.Metadata.UniqueLabels {
+			perTaskLabelStats[protoTask.Name+label]++
+		}
+	}
+
+	// Filter out labels useless for filtering
+	for _, task := range tasks {
+		var keptLabels []string
+
+		numSimilarlyNamedTasks := countTasksWithName(tasks, task.Name)
+
+		for _, label := range task.Metadata.UniqueLabels {
+			numSimilarlyNamedAndLabeledTasks := perTaskLabelStats[task.Name+label]
+
+			// Only keep labels if they allow for more specific selection than simply all tasks with this name
+			if numSimilarlyNamedAndLabeledTasks != numSimilarlyNamedTasks {
+				keptLabels = append(keptLabels, label)
+			}
+		}
+
+		task.Metadata.UniqueLabels = keptLabels
+	}
 }
