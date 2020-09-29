@@ -463,14 +463,22 @@ func removeCommonLabels(tasks []*api.Task) {
 	// Count how many times a label occurs for each group of similarly named tasks
 	perTaskLabelStats := make(map[string]int)
 
-	for _, protoTask := range tasks {
-		for _, label := range protoTask.Metadata.UniqueLabels {
-			perTaskLabelStats[protoTask.Name+label]++
+	for _, task := range tasks {
+		if task.Metadata == nil {
+			continue
+		}
+
+		for _, label := range task.Metadata.UniqueLabels {
+			perTaskLabelStats[task.Name+label]++
 		}
 	}
 
 	// Filter out labels useless for filtering
 	for _, task := range tasks {
+		if task.Metadata == nil {
+			continue
+		}
+
 		var keptLabels []string
 
 		numSimilarlyNamedTasks := countTasksWithName(tasks, task.Name)
