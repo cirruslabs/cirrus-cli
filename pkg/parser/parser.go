@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"crypto/sha256"
+	"crypto/md5" // nolint:gosec // backwards compatibility
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
@@ -245,10 +245,13 @@ func (p *Parser) ParseFromFile(path string) (*Result, error) {
 
 func (p *Parser) ContentHash(filePath string) string {
 	// Note that this will be empty if we don't know anything about the file,
-	// so we'll return SHA256(""), but that's OK since the purpose is caching
+	// so we'll return MD5(""), but that's OK since the purpose is caching
 	fileContents := p.filesContents[filePath]
 
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(fileContents)))
+	// nolint:gosec // backwards compatibility
+	digest := md5.Sum([]byte(fileContents))
+
+	return fmt.Sprintf("%x", digest)
 }
 
 func (p *Parser) NextTaskID() int64 {
