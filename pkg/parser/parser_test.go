@@ -7,7 +7,6 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
-	"github.com/go-test/deep"
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -136,8 +135,6 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 		t.Fatal(err)
 	}
 
-	fixtureTasks := testutil.TasksFromJSON(t, fixtureBytes)
-
 	// Obtain the actual result by parsing YAML configuration using the local parser
 	localParser := parser.New(parser.WithEnvironment(viaRPCLoadEnv(t, envPath)))
 	localResult, err := localParser.Parse(string(yamlBytes))
@@ -148,13 +145,7 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 		t.Fatal(localResult.Errors)
 	}
 
-	differences := deep.Equal(fixtureTasks, localResult.Tasks)
-	for _, difference := range differences {
-		fmt.Println(difference)
-	}
-	if len(differences) != 0 {
-		t.Fatal("found differences")
-	}
+	assert.JSONEq(t, string(fixtureBytes), string(testutil.TasksToJSON(t, localResult.Tasks)))
 }
 
 func viaRPCCreateJSONFixture(t *testing.T, yamlBytes []byte, fixturePath string, envPath string) {
