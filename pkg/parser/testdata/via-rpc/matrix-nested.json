@@ -1,0 +1,374 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "cat package-lock.json"
+          ],
+          "folder": "node_modules",
+          "populateScripts": [
+            "npm ci"
+          ]
+        },
+        "name": "node_modules"
+      },
+      {
+        "name": "lint",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run lint"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Lint"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "cat package-lock.json"
+          ],
+          "folder": "node_modules",
+          "populateScripts": [
+            "npm ci"
+          ]
+        },
+        "name": "node_modules"
+      },
+      {
+        "name": "relay",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run relay"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:latest",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Relay"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "cat package-lock.json"
+          ],
+          "folder": "node_modules",
+          "populateScripts": [
+            "npm ci"
+          ]
+        },
+        "name": "node_modules"
+      },
+      {
+        "name": "typecheck",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run typecheck"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:latest",
+      "memory": 4096
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "2",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Type Check"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "cat package-lock.json"
+          ],
+          "folder": "node_modules",
+          "populateScripts": [
+            "npm ci"
+          ]
+        },
+        "name": "node_modules"
+      },
+      {
+        "name": "prettier",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run prettier-check"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:latest",
+      "memory": 4096
+    },
+    "localGroupId": "3",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "3",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Prettier"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "cat package-lock.json"
+          ],
+          "folder": "node_modules",
+          "populateScripts": [
+            "npm ci"
+          ]
+        },
+        "name": "node_modules"
+      },
+      {
+        "name": "test",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run test"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:latest",
+      "memory": 4096
+    },
+    "localGroupId": "4",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "4",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "container:node:latest"
+      ]
+    },
+    "name": "Test"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "cat package-lock.json"
+          ],
+          "folder": "node_modules",
+          "populateScripts": [
+            "npm ci"
+          ]
+        },
+        "name": "node_modules"
+      },
+      {
+        "name": "test",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run test"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:13",
+      "memory": 4096
+    },
+    "localGroupId": "5",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "5",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "container:node:13"
+      ]
+    },
+    "name": "Test"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "cat package-lock.json"
+          ],
+          "folder": "node_modules",
+          "populateScripts": [
+            "npm ci"
+          ]
+        },
+        "name": "node_modules"
+      },
+      {
+        "name": "test",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run test"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:12",
+      "memory": 4096
+    },
+    "localGroupId": "6",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "6",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "container:node:12"
+      ]
+    },
+    "name": "Test"
+  }
+]

@@ -1,0 +1,25 @@
+check_task:
+  matrix:
+    - container:
+        image: gradle:4.4.1-jdk8
+    - container:
+        image: gradle:4.4.1-jdk8
+      environment:
+        SKIP_RELEASE: true
+        MOCK_MAKER: mock-maker-inline
+    - container:
+        image: gradle:4.4.1-jdk9
+      environment:
+        SKIP_RELEASE: true
+    - container:
+        image: gradle:4.4.1-jdk9
+      environment:
+        SKIP_RELEASE: true
+        MOCK_MAKER: mock-maker-inline
+  gradle_cache:
+    folder: ~/.gradle/caches
+  check_script: gradle build idea -s -PcheckJava6Compatibility
+  release_script: gradle ciPerformRelease
+  cleanup_before_cache_script:
+    - rm -rf ~/.gradle/caches/$GRADLE_VERSION/
+    - find ~/.gradle/caches/ -name "*.lock" -type f -delete

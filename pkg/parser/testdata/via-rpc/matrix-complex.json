@@ -1,0 +1,285 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "folder": "$HOME/.gradle/caches",
+          "reuploadOnChanges": true
+        },
+        "name": "gradle"
+      },
+      {
+        "name": "check",
+        "scriptInstruction": {
+          "scripts": [
+            "gradle build idea -s -PcheckJava6Compatibility"
+          ]
+        }
+      },
+      {
+        "name": "release",
+        "scriptInstruction": {
+          "scripts": [
+            "gradle ciPerformRelease"
+          ]
+        }
+      },
+      {
+        "name": "cleanup_before_cache",
+        "scriptInstruction": {
+          "scripts": [
+            "rm -rf ~/.gradle/caches/$GRADLE_VERSION/",
+            "find ~/.gradle/caches/ -name \"*.lock\" -type f -delete"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'gradle' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "gradle"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "gradle:4.4.1-jdk8",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "container:gradle:4.4.1-jdk8"
+      ]
+    },
+    "name": "check"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "folder": "$HOME/.gradle/caches",
+          "reuploadOnChanges": true
+        },
+        "name": "gradle"
+      },
+      {
+        "name": "check",
+        "scriptInstruction": {
+          "scripts": [
+            "gradle build idea -s -PcheckJava6Compatibility"
+          ]
+        }
+      },
+      {
+        "name": "release",
+        "scriptInstruction": {
+          "scripts": [
+            "gradle ciPerformRelease"
+          ]
+        }
+      },
+      {
+        "name": "cleanup_before_cache",
+        "scriptInstruction": {
+          "scripts": [
+            "rm -rf ~/.gradle/caches/$GRADLE_VERSION/",
+            "find ~/.gradle/caches/ -name \"*.lock\" -type f -delete"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'gradle' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "gradle"
+        }
+      }
+    ],
+    "environment": {
+      "MOCK_MAKER": "mock-maker-inline",
+      "SKIP_RELEASE": "true"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "gradle:4.4.1-jdk8",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "MOCK_MAKER:mock-maker-inline",
+        "SKIP_RELEASE:true",
+        "container:gradle:4.4.1-jdk8"
+      ]
+    },
+    "name": "check"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "folder": "$HOME/.gradle/caches",
+          "reuploadOnChanges": true
+        },
+        "name": "gradle"
+      },
+      {
+        "name": "check",
+        "scriptInstruction": {
+          "scripts": [
+            "gradle build idea -s -PcheckJava6Compatibility"
+          ]
+        }
+      },
+      {
+        "name": "release",
+        "scriptInstruction": {
+          "scripts": [
+            "gradle ciPerformRelease"
+          ]
+        }
+      },
+      {
+        "name": "cleanup_before_cache",
+        "scriptInstruction": {
+          "scripts": [
+            "rm -rf ~/.gradle/caches/$GRADLE_VERSION/",
+            "find ~/.gradle/caches/ -name \"*.lock\" -type f -delete"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'gradle' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "gradle"
+        }
+      }
+    ],
+    "environment": {
+      "SKIP_RELEASE": "true"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "gradle:4.4.1-jdk9",
+      "memory": 4096
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "2",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "SKIP_RELEASE:true",
+        "container:gradle:4.4.1-jdk9"
+      ]
+    },
+    "name": "check"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "folder": "$HOME/.gradle/caches",
+          "reuploadOnChanges": true
+        },
+        "name": "gradle"
+      },
+      {
+        "name": "check",
+        "scriptInstruction": {
+          "scripts": [
+            "gradle build idea -s -PcheckJava6Compatibility"
+          ]
+        }
+      },
+      {
+        "name": "release",
+        "scriptInstruction": {
+          "scripts": [
+            "gradle ciPerformRelease"
+          ]
+        }
+      },
+      {
+        "name": "cleanup_before_cache",
+        "scriptInstruction": {
+          "scripts": [
+            "rm -rf ~/.gradle/caches/$GRADLE_VERSION/",
+            "find ~/.gradle/caches/ -name \"*.lock\" -type f -delete"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'gradle' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "gradle"
+        }
+      }
+    ],
+    "environment": {
+      "MOCK_MAKER": "mock-maker-inline",
+      "SKIP_RELEASE": "true"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "gradle:4.4.1-jdk9",
+      "memory": 4096
+    },
+    "localGroupId": "3",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "3",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "MOCK_MAKER:mock-maker-inline",
+        "SKIP_RELEASE:true",
+        "container:gradle:4.4.1-jdk9"
+      ]
+    },
+    "name": "check"
+  }
+]
