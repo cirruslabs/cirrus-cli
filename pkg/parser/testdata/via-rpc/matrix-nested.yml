@@ -1,0 +1,23 @@
+task:
+  container:
+    image: node:latest
+  node_modules_cache:
+    folder: node_modules
+    fingerprint_script: cat package-lock.json
+    populate_script: npm ci
+  matrix:
+    - name: Lint
+      lint_script: npm run lint
+    - name: Relay
+      relay_script: npm run relay
+    - name: Type Check
+      typecheck_script: npm run typecheck
+    - name: Prettier
+      prettier_script: npm run prettier-check
+    - name: Test
+      container:
+        matrix:
+          image: node:latest
+          image: node:13
+          image: node:12
+      test_script: npm run test

@@ -7,14 +7,17 @@ import (
 // Callback function to be called by traverse().
 //
 // Traversal continues until this function returns true.
-type callback func(item *yaml.MapItem) (bool, error)
+type callback func(item *yaml.MapItem) error
 
 // Implements preorder traversal of the YAML parse tree.
 func traverse(item *yaml.MapItem, f callback) error {
-	done, err := f(item)
-	if done || err != nil {
+	// Call the traversal function
+	err := f(item)
+	if err != nil {
 		return err
 	}
+
+	// Dig deeper into the tree
 	return process(item.Value, f)
 }
 

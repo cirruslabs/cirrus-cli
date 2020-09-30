@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"crypto/sha256"
+	"crypto/md5" // nolint:gosec // backwards compatibility
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
+	"strconv"
 )
 
 var (
@@ -177,17 +178,17 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	}
 	protoTasks = append(protoTasks, serviceTasks...)
 
-	// Final pass over resulting tasks in Protocol Buffers format
+	// Postprocess individual tasks
 	for _, protoTask := range protoTasks {
 		// Insert empty clone instruction if custom clone script wasn't provided by the user
 		ensureCloneInstruction(protoTask)
 
 		// Provide unique labels for identically named tasks
-		if countTasksWithName(protoTasks, protoTask.Name) > 1 {
-			if err := populateUniqueLabels(protoTask); err != nil {
-				return nil, fmt.Errorf("%w: %v", ErrInternal, err)
-			}
+		uniqueLabelsForTask, err := uniqueLabels(protoTask, protoTasks)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
+		protoTask.Metadata.UniqueLabels = uniqueLabelsForTask
 	}
 
 	return &Result{
@@ -241,10 +242,13 @@ func (p *Parser) ParseFromFile(path string) (*Result, error) {
 
 func (p *Parser) ContentHash(filePath string) string {
 	// Note that this will be empty if we don't know anything about the file,
-	// so we'll return SHA256(""), but that's OK since the purpose is caching
+	// so we'll return MD5(""), but that's OK since the purpose is caching
 	fileContents := p.filesContents[filePath]
 
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(fileContents)))
+	// nolint:gosec // backwards compatibility
+	digest := md5.Sum([]byte(fileContents))
+
+	return fmt.Sprintf("%x", digest)
 }
 
 func (p *Parser) NextTaskID() int64 {
@@ -303,15 +307,20 @@ func resolveDependencies(tasks []task.ParseableTaskLike) error {
 func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error) {
 	var serviceTasks []*api.Task
 
-	for _, task := range protoTasks {
+	for _, protoTask := range protoTasks {
 		var dynamicInstance ptypes.DynamicAny
-		if err := ptypes.UnmarshalAny(task.Instance, &dynamicInstance); err != nil {
+		if err := ptypes.UnmarshalAny(protoTask.Instance, &dynamicInstance); err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
 
 		taskContainer, ok := dynamicInstance.Message.(*api.ContainerInstance)
 		if !ok {
 			continue
+		}
+
+		if taskContainer.Platform != api.Platform_LINUX {
+			return nil, fmt.Errorf("%w: unsupported platform for building Dockerfile: %s",
+				parsererror.ErrParsing, taskContainer.Platform.String())
 		}
 
 		if taskContainer.DockerfilePath == "" {
@@ -333,25 +342,54 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
 
+		// Craft Docker build arguments
+		var buildArgs string
+		for key, value := range taskContainer.DockerArguments {
+			buildArgs += fmt.Sprintf(" %s=%s", key, value)
+		}
+		var dockerBuildArgs string
+		for key, value := range taskContainer.DockerArguments {
+			dockerBuildArgs += fmt.Sprintf(" --build-arg %s=%s", key, value)
+		}
+
 		newTask := &api.Task{
-			Name:         fmt.Sprintf("Prebuild %s", taskContainer.DockerfilePath),
+			Name:         fmt.Sprintf("Prebuild %s%s", taskContainer.DockerfilePath, buildArgs),
 			LocalGroupId: p.NextTaskID(),
 			Instance:     anyInstance,
 			Commands: []*api.Command{
 				{
-					Name: "dummy",
+					Name: "build",
 					Instruction: &api.Command_ScriptInstruction{
 						ScriptInstruction: &api.ScriptInstruction{
-							Scripts: []string{"true"},
+							Scripts: []string{fmt.Sprintf("docker build "+
+								"--tag gcr.io/%s:%s "+
+								"--file %s%s "+
+								"${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}",
+								prebuiltInstance.Repository, prebuiltInstance.Reference,
+								dockerBuildArgs, taskContainer.DockerfilePath)},
+						},
+					},
+				},
+				{
+					Name: "push",
+					Instruction: &api.Command_ScriptInstruction{
+						ScriptInstruction: &api.ScriptInstruction{
+							Scripts: []string{fmt.Sprintf("gcloud docker -- push gcr.io/cirrus-ci-community/%s:latest",
+								dockerfileHash)},
 						},
 					},
 				},
 			},
+			Environment: protoTask.Environment,
+			Metadata: &api.Task_Metadata{
+				Properties: task.DefaultTaskProperties(),
+			},
 		}
+		newTask.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(newTask.LocalGroupId, 10)
 
 		serviceTasks = append(serviceTasks, newTask)
 
-		task.RequiredGroups = append(task.RequiredGroups, newTask.LocalGroupId)
+		protoTask.RequiredGroups = append(protoTask.RequiredGroups, newTask.LocalGroupId)
 
 		// Ensure that the task will use our to-be-created image
 		taskContainer.Image = fmt.Sprintf("gcr.io/cirrus-ci-community/%s:latest", dockerfileHash)
@@ -359,7 +397,7 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
-		task.Instance = updatedInstance
+		protoTask.Instance = updatedInstance
 	}
 
 	return serviceTasks, nil
@@ -395,54 +433,4 @@ func ensureCloneInstruction(task *api.Task) {
 	}
 
 	task.Commands = append([]*api.Command{cloneCommand}, task.Commands...)
-}
-
-func countTasksWithName(protoTasks []*api.Task, name string) (result int) {
-	for _, protoTask := range protoTasks {
-		if protoTask.Name == name {
-			result++
-		}
-	}
-
-	return
-}
-
-func populateUniqueLabels(task *api.Task) error {
-	// Unmarshal instance
-	var dynamicAny ptypes.DynamicAny
-
-	if err := ptypes.UnmarshalAny(task.Instance, &dynamicAny); err != nil {
-		return err
-	}
-
-	// Populate labels
-	var labels []string
-
-	switch instance := dynamicAny.Message.(type) {
-	case *api.ContainerInstance:
-		if instance.DockerfilePath == "" {
-			labels = append(labels, fmt.Sprintf("container:%s", instance.Image))
-
-			if instance.OperationSystemVersion != "" {
-				labels = append(labels, fmt.Sprintf("os:%s", instance.OperationSystemVersion))
-			}
-		} else {
-			labels = append(labels, fmt.Sprintf("Dockerfile:%s", instance.DockerfilePath))
-
-			for key, value := range instance.DockerArguments {
-				labels = append(labels, fmt.Sprintf("%s:%s", key, value))
-			}
-		}
-
-		for _, additionalContainer := range instance.AdditionalContainers {
-			labels = append(labels, fmt.Sprintf("%s:%s", additionalContainer.Name, additionalContainer.Image))
-		}
-	case *api.PipeInstance:
-		labels = append(labels, "pipe")
-	}
-
-	// Update task
-	task.Metadata.UniqueLabels = labels
-
-	return nil
 }

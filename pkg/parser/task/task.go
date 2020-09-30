@@ -33,14 +33,14 @@ type Task struct {
 //nolint:gocognit // it's a parser, there is a lot of boilerplate
 func NewTask(env map[string]string, additionalInstances map[string]protoreflect.MessageDescriptor) *Task {
 	task := &Task{}
-	task.proto.Metadata = &api.Task_Metadata{Properties: getDefaultProperties()}
+	task.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
 	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		taskEnv, err := node.GetStringMapping()
 		if err != nil {
 			return err
 		}
-		task.proto.Environment = taskEnv
+		task.proto.Environment = environment.Merge(task.proto.Environment, taskEnv)
 		return nil
 	})
 	task.CollectibleField("env", schema.TodoSchema, func(node *node.Node) error {
@@ -48,7 +48,7 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 		if err != nil {
 			return err
 		}
-		task.proto.Environment = taskEnv
+		task.proto.Environment = environment.Merge(task.proto.Environment, taskEnv)
 		return nil
 	})
 

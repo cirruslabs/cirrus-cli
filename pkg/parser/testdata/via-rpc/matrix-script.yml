@@ -1,0 +1,8 @@
+container:
+  image: debian:latest
+
+task:
+  name: test
+  matrix:
+    script: ./test_unit.sh
+    script: ./test_integration.sh

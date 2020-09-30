@@ -1,0 +1,221 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "backgroundScriptInstruction": {
+          "scripts": [
+            "Xvfb :99 -ac -screen 0 1024x768x24"
+          ]
+        },
+        "name": "xvfb_start"
+      },
+      {
+        "name": "install",
+        "scriptInstruction": {
+          "scripts": [
+            "npm install --unsafe-perm"
+          ]
+        }
+      },
+      {
+        "name": "test",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run unit-node6"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "DISPLAY": ":99.0"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "dockerfilePath": ".ci/node6/Dockerfile.linux",
+      "image": "gcr.io/cirrus-ci-community/e55f410835991439e5ec0ab4830daf29:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "node6 (linux)",
+    "requiredGroups": [
+      "2"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "backgroundScriptInstruction": {
+          "scripts": [
+            "Xvfb :99 -ac -screen 0 1024x768x24"
+          ]
+        },
+        "name": "xvfb_start"
+      },
+      {
+        "name": "install",
+        "scriptInstruction": {
+          "scripts": [
+            "npm install --unsafe-perm"
+          ]
+        }
+      },
+      {
+        "name": "lint",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run lint"
+          ]
+        }
+      },
+      {
+        "name": "coverage",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run coverage"
+          ]
+        }
+      },
+      {
+        "name": "test_doclint",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run test-doclint"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "DISPLAY": ":99.0"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "dockerfilePath": ".ci/node7/Dockerfile.linux",
+      "image": "gcr.io/cirrus-ci-community/3687850f77ee15dd7dc5d1e5f025b885:latest",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "node7 (linux)",
+    "requiredGroups": [
+      "3"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/e55f410835991439e5ec0ab4830daf29:latest --file .ci/node6/Dockerfile.linux ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/e55f410835991439e5ec0ab4830daf29:latest"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "DISPLAY": ":99.0"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "dockerfilePath": ".ci/node6/Dockerfile.linux",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/e55f410835991439e5ec0ab4830daf29"
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "2",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild .ci/node6/Dockerfile.linux"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/3687850f77ee15dd7dc5d1e5f025b885:latest --file .ci/node7/Dockerfile.linux ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/3687850f77ee15dd7dc5d1e5f025b885:latest"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "DISPLAY": ":99.0"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "dockerfilePath": ".ci/node7/Dockerfile.linux",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/3687850f77ee15dd7dc5d1e5f025b885"
+    },
+    "localGroupId": "3",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "3",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild .ci/node7/Dockerfile.linux"
+  }
+]

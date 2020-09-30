@@ -1,0 +1,56 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone",
+        "properties": {
+          "image": "squidfunk/mkdocs-material:latest"
+        }
+      },
+      {
+        "name": "install",
+        "scriptInstruction": {
+          "scripts": [
+            "pip install --upgrade pymdown-extensions"
+          ]
+        }
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "mkdocs build"
+          ]
+        }
+      },
+      {
+        "name": "validate",
+        "properties": {
+          "image": "liche:latest"
+        },
+        "scriptInstruction": {
+          "scripts": [
+            "liche --document-root=site --recursive site/"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PipeInstance",
+      "cpu": 4,
+      "memory": 12288
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Build and Validate Links"
+  }
+]

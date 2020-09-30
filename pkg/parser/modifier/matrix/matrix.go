@@ -14,13 +14,21 @@ var ErrMatrixNeedsCollection = errors.New("matrix should contain a collection")
 // something other than maps (e.g. lists or scalars) as it's items.
 var ErrMatrixNeedsListOfMaps = errors.New("matrix with a list can only contain maps as it's items")
 
+// errExpansionCommenced is returned when the matrix modifier gets expanded
+// and we need to do another pass to see if there's more.
+var errExpansionCommenced = errors.New("single expansion commenced")
+
+// errNoExpansionDone is returned when a single pass yields no matrix expansions.
+var errNoExpansionDone = errors.New("no matrix expansion was done")
+
 // Recursively processes each "outer" map key of the loaded YAML document
 // in an attempt to produce multiple keys as a result of matrix expansion.
 func singlePass(inputTree yaml.MapSlice) (yaml.MapSlice, error) {
 	var outputTree yaml.MapSlice
+	var atLeastOneExpansion bool
 
 	if len(inputTree) == 0 {
-		return nil, nil
+		return nil, errNoExpansionDone
 	}
 
 	for i := range inputTree {
@@ -38,17 +46,18 @@ func singlePass(inputTree yaml.MapSlice) (yaml.MapSlice, error) {
 		}
 
 		var expandedTrees []yaml.MapItem
-		expandedTreesCollector := func(item *yaml.MapItem) (bool, error) {
+		expandedTreesCollector := func(item *yaml.MapItem) error {
 			newTrees, expandErr := expandIfMatrix(&treeToExpand, item)
 			// stop once found any expansion
 			if len(newTrees) != 0 {
 				expandedTrees = newTrees
-				return true, nil
+				return errExpansionCommenced
 			}
-			return false, expandErr
+			return expandErr
 		}
 
-		if err := traverse(&treeToExpand, expandedTreesCollector); err != nil {
+		err := traverse(&treeToExpand, expandedTreesCollector)
+		if err != nil && !errors.Is(err, errExpansionCommenced) {
 			return nil, err
 		}
 
@@ -56,27 +65,32 @@ func singlePass(inputTree yaml.MapSlice) (yaml.MapSlice, error) {
 			outputTree = append(outputTree, treeToExpand)
 		} else {
 			outputTree = append(outputTree, expandedTrees...)
+			atLeastOneExpansion = true
 		}
 	}
 
-	return outputTree, nil
+	if atLeastOneExpansion {
+		return outputTree, nil
+	}
+
+	return nil, errNoExpansionDone
 }
 
 func ExpandMatrices(tree yaml.MapSlice) (yaml.MapSlice, error) {
 	for {
 		expandedTree, err := singlePass(tree)
 		if err != nil {
+			// Consider the preprocessing done once singlePass() stops expanding the document
+			// (which means no "matrix" modifier was found)
+			if errors.Is(err, errNoExpansionDone) {
+				break
+			}
+
 			return nil, err
 		}
 
-		if len(expandedTree) != len(tree) {
-			// Update tree
-			tree = expandedTree
-		} else {
-			// Consider the preprocessing done once singlePass() stops expanding the document
-			// (which means no "matrix" modifier was found)
-			break
-		}
+		// Update tree
+		tree = expandedTree
 	}
 
 	return tree, nil

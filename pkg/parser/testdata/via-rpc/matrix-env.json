@@ -1,0 +1,169 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run $COMMAND"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "COMMAND": "lint",
+      "TEST": "true"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:8.3.0",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "COMMAND:lint",
+        "container:node:8.3.0"
+      ]
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run $COMMAND"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "COMMAND": "test",
+      "TEST": "true"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:8.3.0",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "COMMAND:test",
+        "container:node:8.3.0"
+      ]
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run $COMMAND"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "COMMAND": "lint",
+      "TEST": "true"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:8.2.0",
+      "memory": 4096
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "2",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "COMMAND:lint",
+        "container:node:8.2.0"
+      ]
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "npm run $COMMAND"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "COMMAND": "test",
+      "TEST": "true"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "node:8.2.0",
+      "memory": 4096
+    },
+    "localGroupId": "3",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "3",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "COMMAND:test",
+        "container:node:8.2.0"
+      ]
+    },
+    "name": "main"
+  }
+]

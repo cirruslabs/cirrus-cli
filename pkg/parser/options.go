@@ -12,6 +12,12 @@ func WithEnvironment(environment map[string]string) Option {
 	}
 }
 
+func WithFilesContents(filesContents map[string]string) Option {
+	return func(parser *Parser) {
+		parser.filesContents = filesContents
+	}
+}
+
 func WithAdditionalInstances(additionalInstances map[string]protoreflect.MessageDescriptor) Option {
 	return func(parser *Parser) {
 		parser.additionalInstances = additionalInstances

@@ -1,0 +1,15 @@
+task:
+  container:
+    matrix:
+      image: node:8.3.0
+      image: node:8.2.0
+
+  environment:
+    matrix:
+      COMMAND: lint
+      COMMAND: test
+
+  env:
+    TEST: true
+  script: npm run $COMMAND
+

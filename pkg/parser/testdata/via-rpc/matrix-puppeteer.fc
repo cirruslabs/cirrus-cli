@@ -1,0 +1,2 @@
+.ci/node7/Dockerfile.linux: FROM node:7
+.ci/node6/Dockerfile.linux: FROM node:6

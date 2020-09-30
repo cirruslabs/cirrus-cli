@@ -22,6 +22,8 @@ const (
 type DockerPipe struct {
 	proto api.Task
 
+	res *PipeResources
+
 	alias     string
 	dependsOn []string
 
@@ -32,22 +34,51 @@ type DockerPipe struct {
 
 func NewDockerPipe(env map[string]string) *DockerPipe {
 	pipe := &DockerPipe{}
-	pipe.proto.Metadata = &api.Task_Metadata{Properties: getDefaultProperties()}
+	pipe.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
 	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
-		environment, err := node.GetStringMapping()
+		pipeEnv, err := node.GetStringMapping()
 		if err != nil {
 			return err
 		}
-		pipe.proto.Environment = environment
+		pipe.proto.Environment = environment.Merge(pipe.proto.Environment, pipeEnv)
 		return nil
 	})
 	pipe.CollectibleField("env", schema.TodoSchema, func(node *node.Node) error {
-		environment, err := node.GetStringMapping()
+		pipeEnv, err := node.GetStringMapping()
 		if err != nil {
 			return err
 		}
-		pipe.proto.Environment = environment
+		pipe.proto.Environment = environment.Merge(pipe.proto.Environment, pipeEnv)
+		return nil
+	})
+
+	pipe.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
+		name, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		pipe.proto.Name = name
+		return nil
+	})
+	pipe.OptionalField(nameable.NewSimpleNameable("alias"), schema.TodoSchema, func(node *node.Node) error {
+		name, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		pipe.alias = name
+		return nil
+	})
+
+	pipe.OptionalField(nameable.NewSimpleNameable("resources"), schema.TodoSchema, func(node *node.Node) error {
+		resources := NewPipeResources(environment.Merge(pipe.proto.Environment, env))
+
+		if err := resources.Parse(node); err != nil {
+			return err
+		}
+
+		pipe.res = resources
+
 		return nil
 	})
 
@@ -106,6 +137,16 @@ func (pipe *DockerPipe) Parse(node *node.Node) error {
 	instance := &api.PipeInstance{
 		Cpu:    defaultCPU,
 		Memory: defaultMemory,
+	}
+
+	// Pick up user-specified resource limits (if any)
+	if pipe.res != nil {
+		if pipe.res.cpu != 0 {
+			instance.Cpu = pipe.res.cpu
+		}
+		if pipe.res.memory != 0 {
+			instance.Memory = pipe.res.memory
+		}
 	}
 
 	anyInstance, err := ptypes.MarshalAny(instance)

@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	"strings"
 )
 
 type CacheCommand struct {
@@ -30,7 +31,16 @@ func NewCacheCommand(mergedEnv map[string]string) *CacheCommand {
 		if err != nil {
 			return err
 		}
+
+		// https://github.com/cirruslabs/cirrus-ci-agent/issues/47
+		const homePrefix = "~/"
+		folder = strings.TrimSpace(folder)
+		if strings.HasPrefix(folder, homePrefix) {
+			folder = "$HOME/" + strings.TrimPrefix(folder, homePrefix)
+		}
+
 		cache.instruction.Folder = folder
+
 		return nil
 	})
 

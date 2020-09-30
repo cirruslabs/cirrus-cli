@@ -3,6 +3,7 @@ package instance
 import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -55,19 +56,19 @@ func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 	})
 
 	ac.OptionalField(nameable.NewSimpleNameable("environment"), schema.TodoSchema, func(node *node.Node) error {
-		environment, err := node.GetStringMapping()
+		acEnv, err := node.GetStringMapping()
 		if err != nil {
 			return err
 		}
-		ac.proto.Environment = environment
+		ac.proto.Environment = environment.Merge(ac.proto.Environment, acEnv)
 		return nil
 	})
 	ac.OptionalField(nameable.NewSimpleNameable("env"), schema.TodoSchema, func(node *node.Node) error {
-		environment, err := node.GetStringMapping()
+		acEnv, err := node.GetStringMapping()
 		if err != nil {
 			return err
 		}
-		ac.proto.Environment = environment
+		ac.proto.Environment = environment.Merge(ac.proto.Environment, acEnv)
 		return nil
 	})
 
