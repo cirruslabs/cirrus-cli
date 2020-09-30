@@ -380,9 +380,7 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 					},
 				},
 			},
-			Environment: map[string]string{
-				"DISPLAY": ":99.0",
-			},
+			Environment: protoTask.Environment,
 			Metadata: &api.Task_Metadata{
 				Properties: task.DefaultTaskProperties(),
 			},
