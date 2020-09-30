@@ -37,7 +37,7 @@
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "cpu": 2,
       "dockerfilePath": ".ci/node6/Dockerfile.linux",
-      "image": "gcr.io/cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e:latest",
+      "image": "gcr.io/cirrus-ci-community/e55f410835991439e5ec0ab4830daf29:latest",
       "memory": 4096
     },
     "metadata": {
@@ -109,7 +109,7 @@
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "cpu": 2,
       "dockerfilePath": ".ci/node7/Dockerfile.linux",
-      "image": "gcr.io/cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e:latest",
+      "image": "gcr.io/cirrus-ci-community/3687850f77ee15dd7dc5d1e5f025b885:latest",
       "memory": 4096
     },
     "localGroupId": "1",
@@ -125,7 +125,7 @@
     },
     "name": "node7 (linux)",
     "requiredGroups": [
-      "2"
+      "3"
     ]
   },
   {
@@ -138,7 +138,7 @@
         "name": "build",
         "scriptInstruction": {
           "scripts": [
-            "docker build --tag gcr.io/cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e:latest --file .ci/node6/Dockerfile.linux ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+            "docker build --tag gcr.io/cirrus-ci-community/e55f410835991439e5ec0ab4830daf29:latest --file .ci/node6/Dockerfile.linux ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
           ]
         }
       },
@@ -146,7 +146,7 @@
         "name": "push",
         "scriptInstruction": {
           "scripts": [
-            "gcloud docker -- push gcr.io/cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e:latest"
+            "gcloud docker -- push gcr.io/cirrus-ci-community/e55f410835991439e5ec0ab4830daf29:latest"
           ]
         }
       }
@@ -158,7 +158,7 @@
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
       "dockerfilePath": ".ci/node6/Dockerfile.linux",
       "reference": "latest",
-      "repository": "cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e"
+      "repository": "cirrus-ci-community/e55f410835991439e5ec0ab4830daf29"
     },
     "localGroupId": "2",
     "metadata": {
@@ -183,7 +183,7 @@
         "name": "build",
         "scriptInstruction": {
           "scripts": [
-            "docker build --tag gcr.io/cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e:latest --file .ci/node7/Dockerfile.linux ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+            "docker build --tag gcr.io/cirrus-ci-community/3687850f77ee15dd7dc5d1e5f025b885:latest --file .ci/node7/Dockerfile.linux ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
           ]
         }
       },
@@ -191,7 +191,7 @@
         "name": "push",
         "scriptInstruction": {
           "scripts": [
-            "gcloud docker -- push gcr.io/cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e:latest"
+            "gcloud docker -- push gcr.io/cirrus-ci-community/3687850f77ee15dd7dc5d1e5f025b885:latest"
           ]
         }
       }
@@ -203,7 +203,7 @@
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
       "dockerfilePath": ".ci/node7/Dockerfile.linux",
       "reference": "latest",
-      "repository": "cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e"
+      "repository": "cirrus-ci-community/3687850f77ee15dd7dc5d1e5f025b885"
     },
     "localGroupId": "3",
     "metadata": {
