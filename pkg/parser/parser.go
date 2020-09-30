@@ -351,9 +351,13 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 		for key, value := range taskContainer.DockerArguments {
 			buildArgs += fmt.Sprintf(" %s=%s", key, value)
 		}
+		var dockerBuildArgs string
+		for key, value := range taskContainer.DockerArguments {
+			dockerBuildArgs += fmt.Sprintf(" --build-arg %s=%s", key, value)
+		}
 
 		newTask := &api.Task{
-			Name:         fmt.Sprintf("Prebuild %s", taskContainer.DockerfilePath),
+			Name:         fmt.Sprintf("Prebuild %s%s", taskContainer.DockerfilePath, buildArgs),
 			LocalGroupId: p.NextTaskID(),
 			Instance:     anyInstance,
 			Commands: []*api.Command{
@@ -366,7 +370,7 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 								"--file %s%s "+
 								"${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}",
 								prebuiltInstance.Repository, prebuiltInstance.Reference,
-								buildArgs, taskContainer.DockerfilePath)},
+								dockerBuildArgs, taskContainer.DockerfilePath)},
 						},
 					},
 				},
