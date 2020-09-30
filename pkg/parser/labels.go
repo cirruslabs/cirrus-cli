@@ -15,7 +15,7 @@ func labels(task *api.Task) ([]string, error) {
 		return nil, err
 	}
 
-	// Populate labels
+	// Instance-specific labels
 	var labels []string
 
 	switch instance := dynamicAny.Message.(type) {
