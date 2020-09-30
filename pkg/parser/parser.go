@@ -20,7 +20,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strconv"
 )
 
@@ -185,15 +184,12 @@ func (p *Parser) Parse(config string) (*Result, error) {
 		ensureCloneInstruction(protoTask)
 
 		// Provide unique labels for identically named tasks
-		if countTasksWithName(protoTasks, protoTask.Name) > 1 {
-			if err := populateUniqueLabels(protoTask); err != nil {
-				return nil, fmt.Errorf("%w: %v", ErrInternal, err)
-			}
+		uniqueLabelsForTask, err := uniqueLabels(protoTask, protoTasks)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
+		protoTask.Metadata.UniqueLabels = uniqueLabelsForTask
 	}
-
-	// Postprocess individual tasks to remove common labels
-	removeCommonLabels(protoTasks)
 
 	return &Result{
 		Tasks: protoTasks,
@@ -437,99 +433,4 @@ func ensureCloneInstruction(task *api.Task) {
 	}
 
 	task.Commands = append([]*api.Command{cloneCommand}, task.Commands...)
-}
-
-func countTasksWithName(protoTasks []*api.Task, name string) (result int) {
-	for _, protoTask := range protoTasks {
-		if protoTask.Name == name {
-			result++
-		}
-	}
-
-	return
-}
-
-func populateUniqueLabels(task *api.Task) error {
-	// Unmarshal instance
-	var dynamicAny ptypes.DynamicAny
-
-	if err := ptypes.UnmarshalAny(task.Instance, &dynamicAny); err != nil {
-		return err
-	}
-
-	// Populate labels
-	var labels []string
-
-	switch instance := dynamicAny.Message.(type) {
-	case *api.ContainerInstance:
-		if instance.DockerfilePath == "" {
-			labels = append(labels, fmt.Sprintf("container:%s", instance.Image))
-
-			if instance.OperationSystemVersion != "" {
-				labels = append(labels, fmt.Sprintf("os:%s", instance.OperationSystemVersion))
-			}
-		} else {
-			labels = append(labels, fmt.Sprintf("Dockerfile:%s", instance.DockerfilePath))
-
-			for key, value := range instance.DockerArguments {
-				labels = append(labels, fmt.Sprintf("%s:%s", key, value))
-			}
-		}
-
-		for _, additionalContainer := range instance.AdditionalContainers {
-			labels = append(labels, fmt.Sprintf("%s:%s", additionalContainer.Name, additionalContainer.Image))
-		}
-	case *api.PipeInstance:
-		labels = append(labels, "pipe")
-	}
-
-	// Environment-specific labels
-	for key, value := range task.Environment {
-		labels = append(labels, fmt.Sprintf("%s:%s", key, value))
-	}
-
-	// Sort labels to make them comparable
-	sort.Strings(labels)
-
-	// Update task
-	task.Metadata.UniqueLabels = labels
-
-	return nil
-}
-
-func removeCommonLabels(tasks []*api.Task) {
-	// Count how many times a label occurs for each group of similarly named tasks
-	perTaskLabelStats := make(map[string]int)
-
-	for _, task := range tasks {
-		if task.Metadata == nil {
-			continue
-		}
-
-		for _, label := range task.Metadata.UniqueLabels {
-			perTaskLabelStats[task.Name+label]++
-		}
-	}
-
-	// Filter out labels useless for filtering
-	for _, task := range tasks {
-		if task.Metadata == nil {
-			continue
-		}
-
-		var keptLabels []string
-
-		numSimilarlyNamedTasks := countTasksWithName(tasks, task.Name)
-
-		for _, label := range task.Metadata.UniqueLabels {
-			numSimilarlyNamedAndLabeledTasks := perTaskLabelStats[task.Name+label]
-
-			// Only keep labels if they allow for more specific selection than simply all tasks with this name
-			if numSimilarlyNamedAndLabeledTasks != numSimilarlyNamedTasks {
-				keptLabels = append(keptLabels, label)
-			}
-		}
-
-		task.Metadata.UniqueLabels = keptLabels
-	}
 }
