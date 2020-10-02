@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/internal"
 	goversion "github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 	"runtime/debug"
@@ -38,6 +39,7 @@ func NewRootCmd() *cobra.Command {
 		newValidateCmd(),
 		newRunCmd(),
 		newServeCmd(),
+		internal.NewRootCmd(),
 	)
 
 	return cmd
