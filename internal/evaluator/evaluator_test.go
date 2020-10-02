@@ -82,11 +82,12 @@ def main(ctx):
     ]
 `
 
-	_, err := evaluateHelper(t, &api.EvaluateConfigRequest{
+	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
 		YamlConfig:     yamlConfig,
 		StarlarkConfig: starlarkConfig,
 	})
 	require.NoError(t, err)
+	require.Len(t, response.Tasks, 4)
 }
 
 // TestGitHubFS ensures that evaluator picks up GitHub-related environment variables if present
