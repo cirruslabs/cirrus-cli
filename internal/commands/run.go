@@ -149,7 +149,7 @@ func run(cmd *cobra.Command, args []string) error {
 	var result *parser.Result
 	if experimentalParser {
 		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment))
-		result, err = p.Parse(mergedYAML)
+		result, err = p.Parse(cmd.Context(), mergedYAML)
 		if err != nil {
 			return err
 		}

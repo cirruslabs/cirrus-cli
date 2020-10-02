@@ -1,12 +1,14 @@
 package parser
 
 import (
+	"context"
 	"crypto/md5" // nolint:gosec // backwards compatibility
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/matrix"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
@@ -18,7 +20,7 @@ import (
 	"github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"io/ioutil"
-	"path/filepath"
+	"os"
 	"regexp"
 	"strconv"
 )
@@ -32,8 +34,10 @@ type Parser struct {
 	// Environment to take into account when expanding variables.
 	environment map[string]string
 
-	// Paths and contents of the files that might influence the parser.
-	filesContents map[string]string
+	// Filesystem to reference when calculating file hashes.
+	//
+	// For example, Dockerfile contents are hashed to avoid duplicate builds.
+	fs fs.FileSystem
 
 	parsers             map[nameable.Nameable]parseable.Parseable
 	numbering           int64
@@ -47,8 +51,8 @@ type Result struct {
 
 func New(opts ...Option) *Parser {
 	parser := &Parser{
-		environment:   make(map[string]string),
-		filesContents: make(map[string]string),
+		environment: make(map[string]string),
+		fs:          dummy.New(),
 	}
 
 	// Apply options
@@ -117,7 +121,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 	return tasks, nil
 }
 
-func (p *Parser) Parse(config string) (*Result, error) {
+func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 	var parsed yaml.MapSlice
 
 	// Unmarshal YAML
@@ -170,7 +174,7 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	}
 
 	// Create service tasks
-	serviceTasks, err := p.createServiceTasks(protoTasks)
+	serviceTasks, err := p.createServiceTasks(ctx, protoTasks)
 	if err != nil {
 		return &Result{
 			Errors: []string{err.Error()},
@@ -196,59 +200,27 @@ func (p *Parser) Parse(config string) (*Result, error) {
 	}, nil
 }
 
-func (p *Parser) ParseFromFile(path string) (*Result, error) {
+func (p *Parser) ParseFromFile(ctx context.Context, path string) (*Result, error) {
 	config, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := p.Parse(string(config))
-	if err != nil || len(result.Errors) != 0 {
-		return result, err
-	}
-
-	// Get the contents of files that might influence the parser results
-	//
-	// For example, when using Dockerfile as CI environment feature[1], the unique hash of the container
-	// image is calculated from the file specified in the "dockerfile" field.
-	//
-	// [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
-	filesContents := make(map[string]string)
-	for _, task := range result.Tasks {
-		inst, err := instance.NewFromProto(task.Instance, []*api.Command{})
-		if err != nil {
-			continue
-		}
-		prebuilt, ok := inst.(*instance.PrebuiltInstance)
-		if !ok {
-			continue
-		}
-		contents, err := ioutil.ReadFile(filepath.Join(filepath.Dir(path), prebuilt.Dockerfile))
-		if err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrFilesContents, err)
-		}
-		filesContents[prebuilt.Dockerfile] = string(contents)
-	}
-
-	// Short-circuit if we've found no special files
-	if len(filesContents) == 0 {
-		return result, nil
-	}
-
-	// Parse again with the file contents supplied
-	p.filesContents = filesContents
-	return p.Parse(string(config))
+	return p.Parse(ctx, string(config))
 }
 
-func (p *Parser) ContentHash(filePath string) string {
+func (p *Parser) fileHash(ctx context.Context, path string) (string, error) {
 	// Note that this will be empty if we don't know anything about the file,
 	// so we'll return MD5(""), but that's OK since the purpose is caching
-	fileContents := p.filesContents[filePath]
+	fileBytes, err := p.fs.Get(ctx, path)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return "", err
+	}
 
 	// nolint:gosec // backwards compatibility
-	digest := md5.Sum([]byte(fileContents))
+	digest := md5.Sum(fileBytes)
 
-	return fmt.Sprintf("%x", digest)
+	return fmt.Sprintf("%x", digest), nil
 }
 
 func (p *Parser) NextTaskID() int64 {
@@ -304,7 +276,7 @@ func resolveDependencies(tasks []task.ParseableTaskLike) error {
 	return nil
 }
 
-func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error) {
+func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task) ([]*api.Task, error) {
 	var serviceTasks []*api.Task
 
 	for _, protoTask := range protoTasks {
@@ -327,7 +299,10 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 			continue
 		}
 
-		dockerfileHash := p.ContentHash(taskContainer.DockerfilePath)
+		dockerfileHash, err := p.fileHash(ctx, taskContainer.DockerfilePath)
+		if err != nil {
+			return nil, err
+		}
 
 		prebuiltInstance := &api.PrebuiltImageInstance{
 			Repository:     fmt.Sprintf("cirrus-ci-community/%s", dockerfileHash),

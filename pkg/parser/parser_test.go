@@ -1,11 +1,13 @@
 package parser_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/memory"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/require"
@@ -40,7 +42,7 @@ func TestValidConfigs(t *testing.T) {
 		file := validCase
 		t.Run(file, func(t *testing.T) {
 			p := parser.New()
-			result, err := p.ParseFromFile(absolutize(file + ".yml"))
+			result, err := p.ParseFromFile(context.Background(), absolutize(file+".yml"))
 
 			require.Nil(t, err)
 			require.Empty(t, result.Errors)
@@ -62,7 +64,7 @@ func TestAdditionalInstances(t *testing.T) {
 	p := parser.New(parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
 		"proto_container": containerInstanceReflect.Descriptor(),
 	}))
-	result, err := p.ParseFromFile(absolutize("proto-instance.yml"))
+	result, err := p.ParseFromFile(context.Background(), absolutize("proto-instance.yml"))
 
 	require.Nil(t, err)
 	require.Empty(t, result.Errors)
@@ -83,7 +85,7 @@ func TestInvalidConfigs(t *testing.T) {
 		file := invalidCase
 		t.Run(file, func(t *testing.T) {
 			p := parser.New()
-			result, err := p.ParseFromFile(absolutize(file))
+			result, err := p.ParseFromFile(context.Background(), absolutize(file))
 
 			require.Nil(t, err)
 			assert.NotEmpty(t, result.Errors)
@@ -136,12 +138,24 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 		t.Fatal(err)
 	}
 
+	// Craft virtual in-memory filesystem with test-specific files
+	fileContents := make(map[string][]byte)
+
+	for key, value := range viaRPCLoadMap(t, fcPath) {
+		fileContents[key] = []byte(value)
+	}
+
+	fs, err := memory.New(fileContents)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Obtain the actual result by parsing YAML configuration using the local parser
 	localParser := parser.New(
 		parser.WithEnvironment(viaRPCLoadMap(t, envPath)),
-		parser.WithFilesContents(viaRPCLoadMap(t, fcPath)),
+		parser.WithFileSystem(fs),
 	)
-	localResult, err := localParser.Parse(string(yamlBytes))
+	localResult, err := localParser.Parse(context.Background(), string(yamlBytes))
 	if err != nil {
 		t.Fatal(err)
 	}
