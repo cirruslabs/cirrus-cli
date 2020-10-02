@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -12,9 +13,9 @@ func WithEnvironment(environment map[string]string) Option {
 	}
 }
 
-func WithFilesContents(filesContents map[string]string) Option {
+func WithFileSystem(fs fs.FileSystem) Option {
 	return func(parser *Parser) {
-		parser.filesContents = filesContents
+		parser.fs = fs
 	}
 }
 

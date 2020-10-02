@@ -75,10 +75,10 @@ func evaluateConfig(ctx context.Context, request *api.EvaluateConfigRequest) (*a
 		yamlConfigs = append(yamlConfigs, request.YamlConfig)
 	}
 
+	fs := fsFromEnvironment(request.Environment)
+
 	// Run Starlark script and register generated YAML configuration (if any)
 	if request.StarlarkConfig != "" {
-		fs := fsFromEnvironment(request.Environment)
-
 		lrk := larker.New(
 			larker.WithFileSystem(fs),
 			larker.WithEnvironment(request.Environment),
@@ -95,10 +95,10 @@ func evaluateConfig(ctx context.Context, request *api.EvaluateConfigRequest) (*a
 	// Parse combined YAML
 	p := parser.New(
 		parser.WithEnvironment(request.Environment),
-		parser.WithFilesContents(request.FilesContents),
+		parser.WithFileSystem(fs),
 	)
 
-	result, err := p.Parse(strings.Join(yamlConfigs, "\n"))
+	result, err := p.Parse(ctx, strings.Join(yamlConfigs, "\n"))
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
