@@ -88,3 +88,53 @@ def main(ctx):
 	})
 	require.NoError(t, err)
 }
+
+// TestGitHubFS ensures that evaluator picks up GitHub-related environment variables if present
+// and instantiates GitHub filesystem for Starlark execution.
+func TestGitHubFS(t *testing.T) {
+	starlarkConfig := `
+load("cirrus", "fs")
+
+def main(ctx):
+    go_mod = fs.read("go.mod")
+
+    if go_mod == None:
+        fail("go.mod does not exists")
+
+    canary = "module github.com/cirruslabs/cirrus-cli"
+
+    if canary not in go_mod:
+        fail("go.mod does not contain '%s'" % canary)
+
+    return [
+        {
+            "container": {
+                "image": "debian:latest",
+            },
+            "script": "true",
+        },
+    ]
+`
+
+	env := map[string]string{
+		"CIRRUS_REPO_CLONE_TOKEN": "",
+		"CIRRUS_REPO_OWNER":       "cirruslabs",
+		"CIRRUS_REPO_NAME":        "cirrus-cli",
+	}
+
+	// Try specifying a branch
+	env["CIRRUS_CHANGE_IN_REPO"] = "master"
+	_, err := evaluateHelper(t, &api.EvaluateConfigRequest{
+		StarlarkConfig: starlarkConfig,
+		Environment:    env,
+	})
+	require.NoError(t, err)
+
+	// Try specifying a commit currently pointed to by the master branch
+	env["CIRRUS_CHANGE_IN_REPO"] = "65368b9c"
+	_, err = evaluateHelper(t, &api.EvaluateConfigRequest{
+		StarlarkConfig: starlarkConfig,
+		Environment:    env,
+	})
+	require.NoError(t, err)
+}
