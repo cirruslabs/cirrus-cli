@@ -25,6 +25,7 @@ type AdditionalContainer struct {
 	parseable.DefaultParser
 }
 
+// nolint:gocognit
 func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 	ac := &AdditionalContainer{
 		proto: &api.AdditionalContainer{},
@@ -86,11 +87,33 @@ func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 		if err != nil {
 			return err
 		}
-		parsedPort, err := strconv.ParseUint(port, 10, 32)
-		if err != nil {
-			return err
+
+		// Support port mapping where a host port[1] is specified in addition to container port
+		// [1]: https://cirrus-ci.org/guide/writing-tasks/#additional-containers
+		const maxSplits = 2
+
+		portParts := strings.SplitN(port, ":", maxSplits)
+
+		if len(portParts) == maxSplits {
+			hostPort, err := strconv.ParseUint(portParts[0], 10, 32)
+			if err != nil {
+				return err
+			}
+			ac.proto.HostPort = uint32(hostPort)
+
+			containerPort, err := strconv.ParseUint(portParts[1], 10, 32)
+			if err != nil {
+				return err
+			}
+			ac.proto.ContainerPort = uint32(containerPort)
+		} else {
+			containerPort, err := strconv.ParseUint(portParts[0], 10, 32)
+			if err != nil {
+				return err
+			}
+			ac.proto.ContainerPort = uint32(containerPort)
 		}
-		ac.proto.ContainerPort = uint32(parsedPort)
+
 		return nil
 	})
 
