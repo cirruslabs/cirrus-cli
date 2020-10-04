@@ -143,6 +143,39 @@ func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 		return nil
 	})
 
+	ac.OptionalField(nameable.NewSimpleNameable("command"), schema.TodoSchema, func(node *node.Node) error {
+		command, err := node.GetSliceOfNonEmptyStrings()
+		if err != nil {
+			return err
+		}
+
+		ac.proto.Command = command
+
+		return nil
+	})
+
+	ac.OptionalField(nameable.NewSimpleNameable("readiness_command"), schema.TodoSchema, func(node *node.Node) error {
+		readinessCommand, err := node.GetSliceOfNonEmptyStrings()
+		if err != nil {
+			return err
+		}
+
+		ac.proto.ReadinessCommand = readinessCommand
+
+		return nil
+	})
+
+	ac.OptionalField(nameable.NewSimpleNameable("privileged"), schema.TodoSchema, func(node *node.Node) error {
+		privileged, err := node.GetBoolValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		ac.proto.Privileged = privileged
+
+		return nil
+	})
+
 	return ac
 }
 
