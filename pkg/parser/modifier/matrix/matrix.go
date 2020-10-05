@@ -2,7 +2,7 @@ package matrix
 
 import (
 	"errors"
-	"github.com/goccy/go-yaml"
+	"gopkg.in/yaml.v2"
 	"strings"
 )
 

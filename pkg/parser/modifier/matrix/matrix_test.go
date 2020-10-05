@@ -3,8 +3,8 @@ package matrix_test
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/matrix"
 	"github.com/go-test/deep"
-	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -21,7 +21,7 @@ func getDocument(t *testing.T, path string, index int) string {
 	}
 	defer file.Close()
 
-	decoder := yaml.NewDecoder(file, yaml.UseOrderedMap())
+	decoder := yaml.NewDecoder(file)
 	var document yaml.MapSlice
 
 	for i := 0; i < index; i++ {
@@ -40,7 +40,7 @@ func getDocument(t *testing.T, path string, index int) string {
 
 // Unmarshals YAML specified by yamlText to a yaml.MapSlice to simplify comparison.
 func yamlAsStruct(t *testing.T, yamlText string) (result yaml.MapSlice) {
-	if err := yaml.UnmarshalWithOptions([]byte(yamlText), &result, yaml.UseOrderedMap()); err != nil {
+	if err := yaml.Unmarshal([]byte(yamlText), &result); err != nil {
 		t.Fatal(err)
 	}
 
@@ -84,7 +84,7 @@ var badCases = []struct {
 
 func runPreprocessor(input string) (string, error) {
 	var tree yaml.MapSlice
-	err := yaml.UnmarshalWithOptions([]byte(input), &tree, yaml.UseOrderedMap())
+	err := yaml.Unmarshal([]byte(input), &tree)
 	if err != nil {
 		return "", err
 	}

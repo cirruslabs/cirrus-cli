@@ -3,7 +3,7 @@ package node
 import (
 	"errors"
 	"fmt"
-	"github.com/goccy/go-yaml"
+	"gopkg.in/yaml.v2"
 )
 
 type Node struct {

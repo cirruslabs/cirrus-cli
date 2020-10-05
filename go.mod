@@ -2,6 +2,9 @@ module github.com/cirruslabs/cirrus-cli
 
 go 1.14
 
+// https://github.com/go-yaml/yaml/pull/364
+replace gopkg.in/yaml.v2 => github.com/cirruslabs/yaml v0.0.0-20201005110149-09a333859ff2
+
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
@@ -17,7 +20,6 @@ require (
 	github.com/go-git/go-billy/v5 v5.0.0
 	github.com/go-git/go-git/v5 v5.1.0
 	github.com/go-test/deep v1.0.7
-	github.com/goccy/go-yaml v1.8.2
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/protobuf v1.4.2
 	github.com/google/go-github/v32 v32.1.0
