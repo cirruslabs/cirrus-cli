@@ -10,6 +10,7 @@ type FoldableLogsRenderer struct {
 	delegate          *renderers.SimpleRenderer
 	startFoldTemplate string
 	endFoldTemplate   string
+	escapeFunc        func(s string) string
 }
 
 func (r FoldableLogsRenderer) RenderScopeStarted(entry *echelon.LogScopeStarted) {
@@ -32,6 +33,11 @@ func (r FoldableLogsRenderer) printFoldMessage(scopes []string, template string)
 	scopesCount := len(scopes)
 	if scopesCount > 0 {
 		lastScope := scopes[scopesCount-1]
+
+		if r.escapeFunc != nil {
+			lastScope = r.escapeFunc(lastScope)
+		}
+
 		foldingMessage := echelon.NewLogEntryMessage(scopes, echelon.InfoLevel, template, lastScope)
 		r.delegate.RenderMessage(foldingMessage)
 	}
