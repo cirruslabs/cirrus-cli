@@ -15,10 +15,10 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task"
-	"github.com/goccy/go-yaml"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -125,7 +125,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 	var parsed yaml.MapSlice
 
 	// Unmarshal YAML
-	if err := yaml.UnmarshalWithOptions([]byte(config), &parsed, yaml.UseOrderedMap()); err != nil {
+	if err := yaml.Unmarshal([]byte(config), &parsed); err != nil {
 		return nil, err
 	}
 

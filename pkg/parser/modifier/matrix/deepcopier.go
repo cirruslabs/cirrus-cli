@@ -3,7 +3,7 @@ package matrix
 import (
 	"bytes"
 	"encoding/gob"
-	"github.com/goccy/go-yaml"
+	"gopkg.in/yaml.v2"
 )
 
 // This is rather inefficient and error-prone (due to the need to manually register unknown types),

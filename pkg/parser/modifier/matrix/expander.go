@@ -1,7 +1,7 @@
 package matrix
 
 import (
-	"github.com/goccy/go-yaml"
+	"gopkg.in/yaml.v2"
 )
 
 // Callback function to be called by traverse().
