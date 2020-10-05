@@ -14,7 +14,7 @@ years from now regardless what versions of packages you'll have locally.
 * [Prebuilt Binary](INSTALL.md#prebuilt-binary)
 * [Golang](INSTALL.md#golang)
 * CI integrations
-  * [Github Actions](INSTALL.md#github-actions)
+  * [GitHub Actions](INSTALL.md#github-actions)
   * [Travis CI](INSTALL.md#travis-ci)
   * [Circle CI](INSTALL.md#circle-ci)
   * [Cirrus CI](INSTALL.md#cirrus-ci)
@@ -25,7 +25,7 @@ Cirrus CLI reuses the [same YAML configuration format as Cirrus CI](https://cirr
 reuse a large [list of examples](https://cirrus-ci.org/examples/) created by Cirrus CI community.
 
 **Note:** Cirrus CLI can be used in any environment that has Docker installed. It can be your laptop or any CI system you already have
-like Jenkins, Github Actions, Travis CI, etc. With Cirrus CLI it's no longer a requirement to use Cirrus CI in order to benefit from Cirrus
+like Jenkins, GitHub Actions, Travis CI, etc. With Cirrus CLI it's no longer a requirement to use Cirrus CI in order to benefit from Cirrus
 configuration format that we (Cirrus Labs) have crafted for so long and really proud of.
 
 Here is an example of `.cirrus.yml` configuration file for testing a Go application with several Go versions:
