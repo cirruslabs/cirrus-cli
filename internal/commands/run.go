@@ -13,8 +13,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
-	"github.com/cirruslabs/echelon"
-	"github.com/cirruslabs/echelon/renderers"
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -39,14 +37,6 @@ var debugNoCleanup bool
 
 // Experimental features flags.
 var experimentalParser bool
-
-const (
-	OutputAuto        = "auto"
-	OutputSimple      = "simple"
-	OutputInteractive = "interactive"
-	OutputTravis      = "travis"
-	OutputGA          = "github-actions"
-)
 
 // envArgsToMap parses and expands environment arguments like "A=B" (set operation)
 // and "A" (pass-through operation) into a map suitable for use across the codebase.
@@ -176,37 +166,9 @@ func run(cmd *cobra.Command, args []string) error {
 
 	var executorOpts []executor.Option
 
-	if output == OutputAuto && envVariableIsTrue("TRAVIS") {
-		output = OutputTravis
-	}
-	if output == OutputAuto && envVariableIsTrue("GITHUB_ACTIONS") {
-		output = OutputGA
-	}
-	if output == OutputAuto && envVariableIsTrue("CI") {
-		output = OutputSimple
-	}
-	if output == OutputAuto {
-		output = OutputInteractive
-	}
-
 	// Enable logging
-	var defaultSimpleRenderer = renderers.NewSimpleRenderer(cmd.OutOrStdout(), nil)
-	var renderer echelon.LogRendered = defaultSimpleRenderer
-	switch output {
-	case OutputInteractive:
-		interactiveRenderer := renderers.NewInteractiveRenderer(os.Stdout, nil)
-		go interactiveRenderer.StartDrawing()
-		defer interactiveRenderer.StopDrawing()
-		renderer = interactiveRenderer
-	case OutputTravis:
-		renderer = logs.NewTravisCILogsRenderer(defaultSimpleRenderer)
-	case OutputGA:
-		renderer = logs.NewGithubActionsLogsRenderer(defaultSimpleRenderer)
-	}
-	logger := echelon.NewLogger(echelon.InfoLevel, renderer)
-	if verbose {
-		logger = echelon.NewLogger(echelon.DebugLevel, renderer)
-	}
+	logger, cancel := logs.GetLogger(output, verbose, cmd.OutOrStdout(), os.Stdout)
+	defer cancel()
 	executorOpts = append(executorOpts, executor.WithLogger(logger))
 
 	// Enable a task filter if the task name is specified
@@ -241,10 +203,6 @@ func run(cmd *cobra.Command, args []string) error {
 	return e.Run(cmd.Context())
 }
 
-func envVariableIsTrue(name string) bool {
-	return os.Getenv(name) == "true"
-}
-
 func newRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [flags] [task]",
@@ -259,8 +217,8 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
-	cmd.PersistentFlags().StringVarP(&output, "output", "o", "auto", fmt.Sprintf("output format of logs, "+
-		"supported values: %s, %s, %s, %s, %s", OutputAuto, OutputInteractive, OutputSimple, OutputTravis, OutputGA))
+	cmd.PersistentFlags().StringVarP(&output, "output", "o", logs.DefaultFormat(), fmt.Sprintf("output format of logs, "+
+		"supported values: %s", strings.Join(logs.Formats(), ", ")))
 
 	// Docker-related flags
 	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false,
