@@ -6,7 +6,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
-	"github.com/cirruslabs/echelon/renderers"
 	"github.com/go-test/deep"
 	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
@@ -39,10 +38,6 @@ func test(cmd *cobra.Command, args []string) error {
 	}
 
 	// Configure hierarchical progress renderer
-	renderer := renderers.NewInteractiveRenderer(os.Stdout, nil)
-	go renderer.StartDrawing()
-	defer renderer.StopDrawing()
-
 	logger, cancel := logs.GetLogger(output, false, cmd.OutOrStdout(), os.Stdout)
 	defer cancel()
 
