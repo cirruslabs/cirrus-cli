@@ -172,7 +172,6 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		},
 	}
 
-	connectorCtx, connectorCancel := context.WithCancel(context.Background())
 	if config.ConnectorMode {
 		containerConfig.Entrypoint = append(containerConfig.Entrypoint, "-api-listen", ":50000")
 		containerConfig.ExposedPorts = map[nat.Port]struct{}{
@@ -222,6 +221,13 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 	// (additionalContainersCtx).
 	var additionalContainersWG sync.WaitGroup
 	additionalContainersCtx, additionalContainersCancel := context.WithCancel(context.Background())
+
+	// Create controls for the connector
+	//
+	// We separate the context here to avoid complex error handling in the connector implementations
+	// (this error handling would weed out false positives from connectorErrChan that resulted from
+	//  context cancellation).
+	connectorCtx, connectorCancel := context.WithCancel(context.Background())
 
 	// Schedule all containers for removal
 	defer func() {
