@@ -122,6 +122,8 @@ The resulting configuration should look like this:
 
 ![](images/teamcity-cirrus-run-build-step-ui.png)
 
+**Note:** you can also preinstall the CLI on the agent itself to skip downloading it each time and just execute `cirrus run` during the step.
+
 ## Cirrus CI
 
 Cirrus CLI uses the same configuration format as [Cirrus CI](https://cirrus-ci.org/) and no additional configuration is required.
