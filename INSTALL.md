@@ -106,6 +106,22 @@ jobs:
      - run: cirrus run
 ```
 
+## TeamCity
+
+Ensure that the CLI will run on the host itself (it should use a non-Dockerized agent) and this host has [Docker installed](https://docs.docker.com/engine/install/).
+
+Create a build step with the "Command Line" runner type and the following custom script contents:
+
+```
+curl -L -o cirrus https://github.com/cirruslabs/cirrus-cli/releases/latest/download/cirrus-linux-amd64
+chmod +x ./cirrus
+./cirrus run
+```
+
+The resulting configuration should look like this:
+
+![](images/teamcity-cirrus-run-build-step-ui.png)
+
 ## Cirrus CI
 
 Cirrus CLI uses the same configuration format as [Cirrus CI](https://cirrus-ci.org/) and no additional configuration is required.
