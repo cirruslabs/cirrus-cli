@@ -171,7 +171,8 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 		task.onlyIfExpression = onlyIfExpression
 		return nil
 	})
-	task.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
+
+	task.CollectibleField("allow_failures", schema.TodoSchema, func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
