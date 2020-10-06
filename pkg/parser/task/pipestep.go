@@ -34,18 +34,13 @@ func NewPipeStep(mergedEnv map[string]string) *PipeStep {
 
 	scriptNameable := nameable.NewRegexNameable("^(.*)script$")
 	step.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
-		scripts, err := node.GetSliceOfNonEmptyStrings()
+		command, err := handleScript(node, scriptNameable)
 		if err != nil {
 			return err
 		}
-		step.protoCommands = append(step.protoCommands, &api.Command{
-			Name: scriptNameable.FirstGroupOrDefault(node.Name, "main"),
-			Instruction: &api.Command_ScriptInstruction{
-				ScriptInstruction: &api.ScriptInstruction{
-					Scripts: scripts,
-				},
-			},
-		})
+
+		step.protoCommands = append(step.protoCommands, command)
+
 		return nil
 	})
 
