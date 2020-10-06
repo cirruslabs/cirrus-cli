@@ -1,0 +1,7 @@
+container:
+  image: debian:latest
+
+ubuntu_task:
+  script: >
+    packer build -force \
+      googlecompute/ubuntu_images.json

@@ -1,0 +1,5 @@
+container:
+  image: debian:latest
+
+task:
+  script: "./pants test binary ::"

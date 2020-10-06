@@ -1,0 +1,12 @@
+container:
+  image: debian:latest
+
+task:
+  timeout_in: 10
+  name: task1
+  script: ./test1.sh
+
+task2_task:
+  script: ./test2.sh
+  allow_failures: $CIRRUS_BRANCH != 'master'
+  experimental: true

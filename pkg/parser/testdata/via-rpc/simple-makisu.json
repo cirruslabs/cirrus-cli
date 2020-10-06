@@ -1,0 +1,39 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "/makisu-internal/makisu build --modifyfs=true -t=cirrusci/web-front-end:latest /makisu-context"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_SHELL": "direct",
+      "CIRRUS_WORKING_DIR": "/makisu-context"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "gcr.io/makisu-project/makisu:v0.1.4",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "build"
+  }
+]
