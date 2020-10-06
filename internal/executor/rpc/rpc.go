@@ -167,6 +167,13 @@ func (r *RPC) Start(ctx context.Context) error {
 
 		r.logger.Warnf("failed to assign Docker network bridge address %s (is Docker running?), switching to connector mode",
 			address)
+
+		address = "localhost:0"
+		listener, err = net.Listen("tcp", address)
+		if err != nil {
+			return fmt.Errorf("%w: failed to start RPC service on %s: %v", ErrRPCFailed, address, err)
+		}
+
 		r.connectorMode = true
 	}
 	r.listener = listener
