@@ -7,20 +7,18 @@ import (
 )
 
 func NewTeamCityLogsRenderer(renderer *renderers.SimpleRenderer) echelon.LogRendered {
+	replacer := strings.NewReplacer(
+		"'", "|'",
+		"[", "|[",
+		"]", "|]",
+		"|", "||",
+		"\n", "|n",
+	)
+
 	return &FoldableLogsRenderer{
 		delegate:          renderer,
 		startFoldTemplate: "##teamcity[blockOpened name='%s']",
 		endFoldTemplate:   "##teamcity[blockClosed name='%s']",
-		escapeFunc: func(s string) string {
-			replacer := strings.NewReplacer(
-				"'", "|'",
-				"[", "|[",
-				"]", "|]",
-				"|", "||",
-				"\n", "|n",
-			)
-
-			return replacer.Replace(s)
-		},
+		escapeFunc:        replacer.Replace,
 	}
 }
