@@ -13,6 +13,7 @@ const (
 	OutputSimple      = "simple"
 	OutputTravis      = "travis"
 	OutputGA          = "github-actions"
+	OutputTeamCity    = "teamcity"
 )
 
 func DefaultFormat() string {
@@ -26,6 +27,7 @@ func Formats() []string {
 		OutputSimple,
 		OutputTravis,
 		OutputGA,
+		OutputTeamCity,
 	}
 }
 
@@ -35,6 +37,9 @@ func GetLogger(format string, verbose bool, logWriter io.Writer, logFile *os.Fil
 	}
 	if format == OutputAuto && envVariableIsTrue("GITHUB_ACTIONS") {
 		format = OutputGA
+	}
+	if format == OutputAuto && envVariableIsSet("TEAMCITY_VERSION") {
+		format = OutputTeamCity
 	}
 	if format == OutputAuto && envVariableIsTrue("CI") {
 		format = OutputSimple
@@ -60,6 +65,8 @@ func GetLogger(format string, verbose bool, logWriter io.Writer, logFile *os.Fil
 		renderer = NewTravisCILogsRenderer(defaultSimpleRenderer)
 	case OutputGA:
 		renderer = NewGithubActionsLogsRenderer(defaultSimpleRenderer)
+	case OutputTeamCity:
+		renderer = NewTeamCityLogsRenderer(defaultSimpleRenderer)
 	}
 
 	logger := echelon.NewLogger(echelon.InfoLevel, renderer)
@@ -69,6 +76,11 @@ func GetLogger(format string, verbose bool, logWriter io.Writer, logFile *os.Fil
 	}
 
 	return logger, cancelFunc
+}
+
+func envVariableIsSet(name string) bool {
+	_, ok := os.LookupEnv(name)
+	return ok
 }
 
 func envVariableIsTrue(name string) bool {
