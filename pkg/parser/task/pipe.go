@@ -12,6 +12,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/golang/protobuf/ptypes"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -115,6 +116,15 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 		return nil
 	})
 
+	pipe.OptionalField(nameable.NewSimpleNameable("experimental"), schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["experimentalFeaturesEnabled"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
 	pipe.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
 		timeoutInSeconds, err := handleTimeoutIn(node, environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
@@ -123,6 +133,15 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 
 		pipe.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
 
+		return nil
+	})
+
+	pipe.CollectibleField("trigger_type", schema.TodoSchema, func(node *node.Node) error {
+		triggerType, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["triggerType"] = strings.ToUpper(triggerType)
 		return nil
 	})
 

@@ -181,6 +181,15 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 		return nil
 	})
 
+	task.CollectibleField("experimental", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["experimentalFeaturesEnabled"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
 	task.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
 		timeoutInSeconds, err := handleTimeoutIn(node, environment.Merge(task.proto.Environment, env))
 		if err != nil {
@@ -189,6 +198,15 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 
 		task.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
 
+		return nil
+	})
+
+	task.CollectibleField("trigger_type", schema.TodoSchema, func(node *node.Node) error {
+		triggerType, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["triggerType"] = strings.ToUpper(triggerType)
 		return nil
 	})
 
