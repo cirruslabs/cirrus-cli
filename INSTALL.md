@@ -7,6 +7,7 @@
   * [GitHub Actions](#github-actions)
   * [Travis CI](#travis-ci)
   * [Circle CI](#circle-ci)
+  * [TeamCity](#teamcity)
   * [Cirrus CI](#cirrus-ci)
 
 # Prequisites

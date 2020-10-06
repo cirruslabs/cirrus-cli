@@ -17,6 +17,7 @@ years from now regardless what versions of packages you'll have locally.
   * [GitHub Actions](INSTALL.md#github-actions)
   * [Travis CI](INSTALL.md#travis-ci)
   * [Circle CI](INSTALL.md#circle-ci)
+  * [TeamCity](INSTALL.md#teamcity)
   * [Cirrus CI](INSTALL.md#cirrus-ci)
 
 ## Usage
