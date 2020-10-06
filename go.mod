@@ -10,12 +10,12 @@ require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/PaesslerAG/gval v1.1.0
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
-	github.com/cirruslabs/cirrus-ci-agent v1.11.0
+	github.com/cirruslabs/cirrus-ci-agent v1.11.1-0.20201006195014-51add510c4b5
 	github.com/cirruslabs/echelon v1.3.0
 	github.com/containerd/containerd v1.4.0 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible
-	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0
 	github.com/go-git/go-billy/v5 v5.0.0
 	github.com/go-git/go-git/v5 v5.1.0

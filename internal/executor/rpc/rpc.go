@@ -36,6 +36,8 @@ type RPC struct {
 	serverWaitGroup            sync.WaitGroup
 	serverSecret, clientSecret string
 
+	connectorMode bool
+
 	build *build.Build
 
 	logger *echelon.Logger
@@ -159,13 +161,13 @@ func (r *RPC) Start(ctx context.Context) error {
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
-		if errors.Is(err, syscall.EADDRNOTAVAIL) {
-			return fmt.Errorf(
-				"%w: failed to assign Docker network bridge address %s (is Docker running?)",
-				ErrRPCFailed, address,
-			)
+		if !errors.Is(err, syscall.EADDRNOTAVAIL) {
+			return fmt.Errorf("%w: failed to start RPC service on %s: %v", ErrRPCFailed, address, err)
 		}
-		return fmt.Errorf("%w: failed to start RPC service on %s: %v", ErrRPCFailed, address, err)
+
+		r.logger.Warnf("failed to assign Docker network bridge address %s (is Docker running?), switching to connector mode",
+			address)
+		r.connectorMode = true
 	}
 	r.listener = listener
 
@@ -179,7 +181,7 @@ func (r *RPC) Start(ctx context.Context) error {
 		r.serverWaitGroup.Done()
 	}()
 
-	r.logger.Debugf("gRPC server is listening at %s", r.Endpoint())
+	r.logger.Debugf("gRPC server is listening at http://%s", r.Endpoint())
 
 	return nil
 }
@@ -187,13 +189,17 @@ func (r *RPC) Start(ctx context.Context) error {
 // Endpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag.
 func (r *RPC) Endpoint() string {
 	// Work around host.docker.internal missing on Linux
-	if runtime.GOOS == "linux" {
-		return "http://" + r.listener.Addr().String()
+	if runtime.GOOS == "linux" || r.connectorMode {
+		return r.listener.Addr().String()
 	}
 
 	port := r.listener.Addr().(*net.TCPAddr).Port
 
-	return fmt.Sprintf("http://host.docker.internal:%d", port)
+	return fmt.Sprintf("host.docker.internal:%d", port)
+}
+
+func (r *RPC) ConnectorMode() bool {
+	return r.connectorMode
 }
 
 // Stop gracefully stops the RPC server.

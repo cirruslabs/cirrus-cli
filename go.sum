@@ -35,8 +35,8 @@ github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghf
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
-github.com/cirruslabs/cirrus-ci-agent v1.11.0 h1:PlupgllTldtR8fI6KJHPg/n0QG1f0tWxXjdUU2eZwaU=
-github.com/cirruslabs/cirrus-ci-agent v1.11.0/go.mod h1:r+XDZvxP39UaEPrW9u/xPECglHVJdc/iqo1g69kAtD4=
+github.com/cirruslabs/cirrus-ci-agent v1.11.1-0.20201006195014-51add510c4b5 h1:jhgzTXAPgwNtQK9xc6oq92RDNildD2cANSudjMXmmFU=
+github.com/cirruslabs/cirrus-ci-agent v1.11.1-0.20201006195014-51add510c4b5/go.mod h1:r+XDZvxP39UaEPrW9u/xPECglHVJdc/iqo1g69kAtD4=
 github.com/cirruslabs/cirrus-ci-annotations v0.0.0-20200908203753-b813f63941d7/go.mod h1:98qD7HLlBx5aNqWiCH80OTTqTTsbXT69wxnlnrnoL0E=
 github.com/cirruslabs/echelon v1.3.0 h1:tWz5i4IFJa8AZbtoqeIurb+NE+DApsLAeOA2n0dCVMI=
 github.com/cirruslabs/echelon v1.3.0/go.mod h1:1jFBACMy3tzodXyTtNNLN9bw6UUU7Xpq9tYMRydehtY=

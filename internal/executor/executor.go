@@ -119,6 +119,7 @@ func (e *Executor) Run(ctx context.Context) error {
 		instanceRunOpts := instance.RunConfig{
 			ProjectDir:    e.build.ProjectDir,
 			Endpoint:      e.rpc.Endpoint(),
+			ConnectorMode: e.rpc.ConnectorMode(),
 			ServerSecret:  e.rpc.ServerSecret(),
 			ClientSecret:  e.rpc.ClientSecret(),
 			TaskID:        task.ID,

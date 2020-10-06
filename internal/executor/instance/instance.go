@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-ci-agent/pkg/connector"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/echelon"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"io"
@@ -23,6 +25,7 @@ import (
 )
 
 var (
+	ErrInstanceFailed            = errors.New("failed to start instance")
 	ErrUnsupportedInstance       = errors.New("unsupported instance type")
 	ErrAdditionalContainerFailed = errors.New("additional container failed")
 )
@@ -82,6 +85,7 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 type RunConfig struct {
 	ProjectDir                 string
 	Endpoint                   string
+	ConnectorMode              bool
 	ServerSecret, ClientSecret string
 	TaskID                     int64
 	Logger                     *echelon.Logger
@@ -142,8 +146,6 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		Image: params.Image,
 		Entrypoint: []string{
 			path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent),
-			"-api-endpoint",
-			config.Endpoint,
 			"-server-token",
 			config.ServerSecret,
 			"-client-token",
@@ -168,6 +170,24 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 			NanoCPUs: int64(params.CPU * nano),
 			Memory:   int64(params.Memory * mebi),
 		},
+	}
+
+	connectorCtx, connectorCancel := context.WithCancel(context.Background())
+	if config.ConnectorMode {
+		containerConfig.Entrypoint = append(containerConfig.Entrypoint, "-api-listen", ":50000")
+		containerConfig.ExposedPorts = map[nat.Port]struct{}{
+			"50000/tcp": {},
+		}
+		hostConfig.PortBindings = map[nat.Port][]nat.PortBinding{
+			"50000/tcp": {
+				{
+					HostIP:   "127.0.0.1",
+					HostPort: "0",
+				},
+			},
+		}
+	} else {
+		containerConfig.Entrypoint = append(containerConfig.Entrypoint, "-api-endpoint", "http://"+config.Endpoint)
 	}
 
 	// In dirty mode we mount the project directory in read-write mode
@@ -220,6 +240,8 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 			}
 		}
 
+		connectorCancel()
+
 		additionalContainersCancel()
 		additionalContainersWG.Wait()
 	}()
@@ -250,6 +272,13 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		return err
 	}
 
+	connectorErrChan := make(chan error)
+	if config.ConnectorMode {
+		if connectorErrChan, err = launchConnector(connectorCtx, cli, cont.ID, config.Endpoint); err != nil {
+			return err
+		}
+	}
+
 	logger.Debugf("waiting for container %s to finish", cont.ID)
 	waitChan, errChan := cli.ContainerWait(ctx, cont.ID, container.WaitConditionNotRunning)
 	select {
@@ -259,9 +288,38 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		return err
 	case acErr := <-additionalContainersErrChan:
 		return acErr
+	case connectorErr := <-connectorErrChan:
+		return connectorErr
 	}
 
 	return nil
+}
+
+func launchConnector(
+	ctx context.Context,
+	cli *client.Client,
+	containerID string,
+	ourEndpoint string,
+) (chan error, error) {
+	containerJSON, err := cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return nil, err
+	}
+
+	portMap, ok := containerJSON.NetworkSettings.Ports["50000/tcp"]
+	if !ok {
+		return nil, fmt.Errorf("%w: expected connector port map to be specified, but found nothing", ErrInstanceFailed)
+	}
+
+	if len(portMap) != 1 {
+		return nil, fmt.Errorf("%w: expected a single connector port mapping, but found %d", ErrInstanceFailed, len(portMap))
+	}
+
+	otherConnectorEndpoint := fmt.Sprintf("%s:%s", portMap[0].HostIP, portMap[0].HostPort)
+
+	_, connectorErrChan := connector.MaleToMale(ctx, otherConnectorEndpoint, ourEndpoint)
+
+	return connectorErrChan, nil
 }
 
 func runAdditionalContainer(
