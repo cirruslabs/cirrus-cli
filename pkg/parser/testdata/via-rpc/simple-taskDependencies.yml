@@ -1,0 +1,15 @@
+container:
+  image: debian:latest
+
+build_task:
+  script: ./build.sh
+
+test_task:
+  depends_on: build
+  script: ./test.sh
+
+task:
+  name: Deploy
+  depends_on: test
+  trigger_type: manual
+  script: ./test.sh

@@ -171,12 +171,22 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 		task.onlyIfExpression = onlyIfExpression
 		return nil
 	})
-	task.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
+
+	task.CollectibleField("allow_failures", schema.TodoSchema, func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 		task.proto.Metadata.Properties["allowFailures"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	task.CollectibleField("experimental", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["experimentalFeaturesEnabled"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
@@ -188,6 +198,15 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 
 		task.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
 
+		return nil
+	})
+
+	task.CollectibleField("trigger_type", schema.TodoSchema, func(node *node.Node) error {
+		triggerType, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["triggerType"] = strings.ToUpper(triggerType)
 		return nil
 	})
 

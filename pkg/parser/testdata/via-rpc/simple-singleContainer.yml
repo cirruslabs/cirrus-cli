@@ -1,0 +1,14 @@
+container:
+  image: memcached:1.5.0-alpine
+  cpu: 0.5
+  memory: 128
+  kvm: true
+  use_static_ip: true
+  use_in_memory_disk: true
+
+test_task:
+  timeout_in: 600s
+  name: Important Tests
+  script:
+    - ./test1.sh
+    - ./test2.sh

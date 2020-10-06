@@ -1,0 +1,22 @@
+aliases:
+  - &bundle_cache
+    folder: /usr/local/bundle
+    fingerprint_script: >
+      echo $CIRRUS_TASK_NAME:$CIRRUS_OS:$RUBY_VERSION &&
+      cat Gemfile &&
+      cat *.gemspec
+    populate_script: bundle update
+
+lint_task:
+  container: ruby:2.5
+  bundle_cache:
+    <<: *bundle_cache
+  test_script: bundle exec rubocop
+
+test_task:
+  container:
+    matrix:
+      image: ruby:2.5
+  bundle_cache:
+    <<: *bundle_cache
+  test_script: bundle exec rake

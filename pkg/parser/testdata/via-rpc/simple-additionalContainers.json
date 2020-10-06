@@ -1,0 +1,69 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "./test1.sh"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "additionalContainers": [
+        {
+          "command": [
+            "echo $FOO"
+          ],
+          "containerPort": 6379,
+          "cpu": 1.3,
+          "environment": {
+            "FOO": "Bar"
+          },
+          "image": "memcached:1.5.0-alpine",
+          "memory": 777,
+          "name": "memcached",
+          "readinessCommand": [
+            "./health.sh"
+          ]
+        },
+        {
+          "containerPort": 6379,
+          "cpu": 0.5,
+          "hostPort": 7777,
+          "image": "redis:3.2-alpine",
+          "memory": 512,
+          "name": "redis"
+        },
+        {
+          "containerPort": 2375,
+          "cpu": 0.5,
+          "image": "docker:18.06-dind",
+          "memory": 512,
+          "name": "docker",
+          "privileged": true
+        }
+      ],
+      "cpu": 2,
+      "image": "my-service:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "task1"
+  }
+]

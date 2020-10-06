@@ -106,6 +106,17 @@ func (node *Node) GetSliceOfNonEmptyStrings() ([]string, error) {
 	}
 }
 
+func (node *Node) GetScript() ([]string, error) {
+	switch value := node.Value.(type) {
+	case *ScalarValue:
+		return strings.Split(value.Value, "\n"), nil
+	case *ListValue:
+		return node.GetSliceOfStrings()
+	default:
+		return nil, fmt.Errorf("%w: field should be a string or a list of values", parsererror.ErrParsing)
+	}
+}
+
 func ExpandEnvironmentVariables(s string, env map[string]string) string {
 	const maxExpansionIterations = 10
 

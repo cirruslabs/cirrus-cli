@@ -1,0 +1,12 @@
+build_task:
+  use_compute_credits: $CIRRUS_BRANCH == 'master'
+  env:
+    CIRRUS_SHELL: direct
+    CIRRUS_WORKING_DIR: /makisu-context
+  container:
+    image: gcr.io/makisu-project/makisu:v0.1.4
+  build_script:
+    /makisu-internal/makisu build
+    --modifyfs=true
+    -t=cirrusci/web-front-end:latest
+    /makisu-context

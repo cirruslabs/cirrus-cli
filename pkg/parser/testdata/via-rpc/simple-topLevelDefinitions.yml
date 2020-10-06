@@ -1,0 +1,11 @@
+container:
+  image: node:latest
+
+allow_failures: true
+auto_cancellation: $CIRRUS_BRANCH == 'master'
+skip_notifications: true
+use_compute_credits: true
+timeout_in: 15
+
+task:
+  script: npm ci

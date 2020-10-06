@@ -1,0 +1,6 @@
+registry_config: ENCRYPTED[qwerty]
+
+task:
+  matrix:
+    container:
+      image: secret:image

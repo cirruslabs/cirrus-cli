@@ -45,7 +45,7 @@ func NewCacheCommand(mergedEnv map[string]string) *CacheCommand {
 	})
 
 	cache.OptionalField(nameable.NewSimpleNameable("fingerprint_script"), schema.TodoSchema, func(node *node.Node) error {
-		scripts, err := node.GetSliceOfNonEmptyStrings()
+		scripts, err := node.GetScript()
 		if err != nil {
 			return err
 		}
@@ -62,7 +62,7 @@ func NewCacheCommand(mergedEnv map[string]string) *CacheCommand {
 	})
 
 	cache.OptionalField(nameable.NewSimpleNameable("populate_script"), schema.TodoSchema, func(node *node.Node) error {
-		scripts, err := node.GetSliceOfNonEmptyStrings()
+		scripts, err := node.GetScript()
 		if err != nil {
 			return err
 		}

@@ -1,0 +1,106 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "echo $CIRRUS_TASK_NAME:$CIRRUS_OS:$RUBY_VERSION \u0026\u0026 cat Gemfile \u0026\u0026 cat *.gemspec",
+            ""
+          ],
+          "folder": "/usr/local/bundle",
+          "populateScripts": [
+            "bundle update"
+          ]
+        },
+        "name": "bundle"
+      },
+      {
+        "name": "test",
+        "scriptInstruction": {
+          "scripts": [
+            "bundle exec rubocop"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'bundle' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "bundle"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "lint"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "echo $CIRRUS_TASK_NAME:$CIRRUS_OS:$RUBY_VERSION \u0026\u0026 cat Gemfile \u0026\u0026 cat *.gemspec",
+            ""
+          ],
+          "folder": "/usr/local/bundle",
+          "populateScripts": [
+            "bundle update"
+          ]
+        },
+        "name": "bundle"
+      },
+      {
+        "name": "test",
+        "scriptInstruction": {
+          "scripts": [
+            "bundle exec rake"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'bundle' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "bundle"
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "ruby:2.5",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "test"
+  }
+]

@@ -1,0 +1,18 @@
+container:
+  image: golang
+
+task:
+  name: Test Shard $TEST_SPLIT
+  env:
+    matrix:
+      TEST_SPLIT: 1/3
+      TEST_SPLIT: 2/2
+      TEST_SPLIT: 3/3
+  alias: tests
+  tests_script: ./.ci/tests.sh
+
+deploy_task:
+  stateful: false
+  only_if: $CIRRUS_BRANCH == 'master'
+  depends_on: tests
+  script: ./.ci/deploy.sh

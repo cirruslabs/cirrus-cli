@@ -7,8 +7,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/go-test/deep"
-	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -69,13 +69,13 @@ func test(cmd *cobra.Command, args []string) error {
 
 		// Compare generated configuration with the expected configuration
 		var expectedConfig yaml.MapSlice
-		err = yaml.UnmarshalWithOptions(expectedConfigBytes, &expectedConfig, yaml.UseOrderedMap())
+		err = yaml.Unmarshal(expectedConfigBytes, &expectedConfig)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 
 		var generatedConfig yaml.MapSlice
-		err = yaml.UnmarshalWithOptions([]byte(generatedConfigString), &generatedConfig, yaml.UseOrderedMap())
+		err = yaml.Unmarshal([]byte(generatedConfigString), &generatedConfig)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}

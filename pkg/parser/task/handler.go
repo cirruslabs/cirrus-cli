@@ -8,7 +8,7 @@ import (
 )
 
 func handleBackgroundScript(node *node.Node, nameable *nameable.RegexNameable) (*api.Command, error) {
-	scripts, err := node.GetSliceOfNonEmptyStrings()
+	scripts, err := node.GetScript()
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func handleBackgroundScript(node *node.Node, nameable *nameable.RegexNameable) (
 }
 
 func handleScript(node *node.Node, nameable *nameable.RegexNameable) (*api.Command, error) {
-	scripts, err := node.GetSliceOfNonEmptyStrings()
+	scripts, err := node.GetScript()
 	if err != nil {
 		return nil, err
 	}
