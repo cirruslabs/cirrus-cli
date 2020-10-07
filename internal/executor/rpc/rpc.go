@@ -100,7 +100,18 @@ func (r *RPC) Start(ctx context.Context) error {
 	// * https://github.com/docker/for-linux/issues/264
 	// * https://github.com/moby/moby/pull/40007
 	if runtime.GOOS == "linux" {
-		host = getDockerBridgeIP(ctx)
+		// Worst-case scenario, but still better than nothing,
+		// since there's still a chance this would work with
+		// a Docker daemon configured by default.
+		const assumedBridgeIP = "172.17.0.1"
+
+		if bridgeIP := getDockerBridgeIP(ctx); bridgeIP != "" {
+			host = bridgeIP
+		} else if cloudBuildIP := getCloudBuildIP(ctx); cloudBuildIP != "" {
+			host = cloudBuildIP
+		} else {
+			host = assumedBridgeIP
+		}
 	}
 
 	address := fmt.Sprintf("%s:0", host)

@@ -30,29 +30,76 @@ func getDockerBridgeInterface(ctx context.Context) string {
 }
 
 func getDockerBridgeIP(ctx context.Context) string {
-	// Worst-case scenario, but still better than nothing
-	// since there's still a chance this would work with
-	// a Docker daemon configured by default.
-	const assumedBridgeIP = "172.17.0.1"
-
 	iface, err := net.InterfaceByName(getDockerBridgeInterface(ctx))
 	if err != nil {
-		return assumedBridgeIP
+		return ""
 	}
 
 	addrs, err := iface.Addrs()
 	if err != nil {
-		return assumedBridgeIP
+		return ""
 	}
 
 	if len(addrs) != 0 {
 		ip, _, err := net.ParseCIDR(addrs[0].String())
 		if err != nil {
-			return assumedBridgeIP
+			return ""
 		}
 
 		return ip.String()
 	}
 
-	return assumedBridgeIP
+	return ""
+}
+
+func getCloudBuildSubnet(ctx context.Context) string {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return ""
+	}
+	defer cli.Close()
+
+	// https://cloud.google.com/cloud-build/docs/build-config#network
+	network, err := cli.NetworkInspect(ctx, "cloudbuild", types.NetworkInspectOptions{})
+	if err != nil {
+		return ""
+	}
+
+	if len(network.IPAM.Config) != 1 {
+		return ""
+	}
+
+	return network.IPAM.Config[0].Subnet
+}
+
+func getCloudBuildIP(ctx context.Context) string {
+	// Are we running in Cloud Build?
+	cloudBuildSubnet := getCloudBuildSubnet(ctx)
+	if cloudBuildSubnet == "" {
+		return ""
+	}
+
+	_, cloudBuildNetwork, err := net.ParseCIDR(cloudBuildSubnet)
+	if err != nil {
+		return ""
+	}
+
+	// Pick up first IP address of the interface attached to the Cloud Build network
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+
+	for _, addr := range addrs {
+		interfaceIP, interfaceNetwork, err := net.ParseCIDR(addr.String())
+		if err != nil {
+			continue
+		}
+
+		if interfaceNetwork == cloudBuildNetwork {
+			return interfaceIP.String()
+		}
+	}
+
+	return ""
 }
