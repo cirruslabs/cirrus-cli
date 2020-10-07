@@ -8,6 +8,7 @@
   * [Travis CI](#travis-ci)
   * [Circle CI](#circle-ci)
   * [TeamCity](#teamcity)
+  * [Cloud Build](#cloud-build)
   * [Cirrus CI](#cirrus-ci)
 
 # Prequisites
@@ -124,6 +125,41 @@ The resulting configuration should look like this:
 ![](images/teamcity-cirrus-run-build-step-ui.png)
 
 **Note:** you can also preinstall the CLI on the agent itself to skip downloading it each time and just execute `cirrus run` during the step.
+
+## Cloud Build
+
+Here is an example of `cloudbuild.yaml` configuration file that runs Cirrus Tasks using CLI:
+
+```yaml
+steps:
+  - name: 'cirrusci/cirrus-cli'
+    args: ['run']
+    env: ['CI=true']
+```
+
+If you want to use [Cloud Storage](https://cloud.google.com/storage) as a cache, Cirrus Labs provides a reference [HTTP proxy implementation](https://github.com/cirruslabs/google-storage-proxy) that transparently forwards all cache operations to the specified bucket.
+
+Here's a modified version of the example above that stores cache entries in the bucket named `change-me`:
+
+```yaml
+steps:
+  - name: 'docker'
+    args:
+      - 'run'
+      - '-d'
+      - '--name=gsp'
+      - '--network=cloudbuild'
+      - '--expose=80'
+      - 'cirrusci/google-storage-proxy:latest'
+      - '-address=0.0.0.0'
+      - '-port=80'
+      - '-bucket=change-me'
+  - name: 'cirrusci/cirrus-cli'
+    args: ['run', '--environment', 'CIRRUS_HTTP_CACHE_HOST=gsp']
+    env: ['CI=true']
+```
+
+You can further configure [lifecycle rules](https://cloud.google.com/storage/docs/lifecycle) to automatically delete outdated cache objects.
 
 ## Cirrus CI
 

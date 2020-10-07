@@ -7,10 +7,9 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -92,56 +91,6 @@ func (r *RPC) ClientSecret() string {
 	return r.clientSecret
 }
 
-func getDockerBridgeInterface(ctx context.Context) string {
-	const assumedBridgeInterface = "docker0"
-
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return assumedBridgeInterface
-	}
-	defer cli.Close()
-
-	network, err := cli.NetworkInspect(ctx, "bridge", types.NetworkInspectOptions{})
-	if err != nil {
-		return assumedBridgeInterface
-	}
-
-	bridgeInterface, ok := network.Options["com.docker.network.bridge.name"]
-	if !ok {
-		return assumedBridgeInterface
-	}
-
-	return bridgeInterface
-}
-
-func getDockerBridgeIP(ctx context.Context) string {
-	// Worst-case scenario, but still better than nothing
-	// since there's still a chance this would work with
-	// a Docker daemon configured by default.
-	const assumedBridgeIP = "172.17.0.1"
-
-	iface, err := net.InterfaceByName(getDockerBridgeInterface(ctx))
-	if err != nil {
-		return assumedBridgeIP
-	}
-
-	addrs, err := iface.Addrs()
-	if err != nil {
-		return assumedBridgeIP
-	}
-
-	if len(addrs) != 0 {
-		ip, _, err := net.ParseCIDR(addrs[0].String())
-		if err != nil {
-			return assumedBridgeIP
-		}
-
-		return ip.String()
-	}
-
-	return assumedBridgeIP
-}
-
 // Start creates the listener and starts RPC server in a separate goroutine.
 func (r *RPC) Start(ctx context.Context) error {
 	host := "localhost"
@@ -152,7 +101,18 @@ func (r *RPC) Start(ctx context.Context) error {
 	// * https://github.com/docker/for-linux/issues/264
 	// * https://github.com/moby/moby/pull/40007
 	if runtime.GOOS == "linux" {
-		host = getDockerBridgeIP(ctx)
+		// Worst-case scenario, but still better than nothing,
+		// since there's still a chance this would work with
+		// a Docker daemon configured by default.
+		const assumedBridgeIP = "172.17.0.1"
+
+		if bridgeIP := heuristic.GetDockerBridgeIP(ctx); bridgeIP != "" {
+			host = bridgeIP
+		} else if cloudBuildIP := heuristic.GetCloudBuildIP(ctx); cloudBuildIP != "" {
+			host = cloudBuildIP
+		} else {
+			host = assumedBridgeIP
+		}
 	}
 
 	address := fmt.Sprintf("%s:0", host)
