@@ -137,6 +137,30 @@ steps:
     env: ['CI=true']
 ```
 
+If you want to use [Cloud Storage](https://cloud.google.com/storage) as a cache, Cirrus Labs provides a reference [HTTP proxy implementation](https://github.com/cirruslabs/google-storage-proxy) that transparently forwards all cache operations to the specified bucket.
+
+Here's a modified version of the example above that stores cache entries in the bucket named `change-me`:
+
+```yaml
+steps:
+  - name: 'docker'
+    args:
+      - 'run'
+      - '-d'
+      - '--name=gsp'
+      - '--network=cloudbuild'
+      - '--expose=80'
+      - 'cirrusci/google-storage-proxy:latest'
+      - '-address=0.0.0.0'
+      - '-port=80'
+      - '-bucket=change-me'
+  - name: 'cirrusci/cirrus-cli'
+    args: ['run', '--environment', 'CIRRUS_HTTP_CACHE_HOST=gsp']
+    env: ['CI=true']
+```
+
+You can further configure [lifecycle rules](https://cloud.google.com/storage/docs/lifecycle) to automatically delete outdated cache objects.
+
 ## Cirrus CI
 
 Cirrus CLI uses the same configuration format as [Cirrus CI](https://cirrus-ci.org/) and no additional configuration is required.
