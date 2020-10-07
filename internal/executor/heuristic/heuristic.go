@@ -7,6 +7,9 @@ import (
 	"net"
 )
 
+// https://cloud.google.com/cloud-build/docs/build-config#network
+const CloudBuildNetworkName = "cloudbuild"
+
 func getDockerBridgeInterface(ctx context.Context) string {
 	const assumedBridgeInterface = "docker0"
 
@@ -59,8 +62,7 @@ func getCloudBuildSubnet(ctx context.Context) string {
 	}
 	defer cli.Close()
 
-	// https://cloud.google.com/cloud-build/docs/build-config#network
-	network, err := cli.NetworkInspect(ctx, "cloudbuild", types.NetworkInspectOptions{})
+	network, err := cli.NetworkInspect(ctx, CloudBuildNetworkName, types.NetworkInspectOptions{})
 	if err != nil {
 		return ""
 	}

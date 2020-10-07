@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/echelon"
 	"github.com/docker/docker/api/types"
@@ -168,6 +169,12 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 			NanoCPUs: int64(params.CPU * nano),
 			Memory:   int64(params.Memory * mebi),
 		},
+	}
+
+	// Attach the container to the Cloud Build network for RPC server
+	// to be accessible in case we're running in Cloud Build.
+	if heuristic.GetCloudBuildIP(ctx) != "" {
+		hostConfig.NetworkMode = heuristic.CloudBuildNetworkName
 	}
 
 	// In dirty mode we mount the project directory in read-write mode
