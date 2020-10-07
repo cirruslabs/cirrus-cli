@@ -1,4 +1,4 @@
-package rpc
+package heuristic
 
 import (
 	"context"
@@ -29,7 +29,7 @@ func getDockerBridgeInterface(ctx context.Context) string {
 	return bridgeInterface
 }
 
-func getDockerBridgeIP(ctx context.Context) string {
+func GetDockerBridgeIP(ctx context.Context) string {
 	iface, err := net.InterfaceByName(getDockerBridgeInterface(ctx))
 	if err != nil {
 		return ""
@@ -72,7 +72,7 @@ func getCloudBuildSubnet(ctx context.Context) string {
 	return network.IPAM.Config[0].Subnet
 }
 
-func getCloudBuildIP(ctx context.Context) string {
+func GetCloudBuildIP(ctx context.Context) string {
 	// Are we running in Cloud Build?
 	cloudBuildSubnet := getCloudBuildSubnet(ctx)
 	if cloudBuildSubnet == "" {

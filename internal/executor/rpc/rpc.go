@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -105,9 +106,9 @@ func (r *RPC) Start(ctx context.Context) error {
 		// a Docker daemon configured by default.
 		const assumedBridgeIP = "172.17.0.1"
 
-		if bridgeIP := getDockerBridgeIP(ctx); bridgeIP != "" {
+		if bridgeIP := heuristic.GetDockerBridgeIP(ctx); bridgeIP != "" {
 			host = bridgeIP
-		} else if cloudBuildIP := getCloudBuildIP(ctx); cloudBuildIP != "" {
+		} else if cloudBuildIP := heuristic.GetCloudBuildIP(ctx); cloudBuildIP != "" {
 			host = cloudBuildIP
 		} else {
 			host = assumedBridgeIP
