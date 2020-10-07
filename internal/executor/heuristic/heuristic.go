@@ -93,12 +93,12 @@ func GetCloudBuildIP(ctx context.Context) string {
 	}
 
 	for _, addr := range addrs {
-		interfaceIP, interfaceNetwork, err := net.ParseCIDR(addr.String())
+		interfaceIP, _, err := net.ParseCIDR(addr.String())
 		if err != nil {
 			continue
 		}
 
-		if interfaceNetwork == cloudBuildNetwork {
+		if cloudBuildNetwork.Contains(interfaceIP) {
 			return interfaceIP.String()
 		}
 	}
