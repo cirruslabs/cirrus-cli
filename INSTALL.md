@@ -8,6 +8,7 @@
   * [Travis CI](#travis-ci)
   * [Circle CI](#circle-ci)
   * [TeamCity](#teamcity)
+  * [Cloud Build](#cloud-build)
   * [Cirrus CI](#cirrus-ci)
 
 # Prequisites
@@ -124,6 +125,17 @@ The resulting configuration should look like this:
 ![](images/teamcity-cirrus-run-build-step-ui.png)
 
 **Note:** you can also preinstall the CLI on the agent itself to skip downloading it each time and just execute `cirrus run` during the step.
+
+## Cloud Build
+
+Here is an example of `cloudbuild.yaml` configuration file that runs Cirrus Tasks using CLI:
+
+```yaml
+steps:
+  - name: 'cirrusci/cirrus-cli'
+    args: ['run']
+    env: ['CI=true']
+```
 
 ## Cirrus CI
 
