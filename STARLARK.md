@@ -61,7 +61,7 @@ def main(ctx):
 
 ## Entrypoints
 
-Different build lifecycle events will call different functions in the `.cirrus.star`. These functions are entrypoints and they expect the function adhere to a certain signature (which consists of function arguments and it's return value).
+Different events will call different top-level functions in the `.cirrus.star`. These functions reserve certain names and will be called with different arguments depending on an event which triggered the execution.
 
 Currently only build generation entrypoint is supported with more to come in the future. For example, there will be a way to declare a function to be called on a task failure to analyze logs and if necessary re-run the task automatically.
 
