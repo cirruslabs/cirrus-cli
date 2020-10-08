@@ -37,7 +37,7 @@ def main(ctx):
     ]
 ```
 
-Once run in the Cirrus CLI, it will internally generate the following YAML configuration:
+Once `run` in the Cirrus CLI, it will internally generate and parse the following YAML configuration to produce the actual tasks to run:
 
 ```yaml
 task:
