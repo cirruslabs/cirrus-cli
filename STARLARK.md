@@ -87,7 +87,7 @@ Besides the ability to load [builtins](#builtins) with it, Cirrus CLI can load o
 
 ### Local
 
-Local loads are relative to the project's root (where `.cirrus.star` is normally located):
+Local loads are relative to the project's root (where `.cirrus.star` is located):
 
 ```python
 load(".ci/notify-slack.star", "notify_slack")
