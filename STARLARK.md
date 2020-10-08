@@ -17,7 +17,7 @@ When you execute `cirrus run`, it looks for the following files in the current d
 * `.cirrus.yml`
 * `.cirrus.star`
 
-While the first configuration is sent directly to the YAML parser, the second configuration is evaluated in the Starlark interpreter first, and only then it's output parsed as YAML.
+While the first configuration is sent directly to the YAML parser, the second configuration is evaluated with the Starlark interpreter first, and only then the evaluation output is parsed as YAML.
 
 You can also have both `.cirrus.yml` and `.cirrus.star` configurations at the same time — their output will be simply merged.
 
