@@ -46,7 +46,7 @@ task:
     script: make
 ```
 
-You might ask why not simply use the YAML format then? Well, with Starlark, you can actually generate parts of the configuration dynamically, based on some external conditions. For example, by [making a HTTP request](#http) and checking the previous build status.
+You might ask why not simply use the YAML format here? With Starlark, you can generate parts of the configuration dynamically based on some external conditions: by [making an HTTP request](#http) to check the previous build status or by [parsing files inside the repository](#fs) to pick up some common settings (for example, parse `package.json` to see if it contains `lint` script and generate a linting task).
  
 And even more importantly: with the [module loading](#module-loading) you can re-use other people's code to avoid wasting time on things written from scratch. For example, there are official [task helpers](https://github.com/cirrus-templates/helpers) available that reduce the boilerplate when generating tasks:
 
