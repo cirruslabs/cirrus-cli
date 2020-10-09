@@ -1,0 +1,11 @@
+container:
+  image: debian:latest
+
+environment:
+  PATH: "/usr/local/bin:/usr/bin"
+  FOO: "/tmp/foo"
+
+task:
+  environment:
+    FOO: "/tmp/foo2"
+  script: "echo $FOO"

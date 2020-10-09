@@ -1,0 +1,27 @@
+env:
+  CIRRUS_WORKING_DIR: "/var/tmp/go/src/github.com/containers/storage"
+  SCRIPT_BASE: "./contrib/cirrus"
+  FEDORA_NAME: "fedora-32"
+  PRIOR_FEDORA_NAME: "fedora-31"
+  UBUNTU_NAME: "ubuntu-20"
+  PRIOR_UBUNTU_NAME: "ubuntu-19"
+
+  # GCE project where images live
+  IMAGE_PROJECT: "libpod-218412"
+  _BUILT_IMAGE_SUFFIX: "libpod-6508632441356288"
+  FEDORA_CACHE_IMAGE_NAME: "${FEDORA_NAME}-${_BUILT_IMAGE_SUFFIX}"
+  PRIOR_FEDORA_CACHE_IMAGE_NAME: "${PRIOR_FEDORA_NAME}-${_BUILT_IMAGE_SUFFIX}"
+  UBUNTU_CACHE_IMAGE_NAME: "${UBUNTU_NAME}-${_BUILT_IMAGE_SUFFIX}"
+  PRIOR_UBUNTU_CACHE_IMAGE_NAME: "${PRIOR_UBUNTU_NAME}-${_BUILT_IMAGE_SUFFIX}"
+
+testing_task:
+  only_if: $VM_IMAGE =~ '.*UBUNTU.*'
+
+  env:
+    VM_IMAGE: "${UBUNTU_CACHE_IMAGE_NAME}"
+
+  container:
+    image: "${VM_IMAGE}"
+
+  setup_script: ${CIRRUS_WORKING_DIR}/${SCRIPT_BASE}/setup.sh
+  build_and_test_script: ${CIRRUS_WORKING_DIR}/${SCRIPT_BASE}/build_and_test.sh

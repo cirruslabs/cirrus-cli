@@ -1,0 +1,126 @@
+[
+  {
+    "commands": [
+      {
+        "name": "clone",
+        "scriptInstruction": {
+          "scripts": [
+            "echo 'clone'"
+          ]
+        }
+      },
+      {
+        "name": "linux_os",
+        "scriptInstruction": {
+          "scripts": [
+            "if [[ \"$OS\" == \"linux\" ]]; then",
+            "  echo \"Only Linux!\"",
+            "fi;",
+            ""
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CPU": "4",
+      "MEMORY": "12G"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "alpine:3.5",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "test_all",
+        "scriptInstruction": {
+          "scripts": [
+            "bin\\cache\\dart-sdk\\bin\\dart.exe -c dev\\bots\\test.dart"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CPU": "4",
+      "MEMORY": "12G",
+      "SHARD": "tests",
+      "TAG": "latest"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 4,
+      "image": "alpine:latest",
+      "memory": 12288
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "tests-windows"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "test_all",
+        "scriptInstruction": {
+          "scripts": [
+            "bin\\cache\\dart-sdk\\bin\\dart.exe -c dev\\bots\\test.dart"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CPU": "4",
+      "MEMORY": "12G",
+      "SHARD": "tool_tests",
+      "TAG": "latest"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 4,
+      "image": "alpine:latest",
+      "memory": 12288
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "2",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "tool_tests-windows"
+  }
+]

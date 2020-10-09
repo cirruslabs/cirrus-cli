@@ -1,0 +1,50 @@
+environment:
+  BOT: "true"
+
+# LINUX SHARDS
+task:
+  container:
+    dockerfile: "dev/ci/docker_linux/Dockerfile"
+    cpu: $CPU
+    memory: $MEMORY
+    use_in_memory_disk: $USE_IN_MEMORY_DISK
+  environment:
+    CPU: 1 # 0.1-8 without compute credits, 0.1-30 with (yes, you can go fractional)
+    MEMORY: 4G # 256M-24G without compute credits, 256M-90G with
+    USE_IN_MEMORY_DISK: false
+  pub_cache:
+    folder: $HOME/.pub-cache
+    fingerprint_script: echo $OS; grep -r --include=pubspec.yaml 'PUBSPEC CHECKSUM' "$CIRRUS_WORKING_DIR"
+    reupload_on_changes: false
+  flutter_pkg_cache:
+    folder: bin/cache/pkg
+    fingerprint_script: echo $OS; cat bin/internal/*.version
+    reupload_on_changes: false
+  artifacts_cache:
+    folder: bin/cache/artifacts
+    fingerprint_script: echo $OS; cat bin/internal/*.version
+    reupload_on_changes: false
+  setup_script:
+    - date
+    - git clean -xffd --exclude=bin/cache/
+    - git fetch origin
+    - git fetch origin master # To set FETCH_HEAD, so that "git merge-base" works.
+    - flutter config --no-analytics
+    - flutter doctor -v
+    - flutter update-packages
+    - ./dev/bots/accept_android_sdk_licenses.sh
+    - date
+  on_failure:
+    failure_script:
+      - date
+      - which flutter
+  matrix:
+    - name: docs-linux # linux-only
+      only_if: "changesInclude('.cirrus.yml', 'dev/**', 'packages/flutter/**', 'packages/flutter_test/**', 'packages/flutter_drive/**', 'packages/flutter_localizations/**', 'packages/flutter_goldens/**', 'bin/**') || $CIRRUS_PR == ''"
+      environment:
+        # TODO(tvolkert): optimize CPU and MEMORY settings once #60646 is resolved.
+        CPU: 4
+        MEMORY: 8G
+        USE_IN_MEMORY_DISK: true
+      script:
+        - ./dev/bots/docs.sh

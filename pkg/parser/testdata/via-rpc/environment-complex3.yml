@@ -1,0 +1,14 @@
+container:
+  image: alpine:latest
+
+env:
+  somethingelse: haha
+
+otherEnv: &otherEnv
+  foo: baz
+
+task:
+  env:
+    <<: *otherEnv
+    foo: bar
+  script: echo $foo

@@ -1,0 +1,27 @@
+container:
+  image: alpine:3.5
+
+env:
+  CPU: 4
+  MEMORY: 12G
+
+task:
+  clone_script: echo 'clone'
+  linux_os_script: |
+    if [[ "$OS" == "linux" ]]; then
+      echo "Only Linux!"
+    fi;
+
+task:
+  name: $SHARD-windows
+  env:
+    TAG: latest
+    matrix:
+      SHARD: tests
+      SHARD: tool_tests
+  container:
+    image: alpine:$TAG
+    cpu: $CPU
+    memory: $MEMORY
+  test_all_script:
+    - bin\cache\dart-sdk\bin\dart.exe -c dev\bots\test.dart
