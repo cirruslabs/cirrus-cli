@@ -3,6 +3,7 @@ package task
 import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -20,7 +21,7 @@ type PipeStep struct {
 	parseable.DefaultParser
 }
 
-func NewPipeStep(mergedEnv map[string]string) *PipeStep {
+func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *PipeStep {
 	step := &PipeStep{}
 
 	step.RequiredField(nameable.NewSimpleNameable("image"), schema.TodoSchema, func(node *node.Node) error {
@@ -46,7 +47,7 @@ func NewPipeStep(mergedEnv map[string]string) *PipeStep {
 
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
 	step.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
-		cache := NewCacheCommand(mergedEnv)
+		cache := NewCacheCommand(mergedEnv, boolevator)
 		if err := cache.Parse(node); err != nil {
 			return err
 		}
@@ -77,7 +78,7 @@ func NewPipeStep(mergedEnv map[string]string) *PipeStep {
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
 		step.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {
-			behavior := NewBehavior(mergedEnv)
+			behavior := NewBehavior(mergedEnv, boolevator)
 			if err := behavior.Parse(node); err != nil {
 				return err
 			}

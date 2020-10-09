@@ -2,6 +2,7 @@ package task
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -15,7 +16,7 @@ type Behavior struct {
 	parseable.DefaultParser
 }
 
-func NewBehavior(mergedEnv map[string]string) *Behavior {
+func NewBehavior(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *Behavior {
 	b := &Behavior{}
 
 	bgNameable := nameable.NewRegexNameable("^(.*)background_script$")
@@ -44,7 +45,7 @@ func NewBehavior(mergedEnv map[string]string) *Behavior {
 
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
 	b.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
-		cache := NewCacheCommand(mergedEnv)
+		cache := NewCacheCommand(mergedEnv, boolevator)
 		if err := cache.Parse(node); err != nil {
 			return err
 		}

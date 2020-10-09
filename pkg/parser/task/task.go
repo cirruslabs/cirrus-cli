@@ -31,7 +31,11 @@ type Task struct {
 }
 
 //nolint:gocognit // it's a parser, there is a lot of boilerplate
-func NewTask(env map[string]string, additionalInstances map[string]protoreflect.MessageDescriptor) *Task {
+func NewTask(
+	env map[string]string,
+	boolevator *boolevator.Boolevator,
+	additionalInstances map[string]protoreflect.MessageDescriptor,
+) *Task {
 	task := &Task{}
 	task.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
@@ -53,9 +57,9 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 	})
 
 	task.CollectibleField("container",
-		instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env)).Schema(),
+		instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
 		func(node *node.Node) error {
-			inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env))
+			inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
 			containerInstance, err := inst.Parse(node)
 			if err != nil {
 				return err
@@ -74,7 +78,8 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 		})
 
 	for instanceName, descriptor := range additionalInstances {
-		additionalInstanceParser := instance.NewProtoParser(descriptor, environment.Merge(task.proto.Environment, env))
+		additionalInstanceParser := instance.NewProtoParser(descriptor, environment.Merge(task.proto.Environment, env),
+			boolevator)
 		task.CollectibleField(instanceName,
 			additionalInstanceParser.Schema(),
 			func(node *node.Node) error {
@@ -134,7 +139,7 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
 	task.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
-		cache := NewCacheCommand(environment.Merge(task.proto.Environment, env))
+		cache := NewCacheCommand(environment.Merge(task.proto.Environment, env), boolevator)
 		if err := cache.Parse(node); err != nil {
 			return err
 		}
@@ -162,7 +167,7 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 		return nil
 	})
 
-	task.registerExecutionBehaviorFields(env)
+	task.registerExecutionBehaviorFields(env, boolevator)
 
 	task.OptionalField(nameable.NewSimpleNameable("depends_on"), schema.TodoSchema, func(node *node.Node) error {
 		dependsOn, err := node.GetSliceOfNonEmptyStrings()
@@ -183,7 +188,7 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 	})
 
 	task.CollectibleField("allow_failures", schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env))
+		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
 		}
@@ -192,7 +197,7 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 	})
 
 	task.CollectibleField("experimental", schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env))
+		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
 		}
@@ -295,12 +300,12 @@ func (task *Task) Proto() interface{} {
 	return &task.proto
 }
 
-func (task *Task) Enabled(env map[string]string) (bool, error) {
+func (task *Task) Enabled(env map[string]string, boolevator *boolevator.Boolevator) (bool, error) {
 	if task.onlyIfExpression == "" {
 		return true, nil
 	}
 
-	evaluation, err := boolevator.Eval(task.onlyIfExpression, environment.Merge(task.proto.Environment, env), nil)
+	evaluation, err := boolevator.Eval(task.onlyIfExpression, environment.Merge(task.proto.Environment, env))
 	if err != nil {
 		return false, err
 	}
@@ -308,11 +313,11 @@ func (task *Task) Enabled(env map[string]string) (bool, error) {
 	return evaluation, nil
 }
 
-func (task *Task) registerExecutionBehaviorFields(env map[string]string) {
+func (task *Task) registerExecutionBehaviorFields(env map[string]string, boolevator *boolevator.Boolevator) {
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
 		task.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {
-			behavior := NewBehavior(environment.Merge(task.proto.Environment, env))
+			behavior := NewBehavior(environment.Merge(task.proto.Environment, env), boolevator)
 			if err := behavior.Parse(node); err != nil {
 				return err
 			}

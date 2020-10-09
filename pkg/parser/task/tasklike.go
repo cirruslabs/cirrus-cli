@@ -1,6 +1,9 @@
 package task
 
-import "github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+import (
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+)
 
 type ParseableTaskLike interface {
 	Name() string
@@ -13,7 +16,7 @@ type ParseableTaskLike interface {
 	DependsOnIDs() []int64
 	SetDependsOnIDs(ids []int64)
 
-	Enabled(env map[string]string) (bool, error)
+	Enabled(env map[string]string, boolevator *boolevator.Boolevator) (bool, error)
 
 	parseable.Parseable
 }

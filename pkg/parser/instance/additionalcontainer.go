@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -26,7 +27,7 @@ type AdditionalContainer struct {
 }
 
 // nolint:gocognit
-func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
+func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *AdditionalContainer {
 	ac := &AdditionalContainer{
 		proto: &api.AdditionalContainer{},
 	}
@@ -166,7 +167,7 @@ func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 	})
 
 	ac.OptionalField(nameable.NewSimpleNameable("privileged"), schema.TodoSchema, func(node *node.Node) error {
-		privileged, err := node.GetBoolValue(mergedEnv)
+		privileged, err := node.GetBoolValue(mergedEnv, boolevator)
 		if err != nil {
 			return err
 		}

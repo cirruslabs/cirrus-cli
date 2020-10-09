@@ -2,6 +2,7 @@ package instance
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -20,7 +21,7 @@ type Container struct {
 	parseable.DefaultParser
 }
 
-func NewCommunityContainer(mergedEnv map[string]string) *Container {
+func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *Container {
 	container := &Container{
 		proto: &api.ContainerInstance{},
 	}
@@ -82,7 +83,7 @@ func NewCommunityContainer(mergedEnv map[string]string) *Container {
 	additionalContainersNameable := nameable.NewSimpleNameable("additional_containers")
 	container.OptionalField(additionalContainersNameable, schema.TodoSchema, func(node *node.Node) error {
 		for _, child := range node.Children {
-			ac := NewAdditionalContainer(mergedEnv)
+			ac := NewAdditionalContainer(mergedEnv, boolevator)
 			additionalContainer, err := ac.Parse(child)
 			if err != nil {
 				return err

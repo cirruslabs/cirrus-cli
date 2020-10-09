@@ -1,6 +1,7 @@
 package instance
 
 import (
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -18,7 +19,11 @@ type ProtoInstance struct {
 }
 
 //nolint:gocognit,gocyclo // it's a parser, there is a lot of boilerplate
-func NewProtoParser(desc protoreflect.MessageDescriptor, mergedEnv map[string]string) *ProtoInstance {
+func NewProtoParser(
+	desc protoreflect.MessageDescriptor,
+	mergedEnv map[string]string,
+	boolevator *boolevator.Boolevator,
+) *ProtoInstance {
 	instance := &ProtoInstance{
 		proto: dynamicpb.NewMessage(desc),
 	}
@@ -48,7 +53,7 @@ func NewProtoParser(desc protoreflect.MessageDescriptor, mergedEnv map[string]st
 				case field.IsList():
 					fieldInstance := instance.proto.NewField(field)
 					for _, child := range node.Children {
-						childParser := NewProtoParser(field.Message(), mergedEnv)
+						childParser := NewProtoParser(field.Message(), mergedEnv, boolevator)
 						parserChild, err := childParser.Parse(child)
 						if err != nil {
 							return err
@@ -58,7 +63,7 @@ func NewProtoParser(desc protoreflect.MessageDescriptor, mergedEnv map[string]st
 					instance.proto.Set(field, fieldInstance)
 					return nil
 				default:
-					childParser := NewProtoParser(field.Message(), mergedEnv)
+					childParser := NewProtoParser(field.Message(), mergedEnv, boolevator)
 					parserChild, err := childParser.Parse(node)
 					if err != nil {
 						return err
@@ -158,7 +163,7 @@ func NewProtoParser(desc protoreflect.MessageDescriptor, mergedEnv map[string]st
 			})
 		case protoreflect.BoolKind:
 			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
-				evaluation, err := node.GetBoolValue(mergedEnv)
+				evaluation, err := node.GetBoolValue(mergedEnv, boolevator)
 				if err != nil {
 					return err
 				}

@@ -33,7 +33,7 @@ type DockerPipe struct {
 	parseable.DefaultParser
 }
 
-func NewDockerPipe(env map[string]string) *DockerPipe {
+func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *DockerPipe {
 	pipe := &DockerPipe{}
 	pipe.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
@@ -89,7 +89,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 		}
 
 		for _, child := range stepsNode.Children {
-			step := NewPipeStep(environment.Merge(pipe.proto.Environment, env))
+			step := NewPipeStep(environment.Merge(pipe.proto.Environment, env), boolevator)
 			if err := step.Parse(child); err != nil {
 				return err
 			}
@@ -108,7 +108,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 		return nil
 	})
 	pipe.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env))
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
 		}
@@ -117,7 +117,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 	})
 
 	pipe.OptionalField(nameable.NewSimpleNameable("experimental"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env))
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
 		}
@@ -207,12 +207,12 @@ func (pipe *DockerPipe) Proto() interface{} {
 	return &pipe.proto
 }
 
-func (pipe *DockerPipe) Enabled(env map[string]string) (bool, error) {
+func (pipe *DockerPipe) Enabled(env map[string]string, boolevator *boolevator.Boolevator) (bool, error) {
 	if pipe.onlyIfExpression == "" {
 		return true, nil
 	}
 
-	evaluation, err := boolevator.Eval(pipe.onlyIfExpression, environment.Merge(pipe.proto.Environment, env), nil)
+	evaluation, err := boolevator.Eval(pipe.onlyIfExpression, environment.Merge(pipe.proto.Environment, env))
 	if err != nil {
 		return false, err
 	}

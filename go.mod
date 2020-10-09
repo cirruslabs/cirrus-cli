@@ -9,6 +9,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/PaesslerAG/gval v1.1.0
+	github.com/bmatcuk/doublestar v1.3.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
 	github.com/cirruslabs/cirrus-ci-agent v1.11.0
 	github.com/cirruslabs/echelon v1.3.0

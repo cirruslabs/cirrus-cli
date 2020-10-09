@@ -18,13 +18,13 @@ func (node *Node) GetStringValue() (string, error) {
 	return valueNode.Value, nil
 }
 
-func (node *Node) GetBoolValue(env map[string]string) (bool, error) {
+func (node *Node) GetBoolValue(env map[string]string, boolevator *boolevator.Boolevator) (bool, error) {
 	expression, err := node.GetStringValue()
 	if err != nil {
 		return false, err
 	}
 
-	evaluation, err := boolevator.Eval(expression, env, nil)
+	evaluation, err := boolevator.Eval(expression, env)
 	if err != nil {
 		return false, err
 	}

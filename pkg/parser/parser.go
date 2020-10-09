@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/matrix"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
@@ -39,6 +40,11 @@ type Parser struct {
 	// For example, Dockerfile contents are hashed to avoid duplicate builds.
 	fs fs.FileSystem
 
+	// A list of changed files useful when evaluating changesInclude() boolevator's function.
+	affectedFiles []string
+
+	boolevator *boolevator.Boolevator
+
 	parsers             map[nameable.Nameable]parseable.Parseable
 	numbering           int64
 	additionalInstances map[string]protoreflect.MessageDescriptor
@@ -60,6 +66,11 @@ func New(opts ...Option) *Parser {
 		opt(parser)
 	}
 
+	// Initialize boolevator
+	parser.boolevator = boolevator.New(boolevator.WithFunctions(map[string]boolevator.Function{
+		"changesInclude": parser.bfuncChangesInclude(),
+	}))
+
 	// Register parsers
 	parser.parsers = map[nameable.Nameable]parseable.Parseable{
 		nameable.NewRegexNameable("^(.*)task$"): &task.Task{},
@@ -77,9 +88,9 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			var taskLike task.ParseableTaskLike
 			switch value.(type) {
 			case *task.Task:
-				taskLike = task.NewTask(environment.Copy(p.environment), p.additionalInstances)
+				taskLike = task.NewTask(environment.Copy(p.environment), p.boolevator, p.additionalInstances)
 			case *task.DockerPipe:
-				taskLike = task.NewDockerPipe(environment.Copy(p.environment))
+				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.boolevator)
 			default:
 				panic("unknown task-like object")
 			}
@@ -105,7 +116,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 				"CIRRUS_TASK_NAME": taskLike.Name(),
 			}
 
-			enabled, err := taskLike.Enabled(environment.Merge(taskSpecificEnv, p.environment))
+			enabled, err := taskLike.Enabled(environment.Merge(taskSpecificEnv, p.environment), p.boolevator)
 			if err != nil {
 				return nil, err
 			}
