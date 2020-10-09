@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -221,7 +222,7 @@ func (p *Parser) ParseFromFile(ctx context.Context, path string) (*Result, error
 	return p.Parse(ctx, string(config))
 }
 
-func (p *Parser) fileHash(ctx context.Context, path string) (string, error) {
+func (p *Parser) fileHash(ctx context.Context, path string, additionalBytes []byte) (string, error) {
 	// Note that this will be empty if we don't know anything about the file,
 	// so we'll return MD5(""), but that's OK since the purpose is caching
 	fileBytes, err := p.fs.Get(ctx, path)
@@ -230,7 +231,7 @@ func (p *Parser) fileHash(ctx context.Context, path string) (string, error) {
 	}
 
 	// nolint:gosec // backwards compatibility
-	digest := md5.Sum(fileBytes)
+	digest := md5.Sum(append(fileBytes, additionalBytes...))
 
 	return fmt.Sprintf("%x", digest), nil
 }
@@ -311,7 +312,15 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 			continue
 		}
 
-		dockerfileHash, err := p.fileHash(ctx, taskContainer.DockerfilePath)
+		// Craft Docker build arguments: arguments used in content hash calculation
+		var hashableArgsSlice []string
+		for key, value := range taskContainer.DockerArguments {
+			hashableArgsSlice = append(hashableArgsSlice, key+value)
+		}
+		sort.Strings(hashableArgsSlice)
+		hashableArgs := strings.Join(hashableArgsSlice, ", ")
+
+		dockerfileHash, err := p.fileHash(ctx, taskContainer.DockerfilePath, []byte(hashableArgs))
 		if err != nil {
 			return nil, err
 		}
