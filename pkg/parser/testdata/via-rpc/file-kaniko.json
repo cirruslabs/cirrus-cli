@@ -1,0 +1,47 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "fileInstruction": {
+          "destinationPath": "/root/.docker/config.json",
+          "fromEnvironmentVariable": "DOCKER_AUTH"
+        },
+        "name": "docker_config"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "executor --destination index.docker.io/cirrusci/testing:$CIRRUS_SHA"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_SHELL": "direct",
+      "CIRRUS_WORKING_DIR": "/workspace",
+      "DOCKER_AUTH": "ENCRYPTED[qwerty]"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "gcr.io/kaniko-project/executor:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Docker Build"
+  }
+]

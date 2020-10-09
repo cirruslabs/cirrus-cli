@@ -1,0 +1,12 @@
+task:
+  name: Docker Build
+  container:
+    image: gcr.io/kaniko-project/executor:latest
+  env:
+    CIRRUS_SHELL: direct
+    CIRRUS_WORKING_DIR: /workspace
+    DOCKER_AUTH: ENCRYPTED[qwerty]
+  docker_config_file:
+    path: /root/.docker/config.json
+    variable_name: DOCKER_AUTH
+  build_script: executor --destination index.docker.io/cirrusci/testing:$CIRRUS_SHA
