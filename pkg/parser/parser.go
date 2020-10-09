@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 )
 
@@ -328,14 +329,26 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
 
-		// Craft Docker build arguments
-		var buildArgs string
+		// Craft Docker build arguments: task name
+		var buildArgsSlice []string
 		for key, value := range taskContainer.DockerArguments {
-			buildArgs += fmt.Sprintf(" %s=%s", key, value)
+			buildArgsSlice = append(buildArgsSlice, fmt.Sprintf("%s=%s", key, value))
 		}
-		var dockerBuildArgs string
+		sort.Strings(buildArgsSlice)
+		var buildArgs string
+		for _, buildArg := range buildArgsSlice {
+			buildArgs += fmt.Sprintf(" %s", buildArg)
+		}
+
+		// Craft Docker build arguments: docker build command
+		var dockerBuildArgsSlice []string
 		for key, value := range taskContainer.DockerArguments {
-			dockerBuildArgs += fmt.Sprintf(" --build-arg %s=%s", key, value)
+			dockerBuildArgsSlice = append(dockerBuildArgsSlice, fmt.Sprintf("%s=\"%s\"", key, value))
+		}
+		sort.Strings(dockerBuildArgsSlice)
+		var dockerBuildArgs string
+		for _, dockerBuildArg := range dockerBuildArgsSlice {
+			dockerBuildArgs += fmt.Sprintf(" --build-arg %s", dockerBuildArg)
 		}
 
 		newTask := &api.Task{
