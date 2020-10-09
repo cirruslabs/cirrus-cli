@@ -352,7 +352,7 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 								"--file %s%s "+
 								"${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}",
 								prebuiltInstance.Repository, prebuiltInstance.Reference,
-								dockerBuildArgs, taskContainer.DockerfilePath)},
+								taskContainer.DockerfilePath, dockerBuildArgs)},
 						},
 					},
 				},
