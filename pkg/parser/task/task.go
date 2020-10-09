@@ -36,7 +36,7 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 	task.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
 	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
-		taskEnv, err := node.GetStringMapping()
+		taskEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
 		}
@@ -44,7 +44,7 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 		return nil
 	})
 	task.CollectibleField("env", schema.TodoSchema, func(node *node.Node) error {
-		taskEnv, err := node.GetStringMapping()
+		taskEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
 		}

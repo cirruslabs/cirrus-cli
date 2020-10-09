@@ -57,7 +57,7 @@ func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 	})
 
 	ac.OptionalField(nameable.NewSimpleNameable("environment"), schema.TodoSchema, func(node *node.Node) error {
-		acEnv, err := node.GetStringMapping()
+		acEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func NewAdditionalContainer(mergedEnv map[string]string) *AdditionalContainer {
 		return nil
 	})
 	ac.OptionalField(nameable.NewSimpleNameable("env"), schema.TodoSchema, func(node *node.Node) error {
-		acEnv, err := node.GetStringMapping()
+		acEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
 		}

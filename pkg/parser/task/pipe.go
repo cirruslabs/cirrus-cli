@@ -38,7 +38,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 	pipe.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
 	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
-		pipeEnv, err := node.GetStringMapping()
+		pipeEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
 		}
@@ -46,7 +46,7 @@ func NewDockerPipe(env map[string]string) *DockerPipe {
 		return nil
 	})
 	pipe.CollectibleField("env", schema.TodoSchema, func(node *node.Node) error {
-		pipeEnv, err := node.GetStringMapping()
+		pipeEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
 		}
