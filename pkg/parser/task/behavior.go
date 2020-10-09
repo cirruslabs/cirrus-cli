@@ -62,6 +62,16 @@ func NewBehavior(mergedEnv map[string]string) *Behavior {
 		return nil
 	})
 
+	fileNameable := nameable.NewRegexNameable("^(.*)file$")
+	b.OptionalField(fileNameable, schema.TodoSchema, func(node *node.Node) error {
+		file := command.NewFileCommand(mergedEnv)
+		if err := file.Parse(node); err != nil {
+			return err
+		}
+		b.commands = append(b.commands, file.Proto())
+		return nil
+	})
+
 	return b
 }
 

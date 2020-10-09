@@ -64,6 +64,16 @@ func NewPipeStep(mergedEnv map[string]string) *PipeStep {
 		return nil
 	})
 
+	fileNameable := nameable.NewRegexNameable("^(.*)file$")
+	step.OptionalField(fileNameable, schema.TodoSchema, func(node *node.Node) error {
+		file := command.NewFileCommand(mergedEnv)
+		if err := file.Parse(node); err != nil {
+			return err
+		}
+		step.protoCommands = append(step.protoCommands, file.Proto())
+		return nil
+	})
+
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
 		step.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {

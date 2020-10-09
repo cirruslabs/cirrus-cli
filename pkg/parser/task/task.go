@@ -152,6 +152,16 @@ func NewTask(env map[string]string, additionalInstances map[string]protoreflect.
 		return nil
 	})
 
+	fileNameable := nameable.NewRegexNameable("^(.*)file$")
+	task.OptionalField(fileNameable, schema.TodoSchema, func(node *node.Node) error {
+		file := command.NewFileCommand(environment.Merge(task.proto.Environment, env))
+		if err := file.Parse(node); err != nil {
+			return err
+		}
+		task.proto.Commands = append(task.proto.Commands, file.Proto())
+		return nil
+	})
+
 	task.registerExecutionBehaviorFields(env)
 
 	task.OptionalField(nameable.NewSimpleNameable("depends_on"), schema.TodoSchema, func(node *node.Node) error {
