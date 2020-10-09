@@ -395,6 +395,9 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 		}
 		newTask.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(newTask.LocalGroupId, 10)
 
+		// Some metadata property fields are preserved from the original task
+		newTask.Metadata.Properties["timeoutInSeconds"] = protoTask.Metadata.Properties["timeoutInSeconds"]
+
 		serviceTasks = append(serviceTasks, newTask)
 
 		protoTask.RequiredGroups = append(protoTask.RequiredGroups, newTask.LocalGroupId)
