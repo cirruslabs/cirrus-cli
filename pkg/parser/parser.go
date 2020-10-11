@@ -29,8 +29,7 @@ import (
 )
 
 var (
-	ErrInternal      = errors.New("internal error")
-	ErrFilesContents = errors.New("failed to retrieve files contents")
+	ErrInternal = errors.New("internal error")
 )
 
 type Parser struct {
