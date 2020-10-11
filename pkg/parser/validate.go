@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/task"
+	"strings"
 )
 
 func commandInstructionName(command *api.Command) string {
@@ -44,3 +46,58 @@ func validateTask(task *api.Task) error {
 	return nil
 }
 
+func validateDependenciesDeep(tasks []task.ParseableTaskLike) error {
+	satisfiedIDs := make(map[int64]struct{})
+
+	for {
+		// Collect tasks that still have some dependencies unsatisfied
+		var unsatisfiedTasks []task.ParseableTaskLike
+		for _, task := range tasks {
+			if _, ok := satisfiedIDs[task.ID()]; !ok {
+				unsatisfiedTasks = append(unsatisfiedTasks, task)
+			}
+		}
+
+		// Try to resolve these dependencies
+		var newlySatisfiedTasks []task.ParseableTaskLike
+		for _, unsatisfiedTask := range unsatisfiedTasks {
+			satisfied := true
+
+			for _, dependencyID := range unsatisfiedTask.DependsOnIDs() {
+				if _, ok := satisfiedIDs[dependencyID]; !ok {
+					satisfied = false
+					break
+				}
+			}
+
+			if satisfied {
+				newlySatisfiedTasks = append(newlySatisfiedTasks, unsatisfiedTask)
+			}
+		}
+
+		if len(newlySatisfiedTasks) == 0 {
+			// We're probably done or there's a missing/circular dependency exist
+			break
+		} else {
+			// Remember tasks that are now resolved
+			for _, newlySatisfiedTask := range newlySatisfiedTasks {
+				satisfiedIDs[newlySatisfiedTask.ID()] = struct{}{}
+			}
+		}
+	}
+
+	// All tasks satisfied?
+	if len(satisfiedIDs) != len(tasks) {
+		var unsatisfiedNames []string
+		for _, task := range tasks {
+			if _, ok := satisfiedIDs[task.ID()]; !ok {
+				unsatisfiedNames = append(unsatisfiedNames, task.Name())
+			}
+		}
+
+		return fmt.Errorf("%w: error in dependencies between tasks: %v",
+			parsererror.ErrParsing, strings.Join(unsatisfiedNames, ", "))
+	}
+
+	return nil
+}

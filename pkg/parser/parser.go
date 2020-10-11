@@ -167,8 +167,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 		task.SetID(p.NextTaskID())
 	}
 
-	// Resolve dependencies
-	if err := resolveDependencies(tasks); err != nil {
+	if err := resolveDependenciesShallow(tasks); err != nil {
 		return &Result{
 			Errors: []string{err.Error()},
 		}, nil
@@ -177,6 +176,12 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 	if len(tasks) == 0 {
 		return &Result{
 			Errors: []string{"configuration was parsed without errors, but no tasks were found"},
+		}, nil
+	}
+
+	if err := validateDependenciesDeep(tasks); err != nil {
+		return &Result{
+			Errors: []string{err.Error()},
 		}, nil
 	}
 
@@ -274,7 +279,7 @@ func (p *Parser) Schema() *schema.Schema {
 	return schema
 }
 
-func resolveDependencies(tasks []task.ParseableTaskLike) error {
+func resolveDependenciesShallow(tasks []task.ParseableTaskLike) error {
 	for _, task := range tasks {
 		var dependsOnIDs []int64
 		for _, dependsOnName := range task.DependsOnNames() {
@@ -286,7 +291,8 @@ func resolveDependencies(tasks []task.ParseableTaskLike) error {
 				}
 			}
 			if foundID == -1 {
-				return fmt.Errorf("%w: dependency not found", parsererror.ErrParsing)
+				return fmt.Errorf("%w: there's no task '%s', but task '%s' depends on it",
+					parsererror.ErrParsing, dependsOnName, task.Name())
 			}
 			dependsOnIDs = append(dependsOnIDs, foundID)
 		}
