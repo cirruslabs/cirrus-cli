@@ -1,0 +1,14 @@
+env:
+  CIRRUS_DOCKER_CONTEXT: ci
+
+timeout_in: 2h
+use_compute_credits: true
+
+container:
+  dockerfile: ci/Dockerfile
+
+task:
+  name: task1
+  script:
+    - ./test1.sh
+    - ./test2.sh
