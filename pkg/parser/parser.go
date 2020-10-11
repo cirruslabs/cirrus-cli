@@ -182,7 +182,15 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 
 	var protoTasks []*api.Task
 	for _, task := range tasks {
-		protoTasks = append(protoTasks, task.Proto().(*api.Task))
+		protoTask := task.Proto().(*api.Task)
+
+		if err := validateTask(protoTask); err != nil {
+			return &Result{
+				Errors: []string{err.Error()},
+			}, nil
+		}
+
+		protoTasks = append(protoTasks, protoTask)
 	}
 
 	// Create service tasks
