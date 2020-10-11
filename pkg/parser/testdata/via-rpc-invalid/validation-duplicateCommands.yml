@@ -1,0 +1,7 @@
+container:
+  image: node:latest
+
+task:
+  foo_cache:
+    folder: foo
+  foo_script: ./foo

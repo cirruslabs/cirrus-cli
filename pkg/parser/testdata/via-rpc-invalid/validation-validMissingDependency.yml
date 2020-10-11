@@ -1,0 +1,10 @@
+container:
+  image: latest
+
+foo_task:
+  only_if: false
+  script: echo foo
+
+bar_task:
+  depends_on: foo
+  script: echo bar

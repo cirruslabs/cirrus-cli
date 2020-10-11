@@ -1,0 +1,16 @@
+container:
+  image: debian:latest
+
+a_task:
+  script: ./test.sh
+
+b_task:
+  depends_on:
+    - a
+    - d
+
+c_task:
+  depends_on: b
+
+d_task:
+  depends_on: c
