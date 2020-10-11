@@ -289,8 +289,91 @@ func resolveDependencies(tasks []task.ParseableTaskLike) error {
 	return nil
 }
 
+func (p *Parser) createServiceTask(
+	dockerfileHash string,
+	protoTask *api.Task,
+	taskContainer *api.ContainerInstance,
+) (*api.Task, error) {
+	prebuiltInstance := &api.PrebuiltImageInstance{
+		Repository:     fmt.Sprintf("cirrus-ci-community/%s", dockerfileHash),
+		Reference:      "latest",
+		Platform:       taskContainer.Platform,
+		DockerfilePath: taskContainer.DockerfilePath,
+		Arguments:      taskContainer.DockerArguments,
+	}
+
+	anyInstance, err := ptypes.MarshalAny(prebuiltInstance)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+	}
+
+	// Craft Docker build arguments: task name
+	var buildArgsSlice []string
+	for key, value := range taskContainer.DockerArguments {
+		buildArgsSlice = append(buildArgsSlice, fmt.Sprintf("%s=%s", key, value))
+	}
+	sort.Strings(buildArgsSlice)
+	var buildArgs string
+	for _, buildArg := range buildArgsSlice {
+		buildArgs += fmt.Sprintf(" %s", buildArg)
+	}
+
+	// Craft Docker build arguments: docker build command
+	var dockerBuildArgsSlice []string
+	for key, value := range taskContainer.DockerArguments {
+		dockerBuildArgsSlice = append(dockerBuildArgsSlice, fmt.Sprintf("%s=\"%s\"", key, value))
+	}
+	sort.Strings(dockerBuildArgsSlice)
+	var dockerBuildArgs string
+	for _, dockerBuildArg := range dockerBuildArgsSlice {
+		dockerBuildArgs += fmt.Sprintf(" --build-arg %s", dockerBuildArg)
+	}
+
+	serviceTask := &api.Task{
+		Name:         fmt.Sprintf("Prebuild %s%s", taskContainer.DockerfilePath, buildArgs),
+		LocalGroupId: p.NextTaskID(),
+		Instance:     anyInstance,
+		Commands: []*api.Command{
+			{
+				Name: "build",
+				Instruction: &api.Command_ScriptInstruction{
+					ScriptInstruction: &api.ScriptInstruction{
+						Scripts: []string{fmt.Sprintf("docker build "+
+							"--tag gcr.io/%s:%s "+
+							"--file %s%s "+
+							"${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}",
+							prebuiltInstance.Repository, prebuiltInstance.Reference,
+							taskContainer.DockerfilePath, dockerBuildArgs)},
+					},
+				},
+			},
+			{
+				Name: "push",
+				Instruction: &api.Command_ScriptInstruction{
+					ScriptInstruction: &api.ScriptInstruction{
+						Scripts: []string{fmt.Sprintf("gcloud docker -- push gcr.io/cirrus-ci-community/%s:latest",
+							dockerfileHash)},
+					},
+				},
+			},
+		},
+		Environment: protoTask.Environment,
+		Metadata: &api.Task_Metadata{
+			Properties: task.DefaultTaskProperties(),
+		},
+	}
+
+	// Some metadata property fields duplicate other fields
+	serviceTask.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(serviceTask.LocalGroupId, 10)
+
+	// Some metadata property fields are preserved from the original task
+	serviceTask.Metadata.Properties["timeoutInSeconds"] = protoTask.Metadata.Properties["timeoutInSeconds"]
+
+	return serviceTask, nil
+}
+
 func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task) ([]*api.Task, error) {
-	var serviceTasks []*api.Task
+	serviceTasks := make(map[string]*api.Task)
 
 	for _, protoTask := range protoTasks {
 		var dynamicInstance ptypes.DynamicAny
@@ -325,82 +408,21 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 			return nil, err
 		}
 
-		prebuiltInstance := &api.PrebuiltImageInstance{
-			Repository:     fmt.Sprintf("cirrus-ci-community/%s", dockerfileHash),
-			Reference:      "latest",
-			Platform:       taskContainer.Platform,
-			DockerfilePath: taskContainer.DockerfilePath,
-			Arguments:      taskContainer.DockerArguments,
+		// Find or create service task
+		serviceTaskKey := taskContainer.DockerfilePath + hashableArgs
+
+		serviceTask, ok := serviceTasks[serviceTaskKey]
+		if !ok {
+			serviceTask, err = p.createServiceTask(dockerfileHash, protoTask, taskContainer)
+			if err != nil {
+				return nil, err
+			}
+
+			serviceTasks[serviceTaskKey] = serviceTask
 		}
 
-		anyInstance, err := ptypes.MarshalAny(prebuiltInstance)
-		if err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
-		}
-
-		// Craft Docker build arguments: task name
-		var buildArgsSlice []string
-		for key, value := range taskContainer.DockerArguments {
-			buildArgsSlice = append(buildArgsSlice, fmt.Sprintf("%s=%s", key, value))
-		}
-		sort.Strings(buildArgsSlice)
-		var buildArgs string
-		for _, buildArg := range buildArgsSlice {
-			buildArgs += fmt.Sprintf(" %s", buildArg)
-		}
-
-		// Craft Docker build arguments: docker build command
-		var dockerBuildArgsSlice []string
-		for key, value := range taskContainer.DockerArguments {
-			dockerBuildArgsSlice = append(dockerBuildArgsSlice, fmt.Sprintf("%s=\"%s\"", key, value))
-		}
-		sort.Strings(dockerBuildArgsSlice)
-		var dockerBuildArgs string
-		for _, dockerBuildArg := range dockerBuildArgsSlice {
-			dockerBuildArgs += fmt.Sprintf(" --build-arg %s", dockerBuildArg)
-		}
-
-		newTask := &api.Task{
-			Name:         fmt.Sprintf("Prebuild %s%s", taskContainer.DockerfilePath, buildArgs),
-			LocalGroupId: p.NextTaskID(),
-			Instance:     anyInstance,
-			Commands: []*api.Command{
-				{
-					Name: "build",
-					Instruction: &api.Command_ScriptInstruction{
-						ScriptInstruction: &api.ScriptInstruction{
-							Scripts: []string{fmt.Sprintf("docker build "+
-								"--tag gcr.io/%s:%s "+
-								"--file %s%s "+
-								"${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}",
-								prebuiltInstance.Repository, prebuiltInstance.Reference,
-								taskContainer.DockerfilePath, dockerBuildArgs)},
-						},
-					},
-				},
-				{
-					Name: "push",
-					Instruction: &api.Command_ScriptInstruction{
-						ScriptInstruction: &api.ScriptInstruction{
-							Scripts: []string{fmt.Sprintf("gcloud docker -- push gcr.io/cirrus-ci-community/%s:latest",
-								dockerfileHash)},
-						},
-					},
-				},
-			},
-			Environment: protoTask.Environment,
-			Metadata: &api.Task_Metadata{
-				Properties: task.DefaultTaskProperties(),
-			},
-		}
-		newTask.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(newTask.LocalGroupId, 10)
-
-		// Some metadata property fields are preserved from the original task
-		newTask.Metadata.Properties["timeoutInSeconds"] = protoTask.Metadata.Properties["timeoutInSeconds"]
-
-		serviceTasks = append(serviceTasks, newTask)
-
-		protoTask.RequiredGroups = append(protoTask.RequiredGroups, newTask.LocalGroupId)
+		// Set dependency to the found or created service task
+		protoTask.RequiredGroups = append(protoTask.RequiredGroups, serviceTask.LocalGroupId)
 
 		// Ensure that the task will use our to-be-created image
 		taskContainer.Image = fmt.Sprintf("gcr.io/cirrus-ci-community/%s:latest", dockerfileHash)
@@ -411,7 +433,13 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 		protoTask.Instance = updatedInstance
 	}
 
-	return serviceTasks, nil
+	// Extract map values to a slice
+	var result []*api.Task
+	for _, serviceTask := range serviceTasks {
+		result = append(result, serviceTask)
+	}
+
+	return result, nil
 }
 
 func ensureCloneInstruction(task *api.Task) {
