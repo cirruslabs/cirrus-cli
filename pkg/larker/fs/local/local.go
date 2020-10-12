@@ -11,12 +11,18 @@ import (
 
 type Local struct {
 	root string
+	cwd  string
 }
 
 func New(root string) *Local {
 	return &Local{
 		root: root,
+		cwd:  "/",
 	}
+}
+
+func (lfs *Local) Chdir(path string) {
+	lfs.cwd = path
 }
 
 func (lfs *Local) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
@@ -67,8 +73,14 @@ func (lfs *Local) Pivot(path string) (string, error) {
 	// to the current platform
 	adaptedPath := filepath.FromSlash(path)
 
+	// Pivot around current directory
+	//
+	// This doesn't need to be secure since as security
+	// is already guaranteed by the SecureJoin below.
+	cwdPath := filepath.Join(lfs.cwd, adaptedPath)
+
 	// Pivot around root
 	//
 	// This needs to be secure to avoid lfs.root breakout.
-	return securejoin.SecureJoin(lfs.root, adaptedPath)
+	return securejoin.SecureJoin(lfs.root, cwdPath)
 }

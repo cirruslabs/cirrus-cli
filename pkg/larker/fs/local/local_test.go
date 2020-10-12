@@ -88,3 +88,16 @@ func TestPivotNoDotDotBreakout(t *testing.T) {
 
 	assert.Equal(t, "/chroot/etc/passwd", pivotedPath)
 }
+
+func TestChdir(t *testing.T) {
+	lfs := local.New("/tmp")
+
+	lfs.Chdir("working-directory")
+
+	pivotedPath, err := lfs.Pivot(".")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "/tmp/working-directory", pivotedPath)
+}

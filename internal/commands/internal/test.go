@@ -54,7 +54,9 @@ func test(cmd *cobra.Command, args []string) error {
 		}
 
 		// Create Starlark executor and run .cirrus.star to generate the configuration
-		fs := local.New(testDir)
+		fs := local.New(".")
+		fs.Chdir(testDir)
+
 		lrk := larker.New(larker.WithFileSystem(fs))
 
 		sourceBytes, err := ioutil.ReadFile(filepath.Join(testDir, ".cirrus.star"))
