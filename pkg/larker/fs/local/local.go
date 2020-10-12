@@ -28,12 +28,7 @@ func (lfs *Local) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
 }
 
 func (lfs *Local) Get(ctx context.Context, path string) ([]byte, error) {
-	// To make Starlark scripts cross-platform, load statements are expected to always use slashes,
-	// but to actually make this work on non-Unix platforms we need to adapt the path
-	// to the current platform
-	adaptedPath := filepath.FromSlash(path)
-
-	return ioutil.ReadFile(lfs.pivot(adaptedPath))
+	return ioutil.ReadFile(lfs.pivot(path))
 }
 
 func (lfs *Local) ReadDir(ctx context.Context, path string) ([]string, error) {
@@ -51,5 +46,10 @@ func (lfs *Local) ReadDir(ctx context.Context, path string) ([]string, error) {
 }
 
 func (lfs *Local) pivot(path string) string {
-	return filepath.Join(lfs.root, path)
+	// To make Starlark scripts cross-platform, load statements are expected to always use slashes,
+	// but to actually make this work on non-Unix platforms we need to adapt the path
+	// to the current platform
+	adaptedPath := filepath.FromSlash(path)
+
+	return filepath.Join(lfs.root, adaptedPath)
 }
