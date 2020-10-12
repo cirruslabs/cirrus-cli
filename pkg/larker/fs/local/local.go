@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	securejoin "github.com/cyphar/filepath-securejoin"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -19,7 +20,12 @@ func New(root string) *Local {
 }
 
 func (lfs *Local) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
-	fileInfo, err := os.Stat(lfs.pivot(path))
+	pivotedPath, err := lfs.Pivot(path)
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfo, err := os.Stat(pivotedPath)
 	if err != nil {
 		return nil, err
 	}
@@ -28,11 +34,21 @@ func (lfs *Local) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
 }
 
 func (lfs *Local) Get(ctx context.Context, path string) ([]byte, error) {
-	return ioutil.ReadFile(lfs.pivot(path))
+	pivotedPath, err := lfs.Pivot(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return ioutil.ReadFile(pivotedPath)
 }
 
 func (lfs *Local) ReadDir(ctx context.Context, path string) ([]string, error) {
-	fileInfos, err := ioutil.ReadDir(lfs.pivot(path))
+	pivotedPath, err := lfs.Pivot(path)
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfos, err := ioutil.ReadDir(pivotedPath)
 	if err != nil {
 		return nil, err
 	}
@@ -45,11 +61,14 @@ func (lfs *Local) ReadDir(ctx context.Context, path string) ([]string, error) {
 	return result, nil
 }
 
-func (lfs *Local) pivot(path string) string {
+func (lfs *Local) Pivot(path string) (string, error) {
 	// To make Starlark scripts cross-platform, load statements are expected to always use slashes,
 	// but to actually make this work on non-Unix platforms we need to adapt the path
 	// to the current platform
 	adaptedPath := filepath.FromSlash(path)
 
-	return filepath.Join(lfs.root, adaptedPath)
+	// Pivot around root
+	//
+	// This needs to be secure to avoid lfs.root breakout.
+	return securejoin.SecureJoin(lfs.root, adaptedPath)
 }

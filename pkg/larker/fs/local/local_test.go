@@ -77,3 +77,14 @@ func TestGetNonExistentFile(t *testing.T) {
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, os.ErrNotExist))
 }
+
+func TestPivotNoDotDotBreakout(t *testing.T) {
+	lfs := local.New("/chroot")
+
+	pivotedPath, err := lfs.Pivot("../../../../etc/passwd")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "/chroot/etc/passwd", pivotedPath)
+}
