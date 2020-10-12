@@ -250,8 +250,6 @@ Cirrus CLI always uses HTTPS to fetch files from Git.
 
 While builtins provide functionality that is considered non-altering to the local system, there are some cases when this may not be enough:
 
-* `cirrus.fs` methods can traverse upwards the project root and read files and folders there
-
 * `cirrus.http` methods can access local services running on `127.0.0.1` or inside of LAN and potentially interact with the services running on these hosts in malicious ways
 
 It's recommended that you don't run Starlark scripts from potentially untrusted sources, similarly to how you probably wouldn't run build scripts from random repositories found on the internet.
