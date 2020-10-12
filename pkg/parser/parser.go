@@ -220,6 +220,11 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 		protoTask.Metadata.UniqueLabels = uniqueLabelsForTask
 	}
 
+	// Sort tasks by their IDs to make output consistent across runs
+	sort.Slice(protoTasks, func(i, j int) bool {
+		return protoTasks[i].LocalGroupId < protoTasks[j].LocalGroupId
+	})
+
 	return &Result{
 		Tasks: protoTasks,
 	}, nil
