@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/evaluator"
 	"github.com/spf13/cobra"
 	"net"
+	"os"
 )
 
 var ErrServe = errors.New("serve failed")
@@ -38,7 +39,12 @@ func newServeCmd() *cobra.Command {
 		Hidden: true,
 	}
 
-	cmd.PersistentFlags().StringVarP(&address, "listen", "l", ":8080", "address to listen on")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	cmd.PersistentFlags().StringVarP(&address, "listen", "l", fmt.Sprintf(":%s", port), "address to listen on")
 
 	return cmd
 }
