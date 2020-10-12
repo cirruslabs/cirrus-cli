@@ -1,0 +1,34 @@
+# https://github.com/cirruslabs/cirrus-ci-docs/issues/191
+
+container:
+  image: debian:latest
+
+build_images_task:
+  # VMs created by packer are not cleaned up by cirrus, must allow task to complete
+  auto_cancellation: $CI != "true"
+
+  env:
+    BUILT_IMAGE_SUFFIX: "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+
+  container:
+    image: "${IMAGE_BUILDER_IMAGE_NAME}"
+
+  environment_script: $SCRIPT_BASE/setup_environment.sh
+  build_vm_images_script: $SCRIPT_BASE/build_vm_images.sh
+
+test_images_task:
+  depends_on:
+    - "build_images"
+
+  env:
+    BUILT_IMAGE_SUFFIX: "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+
+  container:
+    matrix:
+      image: "fedora-29-${BUILT_IMAGE_SUFFIX}"
+      image: "fedora-28-${BUILT_IMAGE_SUFFIX}"
+      image: "ubuntu-18-${BUILT_IMAGE_SUFFIX}"
+
+  setup_environment_script: $SCRIPT_BASE/setup_environment.sh
+  unit_test_script: $SCRIPT_BASE/unit_test.sh
+  integration_test_script: $SCRIPT_BASE/integration_test.sh

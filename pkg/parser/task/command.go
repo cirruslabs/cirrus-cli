@@ -2,6 +2,7 @@ package task
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -18,7 +19,7 @@ type CacheCommand struct {
 	parseable.DefaultParser
 }
 
-func NewCacheCommand(mergedEnv map[string]string) *CacheCommand {
+func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *CacheCommand {
 	cache := &CacheCommand{
 		proto: &api.Command{},
 		instruction: &api.CacheInstruction{
@@ -71,7 +72,7 @@ func NewCacheCommand(mergedEnv map[string]string) *CacheCommand {
 	})
 
 	cache.OptionalField(nameable.NewSimpleNameable("reupload_on_changes"), schema.TodoSchema, func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(mergedEnv)
+		evaluation, err := node.GetBoolValue(mergedEnv, boolevator)
 		if err != nil {
 			return err
 		}

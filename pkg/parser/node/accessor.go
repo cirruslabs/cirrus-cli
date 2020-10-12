@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"sort"
@@ -17,13 +18,13 @@ func (node *Node) GetStringValue() (string, error) {
 	return valueNode.Value, nil
 }
 
-func (node *Node) GetBoolValue(env map[string]string) (bool, error) {
+func (node *Node) GetBoolValue(env map[string]string, boolevator *boolevator.Boolevator) (bool, error) {
 	expression, err := node.GetStringValue()
 	if err != nil {
 		return false, err
 	}
 
-	evaluation, err := boolevator.Eval(expression, env, nil)
+	evaluation, err := boolevator.Eval(expression, env)
 	if err != nil {
 		return false, err
 	}
@@ -114,6 +115,28 @@ func (node *Node) GetScript() ([]string, error) {
 		return node.GetSliceOfStrings()
 	default:
 		return nil, fmt.Errorf("%w: field should be a string or a list of values", parsererror.ErrParsing)
+	}
+}
+
+func (node *Node) GetEnvironment() (map[string]string, error) {
+	switch node.Value.(type) {
+	case *ListValue:
+		accumulatedEnv := make(map[string]string)
+
+		for _, child := range node.Children {
+			childEnv, err := child.GetStringMapping()
+			if err != nil {
+				return nil, err
+			}
+
+			accumulatedEnv = environment.Merge(accumulatedEnv, childEnv)
+		}
+
+		return accumulatedEnv, nil
+	case *MapValue:
+		return node.GetStringMapping()
+	default:
+		return nil, fmt.Errorf("%w: field should be a map or a list of maps", parsererror.ErrParsing)
 	}
 }
 

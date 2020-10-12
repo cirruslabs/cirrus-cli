@@ -7,7 +7,7 @@ import (
 )
 
 func evalHelper(t *testing.T, expr string, env map[string]string) bool {
-	evaluation, err := boolevator.Eval(expr, env, nil)
+	evaluation, err := boolevator.New().Eval(expr, env)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestFunction(t *testing.T) {
 		},
 	}
 
-	evaluation, err := boolevator.Eval("changesInclude('*.txt')", nil, functions)
+	evaluation, err := boolevator.New(boolevator.WithFunctions(functions)).Eval("changesInclude('*.txt')", nil)
 	if err != nil {
 		t.Fatal(err)
 	}

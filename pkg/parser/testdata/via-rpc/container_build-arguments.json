@@ -1,0 +1,90 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "./test1.sh",
+            "./test2.sh"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "dockerArguments": {
+        "bar": "baz",
+        "foo": "bar"
+      },
+      "dockerfilePath": "ci/Dockerfile",
+      "image": "gcr.io/cirrus-ci-community/e02d522efc69d3863e49972eb177dd6a:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "task1",
+    "requiredGroups": [
+      "1"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/e02d522efc69d3863e49972eb177dd6a:latest --file ci/Dockerfile --build-arg bar=\"baz\" --build-arg foo=\"bar\" ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/e02d522efc69d3863e49972eb177dd6a:latest"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "arguments": {
+        "bar": "baz",
+        "foo": "bar"
+      },
+      "dockerfilePath": "ci/Dockerfile",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/e02d522efc69d3863e49972eb177dd6a"
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild ci/Dockerfile bar=baz foo=bar"
+  }
+]

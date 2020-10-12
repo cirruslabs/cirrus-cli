@@ -1,0 +1,58 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "setup",
+        "scriptInstruction": {
+          "scripts": [
+            "${CIRRUS_WORKING_DIR}/${SCRIPT_BASE}/setup.sh"
+          ]
+        }
+      },
+      {
+        "name": "build_and_test",
+        "scriptInstruction": {
+          "scripts": [
+            "${CIRRUS_WORKING_DIR}/${SCRIPT_BASE}/build_and_test.sh"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_WORKING_DIR": "/var/tmp/go/src/github.com/containers/storage",
+      "FEDORA_CACHE_IMAGE_NAME": "${FEDORA_NAME}-${_BUILT_IMAGE_SUFFIX}",
+      "FEDORA_NAME": "fedora-32",
+      "IMAGE_PROJECT": "libpod-218412",
+      "PRIOR_FEDORA_CACHE_IMAGE_NAME": "${PRIOR_FEDORA_NAME}-${_BUILT_IMAGE_SUFFIX}",
+      "PRIOR_FEDORA_NAME": "fedora-31",
+      "PRIOR_UBUNTU_CACHE_IMAGE_NAME": "${PRIOR_UBUNTU_NAME}-${_BUILT_IMAGE_SUFFIX}",
+      "PRIOR_UBUNTU_NAME": "ubuntu-19",
+      "SCRIPT_BASE": "./contrib/cirrus",
+      "UBUNTU_CACHE_IMAGE_NAME": "${UBUNTU_NAME}-${_BUILT_IMAGE_SUFFIX}",
+      "UBUNTU_NAME": "ubuntu-20",
+      "VM_IMAGE": "${UBUNTU_CACHE_IMAGE_NAME}",
+      "_BUILT_IMAGE_SUFFIX": "libpod-6508632441356288"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "ubuntu-20-libpod-6508632441356288",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "testing"
+  }
+]

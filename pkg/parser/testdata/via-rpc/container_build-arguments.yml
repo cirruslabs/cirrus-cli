@@ -1,0 +1,11 @@
+container:
+  dockerfile: ci/Dockerfile
+  docker_arguments:
+    foo: bar
+    bar: baz
+
+task:
+  name: task1
+  script:
+    - ./test1.sh
+    - ./test2.sh

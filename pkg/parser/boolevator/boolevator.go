@@ -12,7 +12,24 @@ import (
 
 type Function func(arguments ...interface{}) interface{}
 
+type Boolevator struct {
+	functions map[string]Function
+}
+
 var ErrInternal = errors.New("internal boolevator error")
+
+func New(opts ...Option) *Boolevator {
+	boolevator := &Boolevator{
+		functions: make(map[string]Function),
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		opt(boolevator)
+	}
+
+	return boolevator
+}
 
 func parseString(ctx context.Context, parser *gval.Parser) (gval.Evaluable, error) {
 	// Work around text/scanner stopping at newline when scanning strings
@@ -23,7 +40,7 @@ func parseString(ctx context.Context, parser *gval.Parser) (gval.Evaluable, erro
 	return parser.Const(unquoted), nil
 }
 
-func Eval(expr string, env map[string]string, functions map[string]Function) (bool, error) {
+func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, error) {
 	// Work around text/scanner stopping at newline when scanning strings
 	expr = strings.ReplaceAll(expr, "\n", "\\n")
 
@@ -84,7 +101,7 @@ func Eval(expr string, env map[string]string, functions map[string]Function) (bo
 	}
 
 	// Functions
-	for name, function := range functions {
+	for name, function := range boolevator.functions {
 		languageBases = append(languageBases, gval.Function(name, function))
 	}
 

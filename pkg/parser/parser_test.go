@@ -203,6 +203,40 @@ func viaRPCLoadMap(t *testing.T, yamlPath string) (result map[string]string) {
 	return
 }
 
+func TestViaRPCInvalid(t *testing.T) {
+	invalidCases := []struct {
+		File    string
+		Message string
+	}{
+		{"validation-badDependencies.yml", "error in dependencies between tasks: b, c, d"},
+		{"validation-badDependencyNames.yml", "there's no task 'fooo', but task 'bar' depends on it"},
+		{"validation-duplicateCommands.yml", "task 'main' cache and script instructions have identical name"},
+		{"validation-validMissingDependency.yml", "there's no task 'foo', but task 'bar' depends on it"},
+	}
+
+	for _, testCase := range invalidCases {
+		testCase := testCase
+
+		t.Run(testCase.File, func(t *testing.T) {
+			yamlBytes, err := ioutil.ReadFile(filepath.Join("testdata", "via-rpc-invalid", testCase.File))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			localParser := parser.New()
+			localResult, err := localParser.Parse(context.Background(), string(yamlBytes))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			require.Empty(t, localResult.Tasks, "parser shouldn't return tasks")
+
+			require.Len(t, localResult.Errors, 1, "parser should return an error")
+			require.Contains(t, localResult.Errors[0], testCase.Message, "parser should return a specific error")
+		})
+	}
+}
+
 func TestSchema(t *testing.T) {
 	p := parser.New()
 

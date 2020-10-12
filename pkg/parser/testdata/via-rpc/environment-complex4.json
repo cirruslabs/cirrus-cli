@@ -1,0 +1,164 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "echo $OS; grep -r --include=pubspec.yaml 'PUBSPEC CHECKSUM' \"$CIRRUS_WORKING_DIR\""
+          ],
+          "folder": "$HOME/.pub-cache"
+        },
+        "name": "pub"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "echo $OS; cat bin/internal/*.version"
+          ],
+          "folder": "bin/cache/pkg"
+        },
+        "name": "flutter_pkg"
+      },
+      {
+        "cacheInstruction": {
+          "fingerprintScripts": [
+            "echo $OS; cat bin/internal/*.version"
+          ],
+          "folder": "bin/cache/artifacts"
+        },
+        "name": "artifacts"
+      },
+      {
+        "name": "setup",
+        "scriptInstruction": {
+          "scripts": [
+            "date",
+            "git clean -xffd --exclude=bin/cache/",
+            "git fetch origin",
+            "git fetch origin master",
+            "flutter config --no-analytics",
+            "flutter doctor -v",
+            "flutter update-packages",
+            "./dev/bots/accept_android_sdk_licenses.sh",
+            "date"
+          ]
+        }
+      },
+      {
+        "executionBehaviour": "ON_FAILURE",
+        "name": "failure",
+        "scriptInstruction": {
+          "scripts": [
+            "date",
+            "which flutter"
+          ]
+        }
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "./dev/bots/docs.sh"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'pub' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "pub"
+        }
+      },
+      {
+        "name": "Upload 'flutter_pkg' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "flutter_pkg"
+        }
+      },
+      {
+        "name": "Upload 'artifacts' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "artifacts"
+        }
+      }
+    ],
+    "environment": {
+      "BOT": "true",
+      "CPU": "4",
+      "MEMORY": "8G",
+      "USE_IN_MEMORY_DISK": "true"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 4,
+      "dockerfilePath": "dev/ci/docker_linux/Dockerfile",
+      "image": "gcr.io/cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e:latest",
+      "memory": 8192
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "docs-linux",
+    "requiredGroups": [
+      "1"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e:latest --file dev/ci/docker_linux/Dockerfile ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e:latest"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "BOT": "true",
+      "CPU": "4",
+      "MEMORY": "8G",
+      "USE_IN_MEMORY_DISK": "true"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "dockerfilePath": "dev/ci/docker_linux/Dockerfile",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild dev/ci/docker_linux/Dockerfile"
+  }
+]

@@ -1,0 +1,8 @@
+task:
+  container:
+    dockerfile: ci/Dockerfile
+    docker_arguments:
+      matrix:
+        foo: bar
+        bar: baz baz
+  script: printenv

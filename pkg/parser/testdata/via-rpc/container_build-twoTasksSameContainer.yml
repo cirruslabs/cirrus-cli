@@ -1,0 +1,8 @@
+container:
+  dockerfile: ci/Dockerfile
+
+test_task:
+  script: ./test.sh
+
+build_task:
+  script: ./build.sh

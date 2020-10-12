@@ -1,0 +1,179 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "printenv"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "dockerArguments": {
+        "foo": "bar"
+      },
+      "dockerfilePath": "ci/Dockerfile",
+      "image": "gcr.io/cirrus-ci-community/2b4c0074861f1fe6525d23e24dd12e99:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "foo:bar"
+      ]
+    },
+    "name": "main",
+    "requiredGroups": [
+      "2"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "printenv"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "dockerArguments": {
+        "bar": "baz baz"
+      },
+      "dockerfilePath": "ci/Dockerfile",
+      "image": "gcr.io/cirrus-ci-community/930472895952b2e55cd88ac886de4bf3:latest",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "bar:baz baz"
+      ]
+    },
+    "name": "main",
+    "requiredGroups": [
+      "3"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/2b4c0074861f1fe6525d23e24dd12e99:latest --file ci/Dockerfile --build-arg foo=\"bar\" ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/2b4c0074861f1fe6525d23e24dd12e99:latest"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "arguments": {
+        "foo": "bar"
+      },
+      "dockerfilePath": "ci/Dockerfile",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/2b4c0074861f1fe6525d23e24dd12e99"
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "2",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild ci/Dockerfile foo=bar"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/930472895952b2e55cd88ac886de4bf3:latest --file ci/Dockerfile --build-arg bar=\"baz baz\" ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/930472895952b2e55cd88ac886de4bf3:latest"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "arguments": {
+        "bar": "baz baz"
+      },
+      "dockerfilePath": "ci/Dockerfile",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/930472895952b2e55cd88ac886de4bf3"
+    },
+    "localGroupId": "3",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "3",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild ci/Dockerfile bar=baz baz"
+  }
+]

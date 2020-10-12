@@ -1,0 +1,223 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "environment",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/setup_environment.sh"
+          ]
+        }
+      },
+      {
+        "name": "build_vm_images",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/build_vm_images.sh"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "${IMAGE_BUILDER_IMAGE_NAME}",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "0",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      }
+    },
+    "name": "build_images"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "setup_environment",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/setup_environment.sh"
+          ]
+        }
+      },
+      {
+        "name": "unit_test",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/unit_test.sh"
+          ]
+        }
+      },
+      {
+        "name": "integration_test",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/integration_test.sh"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "fedora-29--${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "1",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "container:fedora-29--${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      ]
+    },
+    "name": "test_images",
+    "requiredGroups": [
+      "0"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "setup_environment",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/setup_environment.sh"
+          ]
+        }
+      },
+      {
+        "name": "unit_test",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/unit_test.sh"
+          ]
+        }
+      },
+      {
+        "name": "integration_test",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/integration_test.sh"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "fedora-28--${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "memory": 4096
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "2",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "container:fedora-28--${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      ]
+    },
+    "name": "test_images",
+    "requiredGroups": [
+      "0"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "setup_environment",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/setup_environment.sh"
+          ]
+        }
+      },
+      {
+        "name": "unit_test",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/unit_test.sh"
+          ]
+        }
+      },
+      {
+        "name": "integration_test",
+        "scriptInstruction": {
+          "scripts": [
+            "$SCRIPT_BASE/integration_test.sh"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "ubuntu-18--${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "memory": 4096
+    },
+    "localGroupId": "3",
+    "metadata": {
+      "properties": {
+        "allowFailures": "false",
+        "executionLock": "null",
+        "experimentalFeaturesEnabled": "false",
+        "indexWithinBuild": "3",
+        "timeoutInSeconds": "3600",
+        "triggerType": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "container:ubuntu-18--${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      ]
+    },
+    "name": "test_images",
+    "requiredGroups": [
+      "0"
+    ]
+  }
+]
