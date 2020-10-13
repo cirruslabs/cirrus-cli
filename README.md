@@ -111,6 +111,16 @@ To start using your own HTTP caching server simply pass it's hostname as `CIRRUS
 cirrus run --environment CIRRUS_HTTP_CACHE_HOST=http-cache-host.internal:8080
 ```
 
+## Security
+
+Cirrus CLI tries to run in different environments, but in some environments we choose to provide more usability at the cost of a few security trade-offs:
+
+* SELinux
+  * service container that copies the project directory into a per-task Docker volume using `rsync` always runs unconfined
+  * task container runs unconfined only if the `--dirty` flag is used
+
+Please [open an issue](https://github.com/cirruslabs/cirrus-cli/issues/new) if your use-case requires a different approach.
+
 ## FAQ
 
 <details>

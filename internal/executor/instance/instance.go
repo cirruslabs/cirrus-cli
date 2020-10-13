@@ -184,6 +184,10 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 			Source: config.ProjectDir,
 			Target: path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir),
 		})
+
+		// Disable SELinux confinement for this container, otherwise
+		// the agent might fail when accessing the project directory
+		hostConfig.SecurityOpt = []string{"label=disable"}
 	}
 
 	// In case the additional containers are used, tell the agent to wait for them

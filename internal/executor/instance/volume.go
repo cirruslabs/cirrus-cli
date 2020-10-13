@@ -121,6 +121,10 @@ func CreateWorkingVolume(
 			Target:   projectDirMountpoint,
 			ReadOnly: true,
 		})
+
+		// Disable SELinux confinement for this container, otherwise
+		// the rsync might fail when accessing the project directory
+		hostConfig.SecurityOpt = []string{"label=disable"}
 	}
 
 	cont, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
