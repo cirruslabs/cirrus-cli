@@ -15,12 +15,15 @@ import (
 	"strings"
 )
 
+type ConfigurationEvaluatorServiceServer struct {
+	// must be embedded to have forward compatible implementations
+	api.UnimplementedCirrusConfigurationEvaluatorServiceServer
+}
+
 func Serve(ctx context.Context, lis net.Listener) error {
 	server := grpc.NewServer()
 
-	api.RegisterCirrusConfigurationEvaluatorServiceService(server, &api.CirrusConfigurationEvaluatorServiceService{
-		EvaluateConfig: evaluateConfig,
-	})
+	api.RegisterCirrusConfigurationEvaluatorServiceServer(server, &ConfigurationEvaluatorServiceServer{})
 
 	errChan := make(chan error)
 
@@ -67,7 +70,7 @@ func fsFromEnvironment(env map[string]string) (fs fs.FileSystem) {
 	return github.New(owner, repo, reference, token)
 }
 
-func evaluateConfig(ctx context.Context, request *api.EvaluateConfigRequest) (*api.EvaluateConfigResponse, error) {
+func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(ctx context.Context, request *api.EvaluateConfigRequest) (*api.EvaluateConfigResponse, error) {
 	var yamlConfigs []string
 
 	// Register YAML configuration (if any)
