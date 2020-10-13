@@ -30,6 +30,9 @@ import (
 var ErrRPCFailed = errors.New("RPC server failed")
 
 type RPC struct {
+	// must be embedded to have forward compatible implementations
+	api.UnimplementedCirrusCIServiceServer
+
 	listener                   net.Listener
 	server                     *grpc.Server
 	serverWaitGroup            sync.WaitGroup
@@ -49,25 +52,7 @@ func New(build *build.Build, opts ...Option) *RPC {
 	}
 
 	// Register itself
-	api.RegisterCirrusCIServiceService(r.server, &api.CirrusCIServiceService{
-		InitialCommands:     r.InitialCommands,
-		ReportSingleCommand: r.ReportSingleCommand,
-		ReportAnnotations:   r.ReportAnnotations,
-		StreamLogs:          r.StreamLogs,
-		SaveLogs:            r.SaveLogs,
-		UploadCache:         r.UploadCache,
-		UploadArtifacts:     r.UploadArtifacts,
-		DownloadCache:       r.DownloadCache,
-		CacheInfo:           r.CacheInfo,
-		Ping:                nil,
-		Heartbeat:           r.Heartbeat,
-		ReportStopHook:      nil,
-		ReportAgentError:    r.ReportAgentError,
-		ReportAgentWarning:  r.ReportAgentWarning,
-		ReportAgentSignal:   r.ReportAgentSignal,
-		ReportAgentLogs:     r.ReportAgentLogs,
-		ParseConfig:         nil,
-	})
+	api.RegisterCirrusCIServiceServer(r.server, r)
 
 	// Apply options
 	for _, opt := range opts {
