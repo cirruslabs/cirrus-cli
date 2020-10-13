@@ -70,7 +70,10 @@ func fsFromEnvironment(env map[string]string) (fs fs.FileSystem) {
 	return github.New(owner, repo, reference, token)
 }
 
-func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(ctx context.Context, request *api.EvaluateConfigRequest) (*api.EvaluateConfigResponse, error) {
+func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
+	ctx context.Context,
+	request *api.EvaluateConfigRequest,
+) (*api.EvaluateConfigResponse, error) {
 	var yamlConfigs []string
 
 	// Register YAML configuration (if any)
