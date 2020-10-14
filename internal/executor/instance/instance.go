@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"math"
 	"path"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -171,10 +172,31 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		},
 	}
 
-	// Attach the container to the Cloud Build network for RPC server
-	// to be accessible in case we're running in Cloud Build.
-	if heuristic.GetCloudBuildIP(ctx) != "" {
-		hostConfig.NetworkMode = heuristic.CloudBuildNetworkName
+	if runtime.GOOS == "linux" {
+		if heuristic.GetCloudBuildIP(ctx) != "" {
+			// Attach the container to the Cloud Build network for RPC the server
+			// to be accessible in case we're running in Cloud Build and the CLI
+			// itself is containerized (so we can't mount a Unix domain socket
+			// because we don't know the path to it on the host)
+			hostConfig.NetworkMode = heuristic.CloudBuildNetworkName
+		} else {
+			// Mount a Unix domain socket in all other Linux cases, assuming that
+			// we run in the same mount namespace as the Docker daemon
+			socketPath := strings.TrimPrefix(config.Endpoint, "unix://")
+
+			hostConfig.Mounts = append(hostConfig.Mounts, mount.Mount{
+				Type:   mount.TypeBind,
+				Source: socketPath,
+				Target: socketPath,
+			})
+		}
+
+		// Disable SELinux confinement for this container
+		//
+		// This solves the following problems when SELinux is enabled:
+		// * agent not being able to connect to the CLI's Unix socket
+		// * task container not being able to read project directory files when using dirty mode
+		hostConfig.SecurityOpt = []string{"label=disable"}
 	}
 
 	// In dirty mode we mount the project directory in read-write mode
@@ -184,10 +206,6 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 			Source: config.ProjectDir,
 			Target: path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir),
 		})
-
-		// Disable SELinux confinement for this container, otherwise
-		// the agent might fail when accessing the project directory
-		hostConfig.SecurityOpt = []string{"label=disable"}
 	}
 
 	// In case the additional containers are used, tell the agent to wait for them
