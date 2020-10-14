@@ -113,11 +113,10 @@ cirrus run --environment CIRRUS_HTTP_CACHE_HOST=http-cache-host.internal:8080
 
 ## Security
 
-Cirrus CLI tries to run in different environments, but in some environments we choose to provide more usability at the cost of a few security trade-offs:
+Cirrus CLI aims to run in different environments, but in some environments we choose to provide more usability at the cost of some security trade-offs:
 
 * SELinux
-  * task container runs unconfined only if the `--dirty` flag is used
-  * service container that copies the project directory into a per-task Docker volume using `rsync` always runs unconfined
+  * both the task container and the service container that copies the project directory into a per-task Docker volume using `rsync` run unconfined
 
 Please [open an issue](https://github.com/cirruslabs/cirrus-cli/issues/new) if your use-case requires a different approach.
 

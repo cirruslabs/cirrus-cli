@@ -18,16 +18,18 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
+	"os"
 	"runtime"
 	"strings"
 	"sync"
-	"syscall"
 
 	// Registers a gzip compressor needed for streaming logs from the agent.
 	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 var ErrRPCFailed = errors.New("RPC server failed")
+
+const networkUnix = "unix"
 
 type RPC struct {
 	// must be embedded to have forward compatible implementations
@@ -78,7 +80,8 @@ func (r *RPC) ClientSecret() string {
 
 // Start creates the listener and starts RPC server in a separate goroutine.
 func (r *RPC) Start(ctx context.Context) error {
-	host := "localhost"
+	network := "tcp"
+	address := "localhost:0"
 
 	// Work around host.docker.internal missing on Linux
 	//
@@ -86,30 +89,17 @@ func (r *RPC) Start(ctx context.Context) error {
 	// * https://github.com/docker/for-linux/issues/264
 	// * https://github.com/moby/moby/pull/40007
 	if runtime.GOOS == "linux" {
-		// Worst-case scenario, but still better than nothing,
-		// since there's still a chance this would work with
-		// a Docker daemon configured by default.
-		const assumedBridgeIP = "172.17.0.1"
-
-		if bridgeIP := heuristic.GetDockerBridgeIP(ctx); bridgeIP != "" {
-			host = bridgeIP
-		} else if cloudBuildIP := heuristic.GetCloudBuildIP(ctx); cloudBuildIP != "" {
-			host = cloudBuildIP
+		if cloudBuildIP := heuristic.GetCloudBuildIP(ctx); cloudBuildIP != "" {
+			network = "tcp"
+			address = fmt.Sprintf("%s:0", cloudBuildIP)
 		} else {
-			host = assumedBridgeIP
+			network = networkUnix
+			address = fmt.Sprintf("/tmp/cli-%s.sock", uuid.New().String())
 		}
 	}
 
-	address := fmt.Sprintf("%s:0", host)
-
-	listener, err := net.Listen("tcp", address)
+	listener, err := net.Listen(network, address)
 	if err != nil {
-		if errors.Is(err, syscall.EADDRNOTAVAIL) {
-			return fmt.Errorf(
-				"%w: failed to assign Docker network bridge address %s (is Docker running?)",
-				ErrRPCFailed, address,
-			)
-		}
 		return fmt.Errorf("%w: failed to start RPC service on %s: %v", ErrRPCFailed, address, err)
 	}
 	r.listener = listener
@@ -131,9 +121,8 @@ func (r *RPC) Start(ctx context.Context) error {
 
 // Endpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag.
 func (r *RPC) Endpoint() string {
-	// Work around host.docker.internal missing on Linux
-	if runtime.GOOS == "linux" {
-		return "http://" + r.listener.Addr().String()
+	if r.listener.Addr().Network() == networkUnix {
+		return "unix://" + r.listener.Addr().String()
 	}
 
 	port := r.listener.Addr().(*net.TCPAddr).Port
@@ -143,6 +132,10 @@ func (r *RPC) Endpoint() string {
 
 // Stop gracefully stops the RPC server.
 func (r *RPC) Stop() {
+	if r.listener.Addr().Network() == networkUnix {
+		_ = os.Remove(r.listener.Addr().String())
+	}
+
 	r.server.GracefulStop()
 	r.serverWaitGroup.Wait()
 }
