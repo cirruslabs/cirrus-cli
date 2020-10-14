@@ -1,4 +1,4 @@
-package task
+package command
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"

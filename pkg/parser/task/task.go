@@ -139,7 +139,7 @@ func NewTask(
 
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
 	task.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
-		cache := NewCacheCommand(environment.Merge(task.proto.Environment, env), boolevator)
+		cache := command.NewCacheCommand(environment.Merge(task.proto.Environment, env), boolevator)
 		if err := cache.Parse(node); err != nil {
 			return err
 		}
