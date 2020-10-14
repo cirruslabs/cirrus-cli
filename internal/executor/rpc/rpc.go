@@ -121,8 +121,12 @@ func (r *RPC) Start(ctx context.Context) error {
 
 // Endpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag.
 func (r *RPC) Endpoint() string {
-	if r.listener.Addr().Network() == networkUnix {
-		return "unix://" + r.listener.Addr().String()
+	if runtime.GOOS == "linux" {
+		if r.listener.Addr().Network() == networkUnix {
+			return "unix://" + r.listener.Addr().String()
+		}
+
+		return fmt.Sprintf("http://%s", r.listener.Addr().String())
 	}
 
 	port := r.listener.Addr().(*net.TCPAddr).Port
