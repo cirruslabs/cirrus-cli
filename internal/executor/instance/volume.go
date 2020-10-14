@@ -131,6 +131,16 @@ func CreateWorkingVolume(
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
+	defer func() {
+		removeErr := cli.ContainerRemove(ctx, cont.ID, types.ContainerRemoveOptions{
+			RemoveVolumes: true,
+			Force:         true,
+		})
+		if removeErr != nil {
+			err = fmt.Errorf("%w: %v", ErrVolumeCreationFailed, removeErr)
+		}
+	}()
+
 	err = cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
@@ -145,12 +155,6 @@ func CreateWorkingVolume(
 				ErrVolumeCreationFailed, res.Error, res.StatusCode)
 		}
 	case err := <-errChan:
-		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
-	}
-
-	// Remove the helper container
-	err = cli.ContainerRemove(ctx, cont.ID, types.ContainerRemoveOptions{})
-	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
