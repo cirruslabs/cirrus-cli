@@ -127,7 +127,8 @@ func CreateWorkingVolume(
 		hostConfig.SecurityOpt = []string{"label=disable"}
 	}
 
-	cont, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, "")
+	containerName := fmt.Sprintf("cirrus-helper-container-%s", uuid.New().String())
+	cont, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, containerName)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
