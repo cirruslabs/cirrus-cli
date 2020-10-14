@@ -21,6 +21,15 @@ func NewArtifactsCommand(mergedEnv map[string]string) *ArtifactsCommand {
 		instruction: &api.ArtifactsInstruction{},
 	}
 
+	articom.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
+		name, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+		articom.proto.Name = name
+		return nil
+	})
+
 	articom.OptionalField(nameable.NewSimpleNameable("paths"), schema.TodoSchema, func(node *node.Node) error {
 		artifactPaths, err := node.GetSliceOfExpandedStrings(mergedEnv)
 		if err != nil {
@@ -65,8 +74,10 @@ func (articom *ArtifactsCommand) Parse(node *node.Node) error {
 		return err
 	}
 
-	cacheNameable := nameable.NewRegexNameable("^(.*)artifacts$")
-	articom.proto.Name = cacheNameable.FirstGroupOrDefault(node.Name, "binary")
+	if articom.proto.Name == "" {
+		cacheNameable := nameable.NewRegexNameable("^(.*)artifacts$")
+		articom.proto.Name = cacheNameable.FirstGroupOrDefault(node.Name, "binary")
+	}
 
 	return nil
 }
