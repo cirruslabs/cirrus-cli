@@ -47,7 +47,7 @@ func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
 	step.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
-		cache := NewCacheCommand(mergedEnv, boolevator)
+		cache := command.NewCacheCommand(mergedEnv, boolevator)
 		if err := cache.Parse(node); err != nil {
 			return err
 		}

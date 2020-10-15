@@ -1,4 +1,4 @@
-package task
+package command
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
@@ -26,6 +26,15 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 			ReuploadOnChanges: true,
 		},
 	}
+
+	cache.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
+		name, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+		cache.proto.Name = name
+		return nil
+	})
 
 	cache.RequiredField(nameable.NewSimpleNameable("folder"), schema.TodoSchema, func(node *node.Node) error {
 		folder, err := node.GetExpandedStringValue(mergedEnv)
@@ -91,8 +100,10 @@ func (cache *CacheCommand) Parse(node *node.Node) error {
 		return err
 	}
 
-	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
-	cache.proto.Name = cacheNameable.FirstGroupOrDefault(node.Name, "main")
+	if cache.proto.Name == "" {
+		cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
+		cache.proto.Name = cacheNameable.FirstGroupOrDefault(node.Name, "main")
+	}
 
 	return nil
 }
