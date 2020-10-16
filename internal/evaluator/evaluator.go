@@ -103,17 +103,20 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 
 	additionalInstances := make(map[string]protoreflect.MessageDescriptor)
 
-	files, err := protodesc.NewFiles(request.AdditionalInstancesInfo.GetDescriptor_())
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
-	for fieldName, fqn := range request.AdditionalInstancesInfo.Instances {
-		descriptor, err := files.FindDescriptorByName(protoreflect.FullName(fqn))
+	descriptorSet := request.AdditionalInstancesInfo.GetDescriptor_()
+	if descriptorSet != nil {
+		files, err := protodesc.NewFiles(descriptorSet)
 		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to find %s type: %v", fqn, err))
+			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
-		if md, _ := descriptor.(protoreflect.MessageDescriptor); md != nil {
-			additionalInstances[fieldName] = md
+		for fieldName, fqn := range request.AdditionalInstancesInfo.Instances {
+			descriptor, err := files.FindDescriptorByName(protoreflect.FullName(fqn))
+			if err != nil {
+				return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to find %s type: %v", fqn, err))
+			}
+			if md, _ := descriptor.(protoreflect.MessageDescriptor); md != nil {
+				additionalInstances[fieldName] = md
+			}
 		}
 	}
 
