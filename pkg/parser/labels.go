@@ -1,22 +1,45 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"sort"
 )
 
 func labels(task *api.Task) ([]string, error) {
+	labels, err := instanceLabels(task.Instance)
+	if err != nil {
+		return labels, err
+	}
+
+	// Environment-specific labels
+	for key, value := range task.Environment {
+		labels = append(labels, fmt.Sprintf("%s:%s", key, value))
+	}
+
+	return labels, nil
+}
+
+func instanceLabels(taskInstance *any.Any) ([]string, error) {
+	// Instance-specific labels
+	var labels []string
+
 	// Unmarshal instance
 	var dynamicAny ptypes.DynamicAny
 
-	if err := ptypes.UnmarshalAny(task.Instance, &dynamicAny); err != nil {
-		return nil, err
+	err := ptypes.UnmarshalAny(taskInstance, &dynamicAny)
+
+	if errors.Is(err, protoregistry.NotFound) {
+		return labels, nil
 	}
 
-	// Instance-specific labels
-	var labels []string
+	if err != nil {
+		return nil, err
+	}
 
 	switch instance := dynamicAny.Message.(type) {
 	case *api.ContainerInstance:
@@ -40,12 +63,6 @@ func labels(task *api.Task) ([]string, error) {
 	case *api.PipeInstance:
 		labels = append(labels, "pipe")
 	}
-
-	// Environment-specific labels
-	for key, value := range task.Environment {
-		labels = append(labels, fmt.Sprintf("%s:%s", key, value))
-	}
-
 	return labels, nil
 }
 
