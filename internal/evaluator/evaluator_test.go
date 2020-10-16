@@ -1,12 +1,18 @@
 package evaluator_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/evaluator"
+	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/types/descriptorpb"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"net"
 	"testing"
 )
@@ -138,4 +144,50 @@ def main(ctx):
 		Environment:    env,
 	})
 	require.NoError(t, err)
+}
+
+// TestAdditionalInstances ensures that dynamically provided instances are respected.
+func TestAdditionalInstances(t *testing.T) {
+	yamlConfig := `
+aliases: &container_body
+  image: alpine:latest
+  platform: linux
+  cpu: 2.5
+  memory: 4G
+  additional_containers:
+    - name: mysql
+      image: mysql:latest
+      cpu: 1
+      memory: 1024
+      environment:
+        MYSQL_ROOT_PASSWORD: ""
+
+regular_task:
+  container:
+    <<: *container_body
+
+proto_task:
+  proto_container:
+    <<: *container_body
+`
+
+	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
+		YamlConfig: yamlConfig,
+		AdditionalInstancesInfo: &api.EvaluateConfigRequest_AdditionalInstancesInfo{
+			Instances: map[string]string{
+				"proto_container": "org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+			},
+			Descriptor_: &descriptor.FileDescriptorSet{
+				File: []*descriptor.FileDescriptorProto{
+					protodesc.ToFileDescriptorProto(api.File_cirrus_ci_service_proto),
+					protodesc.ToFileDescriptorProto(anypb.File_google_protobuf_any_proto),
+					protodesc.ToFileDescriptorProto(emptypb.File_google_protobuf_empty_proto),
+					protodesc.ToFileDescriptorProto(descriptorpb.File_google_protobuf_descriptor_proto),
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+	require.Len(t, response.Tasks, 2)
+	require.Equal(t, 0, bytes.Compare(response.Tasks[0].Instance.Value, response.Tasks[1].Instance.Value))
 }

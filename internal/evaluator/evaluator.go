@@ -105,6 +105,8 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 
 	descriptorSet := request.AdditionalInstancesInfo.GetDescriptor_()
 	if descriptorSet != nil {
+		// convert protobuf descriptors to proto reflections
+		// in order to pass additional instances provided dynamically by the request
 		files, err := protodesc.NewFiles(descriptorSet)
 		if err != nil {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
