@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"context"
+	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
@@ -11,6 +12,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/reflect/protodesc"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"net"
 	"strings"
 )
@@ -98,10 +101,27 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		yamlConfigs = append(yamlConfigs, generatedYamlConfig)
 	}
 
+	additionalInstances := make(map[string]protoreflect.MessageDescriptor)
+
+	files, err := protodesc.NewFiles(request.AdditionalInstancesInfo.GetDescriptor_())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	for fieldName, fqn := range request.AdditionalInstancesInfo.Instances {
+		descriptor, err := files.FindDescriptorByName(protoreflect.FullName(fqn))
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to find %s type: %v", fqn, err))
+		}
+		if md, _ := descriptor.(protoreflect.MessageDescriptor); md != nil {
+			additionalInstances[fieldName] = md
+		}
+	}
+
 	// Parse combined YAML
 	p := parser.New(
 		parser.WithEnvironment(request.Environment),
 		parser.WithFileSystem(fs),
+		parser.WithAdditionalInstances(additionalInstances),
 	)
 
 	result, err := p.Parse(ctx, strings.Join(yamlConfigs, "\n"))

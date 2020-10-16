@@ -19,6 +19,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/reflect/protoregistry"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -395,7 +396,13 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 
 	for _, protoTask := range protoTasks {
 		var dynamicInstance ptypes.DynamicAny
-		if err := ptypes.UnmarshalAny(protoTask.Instance, &dynamicInstance); err != nil {
+		err := ptypes.UnmarshalAny(protoTask.Instance, &dynamicInstance)
+
+		if err == protoregistry.NotFound {
+			continue
+		}
+
+		if err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
 
