@@ -1,7 +1,6 @@
 package evaluator_test
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
@@ -9,6 +8,7 @@ import (
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -189,5 +189,5 @@ proto_task:
 	})
 	require.NoError(t, err)
 	require.Len(t, response.Tasks, 2)
-	require.Equal(t, 0, bytes.Compare(response.Tasks[0].Instance.Value, response.Tasks[1].Instance.Value))
+	require.JSONEq(t, protojson.Format(response.Tasks[0].Instance), protojson.Format(response.Tasks[1].Instance))
 }
