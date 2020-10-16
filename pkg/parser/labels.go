@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/golang/protobuf/ptypes"
@@ -32,7 +33,7 @@ func instanceLabels(taskInstance *any.Any) ([]string, error) {
 
 	err := ptypes.UnmarshalAny(taskInstance, &dynamicAny)
 
-	if err == protoregistry.NotFound {
+	if errors.Is(err, protoregistry.NotFound) {
 		return labels, nil
 	}
 

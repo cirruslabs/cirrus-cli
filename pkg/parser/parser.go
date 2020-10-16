@@ -398,7 +398,7 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 		var dynamicInstance ptypes.DynamicAny
 		err := ptypes.UnmarshalAny(protoTask.Instance, &dynamicInstance)
 
-		if err == protoregistry.NotFound {
+		if errors.Is(err, protoregistry.NotFound) {
 			continue
 		}
 
