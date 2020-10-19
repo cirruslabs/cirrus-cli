@@ -1,4 +1,4 @@
-package internal
+package test
 
 import (
 	"errors"
@@ -103,7 +103,7 @@ func test(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func newTestCmd() *cobra.Command {
+func NewTestCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "test",
 		Short: "Discover and run Starlark tests",
