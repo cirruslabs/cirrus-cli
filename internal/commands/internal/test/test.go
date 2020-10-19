@@ -54,10 +54,19 @@ func test(cmd *cobra.Command, args []string) error {
 		}
 
 		// Create Starlark executor and run .cirrus.star to generate the configuration
+		var larkerOpts []larker.Option
+
 		fs := local.New(".")
 		fs.Chdir(testDir)
+		larkerOpts = append(larkerOpts, larker.WithFileSystem(fs))
 
-		lrk := larker.New(larker.WithFileSystem(fs))
+		testConfig, err := LoadConfiguration(filepath.Join(testDir, ".cirrus.testconfig.yml"))
+		if err != nil {
+			return err
+		}
+		larkerOpts = append(larkerOpts, larker.WithEnvironment(testConfig.Environment))
+
+		lrk := larker.New(larkerOpts...)
 
 		sourceBytes, err := ioutil.ReadFile(filepath.Join(testDir, ".cirrus.star"))
 		if err != nil {
