@@ -1,4 +1,4 @@
-package internal_test
+package test_test
 
 import (
 	"bytes"
@@ -11,9 +11,9 @@ import (
 	"testing"
 )
 
-// TestTestSimple ensures that a simple test is discovered and ran successfully.
-func TestTestSimple(t *testing.T) {
-	testutil.TempChdirPopulatedWith(t, "testdata/test-simple")
+// TestSimple ensures that a simple test is discovered and ran successfully.
+func TestSimple(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/simple")
 
 	// Create os.Stderr writer that duplicates it's output to buf
 	buf := bytes.NewBufferString("")
