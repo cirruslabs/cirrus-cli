@@ -35,8 +35,11 @@ type DockerPipe struct {
 
 func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *DockerPipe {
 	pipe := &DockerPipe{}
-	pipe.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 	pipe.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
+	pipe.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
+
+	pipe.proto.Metadata.Properties["auto_cancellation"] =
+		strconv.FormatBool(env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"])
 
 	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		pipeEnv, err := node.GetEnvironment()
@@ -46,6 +49,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		pipe.proto.Environment = environment.Merge(pipe.proto.Environment, pipeEnv)
 		return nil
 	})
+
 	pipe.CollectibleField("env", schema.TodoSchema, func(node *node.Node) error {
 		pipeEnv, err := node.GetEnvironment()
 		if err != nil {
@@ -108,12 +112,53 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		pipe.onlyIfExpression = onlyIfExpression
 		return nil
 	})
+
 	pipe.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
 		}
 		pipe.proto.Metadata.Properties["allow_failures"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	pipe.CollectibleField("skip_notifications", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["skip_notifications"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	pipe.CollectibleField("auto_cancellation", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	pipe.CollectibleField("use_compute_credits", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["use_compute_credits"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	pipe.CollectibleField("stateful", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["stateful"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 

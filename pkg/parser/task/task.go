@@ -39,6 +39,9 @@ func NewTask(
 	task := &Task{}
 	task.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
+	task.proto.Metadata.Properties["auto_cancellation"] =
+		strconv.FormatBool(env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"])
+
 	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		taskEnv, err := node.GetEnvironment()
 		if err != nil {
