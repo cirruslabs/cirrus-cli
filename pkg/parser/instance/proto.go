@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/any"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 	"sort"
@@ -255,4 +256,34 @@ func (p *ProtoInstance) Parse(node *node.Node) (*dynamicpb.Message, error) {
 		return nil, err
 	}
 	return p.proto, nil
+}
+
+func GuessPlatform(anyInstance *any.Any, descriptor protoreflect.MessageDescriptor) string {
+	platformField := descriptor.Fields().ByJSONName("platform")
+	if platformField != nil {
+		dynamicMessage := dynamicpb.NewMessage(descriptor)
+		_ = proto.Unmarshal(anyInstance.GetValue(), dynamicMessage)
+		value := dynamicMessage.Get(platformField)
+		valueDescription := platformField.Enum().Values().Get(int(value.Enum()))
+		enumName := string(valueDescription.Name())
+		return strings.ToLower(enumName)
+	}
+
+	instanceType := strings.ToLower(anyInstance.TypeUrl)
+	if strings.Contains(instanceType, "windows") {
+		return "windows"
+	}
+	if strings.Contains(instanceType, "freebsd") {
+		return "freebsd"
+	}
+	if strings.Contains(instanceType, "darwin") {
+		return "darwin"
+	}
+	if strings.Contains(instanceType, "osx") {
+		return "darwin"
+	}
+	if strings.Contains(instanceType, "anka") {
+		return "darwin"
+	}
+	return "linux"
 }
