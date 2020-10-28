@@ -177,7 +177,7 @@ proto_task:
 			Instances: map[string]string{
 				"proto_container": "org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
 			},
-			Descriptor_: &descriptor.FileDescriptorSet{
+			DescriptorSet: &descriptor.FileDescriptorSet{
 				File: []*descriptor.FileDescriptorProto{
 					protodesc.ToFileDescriptorProto(api.File_cirrus_ci_service_proto),
 					protodesc.ToFileDescriptorProto(anypb.File_google_protobuf_any_proto),

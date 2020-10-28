@@ -40,12 +40,11 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Lint"
@@ -92,12 +91,11 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Relay"
@@ -144,12 +142,11 @@
     "localGroupId": "2",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "2",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Type Check"
@@ -196,12 +193,11 @@
     "localGroupId": "3",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "3",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Prettier"
@@ -248,12 +244,11 @@
     "localGroupId": "4",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "4",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "container:node:latest"
@@ -303,12 +298,11 @@
     "localGroupId": "5",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "5",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "container:node:13"
@@ -358,12 +352,11 @@
     "localGroupId": "6",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "6",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "container:node:12"

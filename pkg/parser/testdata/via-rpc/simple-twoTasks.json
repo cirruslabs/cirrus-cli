@@ -22,12 +22,11 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "task1"
@@ -56,12 +55,11 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "true",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "true",
+        "allow_failures": "true",
+        "experimental": "true",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "task2"

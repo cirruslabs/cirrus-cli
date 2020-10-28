@@ -197,7 +197,7 @@ func NewTask(
 		if err != nil {
 			return err
 		}
-		task.proto.Metadata.Properties["allowFailures"] = strconv.FormatBool(evaluation)
+		task.proto.Metadata.Properties["allow_failures"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
@@ -236,27 +236,27 @@ func NewTask(
 		if err != nil {
 			return err
 		}
-		task.proto.Metadata.Properties["experimentalFeaturesEnabled"] = strconv.FormatBool(evaluation)
+		task.proto.Metadata.Properties["experimental"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
 	task.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
-		timeoutInSeconds, err := handleTimeoutIn(node, environment.Merge(task.proto.Environment, env))
+		timeout, err := handleTimeoutIn(node, environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 
-		task.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
+		task.proto.Metadata.Properties["timeout_in"] = timeout
 
 		return nil
 	})
 
 	task.CollectibleField("trigger_type", schema.TodoSchema, func(node *node.Node) error {
-		triggerType, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
+		trigger_type, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}
-		task.proto.Metadata.Properties["triggerType"] = strings.ToUpper(triggerType)
+		task.proto.Metadata.Properties["trigger_type"] = strings.ToUpper(trigger_type)
 		return nil
 	})
 
@@ -266,7 +266,7 @@ func NewTask(
 			return err
 		}
 
-		task.proto.Metadata.Properties["executionLock"] = lockName
+		task.proto.Metadata.Properties["execution_lock"] = lockName
 
 		return nil
 	})

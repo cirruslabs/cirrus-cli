@@ -27,12 +27,11 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "7200",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "7200",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "task1",
@@ -75,12 +74,12 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "7200",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "true",
+        "timeout_in": "7200",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Prebuild ci/Dockerfile"

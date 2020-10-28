@@ -55,7 +55,7 @@ func NewFromProto(protoTask *api.Task) (*Task, error) {
 
 	timeout := defaultTaskTimeout
 	if protoTask.Metadata != nil {
-		metadataTimeout, found := protoTask.Metadata.Properties["timeoutInSeconds"]
+		metadataTimeout, found := protoTask.Metadata.Properties["timeout_in"]
 		if found {
 			metadataTimeout, err := strconv.Atoi(metadataTimeout)
 			if err != nil {

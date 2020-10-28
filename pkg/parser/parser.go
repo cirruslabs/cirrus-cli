@@ -380,7 +380,7 @@ func (p *Parser) createServiceTask(
 		Metadata: &api.Task_Metadata{
 			Properties: environment.Merge(
 				task.DefaultTaskProperties(),
-				map[string]string{"skipNotifications": "true"},
+				map[string]string{"skip_notifications": "true"},
 			),
 		},
 	}
@@ -389,7 +389,7 @@ func (p *Parser) createServiceTask(
 	serviceTask.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(serviceTask.LocalGroupId, 10)
 
 	// Some metadata property fields are preserved from the original task
-	serviceTask.Metadata.Properties["timeoutInSeconds"] = protoTask.Metadata.Properties["timeoutInSeconds"]
+	serviceTask.Metadata.Properties["timeout_in"] = protoTask.Metadata.Properties["timeout_in"]
 
 	return serviceTask, nil
 }

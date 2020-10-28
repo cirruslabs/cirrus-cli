@@ -64,12 +64,11 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "1800",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "1800",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "compile"
@@ -93,12 +92,11 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "1800",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "1800",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "main"

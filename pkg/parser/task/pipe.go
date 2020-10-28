@@ -112,7 +112,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		if err != nil {
 			return err
 		}
-		pipe.proto.Metadata.Properties["allowFailures"] = strconv.FormatBool(evaluation)
+		pipe.proto.Metadata.Properties["allow_failures"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
@@ -121,27 +121,27 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		if err != nil {
 			return err
 		}
-		pipe.proto.Metadata.Properties["experimentalFeaturesEnabled"] = strconv.FormatBool(evaluation)
+		pipe.proto.Metadata.Properties["experimental"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
 	pipe.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
-		timeoutInSeconds, err := handleTimeoutIn(node, environment.Merge(pipe.proto.Environment, env))
+		timeout_in, err := handleTimeoutIn(node, environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 
-		pipe.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
+		pipe.proto.Metadata.Properties["timeout_in"] = timeout_in
 
 		return nil
 	})
 
 	pipe.CollectibleField("trigger_type", schema.TodoSchema, func(node *node.Node) error {
-		triggerType, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
+		trigger_type, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}
-		pipe.proto.Metadata.Properties["triggerType"] = strings.ToUpper(triggerType)
+		pipe.proto.Metadata.Properties["trigger_type"] = strings.ToUpper(trigger_type)
 		return nil
 	})
 

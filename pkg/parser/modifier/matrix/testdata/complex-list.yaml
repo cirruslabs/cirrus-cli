@@ -1,0 +1,19 @@
+check_task:
+  matrix:
+    - container:
+        image: alpine:latest
+    - container:
+        image: alpine:latest
+      environment:
+        SKIP_RELEASE: true
+        MOCK_MAKER: mock-maker-inline
+---
+check_task:
+  container:
+    image: alpine:latest
+check_task:
+  container:
+    image: alpine:latest
+  environment:
+    SKIP_RELEASE: true
+    MOCK_MAKER: mock-maker-inline

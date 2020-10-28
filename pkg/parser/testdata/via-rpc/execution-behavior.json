@@ -73,12 +73,12 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "master",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "execution_lock": "master",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "main"

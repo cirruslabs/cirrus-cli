@@ -22,12 +22,12 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "true",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "true",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "900",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "true",
+        "timeout_in": "900",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "main"

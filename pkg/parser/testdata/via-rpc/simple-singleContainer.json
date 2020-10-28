@@ -23,12 +23,11 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "600",
-        "triggerType": "AUTOMATIC"
+        "timeout_in": "600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Important Tests"
