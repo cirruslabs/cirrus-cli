@@ -75,6 +75,7 @@ func NewTask(
 					return err
 				}
 				task.proto.Instance = anyInstance
+				task.proto.Environment["CIRRUS_OS"] = "linux"
 
 				return nil
 			})
@@ -96,6 +97,20 @@ func NewTask(
 					return err
 				}
 				task.proto.Instance = anyInstance
+				task.proto.Environment["CIRRUS_OS"] = "linux"
+				instanceType := strings.ToLower(anyInstance.TypeUrl)
+				if strings.Contains(instanceType, "windows") {
+					task.proto.Environment["CIRRUS_OS"] = "windows"
+				}
+				if strings.Contains(instanceType, "freebsd") {
+					task.proto.Environment["CIRRUS_OS"] = "freebsd"
+				}
+				if strings.Contains(instanceType, "darwin") {
+					task.proto.Environment["CIRRUS_OS"] = "darwin"
+				}
+				if strings.Contains(instanceType, "osx") {
+					task.proto.Environment["CIRRUS_OS"] = "darwin"
+				}
 				return nil
 			})
 	}
