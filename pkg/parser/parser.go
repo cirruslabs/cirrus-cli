@@ -214,7 +214,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 		ensureCloneInstruction(protoTask)
 
 		// Provide unique labels for identically named tasks
-		uniqueLabelsForTask, err := uniqueLabels(protoTask, protoTasks)
+		uniqueLabelsForTask, err := uniqueLabels(protoTask, protoTasks, p.additionalInstances)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
@@ -293,15 +293,15 @@ func resolveDependenciesShallow(tasks []task.ParseableTaskLike) error {
 			for _, subTask := range tasks {
 				if subTask.Name() == dependsOnName {
 					foundID = subTask.ID()
-					break
+					dependsOnIDs = append(dependsOnIDs, subTask.ID())
 				}
 			}
 			if foundID == -1 {
 				return fmt.Errorf("%w: there's no task '%s', but task '%s' depends on it",
 					parsererror.ErrParsing, dependsOnName, task.Name())
 			}
-			dependsOnIDs = append(dependsOnIDs, foundID)
 		}
+		sort.Slice(dependsOnIDs, func(i, j int) bool { return dependsOnIDs[i] < dependsOnIDs[j] })
 		task.SetDependsOnIDs(dependsOnIDs)
 	}
 
@@ -378,7 +378,10 @@ func (p *Parser) createServiceTask(
 		},
 		Environment: protoTask.Environment,
 		Metadata: &api.Task_Metadata{
-			Properties: task.DefaultTaskProperties(),
+			Properties: environment.Merge(
+				task.DefaultTaskProperties(),
+				map[string]string{"skipNotifications": "true"},
+			),
 		},
 	}
 
