@@ -22,6 +22,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "CPU": "4",
       "MEMORY": "12G"
     },
@@ -36,6 +37,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }
@@ -58,6 +60,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "CPU": "4",
       "MEMORY": "12G",
       "SHARD": "tests",
@@ -75,6 +78,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "1",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }
@@ -97,6 +101,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "CPU": "4",
       "MEMORY": "12G",
       "SHARD": "tool_tests",
@@ -114,6 +119,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "2",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }

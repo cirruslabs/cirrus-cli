@@ -75,7 +75,7 @@ func NewTask(
 					return err
 				}
 				task.proto.Instance = anyInstance
-				task.proto.Environment["CIRRUS_OS"] = "linux"
+				task.proto.Environment = environment.Merge(task.proto.Environment, map[string]string{"CIRRUS_OS": "linux"})
 
 				return nil
 			})
@@ -97,7 +97,7 @@ func NewTask(
 					return err
 				}
 				task.proto.Instance = anyInstance
-				task.proto.Environment["CIRRUS_OS"] = "linux"
+				task.proto.Environment = environment.Merge(task.proto.Environment, map[string]string{"CIRRUS_OS": "linux"})
 				instanceType := strings.ToLower(anyInstance.TypeUrl)
 				if strings.Contains(instanceType, "windows") {
 					task.proto.Environment["CIRRUS_OS"] = "windows"

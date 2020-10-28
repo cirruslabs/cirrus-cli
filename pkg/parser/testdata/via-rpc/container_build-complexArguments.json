@@ -14,6 +14,9 @@
         }
       }
     ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "cpu": 2,
@@ -29,6 +32,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       },
@@ -56,6 +60,9 @@
         }
       }
     ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "cpu": 2,
@@ -72,6 +79,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "1",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       },
@@ -107,6 +115,9 @@
         }
       }
     ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
       "arguments": {
@@ -152,6 +163,9 @@
         }
       }
     ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
       "arguments": {

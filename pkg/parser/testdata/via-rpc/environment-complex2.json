@@ -23,7 +23,8 @@
       }
     ],
     "environment": {
-      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -36,6 +37,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }
@@ -74,7 +76,8 @@
       }
     ],
     "environment": {
-      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -88,6 +91,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "1",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       },
@@ -132,7 +136,8 @@
       }
     ],
     "environment": {
-      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -146,6 +151,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "2",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       },
@@ -190,7 +196,8 @@
       }
     ],
     "environment": {
-      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -204,6 +211,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "3",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       },

@@ -36,6 +36,7 @@ type DockerPipe struct {
 func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *DockerPipe {
 	pipe := &DockerPipe{}
 	pipe.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
+	pipe.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 
 	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		pipeEnv, err := node.GetEnvironment()

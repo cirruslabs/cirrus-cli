@@ -15,6 +15,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "DEST_BRANCH": "master"
     },
     "instance": {
@@ -28,6 +29,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }

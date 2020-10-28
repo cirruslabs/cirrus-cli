@@ -54,7 +54,8 @@
       }
     ],
     "environment": {
-      "APP_NAME": "test"
+      "APP_NAME": "test",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -67,6 +68,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
+        "skip_notifications": "false",
         "timeout_in": "1800",
         "trigger_type": "AUTOMATIC"
       }
@@ -81,7 +83,8 @@
       }
     ],
     "environment": {
-      "APP_NAME": "test"
+      "APP_NAME": "test",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -95,6 +98,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "1",
+        "skip_notifications": "false",
         "timeout_in": "1800",
         "trigger_type": "AUTOMATIC"
       }

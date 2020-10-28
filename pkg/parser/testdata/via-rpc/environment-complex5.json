@@ -23,6 +23,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "CIRRUS_WORKING_DIR": "/var/tmp/go/src/github.com/containers/storage",
       "FEDORA_CACHE_IMAGE_NAME": "${FEDORA_NAME}-${_BUILT_IMAGE_SUFFIX}",
       "FEDORA_NAME": "fedora-32",
@@ -48,6 +49,7 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
+        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }
