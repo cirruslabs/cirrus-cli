@@ -102,7 +102,9 @@ func extractProtoInstanceLabels(anyInstance *any.Any, instanceName string, descr
 	} else if fieldDescriptor := descriptor.Fields().ByName("template"); fieldDescriptor != nil {
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
 	}
-	instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, instanceValue))
+	if instanceValue != "" {
+		instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, instanceValue))
+	}
 
 	if fieldDescriptor := descriptor.Fields().ByName("dockerfile"); fieldDescriptor != nil {
 		path := dynamicInstance.Get(fieldDescriptor).String()
