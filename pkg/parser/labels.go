@@ -92,24 +92,26 @@ func extractProtoInstanceLabels(anyInstance *any.Any, instanceName string, descr
 		return nil, err
 	}
 
+	instanceValue := ""
 	if fieldDescriptor := descriptor.Fields().ByName("image"); fieldDescriptor != nil {
-		instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, dynamicInstance.Get(fieldDescriptor)))
+		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
 	} else if fieldDescriptor := descriptor.Fields().ByName("image_name"); fieldDescriptor != nil {
-		instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, dynamicInstance.Get(fieldDescriptor)))
+		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
 	} else if fieldDescriptor := descriptor.Fields().ByName("image_id"); fieldDescriptor != nil {
-		instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, dynamicInstance.Get(fieldDescriptor)))
+		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
 	} else if fieldDescriptor := descriptor.Fields().ByName("template"); fieldDescriptor != nil {
-		instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, dynamicInstance.Get(fieldDescriptor)))
+		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
 	}
+	instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, instanceValue))
 
-	if fieldDescriptor := descriptor.Fields().ByName("dockerfilePath"); fieldDescriptor != nil {
+	if fieldDescriptor := descriptor.Fields().ByName("dockerfile"); fieldDescriptor != nil {
 		path := dynamicInstance.Get(fieldDescriptor).String()
 		if path != "" {
 			instanceLabels = append(instanceLabels, fmt.Sprintf("Dockerfile:%s", path))
 		}
 	}
 
-	if fieldDescriptor := descriptor.Fields().ByName("dockerArguments"); fieldDescriptor != nil {
+	if fieldDescriptor := descriptor.Fields().ByName("docker_arguments"); fieldDescriptor != nil {
 		dynamicInstance.Get(fieldDescriptor).Map().Range(func(key protoreflect.MapKey, value protoreflect.Value) bool {
 			instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", key, value))
 			return true
