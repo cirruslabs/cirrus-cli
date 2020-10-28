@@ -259,16 +259,6 @@ func (p *ProtoInstance) Parse(node *node.Node) (*dynamicpb.Message, error) {
 }
 
 func GuessPlatform(anyInstance *any.Any, descriptor protoreflect.MessageDescriptor) string {
-	platformField := descriptor.Fields().ByJSONName("platform")
-	if platformField != nil {
-		dynamicMessage := dynamicpb.NewMessage(descriptor)
-		_ = proto.Unmarshal(anyInstance.GetValue(), dynamicMessage)
-		value := dynamicMessage.Get(platformField)
-		valueDescription := platformField.Enum().Values().Get(int(value.Enum()))
-		enumName := string(valueDescription.Name())
-		return strings.ToLower(enumName)
-	}
-
 	instanceType := strings.ToLower(anyInstance.TypeUrl)
 	if strings.Contains(instanceType, "windows") {
 		return "windows"
@@ -285,5 +275,16 @@ func GuessPlatform(anyInstance *any.Any, descriptor protoreflect.MessageDescript
 	if strings.Contains(instanceType, "anka") {
 		return "darwin"
 	}
+
+	platformField := descriptor.Fields().ByJSONName("platform")
+	if platformField != nil {
+		dynamicMessage := dynamicpb.NewMessage(descriptor)
+		_ = proto.Unmarshal(anyInstance.GetValue(), dynamicMessage)
+		value := dynamicMessage.Get(platformField)
+		valueDescription := platformField.Enum().Values().Get(int(value.Enum()))
+		enumName := string(valueDescription.Name())
+		return strings.ToLower(enumName)
+	}
+
 	return "linux"
 }
