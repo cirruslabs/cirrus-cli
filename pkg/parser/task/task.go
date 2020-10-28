@@ -231,6 +231,16 @@ func NewTask(
 		return nil
 	})
 
+	// for cloud only
+	task.CollectibleField("stateful", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["stateful"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
 	task.CollectibleField("experimental", schema.TodoSchema, func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
 		if err != nil {
