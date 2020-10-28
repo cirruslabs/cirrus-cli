@@ -31,6 +31,29 @@ func TestDeepFindChildren(t *testing.T) {
 	assert.Equal(t, "KEY1", virtualNode.Children[1].Name)
 }
 
+func TestDeepFindChildrenSameLevel(t *testing.T) {
+	yamlSlice := yaml.MapSlice{
+		{Key: "alpha", Value: yaml.MapSlice{
+			{Key: "env", Value: yaml.MapSlice{
+				{Key: "KEY1", Value: "VALUE1"},
+			}},
+			{Key: "env", Value: yaml.MapSlice{
+				{Key: "KEY2", Value: "VALUE2"},
+			}},
+		}},
+	}
+
+	tree, err := node.NewFromSlice(yamlSlice)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	virtualNode := tree.Children[0].DeepFindChild("env")
+	assert.Len(t, virtualNode.Children, 2)
+	assert.Equal(t, "KEY1", virtualNode.Children[1].Name)
+	assert.Equal(t, "KEY2", virtualNode.Children[0].Name)
+}
+
 func TestHasChildren(t *testing.T) {
 	yamlSlice := yaml.MapSlice{
 		{Key: "some name", Value: "some value"},

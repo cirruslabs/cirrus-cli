@@ -25,8 +25,6 @@ func (node *Node) DeepFindChild(name string) *Node {
 					virtualNode.Children = append(virtualNode.Children, subChild)
 				}
 			}
-
-			break
 		}
 	}
 
