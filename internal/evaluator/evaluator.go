@@ -103,7 +103,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 
 	additionalInstances := make(map[string]protoreflect.MessageDescriptor)
 
-	descriptorSet := request.AdditionalInstancesInfo.GetDescriptor_()
+	descriptorSet := request.AdditionalInstancesInfo.GetDescriptorSet()
 	if descriptorSet != nil {
 		// convert protobuf descriptors to proto reflections
 		// in order to pass additional instances provided dynamically by the request
