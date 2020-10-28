@@ -38,11 +38,15 @@ func (node *Node) DeepFindChild(name string) *Node {
 }
 
 func (node *Node) HasChild(name string) bool {
+	return node.FindChild(name) != nil
+}
+
+func (node *Node) FindChild(name string) *Node {
 	for _, child := range node.Children {
 		if child.Name == name {
-			return true
+			return child
 		}
 	}
 
-	return false
+	return nil
 }
