@@ -93,7 +93,11 @@ func extractProtoInstanceLabels(anyInstance *any.Any, instanceName string, descr
 	}
 
 	instanceValue := ""
-	if fieldDescriptor := descriptor.Fields().ByName("image"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
+	if fieldDescriptor := descriptor.Fields().ByName("container"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
+		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
+	} else if fieldDescriptor := descriptor.Fields().ByName("image_family"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
+		instanceValue = "family/" + dynamicInstance.Get(fieldDescriptor).String()
+	} else if fieldDescriptor := descriptor.Fields().ByName("image"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
 	} else if fieldDescriptor := descriptor.Fields().ByName("image_name"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
@@ -101,18 +105,13 @@ func extractProtoInstanceLabels(anyInstance *any.Any, instanceName string, descr
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
 	} else if fieldDescriptor := descriptor.Fields().ByName("template"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
-	} else if fieldDescriptor := descriptor.Fields().ByName("image_family"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
-		instanceValue = "family/" + dynamicInstance.Get(fieldDescriptor).String()
 	}
 	if instanceValue != "" {
 		instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, instanceValue))
 	}
 
-	if fieldDescriptor := descriptor.Fields().ByName("dockerfile"); fieldDescriptor != nil {
-		path := dynamicInstance.Get(fieldDescriptor).String()
-		if path != "" {
-			instanceLabels = append(instanceLabels, fmt.Sprintf("Dockerfile:%s", path))
-		}
+	if fieldDescriptor := descriptor.Fields().ByName("dockerfile"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
+		instanceLabels = append(instanceLabels, fmt.Sprintf("Dockerfile:%s", dynamicInstance.Get(fieldDescriptor).String()))
 	}
 
 	if fieldDescriptor := descriptor.Fields().ByName("docker_arguments"); fieldDescriptor != nil {
@@ -122,12 +121,6 @@ func extractProtoInstanceLabels(anyInstance *any.Any, instanceName string, descr
 		})
 	}
 
-	if fieldDescriptor := descriptor.Fields().ByName("zone"); fieldDescriptor != nil {
-		zone := dynamicInstance.Get(fieldDescriptor).String()
-		if zone != "" {
-			instanceLabels = append(instanceLabels, fmt.Sprintf("zone:%s", zone))
-		}
-	}
 	return instanceLabels, nil
 }
 
