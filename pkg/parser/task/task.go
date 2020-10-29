@@ -70,15 +70,17 @@ func NewTask(
 					return err
 				}
 
-				// Retrieve the platform to update the base environment
-				env["CIRRUS_OS"] = strings.ToLower(containerInstance.Platform.String())
+				// Retrieve the platform to update the environment
+				task.proto.Environment = environment.Merge(
+					task.proto.Environment,
+					map[string]string{"CIRRUS_OS": strings.ToLower(containerInstance.Platform.String())},
+				)
 
 				anyInstance, err := ptypes.MarshalAny(containerInstance)
 				if err != nil {
 					return err
 				}
 				task.proto.Instance = anyInstance
-				task.proto.Environment = environment.Merge(task.proto.Environment, map[string]string{"CIRRUS_OS": "linux"})
 
 				return nil
 			})
