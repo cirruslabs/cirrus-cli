@@ -48,7 +48,8 @@ type Parser struct {
 	boolevator *boolevator.Boolevator
 
 	parsers             map[nameable.Nameable]parseable.Parseable
-	numbering           int64
+	idNumbering         int64
+	indexNumbering      int64
 	additionalInstances map[string]protoreflect.MessageDescriptor
 }
 
@@ -128,6 +129,8 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			if !enabled {
 				continue
 			}
+
+			taskLike.SetIndexWithinBuild(p.NextTaskLocalIndex())
 
 			tasks = append(tasks, taskLike)
 		}
@@ -253,9 +256,16 @@ func (p *Parser) fileHash(ctx context.Context, path string, additionalBytes []by
 
 func (p *Parser) NextTaskID() int64 {
 	defer func() {
-		p.numbering++
+		p.idNumbering++
 	}()
-	return p.numbering
+	return p.idNumbering
+}
+
+func (p *Parser) NextTaskLocalIndex() int64 {
+	defer func() {
+		p.indexNumbering++
+	}()
+	return p.indexNumbering
 }
 
 func (p *Parser) Schema() *schema.Schema {
@@ -380,7 +390,7 @@ func (p *Parser) createServiceTask(
 	}
 
 	// Some metadata property fields duplicate other fields
-	serviceTask.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(serviceTask.LocalGroupId, 10)
+	serviceTask.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(p.NextTaskLocalIndex(), 10)
 
 	// Some metadata property fields are preserved from the original task
 	serviceTask.Metadata.Properties["timeout_in"] = protoTask.Metadata.Properties["timeout_in"]
