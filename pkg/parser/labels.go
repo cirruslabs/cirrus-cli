@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
+	"google.golang.org/protobuf/types/known/anypb"
 	"sort"
 	"strings"
 )
@@ -32,7 +31,7 @@ func labels(
 }
 
 func instanceLabels(
-	taskInstance *any.Any,
+	taskInstance *anypb.Any,
 	additionalInstances map[string]protoreflect.MessageDescriptor,
 ) ([]string, error) {
 	for instanceName, descriptor := range additionalInstances {
@@ -44,9 +43,7 @@ func instanceLabels(
 	var labels []string
 
 	// Unmarshal instance
-	var dynamicAny ptypes.DynamicAny
-
-	err := ptypes.UnmarshalAny(taskInstance, &dynamicAny)
+	dynamicAny, err := taskInstance.UnmarshalNew()
 
 	if errors.Is(err, protoregistry.NotFound) {
 		return labels, nil
@@ -56,7 +53,7 @@ func instanceLabels(
 		return nil, err
 	}
 
-	switch instance := dynamicAny.Message.(type) {
+	switch instance := dynamicAny.(type) {
 	case *api.ContainerInstance:
 		if instance.DockerfilePath == "" {
 			labels = append(labels, fmt.Sprintf("container:%s", instance.Image))
@@ -81,7 +78,11 @@ func instanceLabels(
 	return labels, nil
 }
 
-func extractProtoInstanceLabels(anyInstance *any.Any, instanceName string, descriptor protoreflect.MessageDescriptor) ([]string, error) {
+func extractProtoInstanceLabels(
+	anyInstance *anypb.Any,
+	instanceName string,
+	descriptor protoreflect.MessageDescriptor,
+) ([]string, error) {
 	dynamicInstance := dynamicpb.NewMessage(descriptor)
 
 	var instanceLabels []string
@@ -93,29 +94,30 @@ func extractProtoInstanceLabels(anyInstance *any.Any, instanceName string, descr
 	}
 
 	instanceValue := ""
-	if fieldDescriptor := descriptor.Fields().ByName("container"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
-		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
-	} else if fieldDescriptor := descriptor.Fields().ByName("image_family"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
-		instanceValue = "family/" + dynamicInstance.Get(fieldDescriptor).String()
-	} else if fieldDescriptor := descriptor.Fields().ByName("image"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
-		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
-	} else if fieldDescriptor := descriptor.Fields().ByName("image_name"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
-		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
-	} else if fieldDescriptor := descriptor.Fields().ByName("image_id"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
-		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
-	} else if fieldDescriptor := descriptor.Fields().ByName("template"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
-		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
+	//nolint:nestif
+	if fd := descriptor.Fields().ByName("container"); checkFieldIsSet(dynamicInstance, fd) {
+		instanceValue = dynamicInstance.Get(fd).String()
+	} else if fd := descriptor.Fields().ByName("image_family"); checkFieldIsSet(dynamicInstance, fd) {
+		instanceValue = "family/" + dynamicInstance.Get(fd).String()
+	} else if fd := descriptor.Fields().ByName("image"); checkFieldIsSet(dynamicInstance, fd) {
+		instanceValue = dynamicInstance.Get(fd).String()
+	} else if fd := descriptor.Fields().ByName("image_name"); checkFieldIsSet(dynamicInstance, fd) {
+		instanceValue = dynamicInstance.Get(fd).String()
+	} else if fd := descriptor.Fields().ByName("image_id"); checkFieldIsSet(dynamicInstance, fd) {
+		instanceValue = dynamicInstance.Get(fd).String()
+	} else if fd := descriptor.Fields().ByName("template"); checkFieldIsSet(dynamicInstance, fd) {
+		instanceValue = dynamicInstance.Get(fd).String()
 	}
 	if instanceValue != "" {
 		instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, instanceValue))
 	}
 
-	if fieldDescriptor := descriptor.Fields().ByName("dockerfile"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
-		instanceLabels = append(instanceLabels, fmt.Sprintf("Dockerfile:%s", dynamicInstance.Get(fieldDescriptor).String()))
+	if fd := descriptor.Fields().ByName("dockerfile"); checkFieldIsSet(dynamicInstance, fd) {
+		instanceLabels = append(instanceLabels, fmt.Sprintf("Dockerfile:%s", dynamicInstance.Get(fd).String()))
 	}
 
-	if fieldDescriptor := descriptor.Fields().ByName("docker_arguments"); fieldDescriptor != nil {
-		dynamicInstance.Get(fieldDescriptor).Map().Range(func(key protoreflect.MapKey, value protoreflect.Value) bool {
+	if fd := descriptor.Fields().ByName("docker_arguments"); checkFieldIsSet(dynamicInstance, fd) {
+		dynamicInstance.Get(fd).Map().Range(func(key protoreflect.MapKey, value protoreflect.Value) bool {
 			instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", key, value))
 			return true
 		})
@@ -124,7 +126,15 @@ func extractProtoInstanceLabels(anyInstance *any.Any, instanceName string, descr
 	return instanceLabels, nil
 }
 
-func uniqueLabels(task *api.Task, tasks []*api.Task, additionalInstances map[string]protoreflect.MessageDescriptor) ([]string, error) {
+func checkFieldIsSet(dynamicInstance *dynamicpb.Message, fd protoreflect.FieldDescriptor) bool {
+	return fd != nil && dynamicInstance.Has(fd)
+}
+
+func uniqueLabels(
+	task *api.Task,
+	tasks []*api.Task,
+	additionalInstances map[string]protoreflect.MessageDescriptor,
+) ([]string, error) {
 	// Collect similarly named tasks, including the task itself
 	var similarlyNamedTasks []*api.Task
 

@@ -168,11 +168,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 		}, nil
 	}
 
-	if err := resolveDependenciesShallow(tasks); err != nil {
-		return &Result{
-			Errors: []string{err.Error()},
-		}, nil
-	}
+	resolveDependenciesShallow(tasks)
 
 	if len(tasks) == 0 {
 		return &Result{
@@ -292,7 +288,7 @@ func (p *Parser) Schema() *schema.Schema {
 	return schema
 }
 
-func resolveDependenciesShallow(tasks []task.ParseableTaskLike) error {
+func resolveDependenciesShallow(tasks []task.ParseableTaskLike) {
 	for _, task := range tasks {
 		var dependsOnIDs []int64
 		for _, dependsOnName := range task.DependsOnNames() {
@@ -305,8 +301,6 @@ func resolveDependenciesShallow(tasks []task.ParseableTaskLike) error {
 		sort.Slice(dependsOnIDs, func(i, j int) bool { return dependsOnIDs[i] < dependsOnIDs[j] })
 		task.SetDependsOnIDs(dependsOnIDs)
 	}
-
-	return nil
 }
 
 func (p *Parser) createServiceTask(

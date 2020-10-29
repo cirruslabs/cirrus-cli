@@ -271,11 +271,11 @@ func NewTask(
 	})
 
 	task.CollectibleField("trigger_type", schema.TodoSchema, func(node *node.Node) error {
-		trigger_type, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
+		triggerType, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}
-		task.proto.Metadata.Properties["trigger_type"] = strings.ToUpper(trigger_type)
+		task.proto.Metadata.Properties["trigger_type"] = strings.ToUpper(triggerType)
 		return nil
 	})
 

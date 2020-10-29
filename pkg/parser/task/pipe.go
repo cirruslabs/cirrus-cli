@@ -33,6 +33,7 @@ type DockerPipe struct {
 	parseable.DefaultParser
 }
 
+//nolint:gocognit // it's a parser, there is a lot of boilerplate
 func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *DockerPipe {
 	pipe := &DockerPipe{}
 	pipe.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
@@ -172,22 +173,22 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 	})
 
 	pipe.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
-		timeout_in, err := handleTimeoutIn(node, environment.Merge(pipe.proto.Environment, env))
+		timeoutIn, err := handleTimeoutIn(node, environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 
-		pipe.proto.Metadata.Properties["timeout_in"] = timeout_in
+		pipe.proto.Metadata.Properties["timeout_in"] = timeoutIn
 
 		return nil
 	})
 
 	pipe.CollectibleField("trigger_type", schema.TodoSchema, func(node *node.Node) error {
-		trigger_type, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
+		triggerType, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}
-		pipe.proto.Metadata.Properties["trigger_type"] = strings.ToUpper(trigger_type)
+		pipe.proto.Metadata.Properties["trigger_type"] = strings.ToUpper(triggerType)
 		return nil
 	})
 

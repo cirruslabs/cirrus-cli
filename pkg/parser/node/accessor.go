@@ -135,7 +135,8 @@ func (node *Node) GetScript() ([]string, error) {
 				if err != nil {
 					return nil, fmt.Errorf("%w: failed to encode Powershell script (%v)", parsererror.ErrParsing, err)
 				}
-				result = append(result, fmt.Sprintf("powershell.exe -NoLogo -EncodedCommand %s", base64.StdEncoding.EncodeToString(valueBytes)))
+				encodedValue := base64.StdEncoding.EncodeToString(valueBytes)
+				result = append(result, fmt.Sprintf("powershell.exe -NoLogo -EncodedCommand %s", encodedValue))
 			}
 		}
 

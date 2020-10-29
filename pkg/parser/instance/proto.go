@@ -6,10 +6,10 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
+	"google.golang.org/protobuf/types/known/anypb"
 	"sort"
 	"strconv"
 	"strings"
@@ -21,7 +21,7 @@ type ProtoInstance struct {
 	parseable.DefaultParser
 }
 
-//nolint:gocognit,gocyclo // it's a parser, there is a lot of boilerplate
+//nolint:gocognit,gocyclo,nestif // it's a parser, there is a lot of boilerplate
 func NewProtoParser(
 	desc protoreflect.MessageDescriptor,
 	mergedEnv map[string]string,
@@ -46,7 +46,7 @@ func NewProtoParser(
 						return err
 					}
 					var keys []string
-					for key, _ := range mapping {
+					for key := range mapping {
 						keys = append(keys, key)
 					}
 					// determenistic order
@@ -76,6 +76,7 @@ func NewProtoParser(
 								return err
 							}
 							parsedChild = dynamicpb.NewMessage(field.Message())
+							//nolint:ineffassign,staticcheck
 							err = proto.Unmarshal(additionalContainerBytes, parsedChild)
 						} else {
 							childParser := NewProtoParser(field.Message(), mergedEnv, boolevator)
@@ -258,7 +259,8 @@ func (p *ProtoInstance) Parse(node *node.Node) (*dynamicpb.Message, error) {
 	return p.proto, nil
 }
 
-func GuessPlatform(anyInstance *any.Any, descriptor protoreflect.MessageDescriptor) string {
+//nolint:goconst
+func GuessPlatform(anyInstance *anypb.Any, descriptor protoreflect.MessageDescriptor) string {
 	instanceType := strings.ToLower(anyInstance.TypeUrl)
 	if strings.Contains(instanceType, "windows") {
 		return "windows"
