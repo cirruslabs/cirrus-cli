@@ -101,6 +101,8 @@ func extractProtoInstanceLabels(anyInstance *any.Any, instanceName string, descr
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
 	} else if fieldDescriptor := descriptor.Fields().ByName("template"); fieldDescriptor != nil {
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
+	} else if fieldDescriptor := descriptor.Fields().ByName("image_family"); fieldDescriptor != nil {
+		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
 	}
 	if instanceValue != "" {
 		instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, instanceValue))
