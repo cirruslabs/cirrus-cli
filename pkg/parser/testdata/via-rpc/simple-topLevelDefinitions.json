@@ -26,6 +26,7 @@
     "metadata": {
       "properties": {
         "allow_failures": "true",
+        "auto_cancellation": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
         "skip_notifications": "true",

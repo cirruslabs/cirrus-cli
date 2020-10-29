@@ -374,7 +374,10 @@ func (p *Parser) createServiceTask(
 		Metadata: &api.Task_Metadata{
 			Properties: environment.Merge(
 				task.DefaultTaskProperties(),
-				map[string]string{"skip_notifications": "true"},
+				map[string]string{
+					"skip_notifications": "true",
+					"auto_cancellation":  protoTask.Metadata.Properties["auto_cancellation"],
+				},
 			),
 		},
 	}

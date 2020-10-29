@@ -209,9 +209,7 @@ func TestViaRPCInvalid(t *testing.T) {
 		Message string
 	}{
 		{"validation-badDependencies.yml", "error in dependencies between tasks: b, c, d"},
-		{"validation-badDependencyNames.yml", "there's no task 'fooo', but task 'bar' depends on it"},
 		{"validation-duplicateCommands.yml", "task 'main' cache and script instructions have identical name"},
-		{"validation-validMissingDependency.yml", "there's no task 'foo', but task 'bar' depends on it"},
 	}
 
 	for _, testCase := range invalidCases {
