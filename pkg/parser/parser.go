@@ -106,6 +106,8 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 				return nil, err
 			}
 
+			taskLike.SetID(p.NextTaskID())
+
 			// Set task's name if not set in the definition
 			if taskLike.Name() == "" {
 				if rn, ok := key.(*nameable.RegexNameable); ok {
@@ -161,11 +163,6 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 		return &Result{
 			Errors: []string{err.Error()},
 		}, nil
-	}
-
-	// Assign group IDs to tasks
-	for _, task := range tasks {
-		task.SetID(p.NextTaskID())
 	}
 
 	if err := resolveDependenciesShallow(tasks); err != nil {
