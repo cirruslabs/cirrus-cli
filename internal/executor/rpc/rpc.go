@@ -114,13 +114,15 @@ func (r *RPC) Start(ctx context.Context) error {
 		r.serverWaitGroup.Done()
 	}()
 
-	r.logger.Debugf("gRPC server is listening at %s", r.Endpoint())
+	r.logger.Debugf("gRPC server is listening at %s (%s inside of a container)",
+		r.DirectEndpoint(), r.ContainerEndpoint())
 
 	return nil
 }
 
-// Endpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag.
-func (r *RPC) Endpoint() string {
+// ContainerEndpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag
+// when running inside of a container.
+func (r *RPC) ContainerEndpoint() string {
 	if runtime.GOOS == "linux" {
 		if r.listener.Addr().Network() == networkUnix {
 			return "unix://" + r.listener.Addr().String()
@@ -132,6 +134,16 @@ func (r *RPC) Endpoint() string {
 	port := r.listener.Addr().(*net.TCPAddr).Port
 
 	return fmt.Sprintf("http://host.docker.internal:%d", port)
+}
+
+// DirectEndpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag
+// when running on the host.
+func (r *RPC) DirectEndpoint() string {
+	if r.listener.Addr().Network() == networkUnix {
+		return "unix://" + r.listener.Addr().String()
+	}
+
+	return "http://" + r.listener.Addr().String()
 }
 
 // Stop gracefully stops the RPC server.

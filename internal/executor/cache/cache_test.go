@@ -34,7 +34,7 @@ func TestKeySanitization(t *testing.T) {
 	}
 
 	// Examine cache directory
-	dirEntries, err := ioutil.ReadDir(filepath.Join(dir, "cirrus"))
+	dirEntries, err := ioutil.ReadDir(filepath.Join(dir, "cirrus", "projects"))
 	if err != nil {
 		t.Fatal(err)
 	}

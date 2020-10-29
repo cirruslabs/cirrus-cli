@@ -32,7 +32,7 @@ func New(dir string, namespace string) (*Cache, error) {
 		dir = userCacheDir
 	}
 
-	namespaceDir := filepath.Join(dir, "cirrus", namespace)
+	namespaceDir := filepath.Join(dir, "cirrus", "projects", namespace)
 
 	// Create a base directory, ignoring ErrExist since it may already be created
 	// by a previous or parallel invocation of the CLI

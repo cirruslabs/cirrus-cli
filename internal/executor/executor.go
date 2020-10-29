@@ -62,7 +62,6 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 		task.Environment = environment.Merge(
 			// Lowest priority: common to all tasks
 			e.baseEnvironment,
-			environment.ContainerSpecific(),
 
 			// Lowest priority: task-specific
 			environment.NodeInfo(task.LocalGroupId, int64(len(tasks))),
@@ -85,14 +84,18 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	e.build = b
 	e.rpc = rpc.New(b, rpc.WithLogger(e.logger))
 
-	// Collect images that shouldn't be pulled under any circumstances
 	for _, task := range b.Tasks() {
-		prebuiltInstance, ok := task.Instance.(*instance.PrebuiltInstance)
-		if !ok {
-			continue
+		// Collect images that shouldn't be pulled under any circumstances
+		if prebuiltInstance, ok := task.Instance.(*instance.PrebuiltInstance); ok {
+			e.dockerOptions.NoPullImages = append(e.dockerOptions.NoPullImages, prebuiltInstance.Image)
 		}
 
-		e.dockerOptions.NoPullImages = append(e.dockerOptions.NoPullImages, prebuiltInstance.Image)
+		// Set task's working directory based on it's instance (if not overridden by the user)
+		if _, ok := e.userSpecifiedEnvironment["CIRRUS_WORKING_DIR"]; !ok {
+			task.Environment = environment.Merge(task.Environment, map[string]string{
+				"CIRRUS_WORKING_DIR": task.Instance.WorkingDirectory(projectDir, e.dirtyMode),
+			})
+		}
 	}
 
 	return e, nil
@@ -117,14 +120,15 @@ func (e *Executor) Run(ctx context.Context) error {
 		// Prepare task's instance
 		taskInstance := task.Instance
 		instanceRunOpts := instance.RunConfig{
-			ProjectDir:    e.build.ProjectDir,
-			Endpoint:      e.rpc.Endpoint(),
-			ServerSecret:  e.rpc.ServerSecret(),
-			ClientSecret:  e.rpc.ClientSecret(),
-			TaskID:        task.ID,
-			Logger:        taskLogger,
-			DirtyMode:     e.dirtyMode,
-			DockerOptions: e.dockerOptions,
+			ProjectDir:        e.build.ProjectDir,
+			ContainerEndpoint: e.rpc.ContainerEndpoint(),
+			DirectEndpoint:    e.rpc.DirectEndpoint(),
+			ServerSecret:      e.rpc.ServerSecret(),
+			ClientSecret:      e.rpc.ClientSecret(),
+			TaskID:            task.ID,
+			Logger:            taskLogger,
+			DirtyMode:         e.dirtyMode,
+			DockerOptions:     e.dockerOptions,
 		}
 
 		// Wrap the context to enforce a timeout for this task

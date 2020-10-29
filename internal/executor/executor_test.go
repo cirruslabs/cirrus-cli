@@ -246,7 +246,6 @@ func TestExecutionBehavior(t *testing.T) {
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	// Create a logger and attach it to writer
-
 	renderer := renderers.NewSimpleRenderer(writer, nil)
 	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
 
@@ -341,4 +340,21 @@ func filesContentsSingleVariation(t *testing.T, dir, dockerfileContents string) 
 
 	t.Fatal("wasn't able to find the container instance in the parsing result")
 	return ""
+}
+
+// TestPersistentWorker ensures that persistent worker instance is handled properly.
+func TestPersistentWorker(t *testing.T) {
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	// Create a logger and attach it to writer
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	dir := testutil.TempDirPopulatedWith(t, "testdata/persistent-worker")
+	err := testutil.ExecuteWithOptionsNew(t, dir, executor.WithLogger(logger))
+	assert.NoError(t, err)
+	assert.Contains(t, buf.String(), "'show' script succeeded")
+	assert.Contains(t, buf.String(), "'check' script succeeded")
 }

@@ -36,6 +36,7 @@ const (
 
 type Instance interface {
 	Run(context.Context, *RunConfig) error
+	WorkingDirectory(projectDir string, dirtyMode bool) string
 }
 
 func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, error) {
@@ -76,6 +77,8 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 			Dockerfile: instance.DockerfilePath,
 			Arguments:  instance.Arguments,
 		}, nil
+	case *api.PersistentWorkerInstance:
+		return NewPersistentWorkerInstance()
 	default:
 		return nil, fmt.Errorf("%w: %T", ErrUnsupportedInstance, instance)
 	}
@@ -83,7 +86,8 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 
 type RunConfig struct {
 	ProjectDir                 string
-	Endpoint                   string
+	ContainerEndpoint          string
+	DirectEndpoint             string
 	ServerSecret, ClientSecret string
 	TaskID                     int64
 	Logger                     *echelon.Logger
@@ -145,7 +149,7 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		Entrypoint: []string{
 			path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent),
 			"-api-endpoint",
-			config.Endpoint,
+			config.ContainerEndpoint,
 			"-server-token",
 			config.ServerSecret,
 			"-client-token",
@@ -182,7 +186,7 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		} else {
 			// Mount a Unix domain socket in all other Linux cases, assuming that
 			// we run in the same mount namespace as the Docker daemon
-			socketPath := strings.TrimPrefix(config.Endpoint, "unix://")
+			socketPath := strings.TrimPrefix(config.ContainerEndpoint, "unix://")
 
 			hostConfig.Mounts = append(hostConfig.Mounts, mount.Mount{
 				Type:   mount.TypeBind,

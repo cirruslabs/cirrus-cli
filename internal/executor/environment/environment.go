@@ -2,10 +2,8 @@ package environment
 
 import (
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/go-git/go-git/v5"
 	"github.com/google/uuid"
-	"path"
 	"strconv"
 	"strings"
 )
@@ -30,12 +28,6 @@ func Copy(env map[string]string) (result map[string]string) {
 	}
 
 	return
-}
-
-func ContainerSpecific() map[string]string {
-	return map[string]string{
-		"CIRRUS_WORKING_DIR": path.Join(instance.WorkingVolumeMountpoint, instance.WorkingVolumeWorkingDir),
-	}
 }
 
 func Static() map[string]string {
