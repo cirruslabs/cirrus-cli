@@ -93,16 +93,16 @@ func extractProtoInstanceLabels(anyInstance *any.Any, instanceName string, descr
 	}
 
 	instanceValue := ""
-	if fieldDescriptor := descriptor.Fields().ByName("image"); fieldDescriptor != nil {
+	if fieldDescriptor := descriptor.Fields().ByName("image"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
-	} else if fieldDescriptor := descriptor.Fields().ByName("image_name"); fieldDescriptor != nil {
+	} else if fieldDescriptor := descriptor.Fields().ByName("image_name"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
-	} else if fieldDescriptor := descriptor.Fields().ByName("image_id"); fieldDescriptor != nil {
+	} else if fieldDescriptor := descriptor.Fields().ByName("image_id"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
-	} else if fieldDescriptor := descriptor.Fields().ByName("template"); fieldDescriptor != nil {
+	} else if fieldDescriptor := descriptor.Fields().ByName("template"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
 		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
-	} else if fieldDescriptor := descriptor.Fields().ByName("image_family"); fieldDescriptor != nil {
-		instanceValue = dynamicInstance.Get(fieldDescriptor).String()
+	} else if fieldDescriptor := descriptor.Fields().ByName("image_family"); fieldDescriptor != nil && dynamicInstance.Has(fieldDescriptor) {
+		instanceValue = "family/" + dynamicInstance.Get(fieldDescriptor).String()
 	}
 	if instanceValue != "" {
 		instanceLabels = append(instanceLabels, fmt.Sprintf("%s:%s", instanceName, instanceValue))
