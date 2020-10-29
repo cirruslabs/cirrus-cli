@@ -289,16 +289,10 @@ func resolveDependenciesShallow(tasks []task.ParseableTaskLike) error {
 	for _, task := range tasks {
 		var dependsOnIDs []int64
 		for _, dependsOnName := range task.DependsOnNames() {
-			var foundID int64 = -1
 			for _, subTask := range tasks {
 				if subTask.Name() == dependsOnName {
-					foundID = subTask.ID()
 					dependsOnIDs = append(dependsOnIDs, subTask.ID())
 				}
-			}
-			if foundID == -1 {
-				return fmt.Errorf("%w: there's no task '%s', but task '%s' depends on it",
-					parsererror.ErrParsing, dependsOnName, task.Name())
 			}
 		}
 		sort.Slice(dependsOnIDs, func(i, j int) bool { return dependsOnIDs[i] < dependsOnIDs[j] })
