@@ -85,6 +85,26 @@ func NewTask(
 				return nil
 			})
 	}
+	if _, ok := additionalInstances["persistent_worker"]; !ok {
+		task.CollectibleField("persistent_worker",
+			instance.NewPersistentWorker().Schema(),
+			func(node *node.Node) error {
+				inst := instance.NewPersistentWorker()
+				persistentWorkerInstance, err := inst.Parse(node)
+				if err != nil {
+					return err
+				}
+
+				anyInstance, err := ptypes.MarshalAny(persistentWorkerInstance)
+				if err != nil {
+					return err
+				}
+				task.proto.Instance = anyInstance
+
+				return nil
+			},
+		)
+	}
 
 	for instanceName, descriptor := range additionalInstances {
 		scopedInstanceName := instanceName
