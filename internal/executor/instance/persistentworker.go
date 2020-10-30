@@ -2,6 +2,7 @@ package instance
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/otiai10/copy"
 	"io"
@@ -15,6 +16,7 @@ import (
 )
 
 var (
+	ErrPopulateFailed      = errors.New("failed to populate working directory")
 	ErrAgentDownloadFailed = errors.New("failed to download agent")
 )
 
@@ -62,7 +64,8 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *RunConfig)
 	} else {
 		// Populate the working directory
 		if err := copy.Copy(config.ProjectDir, pwi.tempDir); err != nil {
-			return err
+			return fmt.Errorf("%w: while copying %s's contents into %s: %v",
+				ErrPopulateFailed, config.ProjectDir, pwi.tempDir, err)
 		}
 
 		cmd.Dir = pwi.tempDir
