@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"google.golang.org/grpc"
 )
 
 func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollResponse_AgentAwareTask) {
@@ -26,7 +27,7 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			worker.taskCompletions <- agentAwareTask.TaskId
 		}()
 
-		_, err = worker.rpcClient.TaskStarted(taskCtx, &api.TaskIdentification{TaskId: agentAwareTask.TaskId})
+		_, err = worker.rpcClient.TaskStarted(taskCtx, &api.TaskIdentification{TaskId: agentAwareTask.TaskId}, grpc.PerRPCCredentials(worker))
 		if err != nil {
 			worker.logger.Errorf("failed to notify the server about the started task %d: %v",
 				agentAwareTask.TaskId, err)
@@ -49,7 +50,7 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
 		}
 
-		_, err = worker.rpcClient.TaskStopped(taskCtx, &api.TaskIdentification{TaskId: agentAwareTask.TaskId})
+		_, err = worker.rpcClient.TaskStopped(taskCtx, &api.TaskIdentification{TaskId: agentAwareTask.TaskId}, grpc.PerRPCCredentials(worker))
 		if err != nil {
 			worker.logger.Errorf("failed to notify the server about the stopped task %d: %v",
 				agentAwareTask.TaskId, err)

@@ -183,7 +183,7 @@ func (worker *Worker) poll(ctx context.Context) error {
 		RunningTasks: worker.runningTasks(),
 	}
 
-	response, err := worker.rpcClient.Poll(ctx, request)
+	response, err := worker.rpcClient.Poll(ctx, request, grpc.PerRPCCredentials(worker))
 	if err != nil {
 		return err
 	}
@@ -206,4 +206,16 @@ func (worker *Worker) poll(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// PerRPCCredentials interface implementation.
+func (worker *Worker) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{
+		"session-token": worker.sessionToken,
+	}, nil
+}
+
+// PerRPCCredentials interface implementation.
+func (worker *Worker) RequireTransportSecurity() bool {
+	return !worker.rpcInsecure
 }
