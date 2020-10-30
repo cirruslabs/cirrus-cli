@@ -22,10 +22,10 @@ By default the worker's name gets assigned semi-automatically based on the name 
 cirrus worker run --token <poll registration token> --name z390-worker
 ```
 
-Note that persistent worker's name should be unique within a poll, otherwise a registration will fail. To avoid this, use a special counter variable `${n}` that gets expanded in the cloud to the worker's registration slot:
+Note that persistent worker's name should be unique within a poll, otherwise a registration will fail. To avoid this, use a special counter variable `%n` that gets expanded in the cloud to the worker's registration slot:
 
 ```
-cirrus worker run --token <poll registration token> --name "z390-worker-${n}"
+cirrus worker run --token <poll registration token> --name "z390-worker-%n"
 ```
 
 ## Configuration
@@ -37,7 +37,7 @@ Example configuration:
 ```yaml
 token: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
-name: "${hostname}-${n}"
+name: "%hostname-%n"
 
 labels:
   distro: debian

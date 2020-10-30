@@ -51,7 +51,7 @@ func NewRunCmd() *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(&configPath, "file", "f", "", "configuration file path (e.g. /etc/cirrus/worker.yml)")
 
-	cmd.PersistentFlags().StringVar(&name, "name", "${hostname}-${n}", "worker name to use when registering in the pool")
+	cmd.PersistentFlags().StringVar(&name, "name", "%hostname-%n", "worker name to use when registering in the pool")
 	_ = viper.BindPFlag("name", cmd.PersistentFlags().Lookup("name"))
 
 	cmd.PersistentFlags().StringVar(&token, "token", "", "pool registration token")
