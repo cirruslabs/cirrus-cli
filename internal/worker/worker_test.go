@@ -20,7 +20,12 @@ const (
 	clientSecret      = "client secret"
 )
 
-func unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+func unaryInterceptor(
+	ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (resp interface{}, err error) {
 	// Only authenticate workers RPC methods
 	if _, ok := info.Server.(*WorkersRPC); !ok {
 		return handler(ctx, req)

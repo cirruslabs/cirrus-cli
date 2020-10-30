@@ -27,7 +27,8 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			worker.taskCompletions <- agentAwareTask.TaskId
 		}()
 
-		_, err = worker.rpcClient.TaskStarted(taskCtx, &api.TaskIdentification{TaskId: agentAwareTask.TaskId}, grpc.PerRPCCredentials(worker))
+		_, err = worker.rpcClient.TaskStarted(taskCtx, &api.TaskIdentification{TaskId: agentAwareTask.TaskId},
+			grpc.PerRPCCredentials(worker))
 		if err != nil {
 			worker.logger.Errorf("failed to notify the server about the started task %d: %v",
 				agentAwareTask.TaskId, err)
@@ -50,7 +51,8 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
 		}
 
-		_, err = worker.rpcClient.TaskStopped(taskCtx, &api.TaskIdentification{TaskId: agentAwareTask.TaskId}, grpc.PerRPCCredentials(worker))
+		_, err = worker.rpcClient.TaskStopped(taskCtx, &api.TaskIdentification{TaskId: agentAwareTask.TaskId},
+			grpc.PerRPCCredentials(worker))
 		if err != nil {
 			worker.logger.Errorf("failed to notify the server about the stopped task %d: %v",
 				agentAwareTask.TaskId, err)
