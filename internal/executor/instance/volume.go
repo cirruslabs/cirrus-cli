@@ -20,12 +20,12 @@ var (
 	ErrVolumeCleanupFailed  = errors.New("failed to clean up working volume")
 )
 
-// AgentImage is the image we'll use to create a working volume.
-var AgentImage = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v" + AgentVersion
-
 const (
 	// AgentVersion represents the version of the https://github.com/cirruslabs/cirrus-ci-agent to use.
 	AgentVersion = "1.14.4"
+
+	// AgentImage is the image we'll use to create a working volume.
+	AgentImage = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v" + AgentVersion
 
 	// Where working volume is mounted to.
 	WorkingVolumeMountpoint = "/tmp/cirrus-ci"
