@@ -14,6 +14,9 @@
         }
       }
     ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "cpu": 2,
@@ -22,12 +25,13 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "task1"
@@ -47,6 +51,9 @@
         }
       }
     ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "cpu": 2,
@@ -56,12 +63,13 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "true",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "true",
+        "allow_failures": "true",
+        "auto_cancellation": "false",
+        "experimental": "true",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "task2"

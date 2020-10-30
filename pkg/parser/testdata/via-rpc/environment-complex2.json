@@ -23,7 +23,8 @@
       }
     ],
     "environment": {
-      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -33,12 +34,13 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "build_images"
@@ -75,7 +77,8 @@
       }
     ],
     "environment": {
-      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -86,12 +89,13 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "container:fedora-29--${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
@@ -134,7 +138,8 @@
       }
     ],
     "environment": {
-      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -145,12 +150,13 @@
     "localGroupId": "2",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "2",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "container:fedora-28--${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
@@ -193,7 +199,8 @@
       }
     ],
     "environment": {
-      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
+      "BUILT_IMAGE_SUFFIX": "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -204,12 +211,13 @@
     "localGroupId": "3",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "3",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "container:ubuntu-18--${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"

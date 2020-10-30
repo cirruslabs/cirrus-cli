@@ -1,5 +1,4 @@
 build_task:
-  use_compute_credits: $CIRRUS_BRANCH == 'master'
   env:
     CIRRUS_SHELL: direct
     CIRRUS_WORKING_DIR: /makisu-context

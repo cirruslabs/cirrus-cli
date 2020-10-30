@@ -12,6 +12,7 @@ type ParseableTaskLike interface {
 
 	ID() int64
 	SetID(id int64)
+	SetIndexWithinBuild(id int64)
 
 	DependsOnIDs() []int64
 	SetDependsOnIDs(ids []int64)

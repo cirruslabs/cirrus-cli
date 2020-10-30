@@ -34,9 +34,14 @@ linters:
 
     # New linters that require a lot of codebase churn and noise, but perhaps we can enable them in the future.
     - nlreturn
+    - wrapcheck
+    - errorlint
 
     # Unfortunately, we use globals due to how spf13/cobra works.
     - gochecknoglobals
+
+    # That's fine that some Proto objects don't have all fields initialized
+    - exhaustivestruct
 
     # Style linters that are total nuts.
     - wsl

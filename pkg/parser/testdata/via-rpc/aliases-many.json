@@ -54,7 +54,8 @@
       }
     ],
     "environment": {
-      "APP_NAME": "test"
+      "APP_NAME": "test",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -64,12 +65,13 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "1800",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "1800",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "compile"
@@ -82,7 +84,8 @@
       }
     ],
     "environment": {
-      "APP_NAME": "test"
+      "APP_NAME": "test",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -93,12 +96,13 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "1800",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "1800",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "main"

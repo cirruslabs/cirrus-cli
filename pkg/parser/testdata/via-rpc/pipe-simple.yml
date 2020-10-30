@@ -3,7 +3,6 @@ pipe:
   resources:
     cpu: 4
     memory: 12G
-  auto_cancellation: true
   steps:
     - image: squidfunk/mkdocs-material:latest
       install_script: pip install --upgrade pymdown-extensions

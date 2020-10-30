@@ -16,7 +16,8 @@
       }
     ],
     "environment": {
-      "CIRRUS_DOCKER_CONTEXT": "ci"
+      "CIRRUS_DOCKER_CONTEXT": "ci",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -27,12 +28,13 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "7200",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "7200",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "task1",
@@ -64,7 +66,8 @@
       }
     ],
     "environment": {
-      "CIRRUS_DOCKER_CONTEXT": "ci"
+      "CIRRUS_DOCKER_CONTEXT": "ci",
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
@@ -75,12 +78,13 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "7200",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "true",
+        "timeout_in": "7200",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Prebuild ci/Dockerfile"

@@ -7,12 +7,11 @@ replace gopkg.in/yaml.v2 => github.com/cirruslabs/yaml v0.0.0-20201005110149-09a
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
-	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/PaesslerAG/gval v1.1.0
 	github.com/bmatcuk/doublestar v1.3.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
-	github.com/cirruslabs/cirrus-ci-agent v1.12.0
-	github.com/cirruslabs/echelon v1.3.0
+	github.com/cirruslabs/cirrus-ci-agent v1.14.3
+	github.com/cirruslabs/echelon v1.3.2
 	github.com/containerd/containerd v1.4.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/docker/distribution v2.7.1+incompatible // indirect
@@ -23,7 +22,7 @@ require (
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/go-test/deep v1.0.7
 	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.7.4 // indirect
@@ -41,14 +40,18 @@ require (
 	github.com/otiai10/copy v1.2.0
 	github.com/qri-io/starlib v0.4.2
 	github.com/sirupsen/logrus v1.7.0 // indirect
-	github.com/spf13/cobra v1.0.0
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/cobra v1.1.1
 	github.com/stretchr/testify v1.6.1
+	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
-	go.starlark.net v0.0.0-20201006213952-227f4aabceb5
+	go.starlark.net v0.0.0-20201014215153-dff0ae5b4820
+	golang.org/x/net v0.0.0-20201022231255-08b38378de70 // indirect
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
-	google.golang.org/genproto v0.0.0-20201013134114-7f9ee70cb474 // indirect
-	google.golang.org/grpc v1.33.0
+	golang.org/x/sys v0.0.0-20201022201747-fb209a7c41cd // indirect
+	golang.org/x/text v0.3.3
+	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20201022181438-0ff5f38871d5 // indirect
+	google.golang.org/grpc v1.33.1
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect

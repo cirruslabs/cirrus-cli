@@ -31,6 +31,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "CPU": "2"
     },
     "instance": {
@@ -41,12 +42,13 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "main"

@@ -33,9 +33,14 @@ type DockerPipe struct {
 	parseable.DefaultParser
 }
 
+//nolint:gocognit // it's a parser, there is a lot of boilerplate
 func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *DockerPipe {
 	pipe := &DockerPipe{}
+	pipe.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 	pipe.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
+
+	pipe.proto.Metadata.Properties["auto_cancellation"] =
+		strconv.FormatBool(env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"])
 
 	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		pipeEnv, err := node.GetEnvironment()
@@ -45,6 +50,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		pipe.proto.Environment = environment.Merge(pipe.proto.Environment, pipeEnv)
 		return nil
 	})
+
 	pipe.CollectibleField("env", schema.TodoSchema, func(node *node.Node) error {
 		pipeEnv, err := node.GetEnvironment()
 		if err != nil {
@@ -107,12 +113,53 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		pipe.onlyIfExpression = onlyIfExpression
 		return nil
 	})
+
 	pipe.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
 		}
-		pipe.proto.Metadata.Properties["allowFailures"] = strconv.FormatBool(evaluation)
+		pipe.proto.Metadata.Properties["allow_failures"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	pipe.CollectibleField("skip_notifications", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["skip_notifications"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	pipe.CollectibleField("auto_cancellation", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	pipe.CollectibleField("use_compute_credits", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["use_compute_credits"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	pipe.CollectibleField("stateful", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		pipe.proto.Metadata.Properties["stateful"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
@@ -121,17 +168,17 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		if err != nil {
 			return err
 		}
-		pipe.proto.Metadata.Properties["experimentalFeaturesEnabled"] = strconv.FormatBool(evaluation)
+		pipe.proto.Metadata.Properties["experimental"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
 	pipe.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
-		timeoutInSeconds, err := handleTimeoutIn(node, environment.Merge(pipe.proto.Environment, env))
+		timeoutIn, err := handleTimeoutIn(node, environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 
-		pipe.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
+		pipe.proto.Metadata.Properties["timeout_in"] = timeoutIn
 
 		return nil
 	})
@@ -141,7 +188,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		if err != nil {
 			return err
 		}
-		pipe.proto.Metadata.Properties["triggerType"] = strings.ToUpper(triggerType)
+		pipe.proto.Metadata.Properties["trigger_type"] = strings.ToUpper(triggerType)
 		return nil
 	})
 
@@ -197,6 +244,9 @@ func (pipe *DockerPipe) DependsOnNames() []string {
 func (pipe *DockerPipe) ID() int64 { return pipe.proto.LocalGroupId }
 func (pipe *DockerPipe) SetID(id int64) {
 	pipe.proto.LocalGroupId = id
+}
+
+func (pipe *DockerPipe) SetIndexWithinBuild(id int64) {
 	pipe.proto.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(id, 10)
 }
 

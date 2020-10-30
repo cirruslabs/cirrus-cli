@@ -48,7 +48,8 @@ type Parser struct {
 	boolevator *boolevator.Boolevator
 
 	parsers             map[nameable.Nameable]parseable.Parseable
-	numbering           int64
+	idNumbering         int64
+	indexNumbering      int64
 	additionalInstances map[string]protoreflect.MessageDescriptor
 }
 
@@ -106,6 +107,8 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 				return nil, err
 			}
 
+			taskLike.SetID(p.NextTaskID())
+
 			// Set task's name if not set in the definition
 			if taskLike.Name() == "" {
 				if rn, ok := key.(*nameable.RegexNameable); ok {
@@ -126,6 +129,8 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			if !enabled {
 				continue
 			}
+
+			taskLike.SetIndexWithinBuild(p.NextTaskLocalIndex())
 
 			tasks = append(tasks, taskLike)
 		}
@@ -163,16 +168,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 		}, nil
 	}
 
-	// Assign group IDs to tasks
-	for _, task := range tasks {
-		task.SetID(p.NextTaskID())
-	}
-
-	if err := resolveDependenciesShallow(tasks); err != nil {
-		return &Result{
-			Errors: []string{err.Error()},
-		}, nil
-	}
+	resolveDependenciesShallow(tasks)
 
 	if len(tasks) == 0 {
 		return &Result{
@@ -214,7 +210,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 		ensureCloneInstruction(protoTask)
 
 		// Provide unique labels for identically named tasks
-		uniqueLabelsForTask, err := uniqueLabels(protoTask, protoTasks)
+		uniqueLabelsForTask, err := uniqueLabels(protoTask, protoTasks, p.additionalInstances)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 		}
@@ -256,9 +252,16 @@ func (p *Parser) fileHash(ctx context.Context, path string, additionalBytes []by
 
 func (p *Parser) NextTaskID() int64 {
 	defer func() {
-		p.numbering++
+		p.idNumbering++
 	}()
-	return p.numbering
+	return p.idNumbering
+}
+
+func (p *Parser) NextTaskLocalIndex() int64 {
+	defer func() {
+		p.indexNumbering++
+	}()
+	return p.indexNumbering
 }
 
 func (p *Parser) Schema() *schema.Schema {
@@ -285,27 +288,19 @@ func (p *Parser) Schema() *schema.Schema {
 	return schema
 }
 
-func resolveDependenciesShallow(tasks []task.ParseableTaskLike) error {
+func resolveDependenciesShallow(tasks []task.ParseableTaskLike) {
 	for _, task := range tasks {
 		var dependsOnIDs []int64
 		for _, dependsOnName := range task.DependsOnNames() {
-			var foundID int64 = -1
 			for _, subTask := range tasks {
 				if subTask.Name() == dependsOnName {
-					foundID = subTask.ID()
-					break
+					dependsOnIDs = append(dependsOnIDs, subTask.ID())
 				}
 			}
-			if foundID == -1 {
-				return fmt.Errorf("%w: there's no task '%s', but task '%s' depends on it",
-					parsererror.ErrParsing, dependsOnName, task.Name())
-			}
-			dependsOnIDs = append(dependsOnIDs, foundID)
 		}
+		sort.Slice(dependsOnIDs, func(i, j int) bool { return dependsOnIDs[i] < dependsOnIDs[j] })
 		task.SetDependsOnIDs(dependsOnIDs)
 	}
-
-	return nil
 }
 
 func (p *Parser) createServiceTask(
@@ -378,15 +373,21 @@ func (p *Parser) createServiceTask(
 		},
 		Environment: protoTask.Environment,
 		Metadata: &api.Task_Metadata{
-			Properties: task.DefaultTaskProperties(),
+			Properties: environment.Merge(
+				task.DefaultTaskProperties(),
+				map[string]string{
+					"skip_notifications": "true",
+					"auto_cancellation":  protoTask.Metadata.Properties["auto_cancellation"],
+				},
+			),
 		},
 	}
 
 	// Some metadata property fields duplicate other fields
-	serviceTask.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(serviceTask.LocalGroupId, 10)
+	serviceTask.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(p.NextTaskLocalIndex(), 10)
 
 	// Some metadata property fields are preserved from the original task
-	serviceTask.Metadata.Properties["timeoutInSeconds"] = protoTask.Metadata.Properties["timeoutInSeconds"]
+	serviceTask.Metadata.Properties["timeout_in"] = protoTask.Metadata.Properties["timeout_in"]
 
 	return serviceTask, nil
 }

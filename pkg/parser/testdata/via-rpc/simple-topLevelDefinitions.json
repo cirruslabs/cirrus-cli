@@ -14,6 +14,9 @@
         }
       }
     ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "cpu": 2,
@@ -22,12 +25,13 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "true",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "true",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "900",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "true",
+        "timeout_in": "900",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "main"

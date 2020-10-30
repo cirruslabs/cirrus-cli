@@ -87,6 +87,7 @@
     ],
     "environment": {
       "BOT": "true",
+      "CIRRUS_OS": "linux",
       "CPU": "4",
       "MEMORY": "8G",
       "USE_IN_MEMORY_DISK": "true"
@@ -100,12 +101,13 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "docs-linux",
@@ -138,6 +140,7 @@
     ],
     "environment": {
       "BOT": "true",
+      "CIRRUS_OS": "linux",
       "CPU": "4",
       "MEMORY": "8G",
       "USE_IN_MEMORY_DISK": "true"
@@ -151,12 +154,13 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "true",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Prebuild dev/ci/docker_linux/Dockerfile"

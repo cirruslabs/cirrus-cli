@@ -22,6 +22,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "CPU": "4",
       "MEMORY": "12G"
     },
@@ -33,12 +34,13 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "main"
@@ -59,6 +61,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "CPU": "4",
       "MEMORY": "12G",
       "SHARD": "tests",
@@ -73,12 +76,13 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "tests-windows"
@@ -99,6 +103,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "CPU": "4",
       "MEMORY": "12G",
       "SHARD": "tool_tests",
@@ -113,12 +118,13 @@
     "localGroupId": "2",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "2",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "tool_tests-windows"

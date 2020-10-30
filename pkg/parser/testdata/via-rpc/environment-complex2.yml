@@ -4,9 +4,6 @@ container:
   image: debian:latest
 
 build_images_task:
-  # VMs created by packer are not cleaned up by cirrus, must allow task to complete
-  auto_cancellation: $CI != "true"
-
   env:
     BUILT_IMAGE_SUFFIX: "-${CIRRUS_REPO_NAME}-${CIRRUS_BUILD_ID}"
 

@@ -22,6 +22,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "CIRRUS_SHELL": "direct",
       "CIRRUS_WORKING_DIR": "/workspace",
       "DOCKER_AUTH": "ENCRYPTED[qwerty]"
@@ -34,12 +35,13 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Docker Build"

@@ -39,6 +39,9 @@ func NewTask(
 	task := &Task{}
 	task.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
+	task.proto.Metadata.Properties["auto_cancellation"] =
+		strconv.FormatBool(env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"])
+
 	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
 		taskEnv, err := node.GetEnvironment()
 		if err != nil {
@@ -47,6 +50,7 @@ func NewTask(
 		task.proto.Environment = environment.Merge(task.proto.Environment, taskEnv)
 		return nil
 	})
+
 	task.CollectibleField("env", schema.TodoSchema, func(node *node.Node) error {
 		taskEnv, err := node.GetEnvironment()
 		if err != nil {
@@ -56,34 +60,40 @@ func NewTask(
 		return nil
 	})
 
-	task.CollectibleField("container",
-		instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
-		func(node *node.Node) error {
-			inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
-			containerInstance, err := inst.Parse(node)
-			if err != nil {
-				return err
-			}
+	if _, ok := additionalInstances["container"]; !ok {
+		task.CollectibleField("container",
+			instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
+			func(node *node.Node) error {
+				inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
+				containerInstance, err := inst.Parse(node)
+				if err != nil {
+					return err
+				}
 
-			// Retrieve the platform to update the base environment
-			env["CIRRUS_OS"] = strings.ToLower(containerInstance.Platform.String())
+				// Retrieve the platform to update the environment
+				task.proto.Environment = environment.Merge(
+					task.proto.Environment,
+					map[string]string{"CIRRUS_OS": strings.ToLower(containerInstance.Platform.String())},
+				)
 
-			anyInstance, err := ptypes.MarshalAny(containerInstance)
-			if err != nil {
-				return err
-			}
-			task.proto.Instance = anyInstance
+				anyInstance, err := ptypes.MarshalAny(containerInstance)
+				if err != nil {
+					return err
+				}
+				task.proto.Instance = anyInstance
 
-			return nil
-		})
+				return nil
+			})
+	}
 
 	for instanceName, descriptor := range additionalInstances {
-		additionalInstanceParser := instance.NewProtoParser(descriptor, environment.Merge(task.proto.Environment, env),
-			boolevator)
-		task.CollectibleField(instanceName,
-			additionalInstanceParser.Schema(),
+		scopedInstanceName := instanceName
+		scopedDescriptor := descriptor
+		task.CollectibleField(scopedInstanceName,
+			instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), boolevator).Schema(),
 			func(node *node.Node) error {
-				parserInstance, err := additionalInstanceParser.Parse(node)
+				parser := instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), boolevator)
+				parserInstance, err := parser.Parse(node)
 				if err != nil {
 					return err
 				}
@@ -92,6 +102,11 @@ func NewTask(
 					return err
 				}
 				task.proto.Instance = anyInstance
+				task.proto.Environment = environment.Merge(
+					task.proto.Environment, map[string]string{
+						"CIRRUS_OS": instance.GuessPlatform(anyInstance, scopedDescriptor),
+					},
+				)
 				return nil
 			})
 	}
@@ -104,6 +119,7 @@ func NewTask(
 		task.proto.Name = name
 		return nil
 	})
+
 	task.OptionalField(nameable.NewSimpleNameable("alias"), schema.TodoSchema, func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
@@ -192,7 +208,47 @@ func NewTask(
 		if err != nil {
 			return err
 		}
-		task.proto.Metadata.Properties["allowFailures"] = strconv.FormatBool(evaluation)
+		task.proto.Metadata.Properties["allow_failures"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	task.CollectibleField("skip_notifications", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["skip_notifications"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	task.CollectibleField("auto_cancellation", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	task.CollectibleField("use_compute_credits", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["use_compute_credits"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	// for cloud only
+	task.CollectibleField("stateful", schema.TodoSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		task.proto.Metadata.Properties["stateful"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
@@ -201,17 +257,17 @@ func NewTask(
 		if err != nil {
 			return err
 		}
-		task.proto.Metadata.Properties["experimentalFeaturesEnabled"] = strconv.FormatBool(evaluation)
+		task.proto.Metadata.Properties["experimental"] = strconv.FormatBool(evaluation)
 		return nil
 	})
 
 	task.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
-		timeoutInSeconds, err := handleTimeoutIn(node, environment.Merge(task.proto.Environment, env))
+		timeout, err := handleTimeoutIn(node, environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 
-		task.proto.Metadata.Properties["timeoutInSeconds"] = timeoutInSeconds
+		task.proto.Metadata.Properties["timeout_in"] = timeout
 
 		return nil
 	})
@@ -221,7 +277,7 @@ func NewTask(
 		if err != nil {
 			return err
 		}
-		task.proto.Metadata.Properties["triggerType"] = strings.ToUpper(triggerType)
+		task.proto.Metadata.Properties["trigger_type"] = strings.ToUpper(triggerType)
 		return nil
 	})
 
@@ -231,7 +287,7 @@ func NewTask(
 			return err
 		}
 
-		task.proto.Metadata.Properties["executionLock"] = lockName
+		task.proto.Metadata.Properties["execution_lock"] = lockName
 
 		return nil
 	})
@@ -245,7 +301,7 @@ func (task *Task) Parse(node *node.Node) error {
 	}
 
 	if task.proto.Instance == nil {
-		return fmt.Errorf("%w: task has no instance attached", parsererror.ErrParsing)
+		return fmt.Errorf("%w: task %s has no instance attached", parsererror.ErrParsing, task.Name())
 	}
 
 	// Generate cache upload instructions
@@ -290,6 +346,9 @@ func (task *Task) DependsOnNames() []string {
 func (task *Task) ID() int64 { return task.proto.LocalGroupId }
 func (task *Task) SetID(id int64) {
 	task.proto.LocalGroupId = id
+}
+
+func (task *Task) SetIndexWithinBuild(id int64) {
 	task.proto.Metadata.Properties["indexWithinBuild"] = strconv.FormatInt(id, 10)
 }
 

@@ -1,10 +1,12 @@
 package node
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
+	"golang.org/x/text/encoding/unicode"
 	"sort"
 	"strings"
 )
@@ -62,7 +64,7 @@ func (node *Node) GetSliceOfStrings() ([]string, error) {
 }
 
 func (node *Node) GetSliceOfExpandedStrings(env map[string]string) ([]string, error) {
-	sliceStrings, err := node.GetSliceOfStrings()
+	sliceStrings, err := node.GetSliceOfNonEmptyStrings()
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +114,33 @@ func (node *Node) GetScript() ([]string, error) {
 	case *ScalarValue:
 		return strings.Split(value.Value, "\n"), nil
 	case *ListValue:
-		return node.GetSliceOfStrings()
+		var result []string
+
+		for _, child := range node.Children {
+			switch childValue := child.Value.(type) {
+			case *ScalarValue:
+				result = append(result, strings.Split(childValue.Value, "\n")...)
+			case *MapValue:
+				// support powershell trick
+				psValueNode := child.FindChild("ps")
+				if psValueNode == nil {
+					return nil, fmt.Errorf("%w: script only supports 'ps: ' helper syntax for Powershell", parsererror.ErrParsing)
+				}
+				psValue, err := psValueNode.GetStringValue()
+				if err != nil {
+					return nil, fmt.Errorf("%w: failed to get Powershell script (%v)", parsererror.ErrParsing, err)
+				}
+				encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
+				valueBytes, err := encoder.Bytes([]byte(psValue))
+				if err != nil {
+					return nil, fmt.Errorf("%w: failed to encode Powershell script (%v)", parsererror.ErrParsing, err)
+				}
+				encodedValue := base64.StdEncoding.EncodeToString(valueBytes)
+				result = append(result, fmt.Sprintf("powershell.exe -NoLogo -EncodedCommand %s", encodedValue))
+			}
+		}
+
+		return result, nil
 	default:
 		return nil, fmt.Errorf("%w: field should be a string or a list of values", parsererror.ErrParsing)
 	}

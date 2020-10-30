@@ -15,6 +15,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "COMMAND": "lint",
       "TEST": "true"
     },
@@ -26,12 +27,13 @@
     },
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "0",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "COMMAND:lint",
@@ -56,6 +58,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "COMMAND": "test",
       "TEST": "true"
     },
@@ -68,12 +71,13 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "1",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "COMMAND:test",
@@ -98,6 +102,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "COMMAND": "lint",
       "TEST": "true"
     },
@@ -110,12 +115,13 @@
     "localGroupId": "2",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "2",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "COMMAND:lint",
@@ -140,6 +146,7 @@
       }
     ],
     "environment": {
+      "CIRRUS_OS": "linux",
       "COMMAND": "test",
       "TEST": "true"
     },
@@ -152,12 +159,13 @@
     "localGroupId": "3",
     "metadata": {
       "properties": {
-        "allowFailures": "false",
-        "executionLock": "null",
-        "experimentalFeaturesEnabled": "false",
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
         "indexWithinBuild": "3",
-        "timeoutInSeconds": "3600",
-        "triggerType": "AUTOMATIC"
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "COMMAND:test",

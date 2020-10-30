@@ -47,14 +47,7 @@ func TestValidConfigs(t *testing.T) {
 			require.Nil(t, err)
 			require.Empty(t, result.Errors)
 
-			expected, err := ioutil.ReadFile(absolutize(file + ".json"))
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			actual := testutil.TasksToJSON(t, result.Tasks)
-
-			assert.JSONEq(t, string(expected), string(actual))
+			assertExpectedTasks(t, absolutize(file+".json"), result)
 		})
 	}
 }
@@ -70,12 +63,19 @@ func TestAdditionalInstances(t *testing.T) {
 	require.Empty(t, result.Errors)
 	require.NotEmpty(t, result.Tasks)
 
-	expected, err := ioutil.ReadFile(absolutize("proto-instance.json"))
+	assertExpectedTasks(t, absolutize("proto-instance.json"), result)
+}
+
+func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.Result) {
+	actual := testutil.TasksToJSON(t, result.Tasks)
+
+	// uncomment to update test data
+	// ioutil.WriteFile(absolutize(actualFixturePath+".json"), actual, 0600)
+
+	expected, err := ioutil.ReadFile(actualFixturePath)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	actual := testutil.TasksToJSON(t, result.Tasks)
 
 	assert.JSONEq(t, string(expected), string(actual))
 }
@@ -209,9 +209,7 @@ func TestViaRPCInvalid(t *testing.T) {
 		Message string
 	}{
 		{"validation-badDependencies.yml", "error in dependencies between tasks: b, c, d"},
-		{"validation-badDependencyNames.yml", "there's no task 'fooo', but task 'bar' depends on it"},
 		{"validation-duplicateCommands.yml", "task 'main' cache and script instructions have identical name"},
-		{"validation-validMissingDependency.yml", "there's no task 'foo', but task 'bar' depends on it"},
 	}
 
 	for _, testCase := range invalidCases {
