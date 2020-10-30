@@ -14,6 +14,10 @@ import (
 	"strconv"
 )
 
+var (
+	ErrAgentDownloadFailed = errors.New("failed to download agent")
+)
+
 type PersistentWorkerInstance struct {
 	tempDir string
 	cleanup func() error
@@ -133,6 +137,11 @@ func RetrieveAgentBinary(
 		return "", err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("%w: got HTTP code %d when downloading %s",
+			ErrAgentDownloadFailed, resp.StatusCode, agentURL)
+	}
 
 	_, err = io.Copy(tmpAgentFile, resp.Body)
 	if err != nil {
