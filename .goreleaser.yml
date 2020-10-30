@@ -7,8 +7,8 @@ before:
 builds:
   - main: cmd/cirrus/main.go
     ldflags: >
-      -X github.com/cirruslabs/cirrus-cli/internal/commands.version={{.Version}}
-      -X github.com/cirruslabs/cirrus-cli/internal/commands.commit={{.ShortCommit}}
+      -X github.com/cirruslabs/cirrus-cli/internal/version.Version={{.Version}}
+      -X github.com/cirruslabs/cirrus-cli/internal/version.Commit={{.ShortCommit}}
     env:
       - CGO_ENABLED=0
     goos:
