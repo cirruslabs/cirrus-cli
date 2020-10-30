@@ -63,9 +63,11 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *RunConfig)
 		cmd.Dir = config.ProjectDir
 	} else {
 		// Populate the working directory
-		if err := copy.Copy(config.ProjectDir, pwi.tempDir); err != nil {
-			return fmt.Errorf("%w: while copying %s's contents into %s: %v",
-				ErrPopulateFailed, config.ProjectDir, pwi.tempDir, err)
+		if config.ProjectDir != "" {
+			if err := copy.Copy(config.ProjectDir, pwi.tempDir); err != nil {
+				return fmt.Errorf("%w: while copying %s's contents into %s: %v",
+					ErrPopulateFailed, config.ProjectDir, pwi.tempDir, err)
+			}
 		}
 
 		cmd.Dir = pwi.tempDir

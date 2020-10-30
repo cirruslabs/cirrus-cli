@@ -2,6 +2,7 @@ package commands
 
 import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands/internal"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -18,6 +19,7 @@ func NewRootCmd() *cobra.Command {
 		newRunCmd(),
 		newServeCmd(),
 		internal.NewRootCmd(),
+		worker.NewRootCmd(),
 	)
 
 	return cmd
