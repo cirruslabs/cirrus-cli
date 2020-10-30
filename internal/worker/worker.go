@@ -105,6 +105,10 @@ func (worker *Worker) info() *api.WorkerInfo {
 }
 
 func (worker *Worker) Run(ctx context.Context) error {
+	// A sub-context to cancel out all Run() side-effects when it finishes
+	subCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	var rpcSecurity grpc.DialOption
 
 	if worker.rpcInsecure {
@@ -119,7 +123,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 	}
 
 	// https://github.com/grpc/grpc-go/blob/master/Documentation/concurrency.md
-	conn, err := grpc.DialContext(ctx, worker.rpcEndpoint, rpcSecurity)
+	conn, err := grpc.DialContext(subCtx, worker.rpcEndpoint, rpcSecurity)
 	if err != nil {
 		worker.logger.Errorf("failed to dial %s: %v", worker.rpcEndpoint, err)
 	}
@@ -128,11 +132,11 @@ func (worker *Worker) Run(ctx context.Context) error {
 
 	for {
 		if worker.sessionToken == "" {
-			if err := worker.register(ctx); err != nil {
+			if err := worker.register(subCtx); err != nil {
 				worker.logger.Errorf("failed to register worker: %v", err)
 			}
 		} else {
-			err := worker.poll(ctx)
+			err := worker.poll(subCtx)
 
 			if errors.Is(err, ErrShutdown) {
 				return nil
@@ -144,7 +148,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 		}
 
 		select {
-		case <-ctx.Done():
+		case <-subCtx.Done():
 			return nil
 		case <-time.After(time.Duration(worker.pollIntervalSeconds) * time.Second):
 			// continue the loop
