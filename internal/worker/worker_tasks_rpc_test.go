@@ -40,7 +40,7 @@ func (tasksRPC *TasksRPC) InitialCommands(
 			},
 		},
 		ServerToken:      serverSecret,
-		TimeoutInSeconds: 30,
+		TimeoutInSeconds: 3600,
 	}, nil
 }
 

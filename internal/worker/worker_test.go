@@ -8,14 +8,13 @@ import (
 	"google.golang.org/grpc"
 	"net"
 	"testing"
-	"time"
 )
 
 const (
-	registrationToken   = "registration token"
-	authenticationToken = "session token"
-	serverSecret        = "server secret"
-	clientSecret        = "client secret"
+	registrationToken = "registration token"
+	sessionToken      = "session token"
+	serverSecret      = "server secret"
+	clientSecret      = "client secret"
 )
 
 func TestWorker(t *testing.T) {
@@ -46,13 +45,10 @@ func TestWorker(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-
-	if err := worker.Run(ctx); err != nil {
+	if err := worker.Run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 
-	cancel()
 	server.GracefulStop()
 
 	assert.True(t, workersRPC.WorkerWasRegistered)

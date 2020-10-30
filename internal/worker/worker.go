@@ -21,7 +21,10 @@ const (
 	defaultPollIntervalSeconds = 10
 )
 
-var ErrWorker = errors.New("worker failed")
+var (
+	ErrWorker   = errors.New("worker failed")
+	ErrShutdown = errors.New("worker is shutting down")
+)
 
 type Worker struct {
 	rpcEndpoint string
@@ -32,8 +35,8 @@ type Worker struct {
 	userSpecifiedLabels map[string]string
 	pollIntervalSeconds uint32
 
-	registrationToken   string
-	authenticationToken string
+	registrationToken string
+	sessionToken      string
 
 	tasks           map[int64]context.CancelFunc
 	taskCompletions chan int64
@@ -124,12 +127,18 @@ func (worker *Worker) Run(ctx context.Context) error {
 	defer conn.Close()
 
 	for {
-		if worker.authenticationToken == "" {
+		if worker.sessionToken == "" {
 			if err := worker.register(ctx); err != nil {
 				worker.logger.Errorf("failed to register worker: %v", err)
 			}
 		} else {
-			if err := worker.poll(ctx); err != nil {
+			err := worker.poll(ctx)
+
+			if errors.Is(err, ErrShutdown) {
+				return nil
+			}
+
+			if err != nil {
 				worker.logger.Errorf("failed to poll: %v", err)
 			}
 		}
@@ -152,7 +161,7 @@ func (worker *Worker) register(ctx context.Context) error {
 		return err
 	}
 
-	worker.authenticationToken = response.AuthenticationToken
+	worker.sessionToken = response.SessionToken
 
 	worker.logger.Infof("worker successfully registered")
 
@@ -173,6 +182,11 @@ func (worker *Worker) poll(ctx context.Context) error {
 	response, err := worker.rpcClient.Poll(ctx, request)
 	if err != nil {
 		return err
+	}
+
+	if response.Shutdown {
+		worker.logger.Info("received shutdown signal from the server, terminating...")
+		return ErrShutdown
 	}
 
 	for _, taskToStop := range response.TasksToStop {

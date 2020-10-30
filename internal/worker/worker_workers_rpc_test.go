@@ -26,28 +26,34 @@ func (workersRPC *WorkersRPC) Register(
 	if request.RegistrationToken == registrationToken {
 		workersRPC.WorkerWasRegistered = true
 
-		return &api.RegisterResponse{AuthenticationToken: authenticationToken}, nil
+		return &api.RegisterResponse{SessionToken: sessionToken}, nil
 	}
 
 	return nil, status.Errorf(codes.PermissionDenied, "invalid registration token")
 }
 
 func (workersRPC *WorkersRPC) Poll(ctx context.Context, request *api.PollRequest) (*api.PollResponse, error) {
-	var tasks []*api.PollResponse_AgentAwareTask
-
 	if !workersRPC.TaskWasAssigned {
 		workersRPC.TaskWasAssigned = true
 
-		tasks = append(tasks, &api.PollResponse_AgentAwareTask{
-			TaskId:       taskID,
-			ClientSecret: clientSecret,
-			ServerSecret: serverSecret,
-		})
+		return &api.PollResponse{
+			TasksToStart: []*api.PollResponse_AgentAwareTask{
+				{
+					TaskId:       taskID,
+					ClientSecret: clientSecret,
+					ServerSecret: serverSecret,
+				},
+			},
+		}, nil
 	}
 
-	return &api.PollResponse{
-		TasksToStart: tasks,
-	}, nil
+	if workersRPC.TaskWasStopped {
+		return &api.PollResponse{
+			Shutdown: true,
+		}, nil
+	}
+
+	return &api.PollResponse{}, nil
 }
 
 func (workersRPC *WorkersRPC) TaskStarted(ctx context.Context, request *api.TaskIdentification) (*empty.Empty, error) {
