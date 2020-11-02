@@ -40,7 +40,7 @@ load("github.com/cirrus-templates/golang/lib.star", "detect_tasks")
 
 If your template generates tasks, you can test it's expected output by creating a directory anywhere in your project and placing a `.cirrus.expected.yml` file there.
 
-You'll also need to place a `.cirrus.star` file there, which call your template functions that you want to test.
+You'll also need to place there a `.cirrus.star` file which loads your template functions you want to test.
 
 Once everything is set-up, run the following CLI command from your project's root:
 
