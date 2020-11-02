@@ -48,4 +48,4 @@ Once everything is set-up, run the following CLI command from your project's roo
 cirrus internal test
 ```
 
-This CLI command will find all directories with `.cirrus.expected.yml` file in them, run the `.cirrus.star` from the same directory and compare the results.
+This CLI command will find all directories with `.cirrus.expected.yml` file in them, run the `.cirrus.star` from the same directory and compare the results with the expected `.cirrus.expected.yml`.
