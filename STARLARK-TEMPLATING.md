@@ -49,3 +49,16 @@ cirrus internal test
 ```
 
 This CLI command will find all directories with `.cirrus.expected.yml` file in them, run the `.cirrus.star` from the same directory and compare the results with the expected `.cirrus.expected.yml`.
+
+### Test configuration file
+
+Some Starlark templates use the [`env` dict](https://github.com/cirruslabs/cirrus-cli/blob/master/STARLARK.md#env) which contents depends on the environment.
+
+To mock the contents of this dict, create the following `.cirrus.testconfig.yml` in the test's directory:
+
+```yaml
+env:
+  CIRRUS_TAG: "v0.1.0"
+```
+
+This will ensure that when the test runs, `env.get("CIRRUS_TAG")` will return `v0.1.0`.
