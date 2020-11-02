@@ -175,3 +175,7 @@ func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *RunConfig) er
 
 	return nil
 }
+
+func (prebuilt *PrebuiltInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {
+	return ""
+}

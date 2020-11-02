@@ -1,0 +1,42 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "show",
+        "scriptInstruction": {
+          "scripts": [
+            "ls -lah"
+          ]
+        }
+      },
+      {
+        "name": "check",
+        "scriptInstruction": {
+          "scripts": [
+            "test -d some-directory",
+            "test -e some-directory/some-file.txt"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance"
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "auto_cancellation": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "skip_notifications": "false",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "unix"
+  }
+]

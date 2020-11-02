@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
@@ -37,6 +38,25 @@ func Execute(t *testing.T, dir string) error {
 func ExecuteWithOptions(t *testing.T, dir string, opts ...executor.Option) error {
 	p := rpcparser.Parser{}
 	result, err := p.ParseFromFile(filepath.Join(dir, ".cirrus.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	require.Empty(t, result.Errors)
+	require.NotEmpty(t, result.Tasks)
+
+	e, err := executor.New(dir, result.Tasks, opts...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return e.Run(context.Background())
+}
+
+// ExecuteWithOptionsNew is the same thing as ExecuteWithOptions, but uses the new in-house parser.
+func ExecuteWithOptionsNew(t *testing.T, dir string, opts ...executor.Option) error {
+	p := parser.New()
+	result, err := p.ParseFromFile(context.Background(), filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
 		t.Fatal(err)
 	}

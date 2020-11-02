@@ -27,6 +27,7 @@ var validCases = []string{
 	"example-flutter-web",
 	"example-mysql",
 	"example-rust",
+	"instance-persistent_worker",
 }
 
 var invalidCases = []string{

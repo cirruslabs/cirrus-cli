@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"path"
 )
 
 var ErrPipeCreationFailed = errors.New("failed to create pipe instance")
@@ -84,4 +85,8 @@ func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) (err error) 
 	}
 
 	return nil
+}
+
+func (pi *PipeInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {
+	return path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir)
 }

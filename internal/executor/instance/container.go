@@ -3,6 +3,7 @@ package instance
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"path"
 )
 
 type ContainerInstance struct {
@@ -44,4 +45,8 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err 
 	}
 
 	return nil
+}
+
+func (inst *ContainerInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {
+	return path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir)
 }

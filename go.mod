@@ -10,7 +10,7 @@ require (
 	github.com/PaesslerAG/gval v1.1.0
 	github.com/bmatcuk/doublestar v1.3.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
-	github.com/cirruslabs/cirrus-ci-agent v1.14.3
+	github.com/cirruslabs/cirrus-ci-agent v1.16.0
 	github.com/cirruslabs/echelon v1.3.2
 	github.com/containerd/containerd v1.4.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.2
@@ -39,8 +39,9 @@ require (
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/otiai10/copy v1.2.0
 	github.com/qri-io/starlib v0.4.2
-	github.com/sirupsen/logrus v1.7.0 // indirect
+	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.1.1
+	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
