@@ -30,7 +30,7 @@ The most significant difference is that templates can be loaded without specifyi
 load("github.com/cirrus-templates/golang", "detect_tasks")
 ```
 
-When no when no `.star` is specified, the convention is to load `lib.star` by default. So, behind the scenes this will be expanded into:
+When no `.star` file to load is specified, the convention is to load `lib.star` by default. So, behind the scenes this will be expanded into:
 
 ```python
 load("github.com/cirrus-templates/golang/lib.star", "detect_tasks")
