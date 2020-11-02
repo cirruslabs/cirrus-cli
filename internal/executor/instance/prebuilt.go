@@ -94,6 +94,26 @@ func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *RunConfig) er
 		return err
 	}
 
+	// Check if the image we're about to build is available locally
+	_, _, err = cli.ImageInspectWithRaw(ctx, prebuilt.Image)
+	if err == nil {
+		logger.Infof("Re-using local image %s...", prebuilt.Image)
+		return nil
+	}
+
+	// The image is not available locally, try to pull it
+	logger.Infof("Pulling image %s...", prebuilt.Image)
+	progress, err := cli.ImagePull(ctx, prebuilt.Image, types.ImagePullOptions{})
+	if err == nil {
+		_, err = io.Copy(ioutil.Discard, progress)
+		if err == nil {
+			logger.Infof("Using pulled image %s...", prebuilt.Image)
+			return nil
+		}
+	}
+
+	logger.Infof("Image %s is not available locally nor remotely, building it...", prebuilt.Image)
+
 	// Create an archive with the build context
 	archivePath, err := CreateTempArchive(config.ProjectDir)
 	if err != nil {
