@@ -16,13 +16,21 @@ import (
 func TestWorkingVolumeSmoke(t *testing.T) {
 	dir := testutil.TempDir(t)
 
+	backend := testutil.ContainerBackendFromEnv(t)
+
 	desiredVolumeName := fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String())
-	volume, err := instance.CreateWorkingVolume(context.Background(), desiredVolumeName, dir, false)
+	volume, err := instance.CreateWorkingVolume(
+		context.Background(),
+		backend,
+		desiredVolumeName,
+		dir,
+		false,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := volume.Close(); err != nil {
+	if err := volume.Close(backend); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -30,14 +38,16 @@ func TestWorkingVolumeSmoke(t *testing.T) {
 // TestCleanupOnFailure ensures that the not-yet-populated volume gets cleaned up on CreateWorkingVolume() failure.
 func TestCleanupOnFailure(t *testing.T) {
 	// Create a container backend client
-	backend, err := containerbackend.NewDocker()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer backend.Close()
+	backend := testutil.ContainerBackendFromEnv(t)
 
 	desiredVolumeName := fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String())
-	_, err = instance.CreateWorkingVolume(context.Background(), desiredVolumeName, "/non-existent", false)
+	_, err := instance.CreateWorkingVolume(
+		context.Background(),
+		testutil.ContainerBackendFromEnv(t),
+		desiredVolumeName,
+		"/non-existent",
+		false,
+	)
 	require.Error(t, err)
 
 	err = backend.VolumeInspect(context.Background(), desiredVolumeName)

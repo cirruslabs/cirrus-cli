@@ -63,7 +63,7 @@ func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) (err error) 
 			return
 		}
 
-		cleanupErr := workingVolume.Close()
+		cleanupErr := workingVolume.Close(config.ContainerBackend)
 		if err == nil {
 			err = cleanupErr
 		}

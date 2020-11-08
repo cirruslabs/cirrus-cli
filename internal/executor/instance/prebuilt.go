@@ -84,12 +84,7 @@ func CreateTempArchive(dir string) (string, error) {
 
 func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *RunConfig) error {
 	logger := config.Logger
-
-	// Create a container backend client
-	backend, err := containerbackend.NewDocker()
-	if err != nil {
-		return err
-	}
+	backend := config.ContainerBackend
 
 	// Check if the image we're about to build is available locally
 	if err := backend.ImageInspect(ctx, prebuilt.Image); err == nil {

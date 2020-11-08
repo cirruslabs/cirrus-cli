@@ -40,7 +40,7 @@ func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Vol
 	initLogger := config.Logger.Scoped("Preparing execution environment...")
 	initLogger.Infof("Preparing volume to work with...")
 	desiredVolumeName := fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String())
-	v, err := CreateWorkingVolume(ctx, desiredVolumeName, config.ProjectDir, config.DirtyMode)
+	v, err := CreateWorkingVolume(ctx, config.ContainerBackend, desiredVolumeName, config.ProjectDir, config.DirtyMode)
 	if err != nil {
 		initLogger.Warnf("Failed to create a volume from working directory: %v", err)
 		initLogger.Finish(false)
@@ -53,17 +53,11 @@ func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Vol
 // CreateWorkingVolume returns name of the working volume created according to the specification in arguments.
 func CreateWorkingVolume(
 	ctx context.Context,
+	backend containerbackend.ContainerBackend,
 	name string,
 	projectDir string,
 	dontPopulate bool,
 ) (vol *Volume, err error) {
-	// Create a container backend client
-	backend, err := containerbackend.NewDocker()
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
-	}
-	defer backend.Close()
-
 	// Retrieve the latest agent image
 	if err := backend.ImagePull(ctx, AgentImage); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
@@ -153,16 +147,8 @@ func (volume *Volume) Name() string {
 	return volume.name
 }
 
-func (volume *Volume) Close() error {
-	// Create a container backend client
-	backend, err := containerbackend.NewDocker()
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrVolumeCleanupFailed, err)
-	}
-	defer backend.Close()
-
-	err = backend.VolumeDelete(context.Background(), volume.name)
-	if err != nil {
+func (volume *Volume) Close(backend containerbackend.ContainerBackend) error {
+	if err := backend.VolumeDelete(context.Background(), volume.name); err != nil {
 		return fmt.Errorf("%w: %v", ErrVolumeCleanupFailed, err)
 	}
 

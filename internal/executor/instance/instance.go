@@ -80,6 +80,7 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 }
 
 type RunConfig struct {
+	ContainerBackend           containerbackend.ContainerBackend
 	ProjectDir                 string
 	ContainerEndpoint          string
 	DirectEndpoint             string
@@ -101,11 +102,7 @@ type Params struct {
 
 func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Params) error {
 	logger := config.Logger
-	logger.Debugf("creating container backend client")
-	backend, err := containerbackend.NewDocker()
-	if err != nil {
-		return err
-	}
+	backend := config.ContainerBackend
 
 	// Clamp resources to those available for container backend daemon
 	info, err := backend.SystemInfo(ctx)

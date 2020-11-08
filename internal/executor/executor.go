@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
@@ -29,6 +30,7 @@ type Executor struct {
 	baseEnvironment          map[string]string
 	userSpecifiedEnvironment map[string]string
 	dirtyMode                bool
+	containerBackend         containerbackend.ContainerBackend
 	dockerOptions            options.DockerOptions
 }
 
@@ -52,6 +54,13 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	if e.logger == nil {
 		renderer := renderers.NewSimpleRenderer(ioutil.Discard, nil)
 		e.logger = echelon.NewLogger(echelon.InfoLevel, renderer)
+	}
+	if e.containerBackend == nil {
+		backend, err := containerbackend.NewDocker()
+		if err != nil {
+			return nil, err
+		}
+		e.containerBackend = backend
 	}
 
 	// Filter tasks (e.g. if a user wants to run only a specific task without dependencies)
@@ -120,6 +129,7 @@ func (e *Executor) Run(ctx context.Context) error {
 		// Prepare task's instance
 		taskInstance := task.Instance
 		instanceRunOpts := instance.RunConfig{
+			ContainerBackend:  e.containerBackend,
 			ProjectDir:        e.build.ProjectDir,
 			ContainerEndpoint: e.rpc.ContainerEndpoint(),
 			DirectEndpoint:    e.rpc.DirectEndpoint(),

@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/echelon"
@@ -41,5 +42,11 @@ func WithDirtyMode() Option {
 func WithDockerOptions(dockerOptions options.DockerOptions) Option {
 	return func(e *Executor) {
 		e.dockerOptions = dockerOptions
+	}
+}
+
+func WithContainerBackend(containerBackend containerbackend.ContainerBackend) Option {
+	return func(e *Executor) {
+		e.containerBackend = containerBackend
 	}
 }

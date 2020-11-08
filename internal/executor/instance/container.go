@@ -26,7 +26,7 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err 
 			return
 		}
 
-		cleanupErr := workingVolume.Close()
+		cleanupErr := workingVolume.Close(config.ContainerBackend)
 		if err == nil {
 			err = cleanupErr
 		}

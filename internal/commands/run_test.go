@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -265,11 +264,7 @@ func TestRunNoCleanup(t *testing.T) {
 	assert.Contains(t, buf.String(), "not cleaning up working volume")
 
 	// The fun ends here since now we have to cleanup containers and volumes ourselves
-	backend, err := containerbackend.NewDocker()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer backend.Close()
+	backend := testutil.ContainerBackendFromEnv(t)
 
 	containerRegex := regexp.MustCompile("not cleaning up (?:container|additional container) (?P<container_id>[^,]+)")
 	volumeRegex := regexp.MustCompile("not cleaning up working volume (?P<volume_id>[^,]+)")
