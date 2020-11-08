@@ -8,6 +8,7 @@ replace gopkg.in/yaml.v2 => github.com/cirruslabs/yaml v0.0.0-20201005110149-09a
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/PaesslerAG/gval v1.1.0
+	github.com/antihax/optional v1.0.0
 	github.com/bmatcuk/doublestar v1.3.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
 	github.com/cirruslabs/cirrus-ci-agent v1.16.0
