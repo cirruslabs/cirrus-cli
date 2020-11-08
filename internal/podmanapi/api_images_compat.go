@@ -329,7 +329,7 @@ func (a *ImagesCompatApiService) CreateImage(ctx context.Context, localVarOption
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Request.IsSet() {
-		localVarPostBody = &localVarOptionals.Request.Value()
+		localVarPostBody = localVarOptionals.Request.Value()
 		
 	}
 	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
@@ -660,7 +660,7 @@ func (a *ImagesCompatApiService) ImportImage(ctx context.Context, localVarOption
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Request.IsSet() {
-		localVarPostBody = &localVarOptionals.Request.Value()
+		localVarPostBody = localVarOptionals.Request.Value()
 		
 	}
 	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)

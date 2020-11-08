@@ -1953,7 +1953,7 @@ func (a *ContainersApiService) LibpodPlayKube(ctx context.Context, localVarOptio
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Request.IsSet() {
-		localVarPostBody = &localVarOptionals.Request.Value()
+		localVarPostBody = localVarOptionals.Request.Value()
 		
 	}
 	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
@@ -2176,7 +2176,7 @@ func (a *ContainersApiService) LibpodPutArchive(ctx context.Context, name string
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Request.IsSet() {
-		localVarPostBody = &localVarOptionals.Request.Value()
+		localVarPostBody = localVarOptionals.Request.Value()
 		
 	}
 	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)

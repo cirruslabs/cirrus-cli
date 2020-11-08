@@ -1626,7 +1626,7 @@ func (a *ContainersCompatApiService) PutArchive(ctx context.Context, name string
 	}
 	// body params
 	if localVarOptionals != nil && localVarOptionals.Request.IsSet() {
-		localVarPostBody = &localVarOptionals.Request.Value()
+		localVarPostBody = localVarOptionals.Request.Value()
 		
 	}
 	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
