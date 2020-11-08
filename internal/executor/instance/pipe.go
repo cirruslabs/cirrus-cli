@@ -79,7 +79,7 @@ func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) (err error) 
 			WorkingVolumeName: workingVolume.Name(),
 		}
 
-		if err := RunDockerizedAgent(ctx, config, params); err != nil {
+		if err := RunContainerizedAgent(ctx, config, params); err != nil {
 			return err
 		}
 	}

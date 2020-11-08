@@ -2,16 +2,13 @@ package instance
 
 import (
 	"archive/tar"
-	"bufio"
 	"context"
-	"encoding/json"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
+	"errors"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 type PrebuiltInstance struct {
@@ -88,28 +85,23 @@ func CreateTempArchive(dir string) (string, error) {
 func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *RunConfig) error {
 	logger := config.Logger
 
-	// Create a Docker client
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	// Create a container backend client
+	backend, err := containerbackend.NewDocker()
 	if err != nil {
 		return err
 	}
 
 	// Check if the image we're about to build is available locally
-	_, _, err = cli.ImageInspectWithRaw(ctx, prebuilt.Image)
-	if err == nil {
+	if err := backend.ImageInspect(ctx, prebuilt.Image); err == nil {
 		logger.Infof("Re-using local image %s...", prebuilt.Image)
 		return nil
 	}
 
 	// The image is not available locally, try to pull it
 	logger.Infof("Pulling image %s...", prebuilt.Image)
-	progress, err := cli.ImagePull(ctx, prebuilt.Image, types.ImagePullOptions{})
-	if err == nil {
-		_, err = io.Copy(ioutil.Discard, progress)
-		if err == nil {
-			logger.Infof("Using pulled image %s...", prebuilt.Image)
-			return nil
-		}
+	if err := backend.ImagePull(ctx, prebuilt.Image); err == nil {
+		logger.Infof("Using pulled image %s...", prebuilt.Image)
+		return nil
 	}
 
 	logger.Infof("Image %s is not available locally nor remotely, building it...", prebuilt.Image)
@@ -143,57 +135,24 @@ func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *RunConfig) er
 	}
 
 	// Build the image
-	buildProgress, err := cli.ImageBuild(ctx, file, types.ImageBuildOptions{
+	logChan, errChan := backend.ImageBuild(ctx, file, &containerbackend.ImageBuildInput{
 		Tags:       []string{prebuilt.Image},
 		Dockerfile: prebuilt.Dockerfile,
 		BuildArgs:  pointyArguments,
-		Remove:     true,
 	})
-	if err != nil {
-		return err
-	}
-
-	buildProgressReader := bufio.NewReader(buildProgress.Body)
 
 	for {
-		// Docker build progress is line-based
-		line, _, err := buildProgressReader.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				break
+		select {
+		case line := <-logChan:
+			logger.Debugf("%s", line)
+		case err := <-errChan:
+			if errors.Is(containerbackend.ErrDone, err) {
+				return nil
 			}
+
 			return err
 		}
-
-		// Each line is a JSON object with the actual message wrapped in it
-		msg := &struct {
-			Stream string
-		}{}
-		if err := json.Unmarshal(line, &msg); err != nil {
-			return err
-		}
-
-		// We're only interested with messages containing the "stream" field, as these are the most helpful
-		if msg.Stream == "" {
-			continue
-		}
-
-		// Cut the unnecessary formatting done by the Docker daemon for some reason
-		progressMessage := strings.TrimSpace(msg.Stream)
-
-		// Some messages contain only "\n", so filter these out
-		if progressMessage == "" {
-			continue
-		}
-
-		logger.Debugf("%s", progressMessage)
 	}
-
-	if err := buildProgress.Body.Close(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (prebuilt *PrebuiltInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {

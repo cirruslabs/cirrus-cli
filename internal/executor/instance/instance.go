@@ -6,16 +6,11 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/echelon"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/client"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
-	"io"
-	"io/ioutil"
 	"math"
 	"path"
 	"runtime"
@@ -104,21 +99,21 @@ type Params struct {
 	WorkingVolumeName      string
 }
 
-func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) error {
+func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Params) error {
 	logger := config.Logger
-	logger.Debugf("creating Docker client")
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	logger.Debugf("creating container backend client")
+	backend, err := containerbackend.NewDocker()
 	if err != nil {
 		return err
 	}
 
-	// Clamp resources to those available for Docker daemon
-	info, err := cli.Info(ctx)
+	// Clamp resources to those available for container backend daemon
+	info, err := backend.SystemInfo(ctx)
 	if err != nil {
 		return err
 	}
-	availableCPU := float32(info.NCPU)
-	availableMemory := uint32(info.MemTotal / mebi)
+	availableCPU := float32(info.TotalCPUs)
+	availableMemory := uint32(info.TotalMemoryBytes / mebi)
 
 	params.CPU = clampCPU(params.CPU, availableCPU)
 	params.Memory = clampMemory(params.Memory, availableMemory)
@@ -130,21 +125,16 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 	if config.DockerOptions.ShouldPullImage(params.Image) {
 		dockerPullLogger := logger.Scoped("docker pull")
 		dockerPullLogger.Infof("Pulling image %s...", params.Image)
-		progress, err := cli.ImagePull(ctx, params.Image, types.ImagePullOptions{})
-		if err != nil {
+		if err := backend.ImagePull(ctx, params.Image); err != nil {
 			dockerPullLogger.Errorf("Failed to pull %s: %v", params.Image, err)
 			dockerPullLogger.Finish(false)
 			return err
 		}
-		_, err = io.Copy(ioutil.Discard, progress)
-		dockerPullLogger.Finish(err == nil)
-		if err != nil {
-			return err
-		}
+		dockerPullLogger.Finish(true)
 	}
 
 	logger.Debugf("creating container using working volume %s", params.WorkingVolumeName)
-	containerConfig := container.Config{
+	input := containerbackend.ContainerCreateInput{
 		Image: params.Image,
 		Entrypoint: []string{
 			path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent),
@@ -161,16 +151,15 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 			"-command-to",
 			params.CommandTo,
 		},
-	}
-	hostConfig := container.HostConfig{
-		Mounts: []mount.Mount{
+		Env: make(map[string]string),
+		Mounts: []containerbackend.ContainerMount{
 			{
-				Type:   mount.TypeVolume,
+				Type:   containerbackend.MountTypeVolume,
 				Source: params.WorkingVolumeName,
 				Target: WorkingVolumeMountpoint,
 			},
 		},
-		Resources: container.Resources{
+		Resources: containerbackend.ContainerResources{
 			NanoCPUs: int64(params.CPU * nano),
 			Memory:   int64(params.Memory * mebi),
 		},
@@ -182,14 +171,14 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 			// to be accessible in case we're running in Cloud Build and the CLI
 			// itself is containerized (so we can't mount a Unix domain socket
 			// because we don't know the path to it on the host)
-			hostConfig.NetworkMode = heuristic.CloudBuildNetworkName
+			input.Network = heuristic.CloudBuildNetworkName
 		} else {
 			// Mount a Unix domain socket in all other Linux cases, assuming that
 			// we run in the same mount namespace as the Docker daemon
 			socketPath := strings.TrimPrefix(config.ContainerEndpoint, "unix://")
 
-			hostConfig.Mounts = append(hostConfig.Mounts, mount.Mount{
-				Type:   mount.TypeBind,
+			input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
+				Type:   containerbackend.MountTypeBind,
 				Source: socketPath,
 				Target: socketPath,
 			})
@@ -200,13 +189,13 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		// This solves the following problems when SELinux is enabled:
 		// * agent not being able to connect to the CLI's Unix socket
 		// * task container not being able to read project directory files when using dirty mode
-		hostConfig.SecurityOpt = []string{"label=disable"}
+		input.DisableSELinux = true
 	}
 
 	// In dirty mode we mount the project directory in read-write mode
 	if config.DirtyMode {
-		hostConfig.Mounts = append(hostConfig.Mounts, mount.Mount{
-			Type:   mount.TypeBind,
+		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
+			Type:   containerbackend.MountTypeBind,
 			Source: config.ProjectDir,
 			Target: path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir),
 		})
@@ -219,10 +208,10 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 			ports = append(ports, strconv.FormatUint(uint64(additionalContainer.ContainerPort), 10))
 		}
 		commaDelimitedPorts := strings.Join(ports, ",")
-		containerConfig.Env = append(containerConfig.Env, "CIRRUS_PORTS_WAIT_FOR="+commaDelimitedPorts)
+		input.Env["CIRRUS_PORTS_WAIT_FOR"] = commaDelimitedPorts
 	}
 
-	cont, err := cli.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, "")
+	cont, err := backend.ContainerCreate(ctx, &input, "")
 	if err != nil {
 		return err
 	}
@@ -244,10 +233,7 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 		} else {
 			logger.Debugf("cleaning up container %s", cont.ID)
 
-			err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
-				RemoveVolumes: true,
-				Force:         true,
-			})
+			err := backend.ContainerDelete(context.Background(), cont.ID)
 			if err != nil {
 				logger.Warnf("error while removing container: %v", err)
 			}
@@ -268,7 +254,7 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 				additionalContainersCtx,
 				logger,
 				additionalContainer,
-				cli,
+				backend,
 				cont.ID,
 				config.DockerOptions,
 			); err != nil {
@@ -279,12 +265,12 @@ func RunDockerizedAgent(ctx context.Context, config *RunConfig, params *Params) 
 	}
 
 	logger.Debugf("starting container %s", cont.ID)
-	if err := cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{}); err != nil {
+	if err := backend.ContainerStart(ctx, cont.ID); err != nil {
 		return err
 	}
 
 	logger.Debugf("waiting for container %s to finish", cont.ID)
-	waitChan, errChan := cli.ContainerWait(ctx, cont.ID, container.WaitConditionNotRunning)
+	waitChan, errChan := backend.ContainerWait(ctx, cont.ID)
 	select {
 	case res := <-waitChan:
 		logger.Debugf("container exited with %v error and exit code %d", res.Error, res.StatusCode)
@@ -301,34 +287,28 @@ func runAdditionalContainer(
 	ctx context.Context,
 	logger *echelon.Logger,
 	additionalContainer *api.AdditionalContainer,
-	cli *client.Client,
+	backend containerbackend.ContainerBackend,
 	connectToContainer string,
 	dockerOptions options.DockerOptions,
 ) error {
 	logger.Debugf("pulling additional container image %s", additionalContainer.Image)
-	progress, err := cli.ImagePull(ctx, additionalContainer.Image, types.ImagePullOptions{})
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
-	}
-	_, err = io.Copy(ioutil.Discard, progress)
+	err := backend.ImagePull(ctx, additionalContainer.Image)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
 
 	logger.Debugf("creating additional container")
-	containerConfig := container.Config{
-		Image: additionalContainer.Image,
-		Cmd:   additionalContainer.Command,
-		Env:   envMapToSlice(additionalContainer.Environment),
-	}
-	hostConfig := container.HostConfig{
-		Resources: container.Resources{
+	input := &containerbackend.ContainerCreateInput{
+		Image:   additionalContainer.Image,
+		Command: additionalContainer.Command,
+		Env:     additionalContainer.Environment,
+		Resources: containerbackend.ContainerResources{
 			NanoCPUs: int64(additionalContainer.Cpu * nano),
 			Memory:   int64(additionalContainer.Memory * mebi),
 		},
-		NetworkMode: container.NetworkMode(fmt.Sprintf("container:%s", connectToContainer)),
+		Network: fmt.Sprintf("container:%s", connectToContainer),
 	}
-	cont, err := cli.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, "")
+	cont, err := backend.ContainerCreate(ctx, input, "")
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
@@ -342,10 +322,7 @@ func runAdditionalContainer(
 		}
 
 		logger.Debugf("cleaning up additional container %s", cont.ID)
-		err := cli.ContainerRemove(context.Background(), cont.ID, types.ContainerRemoveOptions{
-			RemoveVolumes: true,
-			Force:         true,
-		})
+		err := backend.ContainerDelete(context.Background(), cont.ID)
 		if err != nil {
 			logger.Warnf("Error while removing additional container: %v", err)
 		}
@@ -361,12 +338,12 @@ func runAdditionalContainer(
 	}
 
 	logger.Debugf("starting additional container %s", cont.ID)
-	if err := cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{}); err != nil {
+	if err := backend.ContainerStart(ctx, cont.ID); err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
 
 	logger.Debugf("waiting for additional container %s to finish", cont.ID)
-	waitChan, errChan := cli.ContainerWait(ctx, cont.ID, container.WaitConditionNotRunning)
+	waitChan, errChan := backend.ContainerWait(ctx, cont.ID)
 	select {
 	case res := <-waitChan:
 		logger.Debugf("additional container exited with %v error and exit code %d", res.Error, res.StatusCode)
@@ -375,14 +352,6 @@ func runAdditionalContainer(
 	}
 
 	return nil
-}
-
-func envMapToSlice(envMap map[string]string) (envSlice []string) {
-	for envKey, envValue := range envMap {
-		envSlice = append(envSlice, fmt.Sprintf("%s=%s", envKey, envValue))
-	}
-
-	return
 }
 
 func clampCPU(requested float32, available float32) float32 {
