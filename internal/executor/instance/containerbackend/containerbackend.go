@@ -33,7 +33,7 @@ type ContainerBackend interface {
 type ImageBuildInput struct {
 	Tags       []string
 	Dockerfile string
-	BuildArgs  map[string]*string
+	BuildArgs  map[string]string
 }
 
 type ContainerCreateInput struct {

@@ -1,9 +1,7 @@
 package containerbackend
 
 import (
-	"bufio"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -12,7 +10,6 @@ import (
 	"github.com/docker/docker/client"
 	"io"
 	"io/ioutil"
-	"strings"
 )
 
 type Docker struct {
@@ -57,10 +54,19 @@ func (docker *Docker) ImageBuild(
 	errChan := make(chan error)
 
 	go func() {
+		// Deal with ImageBuildOptions's BuildArgs field quirks
+		// since we don't differentiate between empty and missing
+		// option values
+		pointyArguments := make(map[string]*string)
+		for key, value := range input.BuildArgs {
+			valueCopy := value
+			pointyArguments[key] = &valueCopy
+		}
+
 		buildProgress, err := docker.cli.ImageBuild(ctx, tarball, types.ImageBuildOptions{
 			Tags:       input.Tags,
 			Dockerfile: input.Dockerfile,
-			BuildArgs:  input.BuildArgs,
+			BuildArgs:  pointyArguments,
 			Remove:     true,
 		})
 		if err != nil {
@@ -68,44 +74,7 @@ func (docker *Docker) ImageBuild(
 			return
 		}
 
-		buildProgressReader := bufio.NewReader(buildProgress.Body)
-
-		for {
-			// Docker build progress is line-based
-			line, _, err := buildProgressReader.ReadLine()
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-
-				errChan <- err
-				return
-			}
-
-			// Each line is a JSON object with the actual message wrapped in it
-			msg := &struct {
-				Stream string
-			}{}
-			if err := json.Unmarshal(line, &msg); err != nil {
-				errChan <- err
-				return
-			}
-
-			// We're only interested with messages containing the "stream" field, as these are the most helpful
-			if msg.Stream == "" {
-				continue
-			}
-
-			// Cut the unnecessary formatting done by the Docker daemon for some reason
-			progressMessage := strings.TrimSpace(msg.Stream)
-
-			// Some messages contain only "\n", so filter these out
-			if progressMessage == "" {
-				continue
-			}
-
-			logChan <- progressMessage
-		}
+		unrollStream(buildProgress.Body, logChan, errChan)
 
 		if err := buildProgress.Body.Close(); err != nil {
 			errChan <- err

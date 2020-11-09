@@ -221,7 +221,7 @@ func TestRunDockerNoPull(t *testing.T) {
 
 	require.NotNil(t, err)
 	assert.NotContains(t, buf.String(), "pulling image")
-	assert.Contains(t, buf.String(), "No such image")
+	assert.Contains(t, strings.ToLower(buf.String()), "no such image")
 }
 
 // TestRunTaskFilteringByLabel ensures that task filtering logic is label-aware.

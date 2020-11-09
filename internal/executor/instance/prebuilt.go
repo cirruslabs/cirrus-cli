@@ -120,20 +120,11 @@ func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *RunConfig) er
 		}
 	}()
 
-	// Deal with ImageBuildOptions's BuildArgs field quirks
-	// since we don't differentiate between empty and missing
-	// option values
-	pointyArguments := make(map[string]*string)
-	for key, value := range prebuilt.Arguments {
-		valueCopy := value
-		pointyArguments[key] = &valueCopy
-	}
-
 	// Build the image
 	logChan, errChan := backend.ImageBuild(ctx, file, &containerbackend.ImageBuildInput{
 		Tags:       []string{prebuilt.Image},
 		Dockerfile: prebuilt.Dockerfile,
-		BuildArgs:  pointyArguments,
+		BuildArgs:  prebuilt.Arguments,
 	})
 
 	for {
