@@ -224,6 +224,11 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 
 	// Schedule all containers for removal
 	defer func() {
+		// We need to remove additional containers first in order to avoid Podman's
+		// "has dependent containers which must be removed before it" error
+		additionalContainersCancel()
+		additionalContainersWG.Wait()
+
 		if config.DockerOptions.NoCleanup {
 			logger.Infof("not cleaning up container %s, don't forget to remove it with \"docker rm -v %s\"",
 				cont.ID, cont.ID)
@@ -235,9 +240,6 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 				logger.Warnf("error while removing container: %v", err)
 			}
 		}
-
-		additionalContainersCancel()
-		additionalContainersWG.Wait()
 	}()
 
 	// Start additional containers (if any)
