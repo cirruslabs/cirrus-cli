@@ -1,0 +1,46 @@
+# InlineResponse2008
+
+## Properties
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**AppArmorProfile** | **string** |  | [optional] [default to null]
+**Args** | **[]string** |  | [optional] [default to null]
+**BoundingCaps** | **[]string** |  | [optional] [default to null]
+**Config** | [***InspectContainerConfig**](InspectContainerConfig.md) |  | [optional] [default to null]
+**ConmonPidFile** | **string** |  | [optional] [default to null]
+**Created** | [**time.Time**](time.Time.md) |  | [optional] [default to null]
+**Dependencies** | **[]string** |  | [optional] [default to null]
+**Driver** | **string** |  | [optional] [default to null]
+**EffectiveCaps** | **[]string** |  | [optional] [default to null]
+**ExecIDs** | **[]string** |  | [optional] [default to null]
+**ExitCommand** | **[]string** |  | [optional] [default to null]
+**GraphDriver** | [***Data**](Data.md) |  | [optional] [default to null]
+**HostConfig** | [***InspectContainerHostConfig**](InspectContainerHostConfig.md) |  | [optional] [default to null]
+**HostnamePath** | **string** |  | [optional] [default to null]
+**HostsPath** | **string** |  | [optional] [default to null]
+**Id** | **string** |  | [optional] [default to null]
+**Image** | **string** |  | [optional] [default to null]
+**ImageName** | **string** |  | [optional] [default to null]
+**IsInfra** | **bool** |  | [optional] [default to null]
+**LogPath** | **string** |  | [optional] [default to null]
+**LogTag** | **string** |  | [optional] [default to null]
+**MountLabel** | **string** |  | [optional] [default to null]
+**Mounts** | [**[]InspectMount**](InspectMount.md) |  | [optional] [default to null]
+**Name** | **string** |  | [optional] [default to null]
+**Namespace** | **string** |  | [optional] [default to null]
+**NetworkSettings** | [***InspectNetworkSettings**](InspectNetworkSettings.md) |  | [optional] [default to null]
+**OCIConfigPath** | **string** |  | [optional] [default to null]
+**OCIRuntime** | **string** |  | [optional] [default to null]
+**Path** | **string** |  | [optional] [default to null]
+**Pod** | **string** |  | [optional] [default to null]
+**ProcessLabel** | **string** |  | [optional] [default to null]
+**ResolvConfPath** | **string** |  | [optional] [default to null]
+**RestartCount** | **int32** |  | [optional] [default to null]
+**Rootfs** | **string** |  | [optional] [default to null]
+**SizeRootFs** | **int64** |  | [optional] [default to null]
+**SizeRw** | **int64** |  | [optional] [default to null]
+**State** | [***InspectContainerState**](InspectContainerState.md) |  | [optional] [default to null]
+**StaticDir** | **string** |  | [optional] [default to null]
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+

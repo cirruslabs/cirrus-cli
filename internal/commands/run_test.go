@@ -5,8 +5,6 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/stretchr/testify/assert"
@@ -223,7 +221,7 @@ func TestRunDockerNoPull(t *testing.T) {
 
 	require.NotNil(t, err)
 	assert.NotContains(t, buf.String(), "pulling image")
-	assert.Contains(t, buf.String(), "No such image")
+	assert.Contains(t, strings.ToLower(buf.String()), "no such image")
 }
 
 // TestRunTaskFilteringByLabel ensures that task filtering logic is label-aware.
@@ -266,10 +264,7 @@ func TestRunNoCleanup(t *testing.T) {
 	assert.Contains(t, buf.String(), "not cleaning up working volume")
 
 	// The fun ends here since now we have to cleanup containers and volumes ourselves
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		t.Fatal(err)
-	}
+	backend := testutil.ContainerBackendFromEnv(t)
 
 	containerRegex := regexp.MustCompile("not cleaning up (?:container|additional container) (?P<container_id>[^,]+)")
 	volumeRegex := regexp.MustCompile("not cleaning up working volume (?P<volume_id>[^,]+)")
@@ -278,10 +273,7 @@ func TestRunNoCleanup(t *testing.T) {
 		matches := containerRegex.FindStringSubmatch(line)
 		if matches != nil {
 			containerID := matches[containerRegex.SubexpIndex("container_id")]
-			if err := cli.ContainerRemove(context.Background(), containerID, types.ContainerRemoveOptions{
-				RemoveVolumes: true,
-				Force:         true,
-			}); err != nil {
+			if err := backend.ContainerDelete(context.Background(), containerID); err != nil {
 				t.Fatal(err)
 			}
 		}
@@ -289,7 +281,7 @@ func TestRunNoCleanup(t *testing.T) {
 		matches = volumeRegex.FindStringSubmatch(line)
 		if matches != nil {
 			volumeID := matches[volumeRegex.SubexpIndex("volume_id")]
-			if err := cli.VolumeRemove(context.Background(), volumeID, false); err != nil {
+			if err := backend.VolumeDelete(context.Background(), volumeID); err != nil {
 				t.Fatal(err)
 			}
 		}

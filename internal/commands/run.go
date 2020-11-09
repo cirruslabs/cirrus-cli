@@ -7,13 +7,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	eenvironment "github.com/cirruslabs/cirrus-cli/internal/executor/environment"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
-	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
@@ -29,8 +29,9 @@ var output string
 var environment []string
 var verbose bool
 
-// Docker-related flags.
-var dockerNoPull bool
+// Container-related flags.
+var containerBackend string
+var containerNoPull bool
 
 // Flags useful for debugging.
 var debugNoCleanup bool
@@ -93,24 +94,12 @@ func readStarlarkConfig(ctx context.Context, env map[string]string) (string, err
 	return lrk.Main(ctx, string(starlarkSource))
 }
 
-func preflightCheck() error {
-	// Since all of the instance types we currently support use Docker,
-	// check that it's actually installed as early as possible
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return fmt.Errorf("%w: cannot connect to Docker daemon: %v, make sure the Docker is installed",
-			ErrRun, err)
-	}
-	defer cli.Close()
-
-	return nil
-}
-
 func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
-	if err := preflightCheck(); err != nil {
+	backend, err := containerbackend.New(containerBackend)
+	if err != nil {
 		return err
 	}
 
@@ -182,9 +171,9 @@ func run(cmd *cobra.Command, args []string) error {
 		executorOpts = append(executorOpts, executor.WithDirtyMode())
 	}
 
-	// Docker-related options
-	executorOpts = append(executorOpts, executor.WithDockerOptions(options.DockerOptions{
-		NoPull:    dockerNoPull,
+	// Container-related options
+	executorOpts = append(executorOpts, executor.WithContainerOptions(options.ContainerOptions{
+		NoPull:    containerNoPull,
 		NoCleanup: debugNoCleanup,
 	}))
 
@@ -193,6 +182,9 @@ func run(cmd *cobra.Command, args []string) error {
 		executor.WithBaseEnvironmentOverride(baseEnvironment),
 		executor.WithUserSpecifiedEnvironment(userSpecifiedEnvironment),
 	)
+
+	// Container backend
+	executorOpts = append(executorOpts, executor.WithContainerBackend(backend))
 
 	// Run
 	e, err := executor.New(projectDir, result.Tasks, executorOpts...)
@@ -220,9 +212,17 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&output, "output", "o", logs.DefaultFormat(), fmt.Sprintf("output format of logs, "+
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))
 
-	// Docker-related flags
-	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false,
+	// Container-related flags
+	cmd.PersistentFlags().StringVar(&containerBackend, "container-backend", containerbackend.BackendAuto,
+		fmt.Sprintf("container engine backend to use, either \"%s\", \"%s\" or \"%s\"",
+			containerbackend.BackendDocker, containerbackend.BackendPodman, containerbackend.BackendAuto))
+	cmd.PersistentFlags().BoolVar(&containerNoPull, "container-no-pull", false,
 		"don't attempt to pull the images before starting containers")
+
+	// Deprecated flags
+	cmd.PersistentFlags().BoolVar(&containerNoPull, "docker-no-pull", false,
+		"don't attempt to pull the images before starting containers")
+	_ = cmd.PersistentFlags().MarkDeprecated("docker-no-pull", "use --container-no-pull instead")
 
 	// Flags useful for debugging
 	cmd.PersistentFlags().BoolVar(&debugNoCleanup, "debug-no-cleanup", false,

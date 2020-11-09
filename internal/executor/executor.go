@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
@@ -29,7 +30,8 @@ type Executor struct {
 	baseEnvironment          map[string]string
 	userSpecifiedEnvironment map[string]string
 	dirtyMode                bool
-	dockerOptions            options.DockerOptions
+	containerBackend         containerbackend.ContainerBackend
+	containerOptions         options.ContainerOptions
 }
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
@@ -52,6 +54,13 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	if e.logger == nil {
 		renderer := renderers.NewSimpleRenderer(ioutil.Discard, nil)
 		e.logger = echelon.NewLogger(echelon.InfoLevel, renderer)
+	}
+	if e.containerBackend == nil {
+		backend, err := containerbackend.NewDocker()
+		if err != nil {
+			return nil, err
+		}
+		e.containerBackend = backend
 	}
 
 	// Filter tasks (e.g. if a user wants to run only a specific task without dependencies)
@@ -87,7 +96,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	for _, task := range b.Tasks() {
 		// Collect images that shouldn't be pulled under any circumstances
 		if prebuiltInstance, ok := task.Instance.(*instance.PrebuiltInstance); ok {
-			e.dockerOptions.NoPullImages = append(e.dockerOptions.NoPullImages, prebuiltInstance.Image)
+			e.containerOptions.NoPullImages = append(e.containerOptions.NoPullImages, prebuiltInstance.Image)
 		}
 
 		// Set task's working directory based on it's instance (if not overridden by the user)
@@ -120,6 +129,7 @@ func (e *Executor) Run(ctx context.Context) error {
 		// Prepare task's instance
 		taskInstance := task.Instance
 		instanceRunOpts := instance.RunConfig{
+			ContainerBackend:  e.containerBackend,
 			ProjectDir:        e.build.ProjectDir,
 			ContainerEndpoint: e.rpc.ContainerEndpoint(),
 			DirectEndpoint:    e.rpc.DirectEndpoint(),
@@ -128,7 +138,7 @@ func (e *Executor) Run(ctx context.Context) error {
 			TaskID:            task.ID,
 			Logger:            taskLogger,
 			DirtyMode:         e.dirtyMode,
-			DockerOptions:     e.dockerOptions,
+			ContainerOptions:  e.containerOptions,
 		}
 
 		// Wrap the context to enforce a timeout for this task

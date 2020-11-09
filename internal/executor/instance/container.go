@@ -19,14 +19,14 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err 
 		return err
 	}
 	defer func() {
-		if config.DockerOptions.NoCleanup {
+		if config.ContainerOptions.NoCleanup {
 			config.Logger.Infof("not cleaning up working volume %s, don't forget to remove it with \"docker volume rm %s\"",
 				workingVolume.Name(), workingVolume.Name())
 
 			return
 		}
 
-		cleanupErr := workingVolume.Close()
+		cleanupErr := workingVolume.Close(config.ContainerBackend)
 		if err == nil {
 			err = cleanupErr
 		}
@@ -40,7 +40,7 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err 
 		WorkingVolumeName:    workingVolume.Name(),
 	}
 
-	if err := RunDockerizedAgent(ctx, config, params); err != nil {
+	if err := RunContainerizedAgent(ctx, config, params); err != nil {
 		return err
 	}
 

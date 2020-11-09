@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/cirruslabs/echelon"
@@ -24,7 +25,7 @@ import (
 func TestExecutorEmpty(t *testing.T) {
 	dir := testutil.TempDir(t)
 
-	e, err := executor.New(dir, []*api.Task{})
+	e, err := executor.New(dir, []*api.Task{}, executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +71,7 @@ func TestExecutorClone(t *testing.T) {
 			},
 			Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
-	})
+	}, executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -115,7 +116,7 @@ func TestExecutorScript(t *testing.T) {
 			},
 			Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
-	}, executor.WithLogger(logger))
+	}, executor.WithLogger(logger), executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +149,7 @@ func TestExecutorFails(t *testing.T) {
 			},
 			Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
-	})
+	}, executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,6 +161,11 @@ func TestExecutorFails(t *testing.T) {
 
 // TestResourceLimits ensures that the desired CPU and memory limits are enforced for instances.
 func TestResourceLimits(t *testing.T) {
+	// Skip this test on Podman due to https://github.com/containers/podman/issues/7959
+	if _, ok := testutil.ContainerBackendFromEnv(t).(*containerbackend.Podman); ok {
+		return
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/resource-limits")
 	err := testutil.Execute(t, dir)
 	assert.NoError(t, err)
@@ -168,6 +174,11 @@ func TestResourceLimits(t *testing.T) {
 // TestAdditionalContainers ensures that the services created in the additional containers
 // are reachable from the main container.
 func TestAdditionalContainers(t *testing.T) {
+	// Skip this test on Podman
+	if _, ok := testutil.ContainerBackendFromEnv(t).(*containerbackend.Podman); ok {
+		return
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/additional-containers")
 	err := testutil.Execute(t, dir)
 	assert.NoError(t, err)

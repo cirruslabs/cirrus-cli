@@ -45,6 +45,8 @@ func ExecuteWithOptions(t *testing.T, dir string, opts ...executor.Option) error
 	require.Empty(t, result.Errors)
 	require.NotEmpty(t, result.Tasks)
 
+	opts = append(opts, executor.WithContainerBackend(ContainerBackendFromEnv(t)))
+
 	e, err := executor.New(dir, result.Tasks, opts...)
 	if err != nil {
 		t.Fatal(err)
@@ -63,6 +65,8 @@ func ExecuteWithOptionsNew(t *testing.T, dir string, opts ...executor.Option) er
 
 	require.Empty(t, result.Errors)
 	require.NotEmpty(t, result.Tasks)
+
+	opts = append(opts, executor.WithContainerBackend(ContainerBackendFromEnv(t)))
 
 	e, err := executor.New(dir, result.Tasks, opts...)
 	if err != nil {

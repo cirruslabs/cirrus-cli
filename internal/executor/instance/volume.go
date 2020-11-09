@@ -4,14 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/api/types/volume"
-	"github.com/docker/docker/client"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/google/uuid"
-	"io"
-	"io/ioutil"
 	"path"
 )
 
@@ -46,7 +40,7 @@ func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Vol
 	initLogger := config.Logger.Scoped("Preparing execution environment...")
 	initLogger.Infof("Preparing volume to work with...")
 	desiredVolumeName := fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String())
-	v, err := CreateWorkingVolume(ctx, desiredVolumeName, config.ProjectDir, config.DirtyMode)
+	v, err := CreateWorkingVolume(ctx, config.ContainerBackend, desiredVolumeName, config.ProjectDir, config.DirtyMode)
 	if err != nil {
 		initLogger.Warnf("Failed to create a volume from working directory: %v", err)
 		initLogger.Finish(false)
@@ -59,34 +53,22 @@ func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Vol
 // CreateWorkingVolume returns name of the working volume created according to the specification in arguments.
 func CreateWorkingVolume(
 	ctx context.Context,
+	backend containerbackend.ContainerBackend,
 	name string,
 	projectDir string,
 	dontPopulate bool,
 ) (vol *Volume, err error) {
-	// Create Docker client
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
-	}
-	defer cli.Close()
-
 	// Retrieve the latest agent image
-	pullResult, err := cli.ImagePull(ctx, AgentImage, types.ImagePullOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
-	}
-	_, err = io.Copy(ioutil.Discard, pullResult)
-	if err != nil {
+	if err := backend.ImagePull(ctx, AgentImage); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
-	dockerVolume, err := cli.VolumeCreate(ctx, volume.VolumeCreateBody{Name: name})
-	if err != nil {
+	if err := backend.VolumeCreate(ctx, name); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 	defer func() {
 		if err != nil {
-			_ = cli.VolumeRemove(ctx, dockerVolume.Name, false)
+			_ = backend.VolumeDelete(ctx, name)
 		}
 	}()
 
@@ -102,24 +84,21 @@ func CreateWorkingVolume(
 			projectDirMountpoint, path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir))
 	}
 
-	containerConfig := &container.Config{
-		Image: AgentImage,
-		Cmd:   []string{"/bin/sh", "-c", copyCmd},
-	}
-
-	hostConfig := &container.HostConfig{
-		Mounts: []mount.Mount{
+	input := &containerbackend.ContainerCreateInput{
+		Image:   AgentImage,
+		Command: []string{"/bin/sh", "-c", copyCmd},
+		Mounts: []containerbackend.ContainerMount{
 			{
-				Type:   mount.TypeVolume,
-				Source: dockerVolume.Name,
+				Type:   containerbackend.MountTypeVolume,
+				Source: name,
 				Target: WorkingVolumeMountpoint,
 			},
 		},
 	}
 
 	if !dontPopulate {
-		hostConfig.Mounts = append(hostConfig.Mounts, mount.Mount{
-			Type:     mount.TypeBind,
+		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
+			Type:     containerbackend.MountTypeBind,
 			Source:   projectDir,
 			Target:   projectDirMountpoint,
 			ReadOnly: true,
@@ -127,31 +106,28 @@ func CreateWorkingVolume(
 
 		// Disable SELinux confinement for this container, otherwise
 		// the rsync might fail when accessing the project directory
-		hostConfig.SecurityOpt = []string{"label=disable"}
+		input.DisableSELinux = true
 	}
 
 	containerName := fmt.Sprintf("cirrus-helper-container-%s", uuid.New().String())
-	cont, err := cli.ContainerCreate(ctx, containerConfig, hostConfig, nil, containerName)
+	cont, err := backend.ContainerCreate(ctx, input, containerName)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 	defer func() {
-		removeErr := cli.ContainerRemove(ctx, cont.ID, types.ContainerRemoveOptions{
-			RemoveVolumes: true,
-			Force:         true,
-		})
+		removeErr := backend.ContainerDelete(ctx, cont.ID)
 		if removeErr != nil {
 			err = fmt.Errorf("%w: %v", ErrVolumeCreationFailed, removeErr)
 		}
 	}()
 
-	err = cli.ContainerStart(ctx, cont.ID, types.ContainerStartOptions{})
+	err = backend.ContainerStart(ctx, cont.ID)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
 	// Wait for the container to finish copying
-	waitChan, errChan := cli.ContainerWait(ctx, cont.ID, container.WaitConditionNotRunning)
+	waitChan, errChan := backend.ContainerWait(ctx, cont.ID)
 	select {
 	case res := <-waitChan:
 		if res.StatusCode != 0 {
@@ -163,7 +139,7 @@ func CreateWorkingVolume(
 	}
 
 	return &Volume{
-		name: dockerVolume.Name,
+		name: name,
 	}, nil
 }
 
@@ -171,16 +147,8 @@ func (volume *Volume) Name() string {
 	return volume.name
 }
 
-func (volume *Volume) Close() error {
-	// Create Docker client
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrVolumeCleanupFailed, err)
-	}
-	defer cli.Close()
-
-	err = cli.VolumeRemove(context.Background(), volume.name, false)
-	if err != nil {
+func (volume *Volume) Close(backend containerbackend.ContainerBackend) error {
+	if err := backend.VolumeDelete(context.Background(), volume.name); err != nil {
 		return fmt.Errorf("%w: %v", ErrVolumeCleanupFailed, err)
 	}
 
