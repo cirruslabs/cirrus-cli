@@ -29,8 +29,8 @@ var output string
 var environment []string
 var verbose bool
 
-// Docker-related flags.
-var dockerNoPull bool
+// Container-related flags.
+var containerNoPull bool
 
 // Flags useful for debugging.
 var debugNoCleanup bool
@@ -210,9 +210,9 @@ func run(cmd *cobra.Command, args []string) error {
 		executorOpts = append(executorOpts, executor.WithDirtyMode())
 	}
 
-	// Docker-related options
+	// Container-related options
 	executorOpts = append(executorOpts, executor.WithContainerOptions(options.ContainerOptions{
-		NoPull:    dockerNoPull,
+		NoPull:    containerNoPull,
 		NoCleanup: debugNoCleanup,
 	}))
 
@@ -251,9 +251,14 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&output, "output", "o", logs.DefaultFormat(), fmt.Sprintf("output format of logs, "+
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))
 
-	// Docker-related flags
-	cmd.PersistentFlags().BoolVar(&dockerNoPull, "docker-no-pull", false,
+	// Container-related flags
+	cmd.PersistentFlags().BoolVar(&containerNoPull, "container-no-pull", false,
 		"don't attempt to pull the images before starting containers")
+
+	// Deprecated flags
+	cmd.PersistentFlags().BoolVar(&containerNoPull, "docker-no-pull", false,
+		"don't attempt to pull the images before starting containers")
+	_ = cmd.PersistentFlags().MarkDeprecated("docker-no-pull", "use --container-no-pull instead")
 
 	// Flags useful for debugging
 	cmd.PersistentFlags().BoolVar(&debugNoCleanup, "debug-no-cleanup", false,
