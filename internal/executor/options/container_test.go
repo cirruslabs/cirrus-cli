@@ -7,7 +7,7 @@ import (
 )
 
 func TestShouldPullImagePositive(t *testing.T) {
-	do := options.DockerOptions{
+	do := options.ContainerOptions{
 		NoPullImages: []string{"nonexistent.invalid/should/not/be:pulled"},
 	}
 
@@ -16,7 +16,7 @@ func TestShouldPullImagePositive(t *testing.T) {
 }
 
 func TestShouldPullImageNegative(t *testing.T) {
-	do := options.DockerOptions{
+	do := options.ContainerOptions{
 		NoPull:       true,
 		NoPullImages: []string{"nonexistent.invalid/should/not/be:pulled"},
 	}

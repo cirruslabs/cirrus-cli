@@ -39,9 +39,9 @@ func WithDirtyMode() Option {
 	}
 }
 
-func WithDockerOptions(dockerOptions options.DockerOptions) Option {
+func WithContainerOptions(containerOptions options.ContainerOptions) Option {
 	return func(e *Executor) {
-		e.dockerOptions = dockerOptions
+		e.containerOptions = containerOptions
 	}
 }
 

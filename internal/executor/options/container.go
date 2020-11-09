@@ -1,12 +1,12 @@
 package options
 
-type DockerOptions struct {
+type ContainerOptions struct {
 	NoPull       bool
 	NoPullImages []string
 	NoCleanup    bool
 }
 
-func (do DockerOptions) ShouldPullImage(image string) bool {
+func (do ContainerOptions) ShouldPullImage(image string) bool {
 	if do.NoPull {
 		return false
 	}

@@ -211,7 +211,7 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Docker-related options
-	executorOpts = append(executorOpts, executor.WithDockerOptions(options.DockerOptions{
+	executorOpts = append(executorOpts, executor.WithContainerOptions(options.ContainerOptions{
 		NoPull:    dockerNoPull,
 		NoCleanup: debugNoCleanup,
 	}))

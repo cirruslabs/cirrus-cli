@@ -88,7 +88,7 @@ type RunConfig struct {
 	TaskID                     int64
 	Logger                     *echelon.Logger
 	DirtyMode                  bool
-	DockerOptions              options.DockerOptions
+	ContainerOptions           options.ContainerOptions
 }
 
 type Params struct {
@@ -119,7 +119,7 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 		additionalContainer.Memory = clampMemory(additionalContainer.Memory, availableMemory)
 	}
 
-	if config.DockerOptions.ShouldPullImage(params.Image) {
+	if config.ContainerOptions.ShouldPullImage(params.Image) {
 		dockerPullLogger := logger.Scoped("docker pull")
 		dockerPullLogger.Infof("Pulling image %s...", params.Image)
 		if err := backend.ImagePull(ctx, params.Image); err != nil {
@@ -229,7 +229,7 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 		additionalContainersCancel()
 		additionalContainersWG.Wait()
 
-		if config.DockerOptions.NoCleanup {
+		if config.ContainerOptions.NoCleanup {
 			logger.Infof("not cleaning up container %s, don't forget to remove it with \"docker rm -v %s\"",
 				cont.ID, cont.ID)
 		} else {
@@ -255,7 +255,7 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 				additionalContainer,
 				backend,
 				cont.ID,
-				config.DockerOptions,
+				config.ContainerOptions,
 			); err != nil {
 				additionalContainersErrChan <- err
 			}
@@ -288,7 +288,7 @@ func runAdditionalContainer(
 	additionalContainer *api.AdditionalContainer,
 	backend containerbackend.ContainerBackend,
 	connectToContainer string,
-	dockerOptions options.DockerOptions,
+	containerOptions options.ContainerOptions,
 ) error {
 	logger.Debugf("pulling additional container image %s", additionalContainer.Image)
 	err := backend.ImagePull(ctx, additionalContainer.Image)
@@ -313,7 +313,7 @@ func runAdditionalContainer(
 	}
 
 	defer func() {
-		if dockerOptions.NoCleanup {
+		if containerOptions.NoCleanup {
 			logger.Infof("not cleaning up additional container %s, don't forget to remove it with \"docker rm -v %s\"",
 				cont.ID, cont.ID)
 
