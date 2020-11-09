@@ -102,11 +102,11 @@ func New(name string) (ContainerBackend, error) {
 	case BackendPodman:
 		return NewPodman()
 	case BackendAuto:
-		if backend, err := NewDocker(); err != nil {
+		if backend, err := NewDocker(); err == nil {
 			return backend, nil
 		}
 
-		if backend, err := NewPodman(); err != nil {
+		if backend, err := NewPodman(); err == nil {
 			return backend, nil
 		}
 
