@@ -6,29 +6,60 @@ import (
 	"errors"
 	"fmt"
 	"github.com/antihax/optional"
+	"github.com/avast/retry-go"
 	swagger "github.com/cirruslabs/cirrus-cli/internal/podmanapi"
+	"github.com/google/uuid"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
 )
 
 var ErrPodman = errors.New("Podman error")
 
 type Podman struct {
+	cmd        *exec.Cmd
 	basePath   string
 	httpClient *http.Client
 	cli        *swagger.APIClient
 }
 
 func NewPodman() (ContainerBackend, error) {
+	socketPath := filepath.Join(os.TempDir(), fmt.Sprintf("podman-%s.sock", uuid.New().String()))
+	socketURI := fmt.Sprintf("unix://%s", socketPath)
+
+	cmd := exec.Command("podman", "system", "service", "-t", "0", socketURI)
+
+	// Prevent the signals sent to the CLI from reaching the Podman process
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
+
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	err := retry.Do(func() error {
+		_, err := os.Stat(socketPath)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	podman := &Podman{
+		cmd:      cmd,
 		basePath: "http://d/v1.0.0",
 		httpClient: &http.Client{
 			Transport: &http.Transport{
 				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-					return (&net.Dialer{}).DialContext(ctx, "unix", "/tmp/podman.sock")
+					return (&net.Dialer{}).DialContext(ctx, "unix", socketPath)
 				},
 			},
 		},
@@ -44,7 +75,34 @@ func NewPodman() (ContainerBackend, error) {
 }
 
 func (podman *Podman) Close() error {
-	return nil
+	doneChan := make(chan error)
+
+	go func() {
+		doneChan <- podman.cmd.Wait()
+	}()
+
+	var interruptSent, killSent bool
+
+	for {
+		select {
+		case <-time.After(time.Second):
+			if !killSent {
+				if err := podman.cmd.Process.Kill(); err != nil {
+					return err
+				}
+				killSent = true
+			}
+		case <-doneChan:
+			return nil
+		default:
+			if !interruptSent {
+				if err := podman.cmd.Process.Signal(os.Interrupt); err != nil {
+					return err
+				}
+				interruptSent = true
+			}
+		}
+	}
 }
 
 func (podman *Podman) VolumeCreate(ctx context.Context, name string) error {
