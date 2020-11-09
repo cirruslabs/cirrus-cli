@@ -120,7 +120,7 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 	}
 
 	if config.ContainerOptions.ShouldPullImage(params.Image) {
-		dockerPullLogger := logger.Scoped("docker pull")
+		dockerPullLogger := logger.Scoped("image pull")
 		dockerPullLogger.Infof("Pulling image %s...", params.Image)
 		if err := backend.ImagePull(ctx, params.Image); err != nil {
 			dockerPullLogger.Errorf("Failed to pull %s: %v", params.Image, err)
