@@ -7,13 +7,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	eenvironment "github.com/cirruslabs/cirrus-cli/internal/executor/environment"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
-	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
@@ -93,24 +93,52 @@ func readStarlarkConfig(ctx context.Context, env map[string]string) (string, err
 	return lrk.Main(ctx, string(starlarkSource))
 }
 
-func preflightCheck() error {
-	// Since all of the instance types we currently support use Docker,
-	// check that it's actually installed as early as possible
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return fmt.Errorf("%w: cannot connect to Docker daemon: %v, make sure the Docker is installed",
-			ErrRun, err)
+func getContainerBackend() (containerbackend.ContainerBackend, error) {
+	availableBackends := []struct {
+		Name        string
+		Instantiate func() (containerbackend.ContainerBackend, error)
+	}{
+		{"docker", containerbackend.NewDocker},
+		{"podman", containerbackend.NewPodman},
 	}
-	defer cli.Close()
 
-	return nil
+	// Specific backend was requested
+	desiredBackendName := os.Getenv("CIRRUS_CONTAINER_BACKEND")
+	for _, availableBackend := range availableBackends {
+		if availableBackend.Name != desiredBackendName {
+			continue
+		}
+
+		backend, err := availableBackend.Instantiate()
+		if err != nil {
+			return nil, fmt.Errorf("%w: cannot connect to %s daemon: %v, make sure it is installed",
+				ErrRun, strings.Title(availableBackend.Name), err)
+		}
+
+		return backend, nil
+	}
+
+	var backendNames []string
+
+	// No preferences, try all backends in the order of our own preference
+	for _, availableBackend := range availableBackends {
+		backendNames = append(backendNames, strings.Title(availableBackend.Name))
+
+		if backend, err := availableBackend.Instantiate(); err == nil {
+			return backend, nil
+		}
+	}
+
+	return nil, fmt.Errorf("%w: cannot connect to %s daemons, make sure the one of them is installed",
+		ErrRun, strings.Join(backendNames, " or "))
 }
 
 func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
-	if err := preflightCheck(); err != nil {
+	backend, err := getContainerBackend()
+	if err != nil {
 		return err
 	}
 
@@ -193,6 +221,9 @@ func run(cmd *cobra.Command, args []string) error {
 		executor.WithBaseEnvironmentOverride(baseEnvironment),
 		executor.WithUserSpecifiedEnvironment(userSpecifiedEnvironment),
 	)
+
+	// Container backend
+	executorOpts = append(executorOpts, executor.WithContainerBackend(backend))
 
 	// Run
 	e, err := executor.New(projectDir, result.Tasks, executorOpts...)

@@ -22,7 +22,7 @@ type Podman struct {
 	cli        *swagger.APIClient
 }
 
-func NewPodman() ContainerBackend {
+func NewPodman() (ContainerBackend, error) {
 	podman := &Podman{
 		basePath: "http://d/v1.0.0",
 		httpClient: &http.Client{
@@ -40,7 +40,7 @@ func NewPodman() ContainerBackend {
 		HTTPClient: podman.httpClient,
 	})
 
-	return podman
+	return podman, nil
 }
 
 func (podman *Podman) Close() error {

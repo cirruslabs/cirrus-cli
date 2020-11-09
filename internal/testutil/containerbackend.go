@@ -10,7 +10,12 @@ func ContainerBackendFromEnv(t *testing.T) containerbackend.ContainerBackend {
 	backendName := os.Getenv("CIRRUS_CONTAINER_BACKEND")
 
 	if backendName == "podman" {
-		return containerbackend.NewPodman()
+		backend, err := containerbackend.NewPodman()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		return backend
 	}
 
 	// Default to Docker
