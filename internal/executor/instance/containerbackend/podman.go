@@ -92,8 +92,8 @@ func (podman *Podman) Close() error {
 				}
 				killSent = true
 			}
-		case <-doneChan:
-			return nil
+		case err := <-doneChan:
+			return err
 		default:
 			if !interruptSent {
 				if err := podman.cmd.Process.Signal(os.Interrupt); err != nil {
