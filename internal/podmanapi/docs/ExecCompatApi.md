@@ -1,6 +1,6 @@
-# \ExecCompatApi
+# {{classname}}
 
-All URIs are relative to *http://podman.io*
+All URIs are relative to *http://podman.io/*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
@@ -8,7 +8,6 @@ Method | HTTP request | Description
 [**InspectExec**](ExecCompatApi.md#InspectExec) | **Get** /exec/{id}/json | Inspect an exec instance
 [**ResizeExec**](ExecCompatApi.md#ResizeExec) | **Post** /exec/{id}/resize | Resize an exec instance
 [**StartExec**](ExecCompatApi.md#StartExec) | **Post** /exec/{id}/start | Start an exec instance
-
 
 # **CreateExec**
 > CreateExec(ctx, name, optional)
@@ -26,11 +25,10 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ExecCompatApiCreateExecOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **control** | [**optional.Interface of Control**](Control.md)| Attributes for create | 
+ **body** | [**optional.Interface of Body**](Body.md)| Attributes for create | 
 
 ### Return type
 
@@ -70,7 +68,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -91,7 +89,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ExecCompatApiResizeExecOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
@@ -108,7 +105,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -129,11 +126,10 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ExecCompatApiStartExecOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **control** | [**optional.Interface of Control1**](Control1.md)| Attributes for start | 
+ **body** | [**optional.Interface of Body2**](Body2.md)| Attributes for start | 
 
 ### Return type
 

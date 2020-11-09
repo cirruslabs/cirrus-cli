@@ -41,7 +41,7 @@ Name | Type | Description | Notes
 **Rmi** | **bool** |  | [optional] [default to null]
 **Rootfs** | **string** |  | [optional] [default to null]
 **Security** | [***SecurityConfig**](SecurityConfig.md) |  | [optional] [default to null]
-**StopSignal** | [***Signal**](Signal.md) |  | [optional] [default to null]
+**StopSignal** | **int64** |  | [optional] [default to null]
 **StopTimeout** | **int32** |  | [optional] [default to null]
 **Syslog** | **bool** |  | [optional] [default to null]
 **Systemd** | **bool** |  | [optional] [default to null]
@@ -55,5 +55,4 @@ Name | Type | Description | Notes
 **WorkDir** | **string** |  | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
 

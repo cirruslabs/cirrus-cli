@@ -7,11 +7,11 @@ Name | Type | Description | Notes
 **AttachStderr** | **bool** |  | [optional] [default to null]
 **AttachStdin** | **bool** |  | [optional] [default to null]
 **AttachStdout** | **bool** |  | [optional] [default to null]
-**Cmd** | [***StrSlice**](StrSlice.md) |  | [optional] [default to null]
+**Cmd** | [***[]string**](array.md) |  | [optional] [default to null]
 **Domainname** | **string** |  | [optional] [default to null]
-**Entrypoint** | [***StrSlice**](StrSlice.md) |  | [optional] [default to null]
+**Entrypoint** | [***[]string**](array.md) |  | [optional] [default to null]
 **Env** | **[]string** |  | [optional] [default to null]
-**ExposedPorts** | [***PortSet**](PortSet.md) |  | [optional] [default to null]
+**ExposedPorts** | [***map[string]interface{}**](map.md) |  | [optional] [default to null]
 **Healthcheck** | [***HealthConfig**](HealthConfig.md) |  | [optional] [default to null]
 **Hostname** | **string** |  | [optional] [default to null]
 **Image** | **string** |  | [optional] [default to null]
@@ -20,7 +20,7 @@ Name | Type | Description | Notes
 **NetworkDisabled** | **bool** |  | [optional] [default to null]
 **OnBuild** | **[]string** |  | [optional] [default to null]
 **OpenStdin** | **bool** |  | [optional] [default to null]
-**Shell** | [***StrSlice**](StrSlice.md) |  | [optional] [default to null]
+**Shell** | [***[]string**](array.md) |  | [optional] [default to null]
 **StdinOnce** | **bool** |  | [optional] [default to null]
 **StopSignal** | **string** |  | [optional] [default to null]
 **StopTimeout** | **int64** |  | [optional] [default to null]
@@ -30,5 +30,4 @@ Name | Type | Description | Notes
 **WorkingDir** | **string** |  | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
 

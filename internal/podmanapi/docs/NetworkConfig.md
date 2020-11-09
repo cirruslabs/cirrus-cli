@@ -12,13 +12,12 @@ Name | Type | Description | Notes
 **IPAddress** | **string** |  | [optional] [default to null]
 **LinkLocalIP** | **[]string** |  | [optional] [default to null]
 **MacAddress** | **string** |  | [optional] [default to null]
-**NetMode** | [***NetworkMode**](NetworkMode.md) |  | [optional] [default to null]
+**NetMode** | **string** |  | [optional] [default to null]
 **Network** | **string** |  | [optional] [default to null]
 **NetworkAlias** | **[]string** |  | [optional] [default to null]
-**PortBindings** | [***PortMap**](PortMap.md) |  | [optional] [default to null]
+**PortBindings** | [***map[string][]PortBinding**](map.md) |  | [optional] [default to null]
 **Publish** | **[]string** |  | [optional] [default to null]
 **PublishAll** | **bool** |  | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
 

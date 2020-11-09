@@ -1,11 +1,11 @@
-# \ImagesApi
+# {{classname}}
 
-All URIs are relative to *http://podman.io*
+All URIs are relative to *http://podman.io/*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**LibpodBuildImage**](ImagesApi.md#LibpodBuildImage) | **Post** /libpod/build | Create image
-[**LibpodChangesImages**](ImagesApi.md#LibpodChangesImages) | **Get** /libpod/images/{name}/changes | Report on changes to images&#39;s filesystem; adds, deletes or modifications.
+[**LibpodChangesImages**](ImagesApi.md#LibpodChangesImages) | **Get** /libpod/images/{name}/changes | Report on changes to images&#x27;s filesystem; adds, deletes or modifications.
 [**LibpodExportImage**](ImagesApi.md#LibpodExportImage) | **Get** /libpod/images/{name:.*}/get | Export an image
 [**LibpodExportImages**](ImagesApi.md#LibpodExportImages) | **Get** /libpod/images/export | Export multiple images
 [**LibpodImageExists**](ImagesApi.md#LibpodImageExists) | **Get** /libpod/images/{name:.*}/exists | Image exists
@@ -24,7 +24,6 @@ Method | HTTP request | Description
 [**LibpodTagImage**](ImagesApi.md#LibpodTagImage) | **Post** /libpod/images/{name:.*}/tag | Tag an image
 [**LibpodUntagImage**](ImagesApi.md#LibpodUntagImage) | **Post** /libpod/images/{name:.*}/untag | Untag an image
 
-
 # **LibpodBuildImage**
 > InlineResponse200 LibpodBuildImage(ctx, optional)
 Create image
@@ -40,7 +39,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodBuildImageOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **dockerfile** | **optional.String**| Path within the build context to the &#x60;Dockerfile&#x60;. This is ignored if remote is specified and points to an external &#x60;Dockerfile&#x60;.  | [default to Dockerfile]
@@ -60,10 +58,10 @@ Name | Type | Description  | Notes
  **cpuperiod** | **optional.Int32**| CPUPeriod limits the CPU CFS (Completely Fair Scheduler) period (As of version 1.xx)  | 
  **cpuquota** | **optional.Int32**| CPUQuota limits the CPU CFS (Completely Fair Scheduler) quota (As of version 1.xx)  | 
  **buildargs** | **optional.String**| JSON map of string pairs denoting build-time variables. For example, the build argument &#x60;Foo&#x60; with the value of &#x60;bar&#x60; would be encoded in JSON as &#x60;[\&quot;Foo\&quot;:\&quot;bar\&quot;]&#x60;.  For example, buildargs&#x3D;{\&quot;Foo\&quot;:\&quot;bar\&quot;}.  Note(s): * This should not be used to pass secrets. * The value of buildargs should be URI component encoded before being passed to the API.  (As of version 1.xx)  | 
- **shmsize** | **optional.Int32**| ShmSize is the \&quot;size\&quot; value to use when mounting an shmfs on the container&#39;s /dev/shm directory. Default is 64MB (As of version 1.xx)  | [default to 67108864]
+ **shmsize** | **optional.Int32**| ShmSize is the \&quot;size\&quot; value to use when mounting an shmfs on the container&#x27;s /dev/shm directory. Default is 64MB (As of version 1.xx)  | [default to 67108864]
  **squash** | **optional.Bool**| Silently ignored. Squash the resulting images layers into a single layer (As of version 1.xx)  | [default to false]
  **labels** | **optional.String**| JSON map of key, value pairs to set as labels on the new image (As of version 1.xx)  | 
- **networkmode** | **optional.String**| Sets the networking mode for the run commands during build. Supported standard values are:   * &#x60;bridge&#x60; limited to containers within a single host, port mapping required for external access   * &#x60;host&#x60; no isolation between host and containers on this network   * &#x60;none&#x60; disable all networking for this container   * container:&lt;nameOrID&gt; share networking with given container   ---All other values are assumed to be a custom network&#39;s name (As of version 1.xx)  | [default to bridge]
+ **networkmode** | **optional.String**| Sets the networking mode for the run commands during build. Supported standard values are:   * &#x60;bridge&#x60; limited to containers within a single host, port mapping required for external access   * &#x60;host&#x60; no isolation between host and containers on this network   * &#x60;none&#x60; disable all networking for this container   * container:&lt;nameOrID&gt; share networking with given container   ---All other values are assumed to be a custom network&#x27;s name (As of version 1.xx)  | [default to bridge]
  **platform** | **optional.String**| Platform format os[/arch[/variant]] (As of version 1.xx)  | 
  **target** | **optional.String**| Target build stage (As of version 1.xx)  | 
  **outputs** | **optional.String**| output configuration TBD (As of version 1.xx)  | 
@@ -79,7 +77,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -107,13 +105,13 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json, text/plain, text/html
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **LibpodExportImage**
-> string LibpodExportImage(ctx, name_, optional)
+> *os.File LibpodExportImage(ctx, name_, optional)
 Export an image
 
 Export an image
@@ -128,7 +126,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodExportImageOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
@@ -137,7 +134,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**string**
+[***os.File**](*os.File.md)
 
 ### Authorization
 
@@ -145,13 +142,13 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **LibpodExportImages**
-> string LibpodExportImages(ctx, optional)
+> *os.File LibpodExportImages(ctx, optional)
 Export multiple images
 
 Export multiple images into a single object. Only `docker-archive` is currently supported.
@@ -165,7 +162,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodExportImagesOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **format** | **optional.String**| format for exported image (only docker-archive is supported) | 
@@ -174,7 +170,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**string**
+[***os.File**](*os.File.md)
 
 ### Authorization
 
@@ -182,7 +178,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -210,7 +206,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -238,7 +234,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -259,7 +255,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodImageTreeOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
@@ -275,13 +270,13 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **LibpodImagesImport**
-> ImageImportReport LibpodImagesImport(ctx, upload, optional)
+> ImageImportReport LibpodImagesImport(ctx, body, optional)
 Import image
 
 Import a previously exported tarball as an image.
@@ -291,19 +286,18 @@ Import a previously exported tarball as an image.
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-  **upload** | ***os.File**| tarball for imported image | 
+  **body** | [**Body8**](Body8.md)|  | 
  **optional** | ***ImagesApiLibpodImagesImportOpts** | optional parameters | nil if no parameters
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodImagesImportOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
  **changes** | [**optional.Interface of []string**](string.md)| Apply the following possible instructions to the created image: CMD | ENTRYPOINT | ENV | EXPOSE | LABEL | STOPSIGNAL | USER | VOLUME | WORKDIR.  JSON encoded string | 
- **message** | **optional.String**| Set commit message for imported image | 
- **reference** | **optional.String**| Optional Name[:TAG] for the image | 
- **url** | **optional.String**| Load image from the specified URL | 
+ **message** | **optional.**| Set commit message for imported image | 
+ **reference** | **optional.**| Optional Name[:TAG] for the image | 
+ **url** | **optional.**| Load image from the specified URL | 
 
 ### Return type
 
@@ -321,7 +315,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **LibpodImagesLoad**
-> ImageLoadReport LibpodImagesLoad(ctx, upload, optional)
+> ImageLoadReport LibpodImagesLoad(ctx, body, optional)
 Load image
 
 Load an image (oci-archive or docker-archive) stream.
@@ -331,16 +325,15 @@ Load an image (oci-archive or docker-archive) stream.
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-  **upload** | ***os.File**| tarball of container image | 
+  **body** | [**Body10**](Body10.md)|  | 
  **optional** | ***ImagesApiLibpodImagesLoadOpts** | optional parameters | nil if no parameters
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodImagesLoadOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **reference** | **optional.String**| Optional Name[:TAG] for the image | 
+ **reference** | **optional.**| Optional Name[:TAG] for the image | 
 
 ### Return type
 
@@ -372,7 +365,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodImagesPullOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **reference** | **optional.String**| Mandatory reference to the image (e.g., quay.io/image/name:tag) | 
@@ -393,7 +385,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -413,7 +405,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodImagesRemoveOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **images** | [**optional.Interface of []string**](string.md)| Images IDs or names to remove. | 
@@ -430,7 +421,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -458,7 +449,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -478,7 +469,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodListImagesOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **all** | **optional.Bool**| Show all images. Only images from a final layer (no children) are shown by default. | [default to false]
@@ -494,7 +484,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -514,7 +504,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodPruneImagesOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **filters** | **optional.String**| filters to apply to image pruning, encoded as JSON (map[string][]string). Available filters:   - &#x60;dangling&#x3D;&lt;boolean&gt;&#x60; When set to &#x60;true&#x60; (or &#x60;1&#x60;), prune only      unused *and* untagged images. When set to &#x60;false&#x60;      (or &#x60;0&#x60;), all unused images are pruned.   - &#x60;until&#x3D;&lt;string&gt;&#x60; Prune images created before this timestamp. The &#x60;&lt;timestamp&gt;&#x60; can be Unix timestamps, date formatted timestamps, or Go duration strings (e.g. &#x60;10m&#x60;, &#x60;1h30m&#x60;) computed relative to the daemon machine’s time.   - &#x60;label&#x60; (&#x60;label&#x3D;&lt;key&gt;&#x60;, &#x60;label&#x3D;&lt;key&gt;&#x3D;&lt;value&gt;&#x60;, &#x60;label!&#x3D;&lt;key&gt;&#x60;, or &#x60;label!&#x3D;&lt;key&gt;&#x3D;&lt;value&gt;&#x60;) Prune images with (or without, in case &#x60;label!&#x3D;...&#x60; is used) the specified labels.  | 
@@ -529,13 +518,13 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **LibpodPushImage**
-> string LibpodPushImage(ctx, name_, optional)
+> *os.File LibpodPushImage(ctx, name_, optional)
 Push Image
 
 Push an image to a container registry
@@ -550,7 +539,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodPushImageOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
@@ -560,7 +548,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-**string**
+[***os.File**](*os.File.md)
 
 ### Authorization
 
@@ -568,7 +556,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -589,7 +577,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodRemoveImageOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
@@ -605,7 +592,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -625,13 +612,12 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodSearchImagesOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **term** | **optional.String**| term to search | 
  **limit** | **optional.Int32**| maximum number of results | 
  **noTrunc** | **optional.Bool**| do not truncate any of the result strings | 
- **filters** | **optional.String**| A JSON encoded value of the filters (a &#x60;map[string][]string&#x60;) to process on the images list. Available filters: - &#x60;is-automated&#x3D;(true|false)&#x60; - &#x60;is-official&#x3D;(true|false)&#x60; - &#x60;stars&#x3D;&lt;number&gt;&#x60; Matches images that has at least &#39;number&#39; stars.  | 
+ **filters** | **optional.String**| A JSON encoded value of the filters (a &#x60;map[string][]string&#x60;) to process on the images list. Available filters: - &#x60;is-automated&#x3D;(true|false)&#x60; - &#x60;is-official&#x3D;(true|false)&#x60; - &#x60;stars&#x3D;&lt;number&gt;&#x60; Matches images that has at least &#x27;number&#x27; stars.  | 
 
 ### Return type
 
@@ -643,7 +629,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -664,7 +650,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodTagImageOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
@@ -681,7 +666,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -702,7 +687,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ImagesApiLibpodUntagImageOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
@@ -719,7 +703,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

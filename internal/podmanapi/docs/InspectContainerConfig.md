@@ -16,7 +16,7 @@ Name | Type | Description | Notes
 **Hostname** | **string** | Container hostname | [optional] [default to null]
 **Image** | **string** | Container image | [optional] [default to null]
 **Labels** | **map[string]string** | Container labels | [optional] [default to null]
-**OnBuild** | **string** | On-build arguments - presently unused. More of Buildah&#39;s domain. | [optional] [default to null]
+**OnBuild** | **string** | On-build arguments - presently unused. More of Buildah&#x27;s domain. | [optional] [default to null]
 **OpenStdin** | **bool** | Whether the container leaves STDIN open | [optional] [default to null]
 **StdinOnce** | **bool** | Whether STDIN is only left open once. Presently not supported by Podman, unused. | [optional] [default to null]
 **StopSignal** | **int32** | Container stop signal | [optional] [default to null]
@@ -25,9 +25,8 @@ Name | Type | Description | Notes
 **Tty** | **bool** | Whether the container creates a TTY | [optional] [default to null]
 **Umask** | **string** | Umask is the umask inside the container. | [optional] [default to null]
 **User** | **string** | User the container was launched with | [optional] [default to null]
-**Volumes** | [**map[string]interface{}**](interface{}.md) | Unused, at present. I&#39;ve never seen this field populated. | [optional] [default to null]
+**Volumes** | [**map[string]interface{}**](interface{}.md) | Unused, at present. I&#x27;ve never seen this field populated. | [optional] [default to null]
 **WorkingDir** | **string** | Container working directory | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
 

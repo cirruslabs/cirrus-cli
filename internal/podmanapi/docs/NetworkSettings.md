@@ -16,12 +16,11 @@ Name | Type | Description | Notes
 **LinkLocalIPv6PrefixLen** | **int64** |  | [optional] [default to null]
 **MacAddress** | **string** |  | [optional] [default to null]
 **Networks** | [**map[string]EndpointSettings**](EndpointSettings.md) |  | [optional] [default to null]
-**Ports** | [***PortMap**](PortMap.md) |  | [optional] [default to null]
+**Ports** | [***map[string][]PortBinding**](map.md) |  | [optional] [default to null]
 **SandboxID** | **string** |  | [optional] [default to null]
 **SandboxKey** | **string** |  | [optional] [default to null]
 **SecondaryIPAddresses** | [**[]Address**](Address.md) |  | [optional] [default to null]
 **SecondaryIPv6Addresses** | [**[]Address**](Address.md) |  | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
 

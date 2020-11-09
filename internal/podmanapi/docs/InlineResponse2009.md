@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **Comment** | **string** |  | [optional] [default to null]
 **Config** | [***ImageConfig**](ImageConfig.md) |  | [optional] [default to null]
 **Created** | [**time.Time**](time.Time.md) |  | [optional] [default to null]
-**Digest** | [***Digest**](Digest.md) |  | [optional] [default to null]
+**Digest** | **string** |  | [optional] [default to null]
 **GraphDriver** | [***Data**](Data.md) |  | [optional] [default to null]
 **Healthcheck** | [***Schema2HealthConfig**](Schema2HealthConfig.md) |  | [optional] [default to null]
 **History** | [**[]History**](History.md) |  | [optional] [default to null]
@@ -28,5 +28,4 @@ Name | Type | Description | Notes
 **VirtualSize** | **int64** |  | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
 

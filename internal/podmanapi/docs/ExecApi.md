@@ -1,6 +1,6 @@
-# \ExecApi
+# {{classname}}
 
-All URIs are relative to *http://podman.io*
+All URIs are relative to *http://podman.io/*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
@@ -8,7 +8,6 @@ Method | HTTP request | Description
 [**LibpodInspectExec**](ExecApi.md#LibpodInspectExec) | **Get** /libpod/exec/{id}/json | Inspect an exec instance
 [**LibpodResizeExec**](ExecApi.md#LibpodResizeExec) | **Post** /libpod/exec/{id}/resize | Resize an exec instance
 [**LibpodStartExec**](ExecApi.md#LibpodStartExec) | **Post** /libpod/exec/{id}/start | Start an exec instance
-
 
 # **LibpodCreateExec**
 > LibpodCreateExec(ctx, name, optional)
@@ -26,11 +25,10 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ExecApiLibpodCreateExecOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **control** | [**optional.Interface of Control2**](Control2.md)| Attributes for create | 
+ **body** | [**optional.Interface of Body4**](Body4.md)| Attributes for create | 
 
 ### Return type
 
@@ -70,7 +68,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -91,7 +89,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ExecApiLibpodResizeExecOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
@@ -108,7 +105,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -129,11 +126,10 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a ExecApiLibpodStartExecOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
- **control** | [**optional.Interface of Control3**](Control3.md)| Attributes for start | 
+ **body** | [**optional.Interface of Body6**](Body6.md)| Attributes for start | 
 
 ### Return type
 

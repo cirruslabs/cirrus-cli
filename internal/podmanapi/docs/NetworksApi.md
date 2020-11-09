@@ -1,6 +1,6 @@
-# \NetworksApi
+# {{classname}}
 
-All URIs are relative to *http://podman.io*
+All URIs are relative to *http://podman.io/*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
@@ -8,7 +8,6 @@ Method | HTTP request | Description
 [**LibpodInspectNetwork**](NetworksApi.md#LibpodInspectNetwork) | **Get** /libpod/networks/{name}/json | Inspect a network
 [**LibpodListNetwork**](NetworksApi.md#LibpodListNetwork) | **Get** /libpod/networks/json | List networks
 [**LibpodRemoveNetwork**](NetworksApi.md#LibpodRemoveNetwork) | **Delete** /libpod/networks/{name} | Remove a network
-
 
 # **LibpodCreateNetwork**
 > NetworkCreateReport LibpodCreateNetwork(ctx, optional)
@@ -25,11 +24,10 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a NetworksApiLibpodCreateNetworkOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **name** | **optional.String**| optional name for new network | 
- **create** | [**optional.Interface of NetworkCreateOptions**](NetworkCreateOptions.md)| attributes for creating a container | 
+ **body** | [**optional.Interface of NetworkCreateOptions**](NetworkCreateOptions.md)| attributes for creating a container | 
+ **name** | **optional.**| optional name for new network | 
 
 ### Return type
 
@@ -47,7 +45,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **LibpodInspectNetwork**
-> []NetworkInspectReport LibpodInspectNetwork(ctx, name)
+> []map[string]interface{} LibpodInspectNetwork(ctx, name)
 Inspect a network
 
 Display low level configuration for a CNI network
@@ -61,7 +59,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**[]NetworkInspectReport**](NetworkInspectReport.md)
+[**[]map[string]interface{}**](map.md)
 
 ### Authorization
 
@@ -69,7 +67,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -89,10 +87,9 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a NetworksApiLibpodListNetworkOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **filter** | **optional.String**| Provide filter values (e.g. &#39;name&#x3D;podman&#39;) | 
+ **filter** | **optional.String**| Provide filter values (e.g. &#x27;name&#x3D;podman&#x27;) | 
 
 ### Return type
 
@@ -104,7 +101,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -125,7 +122,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a NetworksApiLibpodRemoveNetworkOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
@@ -141,7 +137,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

@@ -13,12 +13,11 @@ Name | Type | Description | Notes
 **ProcOpts** | **[]string** |  | [optional] [default to null]
 **ReadOnlyRootfs** | **bool** |  | [optional] [default to null]
 **ReadOnlyTmpfs** | **bool** |  | [optional] [default to null]
-**SeccompPolicy** | [***Policy**](Policy.md) |  | [optional] [default to null]
+**SeccompPolicy** | **int64** |  | [optional] [default to null]
 **SeccompProfileFromImage** | **string** |  | [optional] [default to null]
 **SeccompProfilePath** | **string** |  | [optional] [default to null]
 **SecurityOpts** | **[]string** |  | [optional] [default to null]
 **Sysctl** | **map[string]string** |  | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
 

@@ -1,6 +1,6 @@
-# \VolumesCompatApi
+# {{classname}}
 
-All URIs are relative to *http://podman.io*
+All URIs are relative to *http://podman.io/*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
@@ -9,7 +9,6 @@ Method | HTTP request | Description
 [**ListVolumes**](VolumesCompatApi.md#ListVolumes) | **Get** /volumes | List volumes
 [**PruneVolumes**](VolumesCompatApi.md#PruneVolumes) | **Post** /volumes/prune | Prune volumes
 [**RemoveVolume**](VolumesCompatApi.md#RemoveVolume) | **Delete** /volumes/{name} | Remove volume
-
 
 # **CreateVolume**
 > InlineResponse20018 CreateVolume(ctx, optional)
@@ -24,10 +23,11 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a VolumesCompatApiCreateVolumeOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **create** | [**optional.Interface of DockerVolumeCreate**](DockerVolumeCreate.md)| attributes for creating a container. Note: If a volume by the same name exists, a 201 response with that volume&#39;s information will be generated.  | 
+ **body** | [**optional.Interface of VolumeCreateBody**](VolumeCreateBody.md)| attributes for creating a container.
+Note: If a volume by the same name exists, a 201 response with that volume&#x27;s information will be generated.
+ | 
 
 ### Return type
 
@@ -65,7 +65,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -85,7 +85,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a VolumesCompatApiListVolumesOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **filters** | **optional.String**| JSON encoded value of the filters (a map[string][]string) to process on the volumes list. Available filters:   - driver&#x3D;&lt;volume-driver-name&gt; Matches volumes based on their driver.   - label&#x3D;&lt;key&gt; or label&#x3D;&lt;key&gt;:&lt;value&gt; Matches volumes based on the presence of a label alone or a label and a value.   - name&#x3D;&lt;volume-name&gt; Matches all of volume name.  Note:   The boolean &#x60;dangling&#x60; filter is not yet implemented for this endpoint.  | 
@@ -100,7 +99,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -118,7 +117,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a VolumesCompatApiPruneVolumesOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **filters** | **optional.String**| JSON encoded value of filters (a map[string][]string) to match volumes against before pruning.  Note: No filters are currently supported and any filters specified will cause an error response.  | 
@@ -133,7 +131,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -152,7 +150,6 @@ Name | Type | Description  | Notes
 
 ### Optional Parameters
 Optional parameters are passed through a pointer to a VolumesCompatApiRemoveVolumeOpts struct
-
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
 
@@ -168,7 +165,7 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: application/json, application/x-tar
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
