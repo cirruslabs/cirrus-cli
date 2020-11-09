@@ -11,7 +11,7 @@ task:
 
 docker_builder:
   name: Test (Docker)
-  alias: test-docker
+  alias: Tests
   test_script:
     - wget --no-verbose -O - https://golang.org/dl/go1.15.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
@@ -21,7 +21,7 @@ docker_builder:
 
 docker_builder:
   name: Test (Podman)
-  alias: test-podman
+  alias: Tests
   install_podman_script:
     - . /etc/os-release
     - echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
@@ -44,8 +44,7 @@ task:
   only_if: $CIRRUS_PR != ''
   depends_on:
     - Lint
-    - test-docker
-    - test-podman
+    - Tests
   container:
     image: goreleaser/goreleaser:latest
   release_script: goreleaser build --snapshot
