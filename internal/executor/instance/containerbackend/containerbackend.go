@@ -3,12 +3,15 @@ package containerbackend
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
+	"os"
 )
 
 var (
-	ErrNotFound = errors.New("not found")
-	ErrDone     = errors.New("done")
+	ErrNotFound  = errors.New("not found")
+	ErrDone      = errors.New("done")
+	ErrNewFailed = errors.New("failed to create backend")
 )
 
 type ContainerBackend interface {
@@ -78,4 +81,39 @@ type ContainerWaitResult struct {
 type SystemInfo struct {
 	TotalCPUs        int64
 	TotalMemoryBytes int64
+}
+
+const (
+	BackendAuto   = "auto"
+	BackendDocker = "docker"
+	BackendPodman = "podman"
+)
+
+func New(name string) (ContainerBackend, error) {
+	if name == BackendAuto {
+		if nameFromEnv, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); ok {
+			name = nameFromEnv
+		}
+	}
+
+	switch name {
+	case BackendDocker:
+		return NewDocker()
+	case BackendPodman:
+		return NewPodman()
+	case BackendAuto:
+		if backend, err := NewDocker(); err != nil {
+			return backend, nil
+		}
+
+		if backend, err := NewPodman(); err != nil {
+			return backend, nil
+		}
+
+		return nil, fmt.Errorf("%w: failed to instantiate all supported container backends"+
+			" (tried %q and %q, are these actually installed on the system?)",
+			ErrNewFailed, BackendDocker, BackendPodman)
+	default:
+		return nil, fmt.Errorf("%w: unknown container backend name %q", ErrNewFailed, name)
+	}
 }

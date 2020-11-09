@@ -30,6 +30,7 @@ var environment []string
 var verbose bool
 
 // Container-related flags.
+var containerBackend string
 var containerNoPull bool
 
 // Flags useful for debugging.
@@ -93,51 +94,11 @@ func readStarlarkConfig(ctx context.Context, env map[string]string) (string, err
 	return lrk.Main(ctx, string(starlarkSource))
 }
 
-func getContainerBackend() (containerbackend.ContainerBackend, error) {
-	availableBackends := []struct {
-		Name        string
-		Instantiate func() (containerbackend.ContainerBackend, error)
-	}{
-		{"docker", containerbackend.NewDocker},
-		{"podman", containerbackend.NewPodman},
-	}
-
-	// Specific backend was requested
-	desiredBackendName := os.Getenv("CIRRUS_CONTAINER_BACKEND")
-	for _, availableBackend := range availableBackends {
-		if availableBackend.Name != desiredBackendName {
-			continue
-		}
-
-		backend, err := availableBackend.Instantiate()
-		if err != nil {
-			return nil, fmt.Errorf("%w: cannot connect to %s daemon: %v, make sure it is installed",
-				ErrRun, strings.Title(availableBackend.Name), err)
-		}
-
-		return backend, nil
-	}
-
-	var backendNames []string
-
-	// No preferences, try all backends in the order of our own preference
-	for _, availableBackend := range availableBackends {
-		backendNames = append(backendNames, strings.Title(availableBackend.Name))
-
-		if backend, err := availableBackend.Instantiate(); err == nil {
-			return backend, nil
-		}
-	}
-
-	return nil, fmt.Errorf("%w: cannot connect to %s daemons, make sure the one of them is installed",
-		ErrRun, strings.Join(backendNames, " or "))
-}
-
 func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
-	backend, err := getContainerBackend()
+	backend, err := containerbackend.New(containerBackend)
 	if err != nil {
 		return err
 	}
@@ -252,6 +213,9 @@ func newRunCmd() *cobra.Command {
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))
 
 	// Container-related flags
+	cmd.PersistentFlags().StringVar(&containerBackend, "container-backend", containerbackend.BackendAuto,
+		fmt.Sprintf("container engine backend to use, either \"%s\", \"%s\" or \"%s\"",
+			containerbackend.BackendDocker, containerbackend.BackendPodman, containerbackend.BackendAuto))
 	cmd.PersistentFlags().BoolVar(&containerNoPull, "container-no-pull", false,
 		"don't attempt to pull the images before starting containers")
 
