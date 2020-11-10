@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/antihax/optional"
 	"github.com/avast/retry-go"
-	swagger "github.com/cirruslabs/cirrus-cli/internal/podmanapi"
+	"github.com/cirruslabs/podmanapi/pkg/swagger"
 	"github.com/google/uuid"
 	"io"
 	"net"
