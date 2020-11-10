@@ -25,6 +25,11 @@ func NewDocker() (ContainerBackend, error) {
 		return nil, err
 	}
 
+	_, err = cli.Ping(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
 	return &Docker{
 		cli: cli,
 	}, nil
