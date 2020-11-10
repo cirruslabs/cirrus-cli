@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	ErrNotFound  = errors.New("not found")
-	ErrDone      = errors.New("done")
-	ErrNewFailed = errors.New("failed to create backend")
+	ErrNotFound       = errors.New("not found")
+	ErrDone           = errors.New("done")
+	ErrNewFailed      = errors.New("failed to create backend")
+	ErrNotImplemented = errors.New("unimplemented method")
 )
 
 type ContainerBackend interface {
