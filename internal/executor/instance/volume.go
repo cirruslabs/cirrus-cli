@@ -16,7 +16,7 @@ var (
 
 const (
 	// AgentVersion represents the version of the https://github.com/cirruslabs/cirrus-ci-agent to use.
-	AgentVersion = "1.18.0"
+	AgentVersion = "1.18.1"
 
 	// AgentImage is the image we'll use to create a working volume.
 	AgentImage = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v" + AgentVersion
