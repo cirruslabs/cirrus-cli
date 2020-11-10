@@ -15,8 +15,12 @@ builds:
       - linux
       - darwin
       - windows
+      - freebsd
+      - solaris
     goarch:
       - amd64
+      - arm
+      - arm64
 
 archives:
   - id: binary
