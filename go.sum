@@ -81,6 +81,8 @@ github.com/cirruslabs/cirrus-ci-agent v1.16.0/go.mod h1:ga2zCGBfC+/+tnlHWa5cHwEu
 github.com/cirruslabs/cirrus-ci-annotations v0.0.0-20200908203753-b813f63941d7/go.mod h1:98qD7HLlBx5aNqWiCH80OTTqTTsbXT69wxnlnrnoL0E=
 github.com/cirruslabs/echelon v1.3.2 h1:ihKvzFoW8kPhlF5xqt1DOnzl+iuz2Oc5nbAZY0wb9r8=
 github.com/cirruslabs/echelon v1.3.2/go.mod h1:1jFBACMy3tzodXyTtNNLN9bw6UUU7Xpq9tYMRydehtY=
+github.com/cirruslabs/echelon v1.4.0 h1:xubCf8BLFEBl1kamBZ1zjBrcw5p4z4anvJUBeR3E5YY=
+github.com/cirruslabs/echelon v1.4.0/go.mod h1:1jFBACMy3tzodXyTtNNLN9bw6UUU7Xpq9tYMRydehtY=
 github.com/cirruslabs/yaml v0.0.0-20201005110149-09a333859ff2 h1:dxpyIpu++pKq0fSQ2N8MbDbbG7hjq2BbOYOG2dfzCB4=
 github.com/cirruslabs/yaml v0.0.0-20201005110149-09a333859ff2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
