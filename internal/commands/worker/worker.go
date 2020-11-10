@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/spf13/cobra"
 )
 
@@ -10,9 +11,9 @@ func NewRootCmd() *cobra.Command {
 		Short: "Persistent worker mode",
 	}
 
-	cmd.AddCommand(
+	commands := []*cobra.Command{
 		NewRunCmd(),
-	)
+	}
 
-	return cmd
+	return helpers.ConsumeSubCommands(cmd, commands)
 }

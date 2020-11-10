@@ -1,3 +1,5 @@
+// +build linux darwin windows
+
 package heuristic
 
 import (
@@ -6,9 +8,6 @@ import (
 	"github.com/docker/docker/client"
 	"net"
 )
-
-// https://cloud.google.com/cloud-build/docs/build-config#network
-const CloudBuildNetworkName = "cloudbuild"
 
 func getCloudBuildSubnet(ctx context.Context) string {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())

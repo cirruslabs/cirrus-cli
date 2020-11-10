@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/internal"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
@@ -14,13 +15,13 @@ func NewRootCmd() *cobra.Command {
 		Version: version.FullVersion,
 	}
 
-	cmd.AddCommand(
+	commands := []*cobra.Command{
 		newValidateCmd(),
 		newRunCmd(),
 		newServeCmd(),
 		internal.NewRootCmd(),
 		worker.NewRootCmd(),
-	)
+	}
 
-	return cmd
+	return helpers.ConsumeSubCommands(cmd, commands)
 }
