@@ -3,6 +3,7 @@ package logs
 import (
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
+	"github.com/cirruslabs/echelon/renderers/config"
 	"io"
 	"os"
 )
@@ -10,6 +11,7 @@ import (
 const (
 	OutputAuto        = "auto"
 	OutputInteractive = "interactive"
+	OutputNoEmoji     = "noemoji"
 	OutputSimple      = "simple"
 	OutputTravis      = "travis"
 	OutputGA          = "github-actions"
@@ -24,6 +26,7 @@ func Formats() []string {
 	return []string{
 		OutputAuto,
 		OutputInteractive,
+		OutputNoEmoji,
 		OutputSimple,
 		OutputTravis,
 		OutputGA,
@@ -56,6 +59,13 @@ func GetLogger(format string, verbose bool, logWriter io.Writer, logFile *os.Fil
 	switch format {
 	case OutputInteractive:
 		interactiveRenderer := renderers.NewInteractiveRenderer(logFile, nil)
+		go interactiveRenderer.StartDrawing()
+		cancelFunc = func() {
+			interactiveRenderer.StopDrawing()
+		}
+		renderer = interactiveRenderer
+	case OutputNoEmoji:
+		interactiveRenderer := renderers.NewInteractiveRenderer(logFile, config.NewDefaultSymbolsOnlyRenderingConfig())
 		go interactiveRenderer.StartDrawing()
 		cancelFunc = func() {
 			interactiveRenderer.StopDrawing()

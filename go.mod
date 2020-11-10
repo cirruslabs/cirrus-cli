@@ -13,7 +13,7 @@ require (
 	github.com/bmatcuk/doublestar v1.3.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
 	github.com/cirruslabs/cirrus-ci-agent v1.16.0
-	github.com/cirruslabs/echelon v1.3.2
+	github.com/cirruslabs/echelon v1.4.0
 	github.com/containerd/containerd v1.4.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/docker/distribution v2.7.1+incompatible // indirect
