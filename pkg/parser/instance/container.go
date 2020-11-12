@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
 )
 
@@ -26,7 +27,8 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 		proto: &api.ContainerInstance{},
 	}
 
-	container.OptionalField(nameable.NewSimpleNameable("image"), schema.TodoSchema, func(node *node.Node) error {
+	imageSchema := schema.String("Docker Image to use.")
+	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
 		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -35,7 +37,8 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 		return nil
 	})
 
-	container.OptionalField(nameable.NewSimpleNameable("dockerfile"), schema.TodoSchema, func(node *node.Node) error {
+	dockerfileSchema := schema.String("Relative path to Dockerfile to build container from.")
+	container.OptionalField(nameable.NewSimpleNameable("dockerfile"), dockerfileSchema, func(node *node.Node) error {
 		dockerfile, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -45,7 +48,8 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 	})
 
 	dockerArgumentsNameable := nameable.NewSimpleNameable("docker_arguments")
-	container.OptionalField(dockerArgumentsNameable, schema.TodoSchema, func(node *node.Node) error {
+	dockerArgumentsSchema := schema.Map("Arguments for Docker build")
+	container.OptionalField(dockerArgumentsNameable, dockerArgumentsSchema, func(node *node.Node) error {
 		dockerArguments, err := node.GetStringMapping()
 		if err != nil {
 			return err
@@ -54,7 +58,7 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 		return nil
 	})
 
-	container.OptionalField(nameable.NewSimpleNameable("cpu"), schema.TodoSchema, func(node *node.Node) error {
+	container.OptionalField(nameable.NewSimpleNameable("cpu"), schema.Number(""), func(node *node.Node) error {
 		cpu, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -67,7 +71,7 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 		return nil
 	})
 
-	container.OptionalField(nameable.NewSimpleNameable("memory"), schema.TodoSchema, func(node *node.Node) error {
+	container.OptionalField(nameable.NewSimpleNameable("memory"), schema.Memory(), func(node *node.Node) error {
 		memory, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -81,7 +85,8 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 	})
 
 	additionalContainersNameable := nameable.NewSimpleNameable("additional_containers")
-	container.OptionalField(additionalContainersNameable, schema.TodoSchema, func(node *node.Node) error {
+	acSchema := schema.ArrayOf(NewAdditionalContainer(nil, nil).Schema())
+	container.OptionalField(additionalContainersNameable, acSchema, func(node *node.Node) error {
 		for _, child := range node.Children {
 			ac := NewAdditionalContainer(mergedEnv, boolevator)
 			additionalContainer, err := ac.Parse(child)
@@ -90,6 +95,28 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 			}
 			container.proto.AdditionalContainers = append(container.proto.AdditionalContainers, additionalContainer)
 		}
+		return nil
+	})
+
+	// no-op
+	container.OptionalField(nameable.NewSimpleNameable("kvm"), schema.Condition(""), func(node *node.Node) error {
+		return nil
+	})
+
+	// no-op
+	container.OptionalField(nameable.NewSimpleNameable("registry_config"), schema.String(""), func(node *node.Node) error {
+		return nil
+	})
+
+	// no-op
+	inMemorySchema := schema.Condition("")
+	container.OptionalField(nameable.NewSimpleNameable("use_in_memory_disk"), inMemorySchema, func(node *node.Node) error {
+		return nil
+	})
+
+	// no-op
+	sipSchema := schema.Condition("")
+	container.OptionalField(nameable.NewSimpleNameable("use_static_ip"), sipSchema, func(node *node.Node) error {
 		return nil
 	})
 
@@ -110,4 +137,13 @@ func (container *Container) Parse(node *node.Node) (*api.ContainerInstance, erro
 	}
 
 	return container.proto, nil
+}
+
+func (container *Container) Schema() *jsschema.Schema {
+	modifiedSchema := container.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+	modifiedSchema.Description = "Container definition for Community Cluster."
+
+	return modifiedSchema
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	jsschema "github.com/lestrrat-go/jsschema"
 )
 
 type ArtifactsCommand struct {
@@ -21,7 +22,7 @@ func NewArtifactsCommand(mergedEnv map[string]string) *ArtifactsCommand {
 		instruction: &api.ArtifactsInstruction{},
 	}
 
-	articom.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
+	articom.OptionalField(nameable.NewSimpleNameable("name"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -30,7 +31,8 @@ func NewArtifactsCommand(mergedEnv map[string]string) *ArtifactsCommand {
 		return nil
 	})
 
-	articom.OptionalField(nameable.NewSimpleNameable("paths"), schema.TodoSchema, func(node *node.Node) error {
+	pathsSchema := schema.ArrayOf(schema.String("Path or pattern of artifacts."))
+	articom.OptionalField(nameable.NewSimpleNameable("paths"), pathsSchema, func(node *node.Node) error {
 		artifactPaths, err := node.GetSliceOfExpandedStrings(mergedEnv)
 		if err != nil {
 			return err
@@ -39,7 +41,8 @@ func NewArtifactsCommand(mergedEnv map[string]string) *ArtifactsCommand {
 		return nil
 	})
 
-	articom.OptionalField(nameable.NewSimpleNameable("path"), schema.TodoSchema, func(node *node.Node) error {
+	pathSchema := schema.String("Path or pattern of artifacts.")
+	articom.OptionalField(nameable.NewSimpleNameable("path"), pathSchema, func(node *node.Node) error {
 		artifactPath, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -48,7 +51,8 @@ func NewArtifactsCommand(mergedEnv map[string]string) *ArtifactsCommand {
 		return nil
 	})
 
-	articom.OptionalField(nameable.NewSimpleNameable("type"), schema.TodoSchema, func(node *node.Node) error {
+	typeSchema := schema.String("Content Type.")
+	articom.OptionalField(nameable.NewSimpleNameable("type"), typeSchema, func(node *node.Node) error {
 		artifactType, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -57,7 +61,8 @@ func NewArtifactsCommand(mergedEnv map[string]string) *ArtifactsCommand {
 		return nil
 	})
 
-	articom.OptionalField(nameable.NewSimpleNameable("format"), schema.TodoSchema, func(node *node.Node) error {
+	formatSchema := schema.String("Content Format.")
+	articom.OptionalField(nameable.NewSimpleNameable("format"), formatSchema, func(node *node.Node) error {
 		artifactFormat, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -88,4 +93,12 @@ func (articom *ArtifactsCommand) Proto() *api.Command {
 	}
 
 	return articom.proto
+}
+
+func (articom *ArtifactsCommand) Schema() *jsschema.Schema {
+	modifiedSchema := articom.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+
+	return modifiedSchema
 }

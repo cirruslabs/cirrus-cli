@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
+	jsschema "github.com/lestrrat-go/jsschema"
 	"strings"
 )
 
@@ -24,7 +25,8 @@ type PipeStep struct {
 func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *PipeStep {
 	step := &PipeStep{}
 
-	step.RequiredField(nameable.NewSimpleNameable("image"), schema.TodoSchema, func(node *node.Node) error {
+	imageSchema := schema.String("Docker Image to use.")
+	step.RequiredField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
 		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -34,7 +36,7 @@ func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 	})
 
 	scriptNameable := nameable.NewRegexNameable("^(.*)script$")
-	step.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
+	step.OptionalField(scriptNameable, schema.Script(""), func(node *node.Node) error {
 		command, err := handleScript(node, scriptNameable)
 		if err != nil {
 			return err
@@ -46,7 +48,8 @@ func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 	})
 
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
-	step.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
+	cacheSchema := command.NewCacheCommand(nil, nil).Schema()
+	step.OptionalField(cacheNameable, cacheSchema, func(node *node.Node) error {
 		cache := command.NewCacheCommand(mergedEnv, boolevator)
 		if err := cache.Parse(node); err != nil {
 			return err
@@ -56,7 +59,8 @@ func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 	})
 
 	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts$")
-	step.OptionalField(artifactsNameable, schema.TodoSchema, func(node *node.Node) error {
+	artifactsSchema := command.NewArtifactsCommand(nil).Schema()
+	step.OptionalField(artifactsNameable, artifactsSchema, func(node *node.Node) error {
 		artifacts := command.NewArtifactsCommand(mergedEnv)
 		if err := artifacts.Parse(node); err != nil {
 			return err
@@ -66,7 +70,8 @@ func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 	})
 
 	fileNameable := nameable.NewRegexNameable("^(.*)file$")
-	step.OptionalField(fileNameable, schema.TodoSchema, func(node *node.Node) error {
+	fileSchema := command.NewFileCommand(nil).Schema()
+	step.OptionalField(fileNameable, fileSchema, func(node *node.Node) error {
 		file := command.NewFileCommand(mergedEnv)
 		if err := file.Parse(node); err != nil {
 			return err
@@ -77,7 +82,10 @@ func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
-		step.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {
+
+		behaviorSchema := NewBehavior(nil, nil).Schema()
+		behaviorSchema.Description = name + " commands."
+		step.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), behaviorSchema, func(node *node.Node) error {
 			behavior := NewBehavior(mergedEnv, boolevator)
 			if err := behavior.Parse(node); err != nil {
 				return err
@@ -111,4 +119,13 @@ func (step *PipeStep) Parse(node *node.Node) error {
 	step.protoCommands[0].Properties["image"] = step.image
 
 	return nil
+}
+
+func (step *PipeStep) Schema() *jsschema.Schema {
+	modifiedSchema := step.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+	modifiedSchema.Description = "Pipe step"
+
+	return modifiedSchema
 }

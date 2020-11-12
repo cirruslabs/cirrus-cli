@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	jsschema "github.com/lestrrat-go/jsschema"
 	"strings"
 )
 
@@ -27,7 +28,7 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 		},
 	}
 
-	cache.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
+	cache.OptionalField(nameable.NewSimpleNameable("name"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -36,7 +37,8 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 		return nil
 	})
 
-	cache.RequiredField(nameable.NewSimpleNameable("folder"), schema.TodoSchema, func(node *node.Node) error {
+	folderSchema := schema.String("Path of a folder to cache.")
+	cache.RequiredField(nameable.NewSimpleNameable("folder"), folderSchema, func(node *node.Node) error {
 		folder, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -54,7 +56,8 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 		return nil
 	})
 
-	cache.OptionalField(nameable.NewSimpleNameable("fingerprint_script"), schema.TodoSchema, func(node *node.Node) error {
+	fpSchema := schema.Script("Script that is used to calculate cache key.")
+	cache.OptionalField(nameable.NewSimpleNameable("fingerprint_script"), fpSchema, func(node *node.Node) error {
 		scripts, err := node.GetScript()
 		if err != nil {
 			return err
@@ -71,7 +74,8 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 		return nil
 	})
 
-	cache.OptionalField(nameable.NewSimpleNameable("populate_script"), schema.TodoSchema, func(node *node.Node) error {
+	populateSchema := schema.Script("In case of a cache miss this script will be executed.")
+	cache.OptionalField(nameable.NewSimpleNameable("populate_script"), populateSchema, func(node *node.Node) error {
 		scripts, err := node.GetScript()
 		if err != nil {
 			return err
@@ -80,7 +84,8 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 		return nil
 	})
 
-	cache.OptionalField(nameable.NewSimpleNameable("reupload_on_changes"), schema.TodoSchema, func(node *node.Node) error {
+	reuploadSchema := schema.Condition("A flag to check if contents of folder has changed after a cache hit.")
+	cache.OptionalField(nameable.NewSimpleNameable("reupload_on_changes"), reuploadSchema, func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(mergedEnv, boolevator)
 		if err != nil {
 			return err
@@ -114,4 +119,13 @@ func (cache *CacheCommand) Proto() *api.Command {
 	}
 
 	return cache.proto
+}
+
+func (cache *CacheCommand) Schema() *jsschema.Schema {
+	modifiedSchema := cache.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+	modifiedSchema.Description = "Folder Cache Definition."
+
+	return modifiedSchema
 }

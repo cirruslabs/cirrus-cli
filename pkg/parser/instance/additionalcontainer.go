@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
 	"strings"
 	"unicode"
@@ -32,7 +33,7 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		proto: &api.AdditionalContainer{},
 	}
 
-	ac.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
+	ac.OptionalField(nameable.NewSimpleNameable("name"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -57,7 +58,7 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		return nil
 	})
 
-	ac.OptionalField(nameable.NewSimpleNameable("environment"), schema.TodoSchema, func(node *node.Node) error {
+	ac.OptionalField(nameable.NewSimpleNameable("environment"), schema.Map(""), func(node *node.Node) error {
 		acEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
@@ -65,7 +66,7 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		ac.proto.Environment = environment.Merge(ac.proto.Environment, acEnv)
 		return nil
 	})
-	ac.OptionalField(nameable.NewSimpleNameable("env"), schema.TodoSchema, func(node *node.Node) error {
+	ac.OptionalField(nameable.NewSimpleNameable("env"), schema.Map(""), func(node *node.Node) error {
 		acEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
@@ -74,7 +75,8 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		return nil
 	})
 
-	ac.OptionalField(nameable.NewSimpleNameable("image"), schema.TodoSchema, func(node *node.Node) error {
+	imageSchema := schema.String("Docker Image.")
+	ac.RequiredField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
 		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -83,7 +85,7 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		return nil
 	})
 
-	ac.OptionalField(nameable.NewSimpleNameable("port"), schema.TodoSchema, func(node *node.Node) error {
+	ac.RequiredField(nameable.NewSimpleNameable("port"), schema.Port(), func(node *node.Node) error {
 		port, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -118,7 +120,7 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		return nil
 	})
 
-	ac.OptionalField(nameable.NewSimpleNameable("cpu"), schema.TodoSchema, func(node *node.Node) error {
+	ac.OptionalField(nameable.NewSimpleNameable("cpu"), schema.Number(""), func(node *node.Node) error {
 		cpu, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -131,7 +133,7 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		return nil
 	})
 
-	ac.OptionalField(nameable.NewSimpleNameable("memory"), schema.TodoSchema, func(node *node.Node) error {
+	ac.OptionalField(nameable.NewSimpleNameable("memory"), schema.Memory(), func(node *node.Node) error {
 		memory, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -144,7 +146,8 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		return nil
 	})
 
-	ac.OptionalField(nameable.NewSimpleNameable("command"), schema.TodoSchema, func(node *node.Node) error {
+	commandSchema := schema.Script("Container CMD to override.")
+	ac.OptionalField(nameable.NewSimpleNameable("command"), commandSchema, func(node *node.Node) error {
 		command, err := node.GetSliceOfNonEmptyStrings()
 		if err != nil {
 			return err
@@ -155,7 +158,8 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		return nil
 	})
 
-	ac.OptionalField(nameable.NewSimpleNameable("readiness_command"), schema.TodoSchema, func(node *node.Node) error {
+	rcommandSchema := schema.Script("Container readiness probe command.")
+	ac.OptionalField(nameable.NewSimpleNameable("readiness_command"), rcommandSchema, func(node *node.Node) error {
 		readinessCommand, err := node.GetSliceOfNonEmptyStrings()
 		if err != nil {
 			return err
@@ -166,7 +170,7 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		return nil
 	})
 
-	ac.OptionalField(nameable.NewSimpleNameable("privileged"), schema.TodoSchema, func(node *node.Node) error {
+	ac.OptionalField(nameable.NewSimpleNameable("privileged"), schema.Condition(""), func(node *node.Node) error {
 		privileged, err := node.GetBoolValue(mergedEnv, boolevator)
 		if err != nil {
 			return err
@@ -194,4 +198,13 @@ func (ac *AdditionalContainer) Parse(node *node.Node) (*api.AdditionalContainer,
 	}
 
 	return ac.proto, nil
+}
+
+func (ac *AdditionalContainer) Schema() *jsschema.Schema {
+	modifiedSchema := ac.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+	modifiedSchema.Description = "Additional Container definition."
+
+	return modifiedSchema
 }

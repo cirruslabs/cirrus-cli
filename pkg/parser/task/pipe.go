@@ -11,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/golang/protobuf/ptypes"
+	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
 	"strings"
 )
@@ -39,10 +40,13 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 	pipe.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 	pipe.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
+	// Don't force required fields in schema
+	pipe.SetCollectible(true)
+
 	pipe.proto.Metadata.Properties["auto_cancellation"] =
 		strconv.FormatBool(env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"])
 
-	pipe.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
+	pipe.CollectibleField("environment", schema.Map(""), func(node *node.Node) error {
 		pipeEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
@@ -51,7 +55,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		return nil
 	})
 
-	pipe.CollectibleField("env", schema.TodoSchema, func(node *node.Node) error {
+	pipe.CollectibleField("env", schema.Map(""), func(node *node.Node) error {
 		pipeEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
@@ -60,7 +64,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		return nil
 	})
 
-	pipe.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
+	pipe.OptionalField(nameable.NewSimpleNameable("name"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
@@ -68,7 +72,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		pipe.proto.Name = name
 		return nil
 	})
-	pipe.OptionalField(nameable.NewSimpleNameable("alias"), schema.TodoSchema, func(node *node.Node) error {
+	pipe.OptionalField(nameable.NewSimpleNameable("alias"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
@@ -77,7 +81,8 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		return nil
 	})
 
-	pipe.OptionalField(nameable.NewSimpleNameable("resources"), schema.TodoSchema, func(node *node.Node) error {
+	resourcesSchema := NewPipeResources(nil).Schema()
+	pipe.OptionalField(nameable.NewSimpleNameable("resources"), resourcesSchema, func(node *node.Node) error {
 		resources := NewPipeResources(environment.Merge(pipe.proto.Environment, env))
 
 		if err := resources.Parse(node); err != nil {
@@ -89,7 +94,8 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		return nil
 	})
 
-	pipe.RequiredField(nameable.NewSimpleNameable("steps"), schema.TodoSchema, func(stepsNode *node.Node) error {
+	stepsSchema := schema.ArrayOf(NewPipeStep(nil, nil).Schema())
+	pipe.RequiredField(nameable.NewSimpleNameable("steps"), stepsSchema, func(stepsNode *node.Node) error {
 		if _, ok := stepsNode.Value.(*node.ListValue); !ok {
 			return fmt.Errorf("%w: steps should be a list node", parsererror.ErrParsing)
 		}
@@ -105,7 +111,17 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		return nil
 	})
 
-	pipe.CollectibleField("only_if", schema.TodoSchema, func(node *node.Node) error {
+	dependsSchema := schema.StringOrListOfStrings("List of task names this task depends on.")
+	pipe.OptionalField(nameable.NewSimpleNameable("depends_on"), dependsSchema, func(node *node.Node) error {
+		dependsOn, err := node.GetSliceOfNonEmptyStrings()
+		if err != nil {
+			return err
+		}
+		pipe.dependsOn = dependsOn
+		return nil
+	})
+
+	pipe.CollectibleField("only_if", schema.Condition(""), func(node *node.Node) error {
 		onlyIfExpression, err := node.GetStringValue()
 		if err != nil {
 			return err
@@ -114,7 +130,8 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		return nil
 	})
 
-	pipe.OptionalField(nameable.NewSimpleNameable("allow_failures"), schema.TodoSchema, func(node *node.Node) error {
+	allowFailuresSchema := schema.Condition("")
+	pipe.OptionalField(nameable.NewSimpleNameable("allow_failures"), allowFailuresSchema, func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -124,7 +141,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 	})
 
 	// for cloud only
-	pipe.CollectibleField("skip_notifications", schema.TodoSchema, func(node *node.Node) error {
+	pipe.CollectibleField("skip_notifications", schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -134,7 +151,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 	})
 
 	// for cloud only
-	pipe.CollectibleField("auto_cancellation", schema.TodoSchema, func(node *node.Node) error {
+	pipe.CollectibleField("auto_cancellation", schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -144,7 +161,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 	})
 
 	// for cloud only
-	pipe.CollectibleField("use_compute_credits", schema.TodoSchema, func(node *node.Node) error {
+	pipe.CollectibleField("use_compute_credits", schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -154,7 +171,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 	})
 
 	// for cloud only
-	pipe.CollectibleField("stateful", schema.TodoSchema, func(node *node.Node) error {
+	pipe.CollectibleField("stateful", schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -163,7 +180,13 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		return nil
 	})
 
-	pipe.OptionalField(nameable.NewSimpleNameable("experimental"), schema.TodoSchema, func(node *node.Node) error {
+	// no-op
+	rplSchema := schema.StringOrListOfStrings("List of required labels on a PR.")
+	pipe.OptionalField(nameable.NewSimpleNameable("required_pr_labels"), rplSchema, func(node *node.Node) error {
+		return nil
+	})
+
+	pipe.OptionalField(nameable.NewSimpleNameable("experimental"), schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(pipe.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -172,7 +195,7 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		return nil
 	})
 
-	pipe.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
+	pipe.CollectibleField("timeout_in", schema.Number("Task timeout in minutes"), func(node *node.Node) error {
 		timeoutIn, err := handleTimeoutIn(node, environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
@@ -183,12 +206,24 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 		return nil
 	})
 
-	pipe.CollectibleField("trigger_type", schema.TodoSchema, func(node *node.Node) error {
+	pipe.CollectibleField("trigger_type", schema.TriggerType(), func(node *node.Node) error {
 		triggerType, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}
 		pipe.proto.Metadata.Properties["trigger_type"] = strings.ToUpper(triggerType)
+		return nil
+	})
+
+	lockSchema := schema.String("Lock name for triggering and execution")
+	pipe.OptionalField(nameable.NewSimpleNameable("execution_lock"), lockSchema, func(node *node.Node) error {
+		lockName, err := node.GetExpandedStringValue(environment.Merge(pipe.proto.Environment, env))
+		if err != nil {
+			return err
+		}
+
+		pipe.proto.Metadata.Properties["execution_lock"] = lockName
+
 		return nil
 	})
 
@@ -268,4 +303,12 @@ func (pipe *DockerPipe) Enabled(env map[string]string, boolevator *boolevator.Bo
 	}
 
 	return evaluation, nil
+}
+
+func (pipe *DockerPipe) Schema() *jsschema.Schema {
+	modifiedSchema := pipe.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+
+	return modifiedSchema
 }

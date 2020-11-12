@@ -4,11 +4,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/lestrrat-go/jsschema"
+	"regexp"
 )
 
 type Parseable interface {
 	Parse(node *node.Node) error
 	Schema() *schema.Schema
+	DeepFields() []DeepField
 	Proto() interface{}
 }
 
@@ -67,5 +69,50 @@ func (parser *DefaultParser) Parse(node *node.Node) error {
 }
 
 func (parser *DefaultParser) Schema() *schema.Schema {
-	return &schema.Schema{}
+	schema := &schema.Schema{
+		Properties:           make(map[string]*schema.Schema),
+		PatternProperties:    make(map[*regexp.Regexp]*schema.Schema),
+		AdditionalItems:      &schema.AdditionalItems{Schema: nil},
+		AdditionalProperties: &schema.AdditionalProperties{Schema: nil},
+	}
+
+	for _, field := range parser.fields {
+		switch nameable := field.name.(type) {
+		case *nameable.SimpleNameable:
+			schema.Properties[nameable.Name()] = field.schema
+		case *nameable.RegexNameable:
+			schema.PatternProperties[nameable.Regex()] = field.schema
+		}
+
+		if field.required && !parser.Collectible() {
+			schema.Required = append(schema.Required, field.name.String())
+		}
+	}
+
+	for _, collectibleField := range parser.collectibleFields {
+		schema.Properties[collectibleField.name] = collectibleField.schema
+	}
+
+	return schema
+}
+
+type DeepField struct {
+	Name   string
+	Schema *schema.Schema
+}
+
+// Note that this is a simplification and it doesn't really return "deep" fields
+// since all of the collectible fields currently are defined on depth 1, which we
+// access here.
+func (parser *DefaultParser) DeepFields() []DeepField {
+	var result []DeepField
+
+	for _, collectibleField := range parser.collectibleFields {
+		result = append(result, DeepField{
+			Name:   collectibleField.name,
+			Schema: collectibleField.schema,
+		})
+	}
+
+	return result
 }
