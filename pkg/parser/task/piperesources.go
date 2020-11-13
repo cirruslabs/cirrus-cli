@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
 )
 
@@ -19,7 +20,7 @@ type PipeResources struct {
 func NewPipeResources(mergedEnv map[string]string) *PipeResources {
 	res := &PipeResources{}
 
-	res.RequiredField(nameable.NewSimpleNameable("cpu"), schema.TodoSchema, func(node *node.Node) error {
+	res.OptionalField(nameable.NewSimpleNameable("cpu"), schema.Number(""), func(node *node.Node) error {
 		cpu, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -32,7 +33,7 @@ func NewPipeResources(mergedEnv map[string]string) *PipeResources {
 		return nil
 	})
 
-	res.RequiredField(nameable.NewSimpleNameable("memory"), schema.TodoSchema, func(node *node.Node) error {
+	res.OptionalField(nameable.NewSimpleNameable("memory"), schema.Memory(), func(node *node.Node) error {
 		memory, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -54,4 +55,13 @@ func (res *PipeResources) Parse(node *node.Node) error {
 	}
 
 	return nil
+}
+
+func (res *PipeResources) Schema() *jsschema.Schema {
+	modifiedSchema := res.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+	modifiedSchema.Description = "Pipe resources"
+
+	return modifiedSchema
 }

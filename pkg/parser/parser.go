@@ -76,8 +76,8 @@ func New(opts ...Option) *Parser {
 
 	// Register parsers
 	parser.parsers = map[nameable.Nameable]parseable.Parseable{
-		nameable.NewRegexNameable("^(.*)task$"): &task.Task{},
-		nameable.NewRegexNameable("^(.*)pipe$"): &task.DockerPipe{},
+		nameable.NewRegexNameable("^(.*)task$"): task.NewTask(nil, nil, nil),
+		nameable.NewRegexNameable("^(.*)pipe$"): task.NewDockerPipe(nil, nil),
 	}
 
 	return parser
@@ -266,24 +266,29 @@ func (p *Parser) NextTaskLocalIndex() int64 {
 
 func (p *Parser) Schema() *schema.Schema {
 	schema := &schema.Schema{
-		Properties:        make(map[string]*schema.Schema),
-		PatternProperties: make(map[*regexp.Regexp]*schema.Schema),
+		Type:                 schema.PrimitiveTypes{schema.ObjectType},
+		ID:                   "https://cirrus-ci.org/",
+		Title:                "JSON schema for Cirrus CI configuration files",
+		SchemaRef:            "http://json-schema.org/draft-04/schema#",
+		Properties:           make(map[string]*schema.Schema),
+		PatternProperties:    make(map[*regexp.Regexp]*schema.Schema),
+		AdditionalProperties: &schema.AdditionalProperties{Schema: nil},
 	}
 
-	schema.ID = "https://cirrus-ci.org/"
-	schema.Title = "JSON schema for Cirrus CI configuration files"
-
-	// Apply parser schemas
-	for key, value := range p.parsers {
-		switch keyNameable := key.(type) {
+	for parserName, parser := range p.parsers {
+		switch nameable := parserName.(type) {
 		case *nameable.SimpleNameable:
-			schema.Properties[keyNameable.Name()] = value.Schema()
+			schema.Properties[nameable.Name()] = parser.Schema()
 		case *nameable.RegexNameable:
-			schema.PatternProperties[keyNameable.Regex()] = value.Schema()
+			schema.PatternProperties[nameable.Regex()] = parser.Schema()
+		}
+
+		// Note: this is a simplification that doesn't return collectible fields recursively,
+		// because it assumes that we're only defining collectibles on the first depth level.
+		for _, collectibleFields := range parser.CollectibleFields() {
+			schema.Properties[collectibleFields.Name] = collectibleFields.Schema
 		}
 	}
-
-	// Apply field schemas
 
 	return schema
 }

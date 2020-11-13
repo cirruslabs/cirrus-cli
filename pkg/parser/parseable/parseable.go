@@ -4,11 +4,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/lestrrat-go/jsschema"
+	"regexp"
 )
 
 type Parseable interface {
 	Parse(node *node.Node) error
 	Schema() *schema.Schema
+	CollectibleFields() []CollectibleField
 	Proto() interface{}
 }
 
@@ -22,14 +24,14 @@ type Field struct {
 }
 
 type CollectibleField struct {
-	name    string
+	Name    string
 	onFound nodeFunc
-	schema  *schema.Schema
+	Schema  *schema.Schema
 }
 
 func (parser *DefaultParser) Parse(node *node.Node) error {
 	for _, field := range parser.collectibleFields {
-		children := node.DeepFindChild(field.name)
+		children := node.DeepFindChild(field.Name)
 
 		if children == nil {
 			continue
@@ -67,5 +69,33 @@ func (parser *DefaultParser) Parse(node *node.Node) error {
 }
 
 func (parser *DefaultParser) Schema() *schema.Schema {
-	return &schema.Schema{}
+	schema := &schema.Schema{
+		Properties:           make(map[string]*schema.Schema),
+		PatternProperties:    make(map[*regexp.Regexp]*schema.Schema),
+		AdditionalItems:      &schema.AdditionalItems{Schema: nil},
+		AdditionalProperties: &schema.AdditionalProperties{Schema: nil},
+	}
+
+	for _, field := range parser.fields {
+		switch nameable := field.name.(type) {
+		case *nameable.SimpleNameable:
+			schema.Properties[nameable.Name()] = field.schema
+		case *nameable.RegexNameable:
+			schema.PatternProperties[nameable.Regex()] = field.schema
+		}
+
+		if field.required && !parser.Collectible() {
+			schema.Required = append(schema.Required, field.name.String())
+		}
+	}
+
+	for _, collectibleField := range parser.collectibleFields {
+		schema.Properties[collectibleField.Name] = collectibleField.Schema
+	}
+
+	return schema
+}
+
+func (parser *DefaultParser) CollectibleFields() []CollectibleField {
+	return parser.collectibleFields
 }

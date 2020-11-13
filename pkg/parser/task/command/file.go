@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	jsschema "github.com/lestrrat-go/jsschema"
 	"strings"
 )
 
@@ -22,7 +23,7 @@ func NewFileCommand(mergedEnv map[string]string) *FileCommand {
 		instruction: &api.FileInstruction{},
 	}
 
-	fileCommand.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
+	fileCommand.OptionalField(nameable.NewSimpleNameable("name"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -31,7 +32,8 @@ func NewFileCommand(mergedEnv map[string]string) *FileCommand {
 		return nil
 	})
 
-	fileCommand.RequiredField(nameable.NewSimpleNameable("path"), schema.TodoSchema, func(node *node.Node) error {
+	pathSchema := schema.String("Destination path.")
+	fileCommand.RequiredField(nameable.NewSimpleNameable("path"), pathSchema, func(node *node.Node) error {
 		path, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -40,7 +42,8 @@ func NewFileCommand(mergedEnv map[string]string) *FileCommand {
 		return nil
 	})
 
-	fileCommand.RequiredField(nameable.NewSimpleNameable("variable_name"), schema.TodoSchema, func(node *node.Node) error {
+	variableSchema := schema.String("Environment variable name.")
+	fileCommand.RequiredField(nameable.NewSimpleNameable("variable_name"), variableSchema, func(node *node.Node) error {
 		variableName, err := node.GetStringValue()
 		if err != nil {
 			return err
@@ -77,4 +80,12 @@ func (fileCommand *FileCommand) Proto() *api.Command {
 	}
 
 	return fileCommand.proto
+}
+
+func (fileCommand *FileCommand) Schema() *jsschema.Schema {
+	modifiedSchema := fileCommand.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+
+	return modifiedSchema
 }

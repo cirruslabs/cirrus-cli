@@ -8,6 +8,7 @@ import (
 type DefaultParser struct {
 	fields            []Field
 	collectibleFields []CollectibleField
+	collectible       bool
 }
 
 func (parser *DefaultParser) OptionalField(name nameable.Nameable, schema *schema.Schema, onFound nodeFunc) {
@@ -29,8 +30,16 @@ func (parser *DefaultParser) RequiredField(nameable nameable.Nameable, schema *s
 
 func (parser *DefaultParser) CollectibleField(name string, schema *schema.Schema, onFound nodeFunc) {
 	parser.collectibleFields = append(parser.collectibleFields, CollectibleField{
-		name:    name,
+		Name:    name,
 		onFound: onFound,
-		schema:  schema,
+		Schema:  schema,
 	})
+}
+
+func (parser *DefaultParser) Collectible() bool {
+	return parser.collectible
+}
+
+func (parser *DefaultParser) SetCollectible(value bool) {
+	parser.collectible = value
 }

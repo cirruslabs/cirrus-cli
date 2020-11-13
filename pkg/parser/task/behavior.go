@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
+	jsschema "github.com/lestrrat-go/jsschema"
 )
 
 type Behavior struct {
@@ -20,7 +21,7 @@ func NewBehavior(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 	b := &Behavior{}
 
 	bgNameable := nameable.NewRegexNameable("^(.*)background_script$")
-	b.OptionalField(bgNameable, schema.TodoSchema, func(node *node.Node) error {
+	b.OptionalField(bgNameable, schema.Script(""), func(node *node.Node) error {
 		command, err := handleBackgroundScript(node, bgNameable)
 		if err != nil {
 			return err
@@ -32,7 +33,7 @@ func NewBehavior(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 	})
 
 	scriptNameable := nameable.NewRegexNameable("^(.*)script$")
-	b.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
+	b.OptionalField(scriptNameable, schema.Script(""), func(node *node.Node) error {
 		command, err := handleScript(node, scriptNameable)
 		if err != nil {
 			return err
@@ -44,7 +45,8 @@ func NewBehavior(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 	})
 
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
-	b.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
+	cacheSchema := command.NewCacheCommand(nil, nil).Schema()
+	b.OptionalField(cacheNameable, cacheSchema, func(node *node.Node) error {
 		cache := command.NewCacheCommand(mergedEnv, boolevator)
 		if err := cache.Parse(node); err != nil {
 			return err
@@ -54,7 +56,8 @@ func NewBehavior(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 	})
 
 	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts$")
-	b.OptionalField(artifactsNameable, schema.TodoSchema, func(node *node.Node) error {
+	artifactsSchema := command.NewArtifactsCommand(nil).Schema()
+	b.OptionalField(artifactsNameable, artifactsSchema, func(node *node.Node) error {
 		artifacts := command.NewArtifactsCommand(mergedEnv)
 		if err := artifacts.Parse(node); err != nil {
 			return err
@@ -64,7 +67,8 @@ func NewBehavior(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 	})
 
 	fileNameable := nameable.NewRegexNameable("^(.*)file$")
-	b.OptionalField(fileNameable, schema.TodoSchema, func(node *node.Node) error {
+	fileSchema := command.NewFileCommand(nil).Schema()
+	b.OptionalField(fileNameable, fileSchema, func(node *node.Node) error {
 		file := command.NewFileCommand(mergedEnv)
 		if err := file.Parse(node); err != nil {
 			return err
@@ -86,4 +90,12 @@ func (b *Behavior) Parse(node *node.Node) error {
 
 func (b *Behavior) Proto() []*api.Command {
 	return b.commands
+}
+
+func (b *Behavior) Schema() *jsschema.Schema {
+	modifiedSchema := b.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+
+	return modifiedSchema
 }

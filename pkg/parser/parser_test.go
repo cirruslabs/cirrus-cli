@@ -10,6 +10,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/memory"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/stretchr/testify/require"
+	"github.com/yudai/gojsondiff"
+	"github.com/yudai/gojsondiff/formatter"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -239,10 +241,80 @@ func TestViaRPCInvalid(t *testing.T) {
 func TestSchema(t *testing.T) {
 	p := parser.New()
 
-	jsonBytes, err := json.MarshalIndent(p.Schema(), "", "  ")
+	// Load reference schema
+	referenceBytes, err := ioutil.ReadFile("testdata/cirrus.json")
 	if err != nil {
 		t.Fatal(err)
 	}
+	var referenceObject map[string]interface{}
+	if err := json.Unmarshal(referenceBytes, &referenceObject); err != nil {
+		t.Fatal(err)
+	}
 
-	fmt.Println(string(jsonBytes))
+	// Load our schema
+	ourBytes, err := json.MarshalIndent(p.Schema(), "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ourObject map[string]interface{}
+	if err := json.Unmarshal(ourBytes, &ourObject); err != nil {
+		t.Fatal(err)
+	}
+
+	// Remove cloud instances from the reference schema since they're not present in our schema
+	delete(referenceObject["patternProperties"].(map[string]interface{}), "^(.*)docker_builder$")
+	delete(referenceObject["patternProperties"].(map[string]interface{}), "^(.*)gke_pipe$")
+
+	ignoredInstances := []string{
+		"anka_instance",
+		"aws_credentials",
+		"azure_container_instance",
+		"azure_credentials",
+		"ec2_instance",
+		"eks_container",
+		"freebsd_instance",
+		"gce_container",
+		"gce_instance",
+		"gcp_credentials",
+		"gke_container",
+		"osx_instance",
+		"windows_container",
+	}
+
+	for _, ignoredInstance := range ignoredInstances {
+		delete(referenceObject["properties"].(map[string]interface{}), ignoredInstance)
+
+		patternedTask := referenceObject["patternProperties"].(map[string]interface{})["^(.*)task$"]
+		delete(patternedTask.(map[string]interface{})["properties"].(map[string]interface{}), ignoredInstance)
+	}
+
+	delete(referenceObject, "fileMatch")
+
+	// Remove persistent_worker instance from our schema since it's not present in the reference schema
+	delete(ourObject["properties"].(map[string]interface{}), "persistent_worker")
+
+	patternedTask := ourObject["patternProperties"].(map[string]interface{})["^(.*)task$"]
+	delete(patternedTask.(map[string]interface{})["properties"].(map[string]interface{}), "persistent_worker")
+
+	// Compare two schemas
+	differ := gojsondiff.New()
+	d := differ.CompareObjects(referenceObject, ourObject)
+
+	if d.Modified() {
+		var diffString string
+
+		config := formatter.AsciiFormatterConfig{
+			ShowArrayIndex: true,
+			Coloring:       true,
+		}
+
+		diffString, err = formatter.NewAsciiFormatter(referenceObject, config).Format(d)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fmt.Print(diffString)
+
+		t.Fail()
+	}
 }

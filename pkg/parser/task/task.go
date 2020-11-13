@@ -13,6 +13,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/ptypes"
+	jsschema "github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 	"strconv"
@@ -30,7 +31,7 @@ type Task struct {
 	parseable.DefaultParser
 }
 
-//nolint:gocognit // it's a parser, there is a lot of boilerplate
+// nolint:gocognit,gocyclo // it's a parser, there is a lot of boilerplate
 func NewTask(
 	env map[string]string,
 	boolevator *boolevator.Boolevator,
@@ -39,10 +40,13 @@ func NewTask(
 	task := &Task{}
 	task.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
+	// Don't force required fields in schema
+	task.SetCollectible(true)
+
 	task.proto.Metadata.Properties["auto_cancellation"] =
 		strconv.FormatBool(env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"])
 
-	task.CollectibleField("environment", schema.TodoSchema, func(node *node.Node) error {
+	task.CollectibleField("environment", schema.Map(""), func(node *node.Node) error {
 		taskEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
@@ -51,7 +55,7 @@ func NewTask(
 		return nil
 	})
 
-	task.CollectibleField("env", schema.TodoSchema, func(node *node.Node) error {
+	task.CollectibleField("env", schema.Map(""), func(node *node.Node) error {
 		taskEnv, err := node.GetEnvironment()
 		if err != nil {
 			return err
@@ -131,7 +135,7 @@ func NewTask(
 			})
 	}
 
-	task.OptionalField(nameable.NewSimpleNameable("name"), schema.TodoSchema, func(node *node.Node) error {
+	task.OptionalField(nameable.NewSimpleNameable("name"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
@@ -140,7 +144,7 @@ func NewTask(
 		return nil
 	})
 
-	task.OptionalField(nameable.NewSimpleNameable("alias"), schema.TodoSchema, func(node *node.Node) error {
+	task.OptionalField(nameable.NewSimpleNameable("alias"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
@@ -150,7 +154,7 @@ func NewTask(
 	})
 
 	bgNameable := nameable.NewRegexNameable("^(.*)background_script$")
-	task.OptionalField(bgNameable, schema.TodoSchema, func(node *node.Node) error {
+	task.OptionalField(bgNameable, schema.Script(""), func(node *node.Node) error {
 		command, err := handleBackgroundScript(node, bgNameable)
 		if err != nil {
 			return err
@@ -162,7 +166,7 @@ func NewTask(
 	})
 
 	scriptNameable := nameable.NewRegexNameable("^(.*)script$")
-	task.OptionalField(scriptNameable, schema.TodoSchema, func(node *node.Node) error {
+	task.OptionalField(scriptNameable, schema.Script(""), func(node *node.Node) error {
 		command, err := handleScript(node, scriptNameable)
 		if err != nil {
 			return err
@@ -174,7 +178,8 @@ func NewTask(
 	})
 
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
-	task.OptionalField(cacheNameable, schema.TodoSchema, func(node *node.Node) error {
+	cacheSchema := command.NewCacheCommand(nil, nil).Schema()
+	task.OptionalField(cacheNameable, cacheSchema, func(node *node.Node) error {
 		cache := command.NewCacheCommand(environment.Merge(task.proto.Environment, env), boolevator)
 		if err := cache.Parse(node); err != nil {
 			return err
@@ -184,7 +189,8 @@ func NewTask(
 	})
 
 	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts$")
-	task.OptionalField(artifactsNameable, schema.TodoSchema, func(node *node.Node) error {
+	artifactsSchema := command.NewArtifactsCommand(nil).Schema()
+	task.OptionalField(artifactsNameable, artifactsSchema, func(node *node.Node) error {
 		artifacts := command.NewArtifactsCommand(environment.Merge(task.proto.Environment, env))
 		if err := artifacts.Parse(node); err != nil {
 			return err
@@ -194,7 +200,8 @@ func NewTask(
 	})
 
 	fileNameable := nameable.NewRegexNameable("^(.*)file$")
-	task.OptionalField(fileNameable, schema.TodoSchema, func(node *node.Node) error {
+	fileSchema := command.NewFileCommand(nil).Schema()
+	task.OptionalField(fileNameable, fileSchema, func(node *node.Node) error {
 		file := command.NewFileCommand(environment.Merge(task.proto.Environment, env))
 		if err := file.Parse(node); err != nil {
 			return err
@@ -205,7 +212,8 @@ func NewTask(
 
 	task.registerExecutionBehaviorFields(env, boolevator)
 
-	task.OptionalField(nameable.NewSimpleNameable("depends_on"), schema.TodoSchema, func(node *node.Node) error {
+	dependsOnSchema := schema.StringOrListOfStrings("List of task names this task depends on.")
+	task.OptionalField(nameable.NewSimpleNameable("depends_on"), dependsOnSchema, func(node *node.Node) error {
 		dependsOn, err := node.GetSliceOfNonEmptyStrings()
 		if err != nil {
 			return err
@@ -214,7 +222,7 @@ func NewTask(
 		return nil
 	})
 
-	task.CollectibleField("only_if", schema.TodoSchema, func(node *node.Node) error {
+	task.CollectibleField("only_if", schema.Condition(""), func(node *node.Node) error {
 		onlyIfExpression, err := node.GetStringValue()
 		if err != nil {
 			return err
@@ -223,7 +231,18 @@ func NewTask(
 		return nil
 	})
 
-	task.CollectibleField("allow_failures", schema.TodoSchema, func(node *node.Node) error {
+	task.CollectibleField("skip", schema.Condition(""), func(node *node.Node) error {
+		skipped, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		if skipped {
+			task.proto.Status = api.Task_SKIPPED
+		}
+		return nil
+	})
+
+	task.CollectibleField("allow_failures", schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -233,7 +252,7 @@ func NewTask(
 	})
 
 	// for cloud only
-	task.CollectibleField("skip_notifications", schema.TodoSchema, func(node *node.Node) error {
+	task.CollectibleField("skip_notifications", schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -243,7 +262,7 @@ func NewTask(
 	})
 
 	// for cloud only
-	task.CollectibleField("auto_cancellation", schema.TodoSchema, func(node *node.Node) error {
+	task.CollectibleField("auto_cancellation", schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -253,7 +272,7 @@ func NewTask(
 	})
 
 	// for cloud only
-	task.CollectibleField("use_compute_credits", schema.TodoSchema, func(node *node.Node) error {
+	task.CollectibleField("use_compute_credits", schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -263,7 +282,7 @@ func NewTask(
 	})
 
 	// for cloud only
-	task.CollectibleField("stateful", schema.TodoSchema, func(node *node.Node) error {
+	task.CollectibleField("stateful", schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -272,7 +291,13 @@ func NewTask(
 		return nil
 	})
 
-	task.CollectibleField("experimental", schema.TodoSchema, func(node *node.Node) error {
+	// no-op
+	labelsSchema := schema.StringOrListOfStrings("List of required labels on a PR.")
+	task.OptionalField(nameable.NewSimpleNameable("required_pr_labels"), labelsSchema, func(node *node.Node) error {
+		return nil
+	})
+
+	task.CollectibleField("experimental", schema.Condition(""), func(node *node.Node) error {
 		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
 		if err != nil {
 			return err
@@ -281,7 +306,7 @@ func NewTask(
 		return nil
 	})
 
-	task.CollectibleField("timeout_in", schema.TodoSchema, func(node *node.Node) error {
+	task.CollectibleField("timeout_in", schema.Number("Task timeout in minutes"), func(node *node.Node) error {
 		timeout, err := handleTimeoutIn(node, environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
@@ -292,7 +317,7 @@ func NewTask(
 		return nil
 	})
 
-	task.CollectibleField("trigger_type", schema.TodoSchema, func(node *node.Node) error {
+	task.CollectibleField("trigger_type", schema.TriggerType(), func(node *node.Node) error {
 		triggerType, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
@@ -301,7 +326,8 @@ func NewTask(
 		return nil
 	})
 
-	task.OptionalField(nameable.NewSimpleNameable("execution_lock"), schema.TodoSchema, func(node *node.Node) error {
+	lockSchema := schema.String("Lock name for triggering and execution")
+	task.OptionalField(nameable.NewSimpleNameable("execution_lock"), lockSchema, func(node *node.Node) error {
 		lockName, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
 			return err
@@ -395,7 +421,10 @@ func (task *Task) Enabled(env map[string]string, boolevator *boolevator.Boolevat
 func (task *Task) registerExecutionBehaviorFields(env map[string]string, boolevator *boolevator.Boolevator) {
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
-		task.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), schema.TodoSchema, func(node *node.Node) error {
+
+		behaviorSchema := NewBehavior(nil, nil).Schema()
+		behaviorSchema.Description = name + " commands."
+		task.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), behaviorSchema, func(node *node.Node) error {
 			behavior := NewBehavior(environment.Merge(task.proto.Environment, env), boolevator)
 			if err := behavior.Parse(node); err != nil {
 				return err
@@ -411,4 +440,13 @@ func (task *Task) registerExecutionBehaviorFields(env map[string]string, booleva
 			return nil
 		})
 	}
+}
+
+func (task *Task) Schema() *jsschema.Schema {
+	modifiedSchema := task.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+	modifiedSchema.Description = "Cirrus CI task definition."
+
+	return modifiedSchema
 }
