@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	jsschema "github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
@@ -35,9 +36,28 @@ func NewProtoParser(
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
 		fieldName := string(field.Name())
+
+		// Empty for now
+		fieldDescription := ""
+
 		switch field.Kind() {
 		case protoreflect.MessageKind:
-			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
+			var messageSchema *jsschema.Schema
+
+			switch {
+			case field.IsMap():
+				messageSchema = schema.Map(fieldDescription)
+			case field.IsList():
+				if fieldName == "additional_containers" {
+					messageSchema = schema.ArrayOf(NewAdditionalContainer(nil, nil).Schema())
+				} else {
+					messageSchema = schema.ArrayOf(NewProtoParser(field.Message(), nil, nil).Schema())
+				}
+			default:
+				messageSchema = NewProtoParser(field.Message(), nil, nil).Schema()
+			}
+
+			instance.OptionalField(nameable.NewSimpleNameable(fieldName), messageSchema, func(node *node.Node) error {
 				switch {
 				case field.IsMap():
 					fieldInstance := instance.proto.NewField(field)
@@ -100,7 +120,14 @@ func NewProtoParser(
 				}
 			})
 		case protoreflect.EnumKind:
-			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
+			var enumItems []interface{}
+			for i := 0; i < field.Enum().Values().Len(); i++ {
+				name := string(field.Enum().Values().Get(i).Name())
+				enumItems = append(enumItems, strings.ToLower(name))
+			}
+			enumSchema := schema.Enum(enumItems, fieldDescription)
+
+			instance.OptionalField(nameable.NewSimpleNameable(fieldName), enumSchema, func(node *node.Node) error {
 				value, err := node.GetExpandedStringValue(mergedEnv)
 				if err != nil {
 					return err
@@ -111,7 +138,9 @@ func NewProtoParser(
 			})
 		case protoreflect.StringKind:
 			if field.Cardinality() == protoreflect.Repeated {
-				instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
+				repeatedSchema := schema.ArrayOf(schema.String(fieldDescription))
+
+				instance.OptionalField(nameable.NewSimpleNameable(fieldName), repeatedSchema, func(node *node.Node) error {
 					values, err := node.GetSliceOfExpandedStrings(mergedEnv)
 					if err != nil {
 						return err
@@ -134,14 +163,16 @@ func NewProtoParser(
 				}
 				if strings.HasSuffix(fieldName, "credentials") || strings.HasSuffix(fieldName, "config") {
 					// some trickery to be able to specify top level credentials for instances
-					instance.CollectibleField(fieldName, schema.TodoSchema, parseCallback)
+					instance.CollectibleField(fieldName, schema.String(fieldDescription), parseCallback)
 				} else {
-					instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, parseCallback)
+					instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.String(fieldDescription), parseCallback)
 				}
 			}
 		case protoreflect.Int64Kind, protoreflect.Sint64Kind,
 			protoreflect.Fixed64Kind, protoreflect.Sfixed64Kind:
-			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
+			intSchema := schema.Integer(fieldDescription)
+
+			instance.OptionalField(nameable.NewSimpleNameable(fieldName), intSchema, func(node *node.Node) error {
 				value, err := node.GetExpandedStringValue(mergedEnv)
 				if err != nil {
 					return err
@@ -159,7 +190,9 @@ func NewProtoParser(
 				return nil
 			})
 		case protoreflect.Uint64Kind:
-			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
+			intSchema := schema.Integer(fieldDescription)
+
+			instance.OptionalField(nameable.NewSimpleNameable(fieldName), intSchema, func(node *node.Node) error {
 				value, err := node.GetExpandedStringValue(mergedEnv)
 				if err != nil {
 					return err
@@ -178,7 +211,9 @@ func NewProtoParser(
 			})
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind,
 			protoreflect.Fixed32Kind, protoreflect.Sfixed32Kind:
-			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
+			intSchema := schema.Integer(fieldDescription)
+
+			instance.OptionalField(nameable.NewSimpleNameable(fieldName), intSchema, func(node *node.Node) error {
 				value, err := node.GetExpandedStringValue(mergedEnv)
 				if err != nil {
 					return err
@@ -194,7 +229,9 @@ func NewProtoParser(
 				return nil
 			})
 		case protoreflect.Uint32Kind:
-			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
+			intSchema := schema.Integer(fieldDescription)
+
+			instance.OptionalField(nameable.NewSimpleNameable(fieldName), intSchema, func(node *node.Node) error {
 				value, err := node.GetExpandedStringValue(mergedEnv)
 				if err != nil {
 					return err
@@ -210,7 +247,9 @@ func NewProtoParser(
 				return nil
 			})
 		case protoreflect.BoolKind:
-			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
+			boolSchema := schema.Boolean(fieldDescription)
+
+			instance.OptionalField(nameable.NewSimpleNameable(fieldName), boolSchema, func(node *node.Node) error {
 				evaluation, err := node.GetBoolValue(mergedEnv, boolevator)
 				if err != nil {
 					return err
@@ -219,7 +258,9 @@ func NewProtoParser(
 				return nil
 			})
 		case protoreflect.FloatKind:
-			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
+			numberSchema := schema.Number(fieldDescription)
+
+			instance.OptionalField(nameable.NewSimpleNameable(fieldName), numberSchema, func(node *node.Node) error {
 				value, err := node.GetExpandedStringValue(mergedEnv)
 				if err != nil {
 					return err
@@ -232,7 +273,9 @@ func NewProtoParser(
 				return nil
 			})
 		case protoreflect.DoubleKind:
-			instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.TodoSchema, func(node *node.Node) error {
+			numberSchema := schema.Number(fieldDescription)
+
+			instance.OptionalField(nameable.NewSimpleNameable(fieldName), numberSchema, func(node *node.Node) error {
 				value, err := node.GetExpandedStringValue(mergedEnv)
 				if err != nil {
 					return err
@@ -289,4 +332,12 @@ func GuessPlatform(anyInstance *anypb.Any, descriptor protoreflect.MessageDescri
 	}
 
 	return "linux"
+}
+
+func (p *ProtoInstance) Schema() *jsschema.Schema {
+	modifiedSchema := p.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+
+	return modifiedSchema
 }

@@ -5,10 +5,6 @@ import (
 	"regexp"
 )
 
-var (
-	TodoSchema = &schema.Schema{}
-)
-
 func Map(description string) *schema.Schema {
 	if description == "" {
 		description = "Map represented as an object."
@@ -39,6 +35,20 @@ func Condition(description string) *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.PrimitiveTypes{schema.StringType},
 		Description: fullDescription,
+	}
+}
+
+func Boolean(description string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.PrimitiveTypes{schema.BooleanType},
+		Description: description,
+	}
+}
+
+func Integer(description string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.PrimitiveTypes{schema.IntegerType},
+		Description: description,
 	}
 }
 
@@ -75,16 +85,20 @@ func StringOrListOfStrings(description string) *schema.Schema {
 	}
 }
 
-func TriggerType() *schema.Schema {
+func Enum(items []interface{}, description string) *schema.Schema {
 	return &schema.Schema{
-		Description: "Trigger type",
-		Enum: []interface{}{
-			"automatic",
-			"manual",
-		},
+		Description:          description,
+		Enum:                 items,
 		AdditionalItems:      &schema.AdditionalItems{Schema: nil},
 		AdditionalProperties: &schema.AdditionalProperties{Schema: nil},
 	}
+}
+
+func TriggerType() *schema.Schema {
+	return Enum([]interface{}{
+		"automatic",
+		"manual",
+	}, "Trigger type")
 }
 
 func Script(description string) *schema.Schema {
