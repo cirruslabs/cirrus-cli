@@ -30,9 +30,9 @@ func (parser *DefaultParser) RequiredField(nameable nameable.Nameable, schema *s
 
 func (parser *DefaultParser) CollectibleField(name string, schema *schema.Schema, onFound nodeFunc) {
 	parser.collectibleFields = append(parser.collectibleFields, CollectibleField{
-		name:    name,
+		Name:    name,
 		onFound: onFound,
-		schema:  schema,
+		Schema:  schema,
 	})
 }
 

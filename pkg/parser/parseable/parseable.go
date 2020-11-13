@@ -10,7 +10,7 @@ import (
 type Parseable interface {
 	Parse(node *node.Node) error
 	Schema() *schema.Schema
-	DeepFields() []DeepField
+	CollectibleFields() []CollectibleField
 	Proto() interface{}
 }
 
@@ -24,14 +24,14 @@ type Field struct {
 }
 
 type CollectibleField struct {
-	name    string
+	Name    string
 	onFound nodeFunc
-	schema  *schema.Schema
+	Schema  *schema.Schema
 }
 
 func (parser *DefaultParser) Parse(node *node.Node) error {
 	for _, field := range parser.collectibleFields {
-		children := node.DeepFindChild(field.name)
+		children := node.DeepFindChild(field.Name)
 
 		if children == nil {
 			continue
@@ -90,29 +90,12 @@ func (parser *DefaultParser) Schema() *schema.Schema {
 	}
 
 	for _, collectibleField := range parser.collectibleFields {
-		schema.Properties[collectibleField.name] = collectibleField.schema
+		schema.Properties[collectibleField.Name] = collectibleField.Schema
 	}
 
 	return schema
 }
 
-type DeepField struct {
-	Name   string
-	Schema *schema.Schema
-}
-
-// Note that this is a simplification and it doesn't really return "deep" fields
-// since all of the collectible fields currently are defined on depth 1, which we
-// access here.
-func (parser *DefaultParser) DeepFields() []DeepField {
-	var result []DeepField
-
-	for _, collectibleField := range parser.collectibleFields {
-		result = append(result, DeepField{
-			Name:   collectibleField.name,
-			Schema: collectibleField.schema,
-		})
-	}
-
-	return result
+func (parser *DefaultParser) CollectibleFields() []CollectibleField {
+	return parser.collectibleFields
 }

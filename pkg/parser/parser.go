@@ -283,8 +283,10 @@ func (p *Parser) Schema() *schema.Schema {
 			schema.PatternProperties[nameable.Regex()] = parser.Schema()
 		}
 
-		for _, deepField := range parser.DeepFields() {
-			schema.Properties[deepField.Name] = deepField.Schema
+		// Note: this is a simplification that doesn't return collectible fields recursively,
+		// because it assumes that we're only defining collectibles on the first depth level.
+		for _, collectibleFields := range parser.CollectibleFields() {
+			schema.Properties[collectibleFields.Name] = collectibleFields.Schema
 		}
 	}
 
