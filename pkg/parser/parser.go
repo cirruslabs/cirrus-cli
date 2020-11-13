@@ -314,11 +314,11 @@ func (p *Parser) createServiceTask(
 	taskContainer *api.ContainerInstance,
 ) (*api.Task, error) {
 	prebuiltInstance := &api.PrebuiltImageInstance{
-		Repository:     fmt.Sprintf("cirrus-ci-community/%s", dockerfileHash),
-		Reference:      "latest",
-		Platform:       taskContainer.Platform,
-		DockerfilePath: taskContainer.DockerfilePath,
-		Arguments:      taskContainer.DockerArguments,
+		Repository: fmt.Sprintf("cirrus-ci-community/%s", dockerfileHash),
+		Reference:  "latest",
+		Platform:   taskContainer.Platform,
+		Dockerfile: taskContainer.Dockerfile,
+		Arguments:  taskContainer.DockerArguments,
 	}
 
 	anyInstance, err := ptypes.MarshalAny(prebuiltInstance)
@@ -349,7 +349,7 @@ func (p *Parser) createServiceTask(
 	}
 
 	serviceTask := &api.Task{
-		Name:         fmt.Sprintf("Prebuild %s%s", taskContainer.DockerfilePath, buildArgs),
+		Name:         fmt.Sprintf("Prebuild %s%s", taskContainer.Dockerfile, buildArgs),
 		LocalGroupId: p.NextTaskID(),
 		Instance:     anyInstance,
 		Commands: []*api.Command{
@@ -362,7 +362,7 @@ func (p *Parser) createServiceTask(
 							"--file %s%s "+
 							"${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}",
 							prebuiltInstance.Repository, prebuiltInstance.Reference,
-							taskContainer.DockerfilePath, dockerBuildArgs)},
+							taskContainer.Dockerfile, dockerBuildArgs)},
 					},
 				},
 			},
@@ -422,7 +422,7 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 				parsererror.ErrParsing, taskContainer.Platform.String())
 		}
 
-		if taskContainer.DockerfilePath == "" {
+		if taskContainer.Dockerfile == "" {
 			continue
 		}
 
@@ -434,13 +434,13 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 		sort.Strings(hashableArgsSlice)
 		hashableArgs := strings.Join(hashableArgsSlice, ", ")
 
-		dockerfileHash, err := p.fileHash(ctx, taskContainer.DockerfilePath, []byte(hashableArgs))
+		dockerfileHash, err := p.fileHash(ctx, taskContainer.Dockerfile, []byte(hashableArgs))
 		if err != nil {
 			return nil, err
 		}
 
 		// Find or create service task
-		serviceTaskKey := taskContainer.DockerfilePath + hashableArgs
+		serviceTaskKey := taskContainer.Dockerfile + hashableArgs
 
 		serviceTask, ok := serviceTasks[serviceTaskKey]
 		if !ok {

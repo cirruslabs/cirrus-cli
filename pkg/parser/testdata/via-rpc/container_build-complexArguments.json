@@ -23,7 +23,7 @@
       "dockerArguments": {
         "foo": "bar"
       },
-      "dockerfilePath": "ci/Dockerfile",
+      "dockerfile": "ci/Dockerfile",
       "image": "gcr.io/cirrus-ci-community/2b4c0074861f1fe6525d23e24dd12e99:latest",
       "memory": 4096
     },
@@ -70,7 +70,7 @@
       "dockerArguments": {
         "bar": "baz baz"
       },
-      "dockerfilePath": "ci/Dockerfile",
+      "dockerfile": "ci/Dockerfile",
       "image": "gcr.io/cirrus-ci-community/930472895952b2e55cd88ac886de4bf3:latest",
       "memory": 4096
     },
@@ -125,7 +125,7 @@
       "arguments": {
         "foo": "bar"
       },
-      "dockerfilePath": "ci/Dockerfile",
+      "dockerfile": "ci/Dockerfile",
       "reference": "latest",
       "repository": "cirrus-ci-community/2b4c0074861f1fe6525d23e24dd12e99"
     },
@@ -174,7 +174,7 @@
       "arguments": {
         "bar": "baz baz"
       },
-      "dockerfilePath": "ci/Dockerfile",
+      "dockerfile": "ci/Dockerfile",
       "reference": "latest",
       "repository": "cirrus-ci-community/930472895952b2e55cd88ac886de4bf3"
     },

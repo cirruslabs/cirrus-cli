@@ -173,7 +173,7 @@ proto_task:
 
 	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
 		YamlConfig: yamlConfig,
-		AdditionalInstancesInfo: &api.EvaluateConfigRequest_AdditionalInstancesInfo{
+		AdditionalInstancesInfo: &api.AdditionalInstancesInfo{
 			Instances: map[string]string{
 				"proto_container": "org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
 			},

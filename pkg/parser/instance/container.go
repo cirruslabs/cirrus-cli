@@ -43,7 +43,7 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 		if err != nil {
 			return err
 		}
-		container.proto.DockerfilePath = dockerfile
+		container.proto.Dockerfile = dockerfile
 		return nil
 	})
 

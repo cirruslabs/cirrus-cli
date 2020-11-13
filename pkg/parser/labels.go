@@ -55,14 +55,14 @@ func instanceLabels(
 
 	switch instance := dynamicAny.(type) {
 	case *api.ContainerInstance:
-		if instance.DockerfilePath == "" {
+		if instance.Dockerfile == "" {
 			labels = append(labels, fmt.Sprintf("container:%s", instance.Image))
 
-			if instance.OperationSystemVersion != "" {
-				labels = append(labels, fmt.Sprintf("os:%s", instance.OperationSystemVersion))
+			if instance.OsVersion != "" {
+				labels = append(labels, fmt.Sprintf("os:%s", instance.OsVersion))
 			}
 		} else {
-			labels = append(labels, fmt.Sprintf("Dockerfile:%s", instance.DockerfilePath))
+			labels = append(labels, fmt.Sprintf("Dockerfile:%s", instance.Dockerfile))
 
 			for key, value := range instance.DockerArguments {
 				labels = append(labels, fmt.Sprintf("%s:%s", key, value))

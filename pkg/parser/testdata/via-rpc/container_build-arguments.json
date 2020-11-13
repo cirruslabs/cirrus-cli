@@ -25,7 +25,7 @@
         "bar": "baz",
         "foo": "bar"
       },
-      "dockerfilePath": "ci/Dockerfile",
+      "dockerfile": "ci/Dockerfile",
       "image": "gcr.io/cirrus-ci-community/e02d522efc69d3863e49972eb177dd6a:latest",
       "memory": 4096
     },
@@ -77,7 +77,7 @@
         "bar": "baz",
         "foo": "bar"
       },
-      "dockerfilePath": "ci/Dockerfile",
+      "dockerfile": "ci/Dockerfile",
       "reference": "latest",
       "repository": "cirrus-ci-community/e02d522efc69d3863e49972eb177dd6a"
     },
