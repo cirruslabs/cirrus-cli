@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
@@ -101,25 +102,9 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		yamlConfigs = append(yamlConfigs, generatedYamlConfig)
 	}
 
-	additionalInstances := make(map[string]protoreflect.MessageDescriptor)
-
-	descriptorSet := request.AdditionalInstancesInfo.GetDescriptorSet()
-	if descriptorSet != nil {
-		// convert protobuf descriptors to proto reflections
-		// in order to pass additional instances provided dynamically by the request
-		files, err := protodesc.NewFiles(descriptorSet)
-		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, err.Error())
-		}
-		for fieldName, fqn := range request.AdditionalInstancesInfo.Instances {
-			descriptor, err := files.FindDescriptorByName(protoreflect.FullName(fqn))
-			if err != nil {
-				return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to find %s type: %v", fqn, err))
-			}
-			if md, _ := descriptor.(protoreflect.MessageDescriptor); md != nil {
-				additionalInstances[fieldName] = md
-			}
-		}
+	additionalInstances, err := transformAdditionalInstances(request.AdditionalInstancesInfo)
+	if err != nil {
+		return nil, err
 	}
 
 	// Parse combined YAML
@@ -139,4 +124,66 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 	}
 
 	return &api.EvaluateConfigResponse{Tasks: result.Tasks}, nil
+}
+
+func (r *ConfigurationEvaluatorServiceServer) JSONSchema(
+	ctx context.Context,
+	request *api.JSONSchemaRequest,
+) (*api.JSONSchemaResponse, error) {
+	additionalInstances, err := transformAdditionalInstances(request.AdditionalInstancesInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate schema
+	p := parser.New(parser.WithAdditionalInstances(additionalInstances))
+
+	schemaBytes, err := json.Marshal(p.Schema())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// Inject fileMatch field
+	var schema map[string]interface{}
+	if err := json.Unmarshal(schemaBytes, &schema); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	schema["fileMatch"] = []string{".cirrus.yml"}
+
+	schemaBytes, err = json.Marshal(&schema)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &api.JSONSchemaResponse{Schema: string(schemaBytes)}, nil
+}
+
+func transformAdditionalInstances(
+	additionalInstancesInfo *api.AdditionalInstancesInfo,
+) (map[string]protoreflect.MessageDescriptor, error) {
+	additionalInstances := make(map[string]protoreflect.MessageDescriptor)
+
+	descriptorSet := additionalInstancesInfo.GetDescriptorSet()
+	if descriptorSet == nil {
+		return additionalInstances, nil
+	}
+
+	files, err := protodesc.NewFiles(descriptorSet)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	for fieldName, fqn := range additionalInstancesInfo.Instances {
+		descriptor, err := files.FindDescriptorByName(protoreflect.FullName(fqn))
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to find %s type: %v", fqn, err))
+		}
+
+		if md, _ := descriptor.(protoreflect.MessageDescriptor); md != nil {
+			additionalInstances[fieldName] = md
+		}
+	}
+
+	return additionalInstances, nil
 }
