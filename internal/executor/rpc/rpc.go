@@ -251,7 +251,7 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 					currentCommand)
 			}
 
-			streamLogger := r.getCommandLogger(task, command)
+			streamLogger = r.getCommandLogger(task, command)
 			streamLogger.Debugf("begin streaming logs")
 		case *api.LogEntry_Chunk:
 			if currentTaskName == "" {
