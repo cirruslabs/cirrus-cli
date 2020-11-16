@@ -113,26 +113,26 @@ func NewTask(
 	for instanceName, descriptor := range additionalInstances {
 		scopedInstanceName := instanceName
 		scopedDescriptor := descriptor
-		task.CollectibleField(scopedInstanceName,
-			instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), boolevator).Schema(),
-			func(node *node.Node) error {
-				parser := instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), boolevator)
-				parserInstance, err := parser.Parse(node)
-				if err != nil {
-					return err
-				}
-				anyInstance, err := anypb.New(parserInstance)
-				if err != nil {
-					return err
-				}
-				task.proto.Instance = anyInstance
-				task.proto.Environment = environment.Merge(
-					task.proto.Environment, map[string]string{
-						"CIRRUS_OS": instance.GuessPlatform(anyInstance, scopedDescriptor),
-					},
-				)
-				return nil
-			})
+
+		instanceSchema := instance.NewProtoParser(scopedDescriptor, nil, nil).Schema()
+		task.CollectibleField(scopedInstanceName, instanceSchema, func(node *node.Node) error {
+			parser := instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), boolevator)
+			parserInstance, err := parser.Parse(node)
+			if err != nil {
+				return err
+			}
+			anyInstance, err := anypb.New(parserInstance)
+			if err != nil {
+				return err
+			}
+			task.proto.Instance = anyInstance
+			task.proto.Environment = environment.Merge(
+				task.proto.Environment, map[string]string{
+					"CIRRUS_OS": instance.GuessPlatform(anyInstance, scopedDescriptor),
+				},
+			)
+			return nil
+		})
 	}
 
 	task.OptionalField(nameable.NewSimpleNameable("name"), schema.String(""), func(node *node.Node) error {

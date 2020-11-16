@@ -12,7 +12,7 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/bmatcuk/doublestar v1.3.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
-	github.com/cirruslabs/cirrus-ci-agent v1.16.0
+	github.com/cirruslabs/cirrus-ci-agent v1.20.0
 	github.com/cirruslabs/echelon v1.4.0
 	github.com/cirruslabs/podmanapi v0.1.0
 	github.com/containerd/containerd v1.4.1 // indirect
@@ -50,7 +50,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
-	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
+	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/yudai/gojsondiff v1.0.0
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect

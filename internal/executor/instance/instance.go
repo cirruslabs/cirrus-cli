@@ -69,7 +69,7 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 
 		return &PrebuiltInstance{
 			Image:      image,
-			Dockerfile: instance.DockerfilePath,
+			Dockerfile: instance.Dockerfile,
 			Arguments:  instance.Arguments,
 		}, nil
 	case *api.PersistentWorkerInstance:

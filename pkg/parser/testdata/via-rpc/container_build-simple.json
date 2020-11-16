@@ -21,7 +21,7 @@
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "cpu": 2,
-      "dockerfilePath": "ci/Dockerfile",
+      "dockerfile": "ci/Dockerfile",
       "image": "gcr.io/cirrus-ci-community/2906b436f40f094d79f1352b647c261d:latest",
       "memory": 4096
     },
@@ -69,7 +69,7 @@
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
-      "dockerfilePath": "ci/Dockerfile",
+      "dockerfile": "ci/Dockerfile",
       "reference": "latest",
       "repository": "cirrus-ci-community/2906b436f40f094d79f1352b647c261d"
     },

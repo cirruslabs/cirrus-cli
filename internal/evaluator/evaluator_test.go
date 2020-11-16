@@ -2,11 +2,14 @@ package evaluator_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/evaluator"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/xeipuuv/gojsonschema"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -17,7 +20,7 @@ import (
 	"testing"
 )
 
-func evaluateHelper(t *testing.T, request *api.EvaluateConfigRequest) (*api.EvaluateConfigResponse, error) {
+func getClient(t *testing.T) api.CirrusConfigurationEvaluatorServiceClient {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	lis, err := net.Listen("tcp", "localhost:0")
@@ -31,27 +34,28 @@ func evaluateHelper(t *testing.T, request *api.EvaluateConfigRequest) (*api.Eval
 		errChan <- evaluator.Serve(ctx, lis)
 	}()
 
-	defer func() {
+	t.Cleanup(func() {
 		cancel()
 
 		if err := <-errChan; err != nil && !errors.Is(err, context.Canceled) {
 			t.Fatal(err)
 		}
-	}()
+	})
 
 	conn, err := grpc.Dial(lis.Addr().String(), grpc.WithInsecure())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	client := api.NewCirrusConfigurationEvaluatorServiceClient(conn)
+	return api.NewCirrusConfigurationEvaluatorServiceClient(conn)
+}
 
-	response, err := client.EvaluateConfig(context.Background(), request)
-	if err != nil {
-		return nil, err
-	}
+func evaluateHelper(t *testing.T, request *api.EvaluateConfigRequest) (*api.EvaluateConfigResponse, error) {
+	return getClient(t).EvaluateConfig(context.Background(), request)
+}
 
-	return response, nil
+func schemaHelper(t *testing.T, request *api.JSONSchemaRequest) (*api.JSONSchemaResponse, error) {
+	return getClient(t).JSONSchema(context.Background(), request)
 }
 
 // TestCrossDependencies ensures that tasks declared in YAML and generated from Starlark can reference each other.
@@ -173,7 +177,7 @@ proto_task:
 
 	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
 		YamlConfig: yamlConfig,
-		AdditionalInstancesInfo: &api.EvaluateConfigRequest_AdditionalInstancesInfo{
+		AdditionalInstancesInfo: &api.AdditionalInstancesInfo{
 			Instances: map[string]string{
 				"proto_container": "org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
 			},
@@ -190,4 +194,30 @@ proto_task:
 	require.NoError(t, err)
 	require.Len(t, response.Tasks, 2)
 	require.JSONEq(t, protojson.Format(response.Tasks[0].Instance), protojson.Format(response.Tasks[1].Instance))
+}
+
+func TestSchemaHasFileMatch(t *testing.T) {
+	response, err := schemaHelper(t, &api.JSONSchemaRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var schemaObject map[string]interface{}
+	if err := json.Unmarshal([]byte(response.Schema), &schemaObject); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, []interface{}{".cirrus.yml"}, schemaObject["fileMatch"])
+}
+
+func TestSchemaValid(t *testing.T) {
+	response, err := schemaHelper(t, &api.JSONSchemaRequest{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	loader := gojsonschema.NewStringLoader(response.Schema)
+	if _, err := gojsonschema.NewSchema(loader); err != nil {
+		t.Fatal(err)
+	}
 }
