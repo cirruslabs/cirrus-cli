@@ -13,7 +13,7 @@ import (
 func TestRetrieveAgentBinary(t *testing.T) {
 	// Does it work?
 	firstPath, err := instance.RetrieveAgentBinary(context.Background(),
-		instance.AgentVersion, runtime.GOOS, runtime.GOARCH)
+		instance.DefaultAgentVersion, runtime.GOOS, runtime.GOARCH)
 	if err != nil {
 		t.Fatal()
 	}
@@ -26,7 +26,7 @@ func TestRetrieveAgentBinary(t *testing.T) {
 	cachedRetrievalStart := time.Now()
 
 	secondPath, err := instance.RetrieveAgentBinary(context.Background(),
-		instance.AgentVersion, runtime.GOOS, runtime.GOARCH)
+		instance.DefaultAgentVersion, runtime.GOOS, runtime.GOARCH)
 	if err != nil {
 		t.Fatal()
 	}
