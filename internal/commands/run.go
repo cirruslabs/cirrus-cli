@@ -71,8 +71,8 @@ func envArgsToMap(arguments []string) map[string]string {
 	return result
 }
 
-func readYAMLConfig() (string, error) {
-	yamlConfig, err := ioutil.ReadFile(".cirrus.yml")
+func readYAMLConfig(path string) (string, error) {
+	yamlConfig, err := ioutil.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return "", nil
@@ -83,17 +83,31 @@ func readYAMLConfig() (string, error) {
 	return string(yamlConfig), nil
 }
 
-func readStarlarkConfig(ctx context.Context, env map[string]string) (string, error) {
-	starlarkSource, err := ioutil.ReadFile(".cirrus.star")
+func readStarlarkConfig(ctx context.Context, path string, env map[string]string) (string, error) {
+	starlarkSource, err := ioutil.ReadFile(path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return "", nil
-		}
 		return "", err
 	}
 
 	lrk := larker.New(larker.WithFileSystem(local.New(".")), larker.WithEnvironment(env))
 	return lrk.Main(ctx, string(starlarkSource))
+}
+
+func readCombinedConfig(ctx context.Context, env map[string]string) (string, error) {
+	yamlConfig, err := readYAMLConfig(".cirrus.yml")
+	if err != nil {
+		return "", err
+	}
+
+	starlarkConfig, err := readStarlarkConfig(ctx, ".cirrus.star", env)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return yamlConfig, nil
+		}
+		return "", err
+	}
+
+	return yamlConfig + "\n" + starlarkConfig, nil
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -113,30 +127,23 @@ func run(cmd *cobra.Command, args []string) error {
 	)
 	userSpecifiedEnvironment := envArgsToMap(environment)
 
-	// Retrieve configurations and merge them
-	yamlConfig, err := readYAMLConfig()
+	// Retrieve the combined YAML configuration
+	combinedYAML, err := readCombinedConfig(cmd.Context(), eenvironment.Merge(baseEnvironment, userSpecifiedEnvironment))
 	if err != nil {
 		return err
 	}
-
-	starlarkConfig, err := readStarlarkConfig(cmd.Context(), eenvironment.Merge(baseEnvironment, userSpecifiedEnvironment))
-	if err != nil {
-		return err
-	}
-
-	mergedYAML := yamlConfig + "\n" + starlarkConfig
 
 	// Parse
 	var result *parser.Result
 	if experimentalParser {
 		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment))
-		result, err = p.Parse(cmd.Context(), mergedYAML)
+		result, err = p.Parse(cmd.Context(), combinedYAML)
 		if err != nil {
 			return err
 		}
 	} else {
 		p := rpcparser.Parser{Environment: userSpecifiedEnvironment}
-		r, err := p.Parse(mergedYAML)
+		r, err := p.Parse(combinedYAML)
 		if err != nil {
 			return err
 		}
