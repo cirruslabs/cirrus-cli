@@ -2,9 +2,10 @@
 
 [![Build Status](https://api.cirrus-ci.com/github/cirruslabs/cirrus-cli.svg?branch=master)](https://cirrus-ci.com/github/cirruslabs/cirrus-cli)
 
-Cirrus CLI is a tool for running containerized tasks reproducibly in any environment. Run your tasks locally the same way
-they are executed in CI or on your colleague's machine. Immutability of Docker containers ensures your project will compile
-years from now regardless what versions of packages you'll have locally.
+Cirrus CLI is a tool for running containerized tasks reproducibly in any environment. Most commonly, Cirrus tasks are used as part of continuous integration workflows 
+but can also be used as part of local development process as a [hermetic replacement of helper scripts/Makefiles](https://medium.com/cirruslabs/using-cirrus-cli-instead-of-makefiles-for-generating-grpc-87b949a67449).
+Cirrus CLI runs your tasks locally the same way they are executed in CI or on your colleague's machine. Immutability of containers ensures
+the tasks will be executed the same way years from now regardless what versions of packages you'll have locally.
 
 ![Cirrus CLI Demo](images/cirrus-cli-demo.gif)
 
