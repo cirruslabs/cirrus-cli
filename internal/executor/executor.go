@@ -141,6 +141,11 @@ func (e *Executor) Run(ctx context.Context) error {
 			ContainerOptions:  e.containerOptions,
 		}
 
+		// Respect custom agent version
+		if agentVersionFromEnv, ok := task.Environment["CIRRUS_AGENT_VERSION"]; ok {
+			instanceRunOpts.SetAgentVersion(agentVersionFromEnv)
+		}
+
 		// Wrap the context to enforce a timeout for this task
 		ctx, cancel := context.WithTimeout(ctx, task.Timeout)
 

@@ -42,7 +42,7 @@ func NewPersistentWorkerInstance() (*PersistentWorkerInstance, error) {
 
 func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *RunConfig) (err error) {
 	// Retrieve the agent's binary
-	agentPath, err := RetrieveAgentBinary(ctx, AgentVersion, runtime.GOOS, runtime.GOARCH)
+	agentPath, err := RetrieveAgentBinary(ctx, config.GetAgentVersion(), runtime.GOOS, runtime.GOARCH)
 	if err != nil {
 		return err
 	}

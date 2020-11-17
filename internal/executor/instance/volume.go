@@ -15,11 +15,11 @@ var (
 )
 
 const (
-	// AgentVersion represents the version of the https://github.com/cirruslabs/cirrus-ci-agent to use.
-	AgentVersion = "1.18.1"
+	// DefaultAgentVersion represents the default version of the https://github.com/cirruslabs/cirrus-ci-agent to use.
+	DefaultAgentVersion = "1.18.1"
 
-	// AgentImage is the image we'll use to create a working volume.
-	AgentImage = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v" + AgentVersion
+	// AgentImageBase is used as a prefix to the agent's version to craft the full agent image name.
+	AgentImageBase = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v"
 
 	// Where working volume is mounted to.
 	WorkingVolumeMountpoint = "/tmp/cirrus-ci"
@@ -40,7 +40,8 @@ func CreateWorkingVolumeFromConfig(ctx context.Context, config *RunConfig) (*Vol
 	initLogger := config.Logger.Scoped("Preparing execution environment...")
 	initLogger.Infof("Preparing volume to work with...")
 	desiredVolumeName := fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String())
-	v, err := CreateWorkingVolume(ctx, config.ContainerBackend, desiredVolumeName, config.ProjectDir, config.DirtyMode)
+	v, err := CreateWorkingVolume(ctx, config.ContainerBackend, desiredVolumeName,
+		config.ProjectDir, config.DirtyMode, config.GetAgentVersion())
 	if err != nil {
 		initLogger.Warnf("Failed to create a volume from working directory: %v", err)
 		initLogger.Finish(false)
@@ -57,9 +58,12 @@ func CreateWorkingVolume(
 	name string,
 	projectDir string,
 	dontPopulate bool,
+	agentVersion string,
 ) (vol *Volume, err error) {
+	agentImage := AgentImageBase + agentVersion
+
 	// Retrieve the latest agent image
-	if err := backend.ImagePull(ctx, AgentImage); err != nil {
+	if err := backend.ImagePull(ctx, agentImage); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
@@ -85,7 +89,7 @@ func CreateWorkingVolume(
 	}
 
 	input := &containerbackend.ContainerCreateInput{
-		Image:   AgentImage,
+		Image:   agentImage,
 		Command: []string{"/bin/sh", "-c", copyCmd},
 		Mounts: []containerbackend.ContainerMount{
 			{

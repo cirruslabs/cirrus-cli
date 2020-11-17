@@ -25,6 +25,7 @@ func TestWorkingVolumeSmoke(t *testing.T) {
 		desiredVolumeName,
 		dir,
 		false,
+		instance.DefaultAgentVersion,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -47,6 +48,7 @@ func TestCleanupOnFailure(t *testing.T) {
 		desiredVolumeName,
 		"/non-existent",
 		false,
+		instance.DefaultAgentVersion,
 	)
 	require.Error(t, err)
 

@@ -89,6 +89,19 @@ type RunConfig struct {
 	Logger                     *echelon.Logger
 	DirtyMode                  bool
 	ContainerOptions           options.ContainerOptions
+	agentVersion               string
+}
+
+func (rc *RunConfig) GetAgentVersion() string {
+	if rc.agentVersion == "" {
+		return DefaultAgentVersion
+	}
+
+	return rc.agentVersion
+}
+
+func (rc *RunConfig) SetAgentVersion(agentVersion string) {
+	rc.agentVersion = agentVersion
 }
 
 type Params struct {
