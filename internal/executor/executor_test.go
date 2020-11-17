@@ -369,3 +369,26 @@ func TestPersistentWorker(t *testing.T) {
 	assert.Contains(t, buf.String(), "'show' script succeeded")
 	assert.Contains(t, buf.String(), "'check' script succeeded")
 }
+
+// TestCirrusWorkingDir ensures that CIRRUS_WORKING_DIR environment variable is respected.
+func TestCirrusWorkingDir(t *testing.T) {
+	// Create a logger and attach it to writer
+	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	dir := testutil.TempDirPopulatedWith(t, "testdata/custom-cirrus-working-dir")
+	err := testutil.ExecuteWithOptionsNew(t, dir, executor.WithLogger(logger))
+	assert.NoError(t, err)
+}
+
+// TestDirtyCirrusWorkingDir ensures that CIRRUS_WORKING_DIR environment variable is respected
+// when running in --dirty mode.
+func TestCirrusWorkingDirDirty(t *testing.T) {
+	// Create a logger and attach it to writer
+	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	dir := testutil.TempDirPopulatedWith(t, "testdata/custom-cirrus-working-dir")
+	err := testutil.ExecuteWithOptionsNew(t, dir, executor.WithLogger(logger), executor.WithDirtyMode())
+	assert.NoError(t, err)
+}

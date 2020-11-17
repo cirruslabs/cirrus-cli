@@ -99,12 +99,10 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 			e.containerOptions.NoPullImages = append(e.containerOptions.NoPullImages, prebuiltInstance.Image)
 		}
 
-		// Set task's working directory based on it's instance (if not overridden by the user)
-		if _, ok := e.userSpecifiedEnvironment["CIRRUS_WORKING_DIR"]; !ok {
-			task.Environment = environment.Merge(task.Environment, map[string]string{
-				"CIRRUS_WORKING_DIR": task.Instance.WorkingDirectory(projectDir, e.dirtyMode),
-			})
-		}
+		// If not set by the user, set task's working directory based on it's instance
+		task.Environment = environment.Merge(map[string]string{
+			"CIRRUS_WORKING_DIR": task.Instance.WorkingDirectory(projectDir, e.dirtyMode),
+		}, task.Environment)
 	}
 
 	return e, nil
