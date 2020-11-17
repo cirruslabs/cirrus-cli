@@ -1,0 +1,9 @@
+task:
+  container:
+    image: debian:latest
+  big_gap_script:
+    - echo -en "big gap incoming\n\nwe're still alive\n"
+  no_newline_script:
+    - echo -en "no newline in the output"
+  double_script:
+    - echo -en "double newline in the output\n\n"

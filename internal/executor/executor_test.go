@@ -392,3 +392,23 @@ func TestCirrusWorkingDirDirty(t *testing.T) {
 	err := testutil.ExecuteWithOptionsNew(t, dir, executor.WithLogger(logger), executor.WithDirtyMode())
 	assert.NoError(t, err)
 }
+
+// TestLoggingNoExtraNewlines ensures that we don't insert unnecessary
+// empty newlines when printing log stream from the agent.
+func TestLoggingNoExtraNewlines(t *testing.T) {
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	// Create a logger and attach it to writer
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.InfoLevel, renderer)
+
+	dir := testutil.TempDirPopulatedWith(t, "testdata/logging-no-extra-newlines")
+	err := testutil.ExecuteWithOptionsNew(t, dir, executor.WithLogger(logger))
+	assert.NoError(t, err)
+
+	assert.Contains(t, buf.String(), "big gap incoming\n\nwe're still alive\n\x1b[32m'big_gap' script succeeded")
+	assert.Contains(t, buf.String(), "no newline in the output\n\x1b[32m'no_newline' script succeeded")
+	assert.Contains(t, buf.String(), "double newline in the output\n\n\x1b[32m'double' script succeeded")
+}
