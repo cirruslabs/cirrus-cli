@@ -260,7 +260,12 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 
 			streamLogger.Debugf("received log chunk of %d bytes", len(x.Chunk.Data))
 
-			logLines := strings.Split(string(x.Chunk.Data), "\n")
+			// Ignore the newline at the end of the chunk,
+			// echelon's Infof() below already adds one
+			log := strings.TrimSuffix(string(x.Chunk.Data), "\n")
+
+			logLines := strings.Split(log, "\n")
+
 			for _, logLine := range logLines {
 				streamLogger.Infof(logLine)
 			}
