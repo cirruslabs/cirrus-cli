@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/internal"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/validate"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/spf13/cobra"
@@ -16,7 +17,7 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	commands := []*cobra.Command{
-		newValidateCmd(),
+		validate.NewValidateCmd(),
 		newRunCmd(),
 		newServeCmd(),
 		internal.NewRootCmd(),

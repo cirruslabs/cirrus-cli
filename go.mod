@@ -54,7 +54,7 @@ require (
 	github.com/yudai/gojsondiff v1.0.0
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
-	go.starlark.net v0.0.0-20201014215153-dff0ae5b4820
+	go.starlark.net v0.0.0-20201118183435-e55f603d8c79
 	golang.org/x/net v0.0.0-20201022231255-08b38378de70 // indirect
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 	golang.org/x/sys v0.0.0-20201022201747-fb209a7c41cd // indirect
