@@ -71,7 +71,7 @@ func ReadYAMLConfig(path string) (string, error) {
 	return string(yamlConfig), nil
 }
 
-func ReadStarlarkConfig(ctx context.Context, path string, env map[string]string) (string, error) {
+func EvaluateStarlarkConfig(ctx context.Context, path string, env map[string]string) (string, error) {
 	starlarkSource, err := ioutil.ReadFile(path)
 	if err != nil {
 		return "", err
@@ -87,7 +87,7 @@ func ReadCombinedConfig(ctx context.Context, env map[string]string) (string, err
 		return "", err
 	}
 
-	starlarkConfig, err := ReadStarlarkConfig(ctx, ".cirrus.star", env)
+	starlarkConfig, err := EvaluateStarlarkConfig(ctx, ".cirrus.star", env)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return yamlConfig, nil

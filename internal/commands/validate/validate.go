@@ -53,7 +53,7 @@ func validate(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	case strings.HasSuffix(validateFile, ".star"):
-		configuration, err = helpers.ReadStarlarkConfig(cmd.Context(), validateFile, resultingEnvironment)
+		configuration, err = helpers.EvaluateStarlarkConfig(cmd.Context(), validateFile, resultingEnvironment)
 		if err != nil {
 			return err
 		}
