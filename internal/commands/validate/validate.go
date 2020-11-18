@@ -1,8 +1,9 @@
-package commands
+package validate
 
 import (
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	eenvironment "github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
@@ -14,7 +15,13 @@ import (
 
 var ErrValidate = errors.New("validate failed")
 
+// General flags.
 var validateFile string
+var environment []string
+
+// Experimental features flags.
+var experimentalParser bool
+
 var yaml bool
 
 func validate(cmd *cobra.Command, args []string) error {
@@ -27,7 +34,7 @@ func validate(cmd *cobra.Command, args []string) error {
 		eenvironment.BuildID(),
 		eenvironment.ProjectSpecific("."),
 	)
-	userSpecifiedEnvironment := envArgsToMap(environment)
+	userSpecifiedEnvironment := helpers.EnvArgsToMap(environment)
 	resultingEnvironment := eenvironment.Merge(baseEnvironment, userSpecifiedEnvironment)
 
 	// Retrieve a combined YAML configuration or a specific one if asked to
@@ -36,17 +43,17 @@ func validate(cmd *cobra.Command, args []string) error {
 
 	switch {
 	case validateFile == "":
-		configuration, err = readCombinedConfig(cmd.Context(), resultingEnvironment)
+		configuration, err = helpers.ReadCombinedConfig(cmd.Context(), resultingEnvironment)
 		if err != nil {
 			return err
 		}
 	case strings.HasSuffix(validateFile, ".yml"):
-		configuration, err = readYAMLConfig(validateFile)
+		configuration, err = helpers.ReadYAMLConfig(validateFile)
 		if err != nil {
 			return err
 		}
 	case strings.HasSuffix(validateFile, ".star"):
-		configuration, err = readStarlarkConfig(cmd.Context(), validateFile, resultingEnvironment)
+		configuration, err = helpers.ReadStarlarkConfig(cmd.Context(), validateFile, resultingEnvironment)
 		if err != nil {
 			return err
 		}
@@ -92,7 +99,7 @@ func validate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func newValidateCmd() *cobra.Command {
+func NewValidateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate Cirrus CI configuration file",
