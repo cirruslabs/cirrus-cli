@@ -105,6 +105,10 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 	// starlark.Dict's to yaml.MapSlice's to make them YAML-serializable
 	yamlList := convertList(starlarkList)
 
+	if len(yamlList) == 0 {
+		return "", nil
+	}
+
 	// Adapt a list of tasks to a YAML configuration format that expects a map on it's outer layer
 	var serializableMainResult yaml.MapSlice
 	for _, listItem := range yamlList {
