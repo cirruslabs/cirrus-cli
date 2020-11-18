@@ -15,6 +15,10 @@ var (
 	name       string
 	token      string
 	labels     map[string]string
+
+	// RPC-related variables.
+	rpcEndpointAddress  string
+	rpcEndpointInsecure bool
 )
 
 func run(cmd *cobra.Command, args []string) error {
@@ -26,11 +30,21 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	worker, err := worker.New(
+	opts := []worker.Option{
 		worker.WithName(viper.GetString("name")),
 		worker.WithRegistrationToken(viper.GetString("token")),
 		worker.WithLabels(viper.GetStringMapString("labels")),
-	)
+	}
+
+	if rpcEndpointAddress != "" {
+		opts = append(opts, worker.WithRPCEndpoint(rpcEndpointAddress))
+	}
+
+	if rpcEndpointInsecure {
+		opts = append(opts, worker.WithRPCInsecure())
+	}
+
+	worker, err := worker.New(opts...)
 	if err != nil {
 		return err
 	}
@@ -60,6 +74,15 @@ func NewRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringToStringVar(&labels, "labels", map[string]string{},
 		"additional labels to use (e.g. --labels distro=debian)")
 	_ = viper.BindPFlag("labels", cmd.PersistentFlags().Lookup("labels"))
+
+	// RPC-related variables
+	cmd.PersistentFlags().StringVar(&rpcEndpointAddress, "rpc-endpoint", worker.DefaultRPCEndpoint, "RPC endpoint address")
+	_ = viper.BindPFlag("rpc.endpoint", cmd.PersistentFlags().Lookup("rpc-endpoint"))
+	_ = cmd.PersistentFlags().MarkHidden("rpc-endpoint")
+
+	cmd.PersistentFlags().BoolVar(&rpcEndpointInsecure, "rpc-insecure", false, "don't use secure RPC endpoint connection")
+	_ = viper.BindPFlag("rpc.insecure", cmd.PersistentFlags().Lookup("rpc-insecure"))
+	_ = cmd.PersistentFlags().MarkHidden("rpc-insecure")
 
 	return cmd
 }

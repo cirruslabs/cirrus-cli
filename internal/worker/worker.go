@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	defaultRPCEndpoint         = "grpc.cirrus-ci.com:443"
+	DefaultRPCEndpoint         = "grpc.cirrus-ci.com:443"
 	defaultPollIntervalSeconds = 10
 )
 
@@ -46,7 +46,7 @@ type Worker struct {
 
 func New(opts ...Option) (*Worker, error) {
 	worker := &Worker{
-		rpcEndpoint: defaultRPCEndpoint,
+		rpcEndpoint: DefaultRPCEndpoint,
 
 		userSpecifiedLabels: make(map[string]string),
 		pollIntervalSeconds: defaultPollIntervalSeconds,
