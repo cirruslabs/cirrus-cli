@@ -26,7 +26,7 @@ func TestSugarCoatedTask(t *testing.T) {
 	validateExpected(t, "testdata/sugar-coated-task")
 }
 
-// TestNoTasks ensures that .cirrus.star that return empty list still generates valid YAML
+// TestNoTasks ensures that .cirrus.star that return empty list still generates valid YAML.
 func TestNoTasks(t *testing.T) {
 	validateExpected(t, "testdata/no-tasks")
 }
