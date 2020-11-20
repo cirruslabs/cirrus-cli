@@ -92,13 +92,13 @@ func ReadCombinedConfig(ctx context.Context, env map[string]string) (string, err
 		}
 
 		yamlConfig, yamlErr = ReadYAMLConfig(".cirrus.yml")
-		if !os.IsNotExist(yamlErr) {
+		if yamlErr != nil && !os.IsNotExist(yamlErr) {
 			return "", yamlErr
 		}
 	}
 
 	starlarkConfig, starlarkErr := EvaluateStarlarkConfig(ctx, ".cirrus.star", env)
-	if !os.IsNotExist(starlarkErr) {
+	if starlarkErr != nil && !os.IsNotExist(starlarkErr) {
 		return "", starlarkErr
 	}
 
