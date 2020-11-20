@@ -149,7 +149,7 @@ func (r *ConfigurationEvaluatorServiceServer) JSONSchema(
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	schema["fileMatch"] = []string{".cirrus.yml"}
+	schema["fileMatch"] = []string{".cirrus.yml", ".cirrus.yaml"}
 
 	schemaBytes, err = json.Marshal(&schema)
 	if err != nil {

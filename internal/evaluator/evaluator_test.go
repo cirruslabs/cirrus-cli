@@ -207,7 +207,7 @@ func TestSchemaHasFileMatch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, []interface{}{".cirrus.yml"}, schemaObject["fileMatch"])
+	assert.Equal(t, []interface{}{".cirrus.yml", ".cirrus.yaml"}, schemaObject["fileMatch"])
 }
 
 func TestSchemaValid(t *testing.T) {

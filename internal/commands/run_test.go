@@ -287,3 +287,18 @@ func TestRunNoCleanup(t *testing.T) {
 		}
 	}
 }
+
+// TestRunNonStandardExtension ensures that we support .cirrus.yaml files.
+func TestRunNonStandardExtension(t *testing.T) {
+	testutil.TempChdir(t)
+
+	if err := ioutil.WriteFile(".cirrus.yaml", validConfig, 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-v", "-o simple"})
+	err := command.Execute()
+
+	assert.Nil(t, err)
+}

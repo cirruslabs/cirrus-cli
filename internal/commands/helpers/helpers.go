@@ -83,7 +83,13 @@ func EvaluateStarlarkConfig(ctx context.Context, path string, env map[string]str
 }
 
 func ReadCombinedConfig(ctx context.Context, env map[string]string) (string, error) {
-	yamlConfig, yamlErr := ReadYAMLConfig(".cirrus.yml")
+	// Here we read the .cirrus.yaml first so that if the error would arise
+	// and will be inspected it would indicate the preferable extension
+	yamlConfig, yamlErr := ReadYAMLConfig(".cirrus.yaml")
+	if yamlErr != nil {
+		yamlConfig, yamlErr = ReadYAMLConfig(".cirrus.yml")
+	}
+
 	starlarkConfig, starlarkErr := EvaluateStarlarkConfig(ctx, ".cirrus.star", env)
 
 	switch {
