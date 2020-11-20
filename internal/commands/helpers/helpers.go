@@ -2,6 +2,8 @@ package helpers
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/spf13/cobra"
@@ -9,6 +11,8 @@ import (
 	"os"
 	"strings"
 )
+
+var ErrConfigurationReadFailed = errors.New("failed to read configuration")
 
 func ConsumeSubCommands(cmd *cobra.Command, subCommands []*cobra.Command) *cobra.Command {
 	var hasValidSubcommands bool
@@ -62,9 +66,6 @@ func EnvArgsToMap(arguments []string) map[string]string {
 func ReadYAMLConfig(path string) (string, error) {
 	yamlConfig, err := ioutil.ReadFile(path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return "", nil
-		}
 		return "", err
 	}
 
@@ -82,18 +83,18 @@ func EvaluateStarlarkConfig(ctx context.Context, path string, env map[string]str
 }
 
 func ReadCombinedConfig(ctx context.Context, env map[string]string) (string, error) {
-	yamlConfig, err := ReadYAMLConfig(".cirrus.yml")
-	if err != nil {
-		return "", err
-	}
+	yamlConfig, yamlErr := ReadYAMLConfig(".cirrus.yml")
+	starlarkConfig, starlarkErr := EvaluateStarlarkConfig(ctx, ".cirrus.star", env)
 
-	starlarkConfig, err := EvaluateStarlarkConfig(ctx, ".cirrus.star", env)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return yamlConfig, nil
-		}
-		return "", err
+	switch {
+	case yamlErr == nil && starlarkErr == nil:
+		return yamlConfig + "\n" + starlarkConfig, nil
+	case yamlErr == nil:
+		return yamlConfig, nil
+	case starlarkErr == nil:
+		return starlarkConfig, nil
+	default:
+		return "", fmt.Errorf("%w: neither .cirrus.yml (%s) nor .cirrus.star were accessile (%s)",
+			ErrConfigurationReadFailed, yamlErr, starlarkErr)
 	}
-
-	return yamlConfig + "\n" + starlarkConfig, nil
 }
