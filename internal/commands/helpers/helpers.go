@@ -110,7 +110,7 @@ func ReadCombinedConfig(ctx context.Context, env map[string]string) (string, err
 	case starlarkErr == nil:
 		return starlarkConfig, nil
 	default:
-		return "", fmt.Errorf("%w: neither .cirrus.yml (%s) nor .cirrus.star were accessile (%s)",
+		return "", fmt.Errorf("%w: neither .cirrus.yml (%s) nor .cirrus.star were accessible (%s)",
 			ErrConfigurationReadFailed, yamlErr, starlarkErr)
 	}
 }
