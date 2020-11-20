@@ -17,8 +17,7 @@ var (
 	labels     map[string]string
 
 	// RPC-related variables.
-	rpcEndpointAddress  string
-	rpcEndpointInsecure bool
+	rpcEndpointAddress string
 )
 
 func run(cmd *cobra.Command, args []string) error {
@@ -38,10 +37,6 @@ func run(cmd *cobra.Command, args []string) error {
 
 	if rpcEndpointAddress != "" {
 		opts = append(opts, worker.WithRPCEndpoint(rpcEndpointAddress))
-	}
-
-	if rpcEndpointInsecure {
-		opts = append(opts, worker.WithRPCInsecure())
 	}
 
 	worker, err := worker.New(opts...)
@@ -79,10 +74,6 @@ func NewRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&rpcEndpointAddress, "rpc-endpoint", worker.DefaultRPCEndpoint, "RPC endpoint address")
 	_ = viper.BindPFlag("rpc.endpoint", cmd.PersistentFlags().Lookup("rpc-endpoint"))
 	_ = cmd.PersistentFlags().MarkHidden("rpc-endpoint")
-
-	cmd.PersistentFlags().BoolVar(&rpcEndpointInsecure, "rpc-insecure", false, "don't use secure RPC endpoint connection")
-	_ = viper.BindPFlag("rpc.insecure", cmd.PersistentFlags().Lookup("rpc-insecure"))
-	_ = cmd.PersistentFlags().MarkHidden("rpc-insecure")
 
 	return cmd
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-ci-agent/pkg/grpchelper"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -17,7 +18,7 @@ import (
 )
 
 const (
-	DefaultRPCEndpoint         = "grpc.cirrus-ci.com:443"
+	DefaultRPCEndpoint         = "https://grpc.cirrus-ci.com:443"
 	defaultPollIntervalSeconds = 10
 )
 
@@ -28,6 +29,7 @@ var (
 
 type Worker struct {
 	rpcEndpoint string
+	rpcTarget   string
 	rpcInsecure bool
 	rpcClient   api.CirrusWorkersServiceClient
 
@@ -61,6 +63,9 @@ func New(opts ...Option) (*Worker, error) {
 	for _, opt := range opts {
 		opt(worker)
 	}
+
+	// Parse endpoint
+	worker.rpcTarget, worker.rpcInsecure = grpchelper.TransportSettings(worker.rpcEndpoint)
 
 	if worker.registrationToken == "" {
 		return nil, fmt.Errorf("%w: must provide a registration token", ErrWorker)
@@ -123,7 +128,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 	}
 
 	// https://github.com/grpc/grpc-go/blob/master/Documentation/concurrency.md
-	conn, err := grpc.DialContext(subCtx, worker.rpcEndpoint, rpcSecurity)
+	conn, err := grpc.DialContext(subCtx, worker.rpcTarget, rpcSecurity)
 	if err != nil {
 		worker.logger.Errorf("failed to dial %s: %v", worker.rpcEndpoint, err)
 	}
