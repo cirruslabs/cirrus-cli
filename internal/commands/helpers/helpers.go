@@ -2,6 +2,8 @@ package helpers
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/spf13/cobra"
@@ -9,6 +11,8 @@ import (
 	"os"
 	"strings"
 )
+
+var ErrConfigurationReadFailed = errors.New("failed to read configuration")
 
 func ConsumeSubCommands(cmd *cobra.Command, subCommands []*cobra.Command) *cobra.Command {
 	var hasValidSubcommands bool
@@ -62,9 +66,6 @@ func EnvArgsToMap(arguments []string) map[string]string {
 func ReadYAMLConfig(path string) (string, error) {
 	yamlConfig, err := ioutil.ReadFile(path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return "", nil
-		}
 		return "", err
 	}
 
@@ -82,18 +83,34 @@ func EvaluateStarlarkConfig(ctx context.Context, path string, env map[string]str
 }
 
 func ReadCombinedConfig(ctx context.Context, env map[string]string) (string, error) {
-	yamlConfig, err := ReadYAMLConfig(".cirrus.yml")
-	if err != nil {
-		return "", err
-	}
-
-	starlarkConfig, err := EvaluateStarlarkConfig(ctx, ".cirrus.star", env)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return yamlConfig, nil
+	// Here we read the .cirrus.yaml first so that if the error would arise
+	// and will be inspected it would indicate the preferable extension
+	yamlConfig, yamlErr := ReadYAMLConfig(".cirrus.yaml")
+	if yamlErr != nil {
+		if !os.IsNotExist(yamlErr) {
+			return "", yamlErr
 		}
-		return "", err
+
+		yamlConfig, yamlErr = ReadYAMLConfig(".cirrus.yml")
+		if yamlErr != nil && !os.IsNotExist(yamlErr) {
+			return "", yamlErr
+		}
 	}
 
-	return yamlConfig + "\n" + starlarkConfig, nil
+	starlarkConfig, starlarkErr := EvaluateStarlarkConfig(ctx, ".cirrus.star", env)
+	if starlarkErr != nil && !os.IsNotExist(starlarkErr) {
+		return "", starlarkErr
+	}
+
+	switch {
+	case yamlErr == nil && starlarkErr == nil:
+		return yamlConfig + "\n" + starlarkConfig, nil
+	case yamlErr == nil:
+		return yamlConfig, nil
+	case starlarkErr == nil:
+		return starlarkConfig, nil
+	default:
+		return "", fmt.Errorf("%w: neither .cirrus.yml (%s) nor .cirrus.star were accessible (%s)",
+			ErrConfigurationReadFailed, yamlErr, starlarkErr)
+	}
 }

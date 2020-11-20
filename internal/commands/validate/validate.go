@@ -47,7 +47,7 @@ func validate(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-	case strings.HasSuffix(validateFile, ".yml"):
+	case strings.HasSuffix(validateFile, ".yml") || strings.HasSuffix(validateFile, ".yaml"):
 		configuration, err = helpers.ReadYAMLConfig(validateFile)
 		if err != nil {
 			return err

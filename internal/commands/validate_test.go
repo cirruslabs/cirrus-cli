@@ -49,3 +49,17 @@ func TestValidateFileArgHasFile(t *testing.T) {
 
 	assert.Nil(t, err)
 }
+
+func TestValidateNoArgsHasFileWithNonStandardExtension(t *testing.T) {
+	testutil.TempChdir(t)
+
+	if err := ioutil.WriteFile(".cirrus.yaml", validConfig, 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"validate", ""})
+	err := command.Execute()
+
+	assert.Nil(t, err)
+}
