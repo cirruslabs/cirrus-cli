@@ -76,8 +76,7 @@ func TestWorker(t *testing.T) {
 	// Start the worker
 	worker, err := worker.New(
 		worker.WithRegistrationToken(registrationToken),
-		worker.WithRPCEndpoint(lis.Addr().String()),
-		worker.WithRPCInsecure(),
+		worker.WithRPCEndpoint("http://"+lis.Addr().String()),
 	)
 	if err != nil {
 		t.Fatal(err)

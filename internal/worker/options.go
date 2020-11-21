@@ -25,9 +25,3 @@ func WithRPCEndpoint(rpcEndpoint string) Option {
 		e.rpcEndpoint = rpcEndpoint
 	}
 }
-
-func WithRPCInsecure() Option {
-	return func(e *Worker) {
-		e.rpcInsecure = true
-	}
-}

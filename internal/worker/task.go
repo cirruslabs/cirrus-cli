@@ -35,15 +35,10 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			return
 		}
 
-		rpcPrefix := "https://"
-		if worker.rpcInsecure {
-			rpcPrefix = "http://"
-		}
-
 		if err := inst.Run(taskCtx, &instance.RunConfig{
 			ProjectDir:        "",
-			ContainerEndpoint: rpcPrefix + worker.rpcEndpoint,
-			DirectEndpoint:    rpcPrefix + worker.rpcEndpoint,
+			ContainerEndpoint: worker.rpcEndpoint,
+			DirectEndpoint:    worker.rpcEndpoint,
 			ServerSecret:      agentAwareTask.ServerSecret,
 			ClientSecret:      agentAwareTask.ClientSecret,
 			TaskID:            agentAwareTask.TaskId,
