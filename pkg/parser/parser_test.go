@@ -166,7 +166,37 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 		t.Fatal(localResult.Errors)
 	}
 
-	assert.JSONEq(t, string(fixtureBytes), string(testutil.TasksToJSON(t, localResult.Tasks)))
+	// Compare two schemas
+	var referenceArray []interface{}
+	if err := json.Unmarshal(fixtureBytes, &referenceArray); err != nil {
+		t.Fatal(err)
+	}
+
+	var ourArray []interface{}
+	if err := json.Unmarshal(testutil.TasksToJSON(t, localResult.Tasks), &ourArray); err != nil {
+		t.Fatal(err)
+	}
+
+	differ := gojsondiff.New()
+	d := differ.CompareArrays(referenceArray, ourArray)
+
+	if d.Modified() {
+		var diffString string
+
+		config := formatter.AsciiFormatterConfig{
+			ShowArrayIndex: true,
+			Coloring:       true,
+		}
+
+		diffString, err = formatter.NewAsciiFormatter(referenceArray, config).Format(d)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fmt.Print(diffString)
+
+		t.Fail()
+	}
 }
 
 func viaRPCCreateJSONFixture(t *testing.T, yamlBytes []byte, fixturePath string, envPath string, fcPath string) {
