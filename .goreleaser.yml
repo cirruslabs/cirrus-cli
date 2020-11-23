@@ -21,6 +21,8 @@ builds:
       - amd64
       - arm
       - arm64
+      - s390x
+      - ppc64le
 
 archives:
   - id: binary
