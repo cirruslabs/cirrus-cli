@@ -292,7 +292,6 @@ func TestSchema(t *testing.T) {
 	}
 
 	// Remove cloud instances from the reference schema since they're not present in our schema
-	delete(referenceObject["patternProperties"].(map[string]interface{}), "^(.*)docker_builder$")
 	delete(referenceObject["patternProperties"].(map[string]interface{}), "^(.*)gke_pipe$")
 
 	ignoredInstances := []string{

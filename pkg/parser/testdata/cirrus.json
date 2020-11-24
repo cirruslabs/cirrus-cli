@@ -670,7 +670,8 @@
           "type": "string"
         },
         "use_static_ip": {
-          "type": "boolean"
+          "description": "Boolean expression that can use environment variables.",
+          "type": "string"
         }
       },
       "type": "object"
@@ -2774,7 +2775,8 @@
               "type": "string"
             },
             "use_static_ip": {
-              "type": "boolean"
+              "description": "Boolean expression that can use environment variables.",
+              "type": "string"
             }
           },
           "type": "object"
@@ -4072,7 +4074,8 @@
           "type": "string"
         },
         "use_static_ip": {
-          "type": "boolean"
+          "description": "Boolean expression that can use environment variables.",
+          "type": "string"
         }
       },
       "type": "object"

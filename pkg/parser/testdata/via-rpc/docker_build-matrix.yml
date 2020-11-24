@@ -1,0 +1,17 @@
+docker_builder:
+  matrix:
+    - name: android
+      environment:
+        TARGET: android
+    - name: bazel
+      environment:
+        TARGET: bazel
+    - name: flutter
+      depends_on: android
+      environment:
+        TARGET: flutter
+    - name: windows
+      platform: windows
+      os_version: 1803
+  build_script: ./$TARGET/build_docker.sh
+  push_script: ./$TARGET/push_docker.sh

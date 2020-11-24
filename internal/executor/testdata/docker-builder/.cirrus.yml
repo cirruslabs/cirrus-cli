@@ -1,0 +1,4 @@
+linux_docker_builder:
+  platform: linux
+  script:
+    - echo "I am running inside Docker Builder!"
