@@ -87,7 +87,7 @@ task:
 
 task:
   name: Release Apple Silicon
-  only_if: $CIRRUS_TAG != ''
+  only_if: $CIRRUS_RELEASE != ''
   depends_on: Release
   env:
     GITHUB_TOKEN: ENCRYPTED[!98ace8259c6024da912c14d5a3c5c6aac186890a8d4819fad78f3e0c41a4e0cd3a2537dd6e91493952fb056fa434be7c!]
@@ -97,4 +97,4 @@ task:
         --data-binary @cirrus-darwin-arm64 \
         --header "Authorization: token $GITHUB_TOKEN" \
         --header "Content-Type: application/octet-stream" \
-        https://uploads.github.com/repos/$CIRRUS_REPO_FULL_NAME/releases/$CIRRUS_TAG/assets?name=cirrus-darwin-arm64
+        https://uploads.github.com/repos/$CIRRUS_REPO_FULL_NAME/releases/$CIRRUS_RELEASE/assets?name=cirrus-darwin-arm64
