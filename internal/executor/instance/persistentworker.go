@@ -128,8 +128,8 @@ func RetrieveAgentBinary(
 	}
 
 	// Download the agent
-	agentURL := fmt.Sprintf("https://github.com/cirruslabs/cirrus-ci-agent/releases/download/v%s/agent_%s_%s_%s%s",
-		agentVersion, agentVersion, runtime.GOOS, runtime.GOARCH, agentSuffix)
+	agentURL := fmt.Sprintf("https://github.com/cirruslabs/cirrus-ci-agent/releases/download/v%s/agent-%s-%s%s",
+		agentVersion, runtime.GOOS, runtime.GOARCH, agentSuffix)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", agentURL, http.NoBody)
 	if err != nil {
