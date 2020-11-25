@@ -41,21 +41,60 @@ docker_builder:
 
 task:
   name: Release (Dry Run)
-  only_if: $CIRRUS_PR != ''
-  depends_on:
-    - Lint
-    - Tests
+  only_if: $CIRRUS_TAG == ''
   container:
     image: goreleaser/goreleaser:latest
   release_script: goreleaser build --snapshot
   binaries_artifacts:
     path: "dist/cirrus_*/cirrus*"
 
+apple_silicon: &APPLE_SILICON_BUILD
+  osx_instance:
+    image: catalina-xcode
+  env:
+    GOPATH: $HOME/go
+    PATH: $GOPATH/bin:$PATH
+  install_script:
+    - brew update
+    - brew install go
+  gotip_script:
+    - go get golang.org/dl/gotip
+    - gotip download
+    - gotip version
+  build_script:
+    - CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 gotip build -o cirrus-darwin-arm64 -ldflags "-X github.com/cirruslabs/cirrus-cli/internal/version.Version=$CIRRUS_TAG" cmd/cirrus/main.go
+  sign_script:
+    - codesign --sign - cirrus-darwin-arm64
+
+task:
+  name: Release Apple Silicon (Dry Run)
+  only_if: $CIRRUS_TAG == ''
+  << : *APPLE_SILICON_BUILD
+  binary_artifacts:
+    path: cirrus-darwin-arm64
+
 task:
   name: Release
   only_if: $CIRRUS_TAG != ''
+  depends_on:
+    - Lint
+    - Tests
   env:
     GITHUB_TOKEN: ENCRYPTED[!98ace8259c6024da912c14d5a3c5c6aac186890a8d4819fad78f3e0c41a4e0cd3a2537dd6e91493952fb056fa434be7c!]
   container:
     image: goreleaser/goreleaser:latest
   release_script: goreleaser
+
+task:
+  name: Release Apple Silicon
+  only_if: $CIRRUS_RELEASE != ''
+  depends_on: Release
+  env:
+    GITHUB_TOKEN: ENCRYPTED[!98ace8259c6024da912c14d5a3c5c6aac186890a8d4819fad78f3e0c41a4e0cd3a2537dd6e91493952fb056fa434be7c!]
+  <<: *APPLE_SILICON_BUILD
+  upload_script: |
+    curl -X POST \
+        --data-binary @cirrus-darwin-arm64 \
+        --header "Authorization: token $GITHUB_TOKEN" \
+        --header "Content-Type: application/octet-stream" \
+        https://uploads.github.com/repos/$CIRRUS_REPO_FULL_NAME/releases/$CIRRUS_RELEASE/assets?name=cirrus-darwin-arm64
