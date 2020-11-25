@@ -16,7 +16,7 @@ var (
 
 const (
 	// DefaultAgentVersion represents the default version of the https://github.com/cirruslabs/cirrus-ci-agent to use.
-	DefaultAgentVersion = "1.24.0"
+	DefaultAgentVersion = "1.23.1"
 
 	// AgentImageBase is used as a prefix to the agent's version to craft the full agent image name.
 	AgentImageBase = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v"
