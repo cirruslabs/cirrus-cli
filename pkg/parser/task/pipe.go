@@ -43,8 +43,10 @@ func NewDockerPipe(env map[string]string, boolevator *boolevator.Boolevator) *Do
 	// Don't force required fields in schema
 	pipe.SetCollectible(true)
 
-	pipe.proto.Metadata.Properties["auto_cancellation"] =
-		strconv.FormatBool(env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"])
+	autoCancellation := env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"]
+	if autoCancellation {
+		pipe.proto.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(autoCancellation)
+	}
 
 	pipe.CollectibleField("environment", schema.Map(""), func(node *node.Node) error {
 		pipeEnv, err := node.GetEnvironment()

@@ -20,6 +20,7 @@ import (
 )
 
 var (
+	ErrFailedToCreateInstance    = errors.New("failed to create instance")
 	ErrUnsupportedInstance       = errors.New("unsupported instance type")
 	ErrAdditionalContainerFailed = errors.New("additional container failed")
 )
@@ -73,6 +74,15 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 			Arguments:  instance.Arguments,
 		}, nil
 	case *api.PersistentWorkerInstance:
+		return NewPersistentWorkerInstance()
+	case *api.DockerBuilder:
+		// Ensure that we're not trying to run e.g. Windows-specific scripts on macOS
+		instanceOS := strings.ToLower(instance.Platform.String())
+		if runtime.GOOS != instanceOS {
+			return nil, fmt.Errorf("%w: cannot run %s Docker Builder instance on this platform",
+				ErrFailedToCreateInstance, strings.Title(instanceOS))
+		}
+
 		return NewPersistentWorkerInstance()
 	default:
 		return nil, fmt.Errorf("%w: %T", ErrUnsupportedInstance, instance)

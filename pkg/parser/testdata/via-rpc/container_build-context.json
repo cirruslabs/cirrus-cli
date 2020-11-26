@@ -29,10 +29,8 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
-        "auto_cancellation": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
-        "skip_notifications": "false",
         "timeout_in": "7200",
         "trigger_type": "AUTOMATIC"
       }
@@ -79,7 +77,6 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
-        "auto_cancellation": "false",
         "experimental": "false",
         "indexWithinBuild": "1",
         "skip_notifications": "true",

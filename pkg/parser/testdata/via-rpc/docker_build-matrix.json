@@ -6,24 +6,28 @@
         "name": "clone"
       },
       {
-        "name": "main",
+        "name": "build",
         "scriptInstruction": {
           "scripts": [
-            "npm run $COMMAND"
+            "./$TARGET/build_docker.sh"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "./$TARGET/push_docker.sh"
           ]
         }
       }
     ],
     "environment": {
       "CIRRUS_OS": "linux",
-      "COMMAND": "lint",
-      "TEST": "true"
+      "TARGET": "android"
     },
     "instance": {
-      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
-      "cpu": 2,
-      "image": "node:8.3.0",
-      "memory": 4096
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.DockerBuilder"
     },
     "metadata": {
       "properties": {
@@ -32,13 +36,9 @@
         "indexWithinBuild": "0",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
-      },
-      "uniqueLabels": [
-        "COMMAND:lint",
-        "container:node:8.3.0"
-      ]
+      }
     },
-    "name": "main"
+    "name": "android"
   },
   {
     "commands": [
@@ -47,24 +47,28 @@
         "name": "clone"
       },
       {
-        "name": "main",
+        "name": "build",
         "scriptInstruction": {
           "scripts": [
-            "npm run $COMMAND"
+            "./$TARGET/build_docker.sh"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "./$TARGET/push_docker.sh"
           ]
         }
       }
     ],
     "environment": {
       "CIRRUS_OS": "linux",
-      "COMMAND": "test",
-      "TEST": "true"
+      "TARGET": "bazel"
     },
     "instance": {
-      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
-      "cpu": 2,
-      "image": "node:8.3.0",
-      "memory": 4096
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.DockerBuilder"
     },
     "localGroupId": "1",
     "metadata": {
@@ -74,13 +78,9 @@
         "indexWithinBuild": "1",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
-      },
-      "uniqueLabels": [
-        "COMMAND:test",
-        "container:node:8.3.0"
-      ]
+      }
     },
-    "name": "main"
+    "name": "bazel"
   },
   {
     "commands": [
@@ -89,24 +89,28 @@
         "name": "clone"
       },
       {
-        "name": "main",
+        "name": "build",
         "scriptInstruction": {
           "scripts": [
-            "npm run $COMMAND"
+            "./$TARGET/build_docker.sh"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "./$TARGET/push_docker.sh"
           ]
         }
       }
     ],
     "environment": {
       "CIRRUS_OS": "linux",
-      "COMMAND": "lint",
-      "TEST": "true"
+      "TARGET": "flutter"
     },
     "instance": {
-      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
-      "cpu": 2,
-      "image": "node:8.2.0",
-      "memory": 4096
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.DockerBuilder"
     },
     "localGroupId": "2",
     "metadata": {
@@ -116,13 +120,12 @@
         "indexWithinBuild": "2",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
-      },
-      "uniqueLabels": [
-        "COMMAND:lint",
-        "container:node:8.2.0"
-      ]
+      }
     },
-    "name": "main"
+    "name": "flutter",
+    "requiredGroups": [
+      "0"
+    ]
   },
   {
     "commands": [
@@ -131,24 +134,29 @@
         "name": "clone"
       },
       {
-        "name": "main",
+        "name": "build",
         "scriptInstruction": {
           "scripts": [
-            "npm run $COMMAND"
+            "./$TARGET/build_docker.sh"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "./$TARGET/push_docker.sh"
           ]
         }
       }
     ],
     "environment": {
-      "CIRRUS_OS": "linux",
-      "COMMAND": "test",
-      "TEST": "true"
+      "CIRRUS_OS": "windows"
     },
     "instance": {
-      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
-      "cpu": 2,
-      "image": "node:8.2.0",
-      "memory": 4096
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.DockerBuilder",
+      "osVersion": "1803",
+      "platform": "WINDOWS"
     },
     "localGroupId": "3",
     "metadata": {
@@ -158,12 +166,8 @@
         "indexWithinBuild": "3",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
-      },
-      "uniqueLabels": [
-        "COMMAND:test",
-        "container:node:8.2.0"
-      ]
+      }
     },
-    "name": "main"
+    "name": "windows"
   }
 ]

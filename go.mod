@@ -12,7 +12,7 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/bmatcuk/doublestar v1.3.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
-	github.com/cirruslabs/cirrus-ci-agent v1.21.0
+	github.com/cirruslabs/cirrus-ci-agent v1.22.0
 	github.com/cirruslabs/echelon v1.4.0
 	github.com/cirruslabs/podmanapi v0.1.0
 	github.com/containerd/containerd v1.4.1 // indirect

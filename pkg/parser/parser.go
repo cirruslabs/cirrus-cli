@@ -76,8 +76,9 @@ func New(opts ...Option) *Parser {
 
 	// Register parsers
 	parser.parsers = map[nameable.Nameable]parseable.Parseable{
-		nameable.NewRegexNameable("^(.*)task$"): task.NewTask(nil, nil, parser.additionalInstances),
-		nameable.NewRegexNameable("^(.*)pipe$"): task.NewDockerPipe(nil, nil),
+		nameable.NewRegexNameable("^(.*)task$"):           task.NewTask(nil, nil, parser.additionalInstances),
+		nameable.NewRegexNameable("^(.*)pipe$"):           task.NewDockerPipe(nil, nil),
+		nameable.NewRegexNameable("^(.*)docker_builder$"): task.NewDockerBuilder(nil, nil),
 	}
 
 	return parser
@@ -94,6 +95,8 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 				taskLike = task.NewTask(environment.Copy(p.environment), p.boolevator, p.additionalInstances)
 			case *task.DockerPipe:
 				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.boolevator)
+			case *task.DockerBuilder:
+				taskLike = task.NewDockerBuilder(environment.Copy(p.environment), p.boolevator)
 			default:
 				panic("unknown task-like object")
 			}
@@ -382,10 +385,13 @@ func (p *Parser) createServiceTask(
 				task.DefaultTaskProperties(),
 				map[string]string{
 					"skip_notifications": "true",
-					"auto_cancellation":  protoTask.Metadata.Properties["auto_cancellation"],
 				},
 			),
 		},
+	}
+
+	if value, ok := protoTask.Metadata.Properties["auto_cancellation"]; ok {
+		serviceTask.Metadata.Properties["auto_cancellation"] = value
 	}
 
 	// Some metadata property fields duplicate other fields

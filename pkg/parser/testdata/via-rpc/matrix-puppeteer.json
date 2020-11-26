@@ -44,10 +44,8 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
-        "auto_cancellation": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
-        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }
@@ -119,10 +117,8 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
-        "auto_cancellation": "false",
         "experimental": "false",
         "indexWithinBuild": "1",
-        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }
@@ -169,7 +165,6 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
-        "auto_cancellation": "false",
         "experimental": "false",
         "indexWithinBuild": "2",
         "skip_notifications": "true",
@@ -216,7 +211,6 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
-        "auto_cancellation": "false",
         "experimental": "false",
         "indexWithinBuild": "3",
         "skip_notifications": "true",

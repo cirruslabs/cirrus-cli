@@ -1,0 +1,15 @@
+container:
+  image: memcached:1.5.0-alpine
+
+test_task:
+  script: ./test.sh
+
+lint_task:
+  script: ./lint.sh
+
+deploy_docker_builder:
+  depends_on:
+    - test
+    - lint
+  build_script: docker build --tag cirrusci/test:latest .
+  push_script: docker push cirrusci/test:latest
