@@ -28,7 +28,6 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
-        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }
@@ -65,7 +64,6 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "1",
-        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }
@@ -107,7 +105,6 @@
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "2",
-        "skip_notifications": "false",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }

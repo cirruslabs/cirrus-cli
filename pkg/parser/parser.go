@@ -385,10 +385,13 @@ func (p *Parser) createServiceTask(
 				task.DefaultTaskProperties(),
 				map[string]string{
 					"skip_notifications": "true",
-					"auto_cancellation":  protoTask.Metadata.Properties["auto_cancellation"],
 				},
 			),
 		},
+	}
+
+	if value, ok := protoTask.Metadata.Properties["auto_cancellation"]; ok {
+		serviceTask.Metadata.Properties["auto_cancellation"] = value
 	}
 
 	// Some metadata property fields duplicate other fields
