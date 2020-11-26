@@ -11,7 +11,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/ptypes"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -31,7 +30,6 @@ type Task struct {
 	parseable.DefaultParser
 }
 
-// nolint:gocognit,gocyclo // it's a parser, there is a lot of boilerplate
 func NewTask(
 	env map[string]string,
 	boolevator *boolevator.Boolevator,
@@ -48,23 +46,7 @@ func NewTask(
 		task.proto.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(autoCancellation)
 	}
 
-	task.CollectibleField("environment", schema.Map(""), func(node *node.Node) error {
-		taskEnv, err := node.GetEnvironment()
-		if err != nil {
-			return err
-		}
-		task.proto.Environment = environment.Merge(task.proto.Environment, taskEnv)
-		return nil
-	})
-
-	task.CollectibleField("env", schema.Map(""), func(node *node.Node) error {
-		taskEnv, err := node.GetEnvironment()
-		if err != nil {
-			return err
-		}
-		task.proto.Environment = environment.Merge(task.proto.Environment, taskEnv)
-		return nil
-	})
+	AttachBaseTaskFields(&task.DefaultParser, &task.proto, env, boolevator)
 
 	if _, ok := additionalInstances["container"]; !ok {
 		task.CollectibleField("container",
@@ -137,15 +119,6 @@ func NewTask(
 		})
 	}
 
-	task.OptionalField(nameable.NewSimpleNameable("name"), schema.String(""), func(node *node.Node) error {
-		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
-		if err != nil {
-			return err
-		}
-		task.proto.Name = name
-		return nil
-	})
-
 	task.OptionalField(nameable.NewSimpleNameable("alias"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
 		if err != nil {
@@ -154,65 +127,6 @@ func NewTask(
 		task.alias = name
 		return nil
 	})
-
-	bgNameable := nameable.NewRegexNameable("^(.*)background_script$")
-	task.OptionalField(bgNameable, schema.Script(""), func(node *node.Node) error {
-		command, err := handleBackgroundScript(node, bgNameable)
-		if err != nil {
-			return err
-		}
-
-		task.proto.Commands = append(task.proto.Commands, command)
-
-		return nil
-	})
-
-	scriptNameable := nameable.NewRegexNameable("^(.*)script$")
-	task.OptionalField(scriptNameable, schema.Script(""), func(node *node.Node) error {
-		command, err := handleScript(node, scriptNameable)
-		if err != nil {
-			return err
-		}
-
-		task.proto.Commands = append(task.proto.Commands, command)
-
-		return nil
-	})
-
-	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
-	cacheSchema := command.NewCacheCommand(nil, nil).Schema()
-	task.OptionalField(cacheNameable, cacheSchema, func(node *node.Node) error {
-		cache := command.NewCacheCommand(environment.Merge(task.proto.Environment, env), boolevator)
-		if err := cache.Parse(node); err != nil {
-			return err
-		}
-		task.proto.Commands = append(task.proto.Commands, cache.Proto())
-		return nil
-	})
-
-	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts$")
-	artifactsSchema := command.NewArtifactsCommand(nil).Schema()
-	task.OptionalField(artifactsNameable, artifactsSchema, func(node *node.Node) error {
-		artifacts := command.NewArtifactsCommand(environment.Merge(task.proto.Environment, env))
-		if err := artifacts.Parse(node); err != nil {
-			return err
-		}
-		task.proto.Commands = append(task.proto.Commands, artifacts.Proto())
-		return nil
-	})
-
-	fileNameable := nameable.NewRegexNameable("^(.*)file$")
-	fileSchema := command.NewFileCommand(nil).Schema()
-	task.OptionalField(fileNameable, fileSchema, func(node *node.Node) error {
-		file := command.NewFileCommand(environment.Merge(task.proto.Environment, env))
-		if err := file.Parse(node); err != nil {
-			return err
-		}
-		task.proto.Commands = append(task.proto.Commands, file.Proto())
-		return nil
-	})
-
-	task.registerExecutionBehaviorFields(env, boolevator)
 
 	dependsOnSchema := schema.StringOrListOfStrings("List of task names this task depends on.")
 	task.OptionalField(nameable.NewSimpleNameable("depends_on"), dependsOnSchema, func(node *node.Node) error {
@@ -230,113 +144,6 @@ func NewTask(
 			return err
 		}
 		task.onlyIfExpression = onlyIfExpression
-		return nil
-	})
-
-	task.CollectibleField("skip", schema.Condition(""), func(node *node.Node) error {
-		skipped, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		if skipped {
-			task.proto.Status = api.Task_SKIPPED
-		}
-		return nil
-	})
-
-	task.CollectibleField("allow_failures", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.proto.Metadata.Properties["allow_failures"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	// for cloud only
-	task.CollectibleField("skip_notifications", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.proto.Metadata.Properties["skip_notifications"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	// for cloud only
-	task.CollectibleField("auto_cancellation", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.proto.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	// for cloud only
-	task.CollectibleField("use_compute_credits", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.proto.Metadata.Properties["use_compute_credits"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	// for cloud only
-	task.CollectibleField("stateful", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.proto.Metadata.Properties["stateful"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	// no-op
-	labelsSchema := schema.StringOrListOfStrings("List of required labels on a PR.")
-	task.OptionalField(nameable.NewSimpleNameable("required_pr_labels"), labelsSchema, func(node *node.Node) error {
-		return nil
-	})
-
-	task.CollectibleField("experimental", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.proto.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.proto.Metadata.Properties["experimental"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	task.CollectibleField("timeout_in", schema.Number("Task timeout in minutes"), func(node *node.Node) error {
-		timeout, err := handleTimeoutIn(node, environment.Merge(task.proto.Environment, env))
-		if err != nil {
-			return err
-		}
-
-		task.proto.Metadata.Properties["timeout_in"] = timeout
-
-		return nil
-	})
-
-	task.CollectibleField("trigger_type", schema.TriggerType(), func(node *node.Node) error {
-		triggerType, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
-		if err != nil {
-			return err
-		}
-		task.proto.Metadata.Properties["trigger_type"] = strings.ToUpper(triggerType)
-		return nil
-	})
-
-	lockSchema := schema.String("Lock name for triggering and execution")
-	task.OptionalField(nameable.NewSimpleNameable("execution_lock"), lockSchema, func(node *node.Node) error {
-		lockName, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
-		if err != nil {
-			return err
-		}
-
-		task.proto.Metadata.Properties["execution_lock"] = lockName
-
 		return nil
 	})
 
@@ -418,30 +225,6 @@ func (task *Task) Enabled(env map[string]string, boolevator *boolevator.Boolevat
 	}
 
 	return evaluation, nil
-}
-
-func (task *Task) registerExecutionBehaviorFields(env map[string]string, boolevator *boolevator.Boolevator) {
-	for id, name := range api.Command_CommandExecutionBehavior_name {
-		idCopy := id
-
-		behaviorSchema := NewBehavior(nil, nil).Schema()
-		behaviorSchema.Description = name + " commands."
-		task.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), behaviorSchema, func(node *node.Node) error {
-			behavior := NewBehavior(environment.Merge(task.proto.Environment, env), boolevator)
-			if err := behavior.Parse(node); err != nil {
-				return err
-			}
-
-			commands := behavior.Proto()
-
-			for _, command := range commands {
-				command.ExecutionBehaviour = api.Command_CommandExecutionBehavior(idCopy)
-				task.proto.Commands = append(task.proto.Commands, command)
-			}
-
-			return nil
-		})
-	}
 }
 
 func (task *Task) Schema() *jsschema.Schema {
