@@ -36,15 +36,9 @@ func NewTask(
 	additionalInstances map[string]protoreflect.MessageDescriptor,
 ) *Task {
 	task := &Task{}
-	task.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
 	// Don't force required fields in schema
 	task.SetCollectible(true)
-
-	autoCancellation := env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"]
-	if autoCancellation {
-		task.proto.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(autoCancellation)
-	}
 
 	AttachBaseTaskFields(&task.DefaultParser, &task.proto, env, boolevator)
 

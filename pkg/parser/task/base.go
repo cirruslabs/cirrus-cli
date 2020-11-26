@@ -20,6 +20,13 @@ func AttachBaseTaskFields(
 	env map[string]string,
 	boolevator *boolevator.Boolevator,
 ) {
+	task.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
+
+	autoCancellation := env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"]
+	if autoCancellation {
+		task.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(autoCancellation)
+	}
+
 	parser.CollectibleField("environment", schema.Map(""), func(node *node.Node) error {
 		taskEnv, err := node.GetEnvironment()
 		if err != nil {

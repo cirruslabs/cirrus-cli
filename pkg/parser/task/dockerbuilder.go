@@ -32,15 +32,10 @@ type DockerBuilder struct {
 
 func NewDockerBuilder(env map[string]string, boolevator *boolevator.Boolevator) *DockerBuilder {
 	dbuilder := &DockerBuilder{}
-	dbuilder.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
-	dbuilder.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
-
-	autoCancellation := env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"]
-	if autoCancellation {
-		dbuilder.proto.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(autoCancellation)
-	}
 
 	AttachBaseTaskFields(&dbuilder.DefaultParser, &dbuilder.proto, env, boolevator)
+
+	dbuilder.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 
 	dbuilder.OptionalField(nameable.NewSimpleNameable("alias"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(dbuilder.proto.Environment, env))
