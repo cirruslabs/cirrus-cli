@@ -37,6 +37,11 @@ func NewDockerBuilder(env map[string]string, boolevator *boolevator.Boolevator) 
 	dbuilder.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 	dbuilder.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
+	autoCancellation := env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"]
+	if autoCancellation {
+		dbuilder.proto.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(autoCancellation)
+	}
+
 	dbuilder.CollectibleField("environment", schema.Map(""), func(node *node.Node) error {
 		taskEnv, err := node.GetEnvironment()
 		if err != nil {

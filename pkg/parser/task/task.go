@@ -43,8 +43,10 @@ func NewTask(
 	// Don't force required fields in schema
 	task.SetCollectible(true)
 
-	task.proto.Metadata.Properties["auto_cancellation"] =
-		strconv.FormatBool(env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"])
+	autoCancellation := env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"]
+	if autoCancellation {
+		task.proto.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(autoCancellation)
+	}
 
 	task.CollectibleField("environment", schema.Map(""), func(node *node.Node) error {
 		taskEnv, err := node.GetEnvironment()
