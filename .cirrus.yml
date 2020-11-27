@@ -1,14 +1,3 @@
-task:
-  container:
-    image: golangci/golangci-lint:latest
-  name: Lint
-  lint_script: golangci-lint run -v --out-format json > golangci.json
-  always:
-    report_artifacts:
-      path: golangci.json
-      type: text/json
-      format: golangci
-
 docker_builder:
   name: Test (Docker)
   alias: Tests
