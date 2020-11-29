@@ -3,7 +3,10 @@
 package containerbackend
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -47,6 +50,50 @@ func (docker *Docker) ImagePull(ctx context.Context, reference string) error {
 
 	if _, err = io.Copy(ioutil.Discard, stream); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (docker *Docker) ImagePush(ctx context.Context, reference string) error {
+	auth, err := XRegistryAuthForImage(reference)
+	if err != nil {
+		return err
+	}
+
+	stream, err := docker.cli.ImagePush(ctx, reference, types.ImagePushOptions{
+		RegistryAuth: auth,
+	})
+	if err != nil {
+		return err
+	}
+	defer stream.Close()
+
+	rdr := bufio.NewReader(stream)
+	for {
+		line, isPrefix, err := rdr.ReadLine()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return err
+		}
+		if isPrefix {
+			return fmt.Errorf("%w: received truncated data", ErrPushFailed)
+		}
+
+		var streamEntry struct {
+			ErrorDetail struct {
+				Message string
+			}
+		}
+		if err := json.Unmarshal(line, &streamEntry); err != nil {
+			return err
+		}
+
+		if streamEntry.ErrorDetail.Message != "" {
+			return fmt.Errorf("%w: %s", ErrPushFailed, streamEntry.ErrorDetail.Message)
+		}
 	}
 
 	return nil
@@ -96,6 +143,16 @@ func (docker *Docker) ImageBuild(
 
 func (docker *Docker) ImageInspect(ctx context.Context, reference string) error {
 	_, _, err := docker.cli.ImageInspectWithRaw(ctx, reference)
+
+	if client.IsErrNotFound(err) {
+		return ErrNotFound
+	}
+
+	return err
+}
+
+func (docker *Docker) ImageDelete(ctx context.Context, reference string) error {
+	_, err := docker.cli.ImageRemove(ctx, reference, types.ImageRemoveOptions{})
 
 	if client.IsErrNotFound(err) {
 		return ErrNotFound

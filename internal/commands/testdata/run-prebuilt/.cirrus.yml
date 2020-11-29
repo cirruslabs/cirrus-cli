@@ -1,0 +1,5 @@
+task:
+  container:
+    dockerfile: Dockerfile
+
+  script: nmap --version

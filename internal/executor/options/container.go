@@ -4,6 +4,9 @@ type ContainerOptions struct {
 	NoPull       bool
 	NoPullImages []string
 	NoCleanup    bool
+
+	DockerfileImageTemplate string
+	DockerfileImagePush     bool
 }
 
 func (do ContainerOptions) ShouldPullImage(image string) bool {

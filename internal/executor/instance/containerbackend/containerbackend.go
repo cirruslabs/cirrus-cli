@@ -11,16 +11,19 @@ import (
 var (
 	ErrNotFound       = errors.New("not found")
 	ErrDone           = errors.New("done")
-	ErrNewFailed      = errors.New("failed to create backend")
-	ErrNotImplemented = errors.New("unimplemented method")
+	ErrNewFailed      = errors.New("failed to create container backend")
+	ErrPushFailed     = errors.New("failed to push container")
+	ErrNotImplemented = errors.New("unimplemented container backend method")
 )
 
 type ContainerBackend interface {
 	io.Closer
 
 	ImagePull(ctx context.Context, reference string) error
+	ImagePush(ctx context.Context, reference string) error
 	ImageBuild(ctx context.Context, tarball io.Reader, input *ImageBuildInput) (<-chan string, <-chan error)
 	ImageInspect(ctx context.Context, reference string) error
+	ImageDelete(ctx context.Context, reference string) error
 
 	VolumeCreate(ctx context.Context, name string) error
 	VolumeInspect(ctx context.Context, name string) error

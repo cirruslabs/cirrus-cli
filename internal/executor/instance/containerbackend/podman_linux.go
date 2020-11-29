@@ -185,6 +185,29 @@ func (podman *Podman) ImagePull(ctx context.Context, reference string) error {
 	return err
 }
 
+func (podman *Podman) ImagePush(ctx context.Context, reference string) error {
+	auth, err := XRegistryAuthForImage(reference)
+	if err != nil {
+		return err
+	}
+
+	// nolint:bodyclose // already closed by Swagger-generated code
+	_, _, err = podman.cli.ImagesApi.LibpodPushImage(ctx, reference, &swagger.ImagesApiLibpodPushImageOpts{
+		XRegistryAuth: optional.NewString(auth),
+	})
+
+	// Enrich the error with it's cause if possible
+	if err != nil {
+		if cause := swaggerCause(err); cause != "" {
+			return fmt.Errorf("%w: caused by %s", err, swaggerCause(err))
+		}
+
+		return err
+	}
+
+	return nil
+}
+
 func (podman *Podman) ImageBuild(
 	ctx context.Context,
 	tarball io.Reader,
@@ -253,6 +276,24 @@ func (podman *Podman) ImageBuild(
 func (podman *Podman) ImageInspect(ctx context.Context, reference string) error {
 	// nolint:bodyclose // already closed by Swagger-generated code
 	_, resp, err := podman.cli.ImagesApi.LibpodInspectImage(ctx, reference)
+
+	if resp != nil && resp.StatusCode == http.StatusNotFound {
+		return ErrNotFound
+	}
+
+	// Enrich the error with it's cause if possible
+	if err != nil {
+		if cause := swaggerCause(err); cause != "" {
+			return fmt.Errorf("%w: caused by %s", err, swaggerCause(err))
+		}
+	}
+
+	return err
+}
+
+func (podman *Podman) ImageDelete(ctx context.Context, reference string) error {
+	// nolint:bodyclose // already closed by Swagger-generated code
+	_, resp, err := podman.cli.ImagesApi.LibpodRemoveImage(ctx, reference, &swagger.ImagesApiLibpodRemoveImageOpts{})
 
 	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		return ErrNotFound

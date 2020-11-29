@@ -16,6 +16,8 @@ import (
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"io/ioutil"
+	"regexp"
+	"strings"
 )
 
 var ErrBuildFailed = errors.New("build failed")
@@ -94,6 +96,20 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	e.rpc = rpc.New(b, rpc.WithLogger(e.logger))
 
 	for _, task := range b.Tasks() {
+		// Transform Dockerfile image names if the user provided their own template
+		switch instanceWithImage := task.Instance.(type) {
+		case *instance.PrebuiltInstance:
+			instanceWithImage.Image, err = e.transformDockerfileImageIfNeeded(instanceWithImage.Image, true)
+			if err != nil {
+				return nil, err
+			}
+		case *instance.ContainerInstance:
+			instanceWithImage.Image, err = e.transformDockerfileImageIfNeeded(instanceWithImage.Image, false)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		// Collect images that shouldn't be pulled under any circumstances
 		if prebuiltInstance, ok := task.Instance.(*instance.PrebuiltInstance); ok {
 			e.containerOptions.NoPullImages = append(e.containerOptions.NoPullImages, prebuiltInstance.Image)
@@ -190,4 +206,25 @@ func (e *Executor) Run(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (e *Executor) transformDockerfileImageIfNeeded(reference string, strict bool) (string, error) {
+	// Modify image name if the user provided a custom template
+	if e.containerOptions.DockerfileImageTemplate == "" {
+		return reference, nil
+	}
+
+	// Extract the already calculated hash
+	re := regexp.MustCompile(`^gcr\.io/cirrus-ci-community/(.*):latest$`)
+	hash := re.FindString(reference)
+	if hash == "" {
+		if strict {
+			return "", fmt.Errorf("%w: unknown prebuilt image format: %s", ErrBuildFailed, reference)
+		}
+
+		return reference, nil
+	}
+
+	// Render the template
+	return strings.ReplaceAll(e.containerOptions.DockerfileImageTemplate, "%s", hash), nil
 }

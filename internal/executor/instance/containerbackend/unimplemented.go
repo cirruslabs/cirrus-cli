@@ -13,6 +13,10 @@ func (*Unimplemented) ImagePull(ctx context.Context, reference string) error {
 	return ErrNotImplemented
 }
 
+func (*Unimplemented) ImagePush(ctx context.Context, reference string) error {
+	return ErrNotImplemented
+}
+
 func (*Unimplemented) ImageBuild(
 	ctx context.Context,
 	tarball io.Reader,
@@ -29,6 +33,10 @@ func (*Unimplemented) ImageBuild(
 }
 
 func (*Unimplemented) ImageInspect(ctx context.Context, reference string) error {
+	return ErrNotImplemented
+}
+
+func (*Unimplemented) ImageDelete(ctx context.Context, reference string) error {
 	return ErrNotImplemented
 }
 

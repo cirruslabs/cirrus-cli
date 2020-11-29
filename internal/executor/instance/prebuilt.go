@@ -127,18 +127,26 @@ func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *RunConfig) er
 		BuildArgs:  prebuilt.Arguments,
 	})
 
+Outer:
 	for {
 		select {
 		case line := <-logChan:
 			logger.Debugf("%s", line)
 		case err := <-errChan:
 			if errors.Is(containerbackend.ErrDone, err) {
-				return nil
+				break Outer
 			}
 
 			return err
 		}
 	}
+
+	// Push the image (if needed)
+	if config.ContainerOptions.DockerfileImagePush {
+		return backend.ImagePush(ctx, prebuilt.Image)
+	}
+
+	return nil
 }
 
 func (prebuilt *PrebuiltInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {
