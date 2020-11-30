@@ -35,6 +35,7 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 		if err != nil {
 			worker.logger.Errorf("failed to notify the server about the started task %d: %v",
 				agentAwareTask.TaskId, err)
+			return
 		}
 
 		if err := inst.Run(taskCtx, &instance.RunConfig{
@@ -52,6 +53,7 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 		if err != nil {
 			worker.logger.Errorf("failed to notify the server about the stopped task %d: %v",
 				agentAwareTask.TaskId, err)
+			return
 		}
 	}()
 
