@@ -186,13 +186,17 @@ func (podman *Podman) ImagePull(ctx context.Context, reference string) error {
 }
 
 func (podman *Podman) ImagePush(ctx context.Context, reference string) error {
+	// Work around https://github.com/containers/buildah/issues/1034
+	podmanReference := "localhost/" + reference
+
 	auth, err := XRegistryAuthForImage(reference)
 	if err != nil {
 		return err
 	}
 
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, _, err = podman.cli.ImagesApi.LibpodPushImage(ctx, reference, &swagger.ImagesApiLibpodPushImageOpts{
+	_, _, err = podman.cli.ImagesApi.LibpodPushImage(ctx, podmanReference, &swagger.ImagesApiLibpodPushImageOpts{
+		Destination: optional.NewString(reference),
 		XRegistryAuth: optional.NewString(auth),
 	})
 
