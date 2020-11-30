@@ -1,5 +1,5 @@
 container:
-  image: nonexistent.invalid/does/it/really/exist:nope
+  image: debian:latest
 
 task:
   script: true

@@ -1,7 +1,13 @@
 package options
 
+import (
+	"context"
+	"errors"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+)
+
 type ContainerOptions struct {
-	NoPull       bool
+	Pull         bool
 	NoPullImages []string
 	NoCleanup    bool
 
@@ -9,16 +15,20 @@ type ContainerOptions struct {
 	DockerfileImagePush     bool
 }
 
-func (do ContainerOptions) ShouldPullImage(image string) bool {
-	if do.NoPull {
-		return false
-	}
-
+func (do ContainerOptions) ShouldPullImage(
+	ctx context.Context,
+	backend containerbackend.ContainerBackend,
+	image string,
+) bool {
 	for _, noPullImage := range do.NoPullImages {
 		if noPullImage == image {
 			return false
 		}
 	}
 
-	return true
+	if do.Pull {
+		return true
+	}
+
+	return errors.Is(backend.ImageInspect(ctx, image), containerbackend.ErrNotFound)
 }
