@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/docker"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -38,12 +39,12 @@ func NewDocker() (ContainerBackend, error) {
 	}, nil
 }
 
-func (docker *Docker) Close() error {
-	return docker.cli.Close()
+func (backend *Docker) Close() error {
+	return backend.cli.Close()
 }
 
-func (docker *Docker) ImagePull(ctx context.Context, reference string) error {
-	stream, err := docker.cli.ImagePull(ctx, reference, types.ImagePullOptions{})
+func (backend *Docker) ImagePull(ctx context.Context, reference string) error {
+	stream, err := backend.cli.ImagePull(ctx, reference, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}
@@ -55,13 +56,13 @@ func (docker *Docker) ImagePull(ctx context.Context, reference string) error {
 	return nil
 }
 
-func (docker *Docker) ImagePush(ctx context.Context, reference string) error {
-	auth, err := XRegistryAuthForImage(reference)
+func (backend *Docker) ImagePush(ctx context.Context, reference string) error {
+	auth, err := docker.XRegistryAuthForImage(reference)
 	if err != nil {
 		return err
 	}
 
-	stream, err := docker.cli.ImagePush(ctx, reference, types.ImagePushOptions{
+	stream, err := backend.cli.ImagePush(ctx, reference, types.ImagePushOptions{
 		RegistryAuth: auth,
 	})
 	if err != nil {
@@ -99,7 +100,7 @@ func (docker *Docker) ImagePush(ctx context.Context, reference string) error {
 	return nil
 }
 
-func (docker *Docker) ImageBuild(
+func (backend *Docker) ImageBuild(
 	ctx context.Context,
 	tarball io.Reader,
 	input *ImageBuildInput,
@@ -117,7 +118,7 @@ func (docker *Docker) ImageBuild(
 			pointyArguments[key] = &valueCopy
 		}
 
-		buildProgress, err := docker.cli.ImageBuild(ctx, tarball, types.ImageBuildOptions{
+		buildProgress, err := backend.cli.ImageBuild(ctx, tarball, types.ImageBuildOptions{
 			Tags:       input.Tags,
 			Dockerfile: input.Dockerfile,
 			BuildArgs:  pointyArguments,
@@ -141,8 +142,8 @@ func (docker *Docker) ImageBuild(
 	return logChan, errChan
 }
 
-func (docker *Docker) ImageInspect(ctx context.Context, reference string) error {
-	_, _, err := docker.cli.ImageInspectWithRaw(ctx, reference)
+func (backend *Docker) ImageInspect(ctx context.Context, reference string) error {
+	_, _, err := backend.cli.ImageInspectWithRaw(ctx, reference)
 
 	if client.IsErrNotFound(err) {
 		return ErrNotFound
@@ -151,8 +152,8 @@ func (docker *Docker) ImageInspect(ctx context.Context, reference string) error 
 	return err
 }
 
-func (docker *Docker) ImageDelete(ctx context.Context, reference string) error {
-	_, err := docker.cli.ImageRemove(ctx, reference, types.ImageRemoveOptions{})
+func (backend *Docker) ImageDelete(ctx context.Context, reference string) error {
+	_, err := backend.cli.ImageRemove(ctx, reference, types.ImageRemoveOptions{})
 
 	if client.IsErrNotFound(err) {
 		return ErrNotFound
@@ -161,13 +162,13 @@ func (docker *Docker) ImageDelete(ctx context.Context, reference string) error {
 	return err
 }
 
-func (docker *Docker) VolumeCreate(ctx context.Context, name string) error {
-	_, err := docker.cli.VolumeCreate(ctx, volume.VolumeCreateBody{Name: name})
+func (backend *Docker) VolumeCreate(ctx context.Context, name string) error {
+	_, err := backend.cli.VolumeCreate(ctx, volume.VolumeCreateBody{Name: name})
 	return err
 }
 
-func (docker *Docker) VolumeInspect(ctx context.Context, name string) error {
-	_, err := docker.cli.VolumeInspect(ctx, name)
+func (backend *Docker) VolumeInspect(ctx context.Context, name string) error {
+	_, err := backend.cli.VolumeInspect(ctx, name)
 
 	if client.IsErrNotFound(err) {
 		return ErrNotFound
@@ -176,11 +177,11 @@ func (docker *Docker) VolumeInspect(ctx context.Context, name string) error {
 	return err
 }
 
-func (docker *Docker) VolumeDelete(ctx context.Context, name string) error {
-	return docker.cli.VolumeRemove(ctx, name, false)
+func (backend *Docker) VolumeDelete(ctx context.Context, name string) error {
+	return backend.cli.VolumeRemove(ctx, name, false)
 }
 
-func (docker *Docker) ContainerCreate(
+func (backend *Docker) ContainerCreate(
 	ctx context.Context,
 	input *ContainerCreateInput,
 	name string,
@@ -224,7 +225,7 @@ func (docker *Docker) ContainerCreate(
 		hostConfig.SecurityOpt = []string{"label=disable"}
 	}
 
-	cont, err := docker.cli.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, name)
+	cont, err := backend.cli.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, name)
 	if err != nil {
 		return nil, err
 	}
@@ -234,16 +235,16 @@ func (docker *Docker) ContainerCreate(
 	}, nil
 }
 
-func (docker *Docker) ContainerStart(ctx context.Context, id string) error {
-	return docker.cli.ContainerStart(ctx, id, types.ContainerStartOptions{})
+func (backend *Docker) ContainerStart(ctx context.Context, id string) error {
+	return backend.cli.ContainerStart(ctx, id, types.ContainerStartOptions{})
 }
 
-func (docker *Docker) ContainerWait(ctx context.Context, id string) (<-chan ContainerWaitResult, <-chan error) {
+func (backend *Docker) ContainerWait(ctx context.Context, id string) (<-chan ContainerWaitResult, <-chan error) {
 	waitChan := make(chan ContainerWaitResult)
 	errChan := make(chan error)
 
 	go func() {
-		dockerWaitChan, dockerErrChan := docker.cli.ContainerWait(ctx, id, container.WaitConditionNotRunning)
+		dockerWaitChan, dockerErrChan := backend.cli.ContainerWait(ctx, id, container.WaitConditionNotRunning)
 
 		select {
 		case resp := <-dockerWaitChan:
@@ -264,15 +265,15 @@ func (docker *Docker) ContainerWait(ctx context.Context, id string) (<-chan Cont
 	return waitChan, errChan
 }
 
-func (docker *Docker) ContainerDelete(ctx context.Context, id string) error {
-	return docker.cli.ContainerRemove(ctx, id, types.ContainerRemoveOptions{
+func (backend *Docker) ContainerDelete(ctx context.Context, id string) error {
+	return backend.cli.ContainerRemove(ctx, id, types.ContainerRemoveOptions{
 		RemoveVolumes: true,
 		Force:         true,
 	})
 }
 
-func (docker *Docker) SystemInfo(ctx context.Context) (*SystemInfo, error) {
-	info, err := docker.cli.Info(ctx)
+func (backend *Docker) SystemInfo(ctx context.Context) (*SystemInfo, error) {
+	info, err := backend.cli.Info(ctx)
 	if err != nil {
 		return nil, err
 	}

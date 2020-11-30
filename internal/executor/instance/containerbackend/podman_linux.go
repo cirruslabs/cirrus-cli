@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/antihax/optional"
 	"github.com/avast/retry-go"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/podman"
 	"github.com/cirruslabs/podmanapi/pkg/swagger"
 	"github.com/google/uuid"
 	"io"
@@ -74,11 +75,11 @@ func NewPodman() (ContainerBackend, error) {
 	return podman, nil
 }
 
-func (podman *Podman) Close() error {
+func (backend *Podman) Close() error {
 	doneChan := make(chan error)
 
 	go func() {
-		doneChan <- podman.cmd.Wait()
+		doneChan <- backend.cmd.Wait()
 	}()
 
 	var interruptSent, killSent bool
@@ -87,7 +88,7 @@ func (podman *Podman) Close() error {
 		select {
 		case <-time.After(time.Second):
 			if !killSent {
-				if err := podman.cmd.Process.Kill(); err != nil {
+				if err := backend.cmd.Process.Kill(); err != nil {
 					return err
 				}
 				killSent = true
@@ -96,7 +97,7 @@ func (podman *Podman) Close() error {
 			return err
 		default:
 			if !interruptSent {
-				if err := podman.cmd.Process.Signal(os.Interrupt); err != nil {
+				if err := backend.cmd.Process.Signal(os.Interrupt); err != nil {
 					return err
 				}
 				interruptSent = true
@@ -105,9 +106,9 @@ func (podman *Podman) Close() error {
 	}
 }
 
-func (podman *Podman) VolumeCreate(ctx context.Context, name string) error {
+func (backend *Podman) VolumeCreate(ctx context.Context, name string) error {
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, _, err := podman.cli.VolumesApi.LibpodCreateVolume(ctx, &swagger.VolumesApiLibpodCreateVolumeOpts{
+	_, _, err := backend.cli.VolumesApi.LibpodCreateVolume(ctx, &swagger.VolumesApiLibpodCreateVolumeOpts{
 		Body: optional.NewInterface(swagger.VolumeCreate{
 			Name: name,
 		}),
@@ -123,9 +124,9 @@ func (podman *Podman) VolumeCreate(ctx context.Context, name string) error {
 	return err
 }
 
-func (podman *Podman) VolumeInspect(ctx context.Context, name string) error {
+func (backend *Podman) VolumeInspect(ctx context.Context, name string) error {
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, resp, err := podman.cli.VolumesApi.LibpodInspectVolume(ctx, name)
+	_, resp, err := backend.cli.VolumesApi.LibpodInspectVolume(ctx, name)
 
 	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		return ErrNotFound
@@ -141,9 +142,9 @@ func (podman *Podman) VolumeInspect(ctx context.Context, name string) error {
 	return err
 }
 
-func (podman *Podman) VolumeDelete(ctx context.Context, name string) error {
+func (backend *Podman) VolumeDelete(ctx context.Context, name string) error {
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, err := podman.cli.VolumesApi.LibpodRemoveVolume(ctx, name, &swagger.VolumesApiLibpodRemoveVolumeOpts{
+	_, err := backend.cli.VolumesApi.LibpodRemoveVolume(ctx, name, &swagger.VolumesApiLibpodRemoveVolumeOpts{
 		Force: optional.NewBool(false),
 	})
 
@@ -157,9 +158,9 @@ func (podman *Podman) VolumeDelete(ctx context.Context, name string) error {
 	return err
 }
 
-func (podman *Podman) ImagePull(ctx context.Context, reference string) error {
+func (backend *Podman) ImagePull(ctx context.Context, reference string) error {
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, _, err := podman.cli.ImagesApi.LibpodImagesPull(ctx, &swagger.ImagesApiLibpodImagesPullOpts{
+	_, _, err := backend.cli.ImagesApi.LibpodImagesPull(ctx, &swagger.ImagesApiLibpodImagesPullOpts{
 		Reference: optional.NewString(reference),
 	})
 
@@ -173,7 +174,7 @@ func (podman *Podman) ImagePull(ctx context.Context, reference string) error {
 	}
 
 	// Due to how Swagger-generated API handles (and essentially ignores) pull errors, we need to check twice
-	err = podman.ImageInspect(ctx, reference)
+	err = backend.ImageInspect(ctx, reference)
 
 	// Enrich the error with it's cause if possible
 	if err != nil {
@@ -185,17 +186,17 @@ func (podman *Podman) ImagePull(ctx context.Context, reference string) error {
 	return err
 }
 
-func (podman *Podman) ImagePush(ctx context.Context, reference string) error {
+func (backend *Podman) ImagePush(ctx context.Context, reference string) error {
 	// Work around https://github.com/containers/buildah/issues/1034
 	podmanReference := "localhost/" + reference
 
-	auth, err := XRegistryAuthForImage(reference)
+	auth, err := podman.XRegistryAuthForImage(reference)
 	if err != nil {
 		return err
 	}
 
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, _, err = podman.cli.ImagesApi.LibpodPushImage(ctx, podmanReference, &swagger.ImagesApiLibpodPushImageOpts{
+	_, _, err = backend.cli.ImagesApi.LibpodPushImage(ctx, podmanReference, &swagger.ImagesApiLibpodPushImageOpts{
 		Destination: optional.NewString(reference),
 		XRegistryAuth: optional.NewString(auth),
 	})
@@ -212,7 +213,7 @@ func (podman *Podman) ImagePush(ctx context.Context, reference string) error {
 	return nil
 }
 
-func (podman *Podman) ImageBuild(
+func (backend *Podman) ImageBuild(
 	ctx context.Context,
 	tarball io.Reader,
 	input *ImageBuildInput,
@@ -221,7 +222,7 @@ func (podman *Podman) ImageBuild(
 	errChan := make(chan error)
 
 	go func() {
-		buildURL, err := url.Parse(podman.basePath + "/libpod/build")
+		buildURL, err := url.Parse(backend.basePath + "/libpod/build")
 		if err != nil {
 			errChan <- err
 			return
@@ -253,7 +254,7 @@ func (podman *Podman) ImageBuild(
 		}
 		req.Header.Set("Content-Type", "application/x-tar")
 
-		resp, err := podman.httpClient.Do(req)
+		resp, err := backend.httpClient.Do(req)
 		if err != nil {
 			errChan <- err
 			return
@@ -277,9 +278,9 @@ func (podman *Podman) ImageBuild(
 	return logChan, errChan
 }
 
-func (podman *Podman) ImageInspect(ctx context.Context, reference string) error {
+func (backend *Podman) ImageInspect(ctx context.Context, reference string) error {
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, resp, err := podman.cli.ImagesApi.LibpodInspectImage(ctx, reference)
+	_, resp, err := backend.cli.ImagesApi.LibpodInspectImage(ctx, reference)
 
 	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		return ErrNotFound
@@ -295,9 +296,9 @@ func (podman *Podman) ImageInspect(ctx context.Context, reference string) error 
 	return err
 }
 
-func (podman *Podman) ImageDelete(ctx context.Context, reference string) error {
+func (backend *Podman) ImageDelete(ctx context.Context, reference string) error {
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, resp, err := podman.cli.ImagesApi.LibpodRemoveImage(ctx, reference, &swagger.ImagesApiLibpodRemoveImageOpts{})
+	_, resp, err := backend.cli.ImagesApi.LibpodRemoveImage(ctx, reference, &swagger.ImagesApiLibpodRemoveImageOpts{})
 
 	if resp != nil && resp.StatusCode == http.StatusNotFound {
 		return ErrNotFound
@@ -313,7 +314,7 @@ func (podman *Podman) ImageDelete(ctx context.Context, reference string) error {
 	return err
 }
 
-func (podman *Podman) ContainerCreate(
+func (backend *Podman) ContainerCreate(
 	ctx context.Context,
 	input *ContainerCreateInput,
 	name string,
@@ -358,7 +359,7 @@ func (podman *Podman) ContainerCreate(
 	}
 
 	// nolint:bodyclose // already closed by Swagger-generated code
-	cont, _, err := podman.cli.ContainersApi.LibpodCreateContainer(ctx, &swagger.ContainersApiLibpodCreateContainerOpts{
+	cont, _, err := backend.cli.ContainersApi.LibpodCreateContainer(ctx, &swagger.ContainersApiLibpodCreateContainerOpts{
 		Body: optional.NewInterface(&specGen),
 	})
 	if err != nil {
@@ -375,9 +376,9 @@ func (podman *Podman) ContainerCreate(
 	}, nil
 }
 
-func (podman *Podman) ContainerStart(ctx context.Context, id string) error {
+func (backend *Podman) ContainerStart(ctx context.Context, id string) error {
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, err := podman.cli.ContainersApi.LibpodStartContainer(ctx, id, &swagger.ContainersApiLibpodStartContainerOpts{})
+	_, err := backend.cli.ContainersApi.LibpodStartContainer(ctx, id, &swagger.ContainersApiLibpodStartContainerOpts{})
 
 	// Enrich the error with it's cause if possible
 	if err != nil {
@@ -389,13 +390,13 @@ func (podman *Podman) ContainerStart(ctx context.Context, id string) error {
 	return err
 }
 
-func (podman *Podman) ContainerWait(ctx context.Context, id string) (<-chan ContainerWaitResult, <-chan error) {
+func (backend *Podman) ContainerWait(ctx context.Context, id string) (<-chan ContainerWaitResult, <-chan error) {
 	waitChan := make(chan ContainerWaitResult)
 	errChan := make(chan error)
 
 	go func() {
 		// nolint:bodyclose // already closed by Swagger-generated code
-		resp, _, err := podman.cli.ContainersApi.LibpodWaitContainer(ctx, id, &swagger.ContainersApiLibpodWaitContainerOpts{
+		resp, _, err := backend.cli.ContainersApi.LibpodWaitContainer(ctx, id, &swagger.ContainersApiLibpodWaitContainerOpts{
 			Condition: optional.NewString("stopped"),
 		})
 
@@ -423,9 +424,9 @@ func (podman *Podman) ContainerWait(ctx context.Context, id string) (<-chan Cont
 	return waitChan, errChan
 }
 
-func (podman *Podman) ContainerDelete(ctx context.Context, id string) error {
+func (backend *Podman) ContainerDelete(ctx context.Context, id string) error {
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, err := podman.cli.ContainersApi.LibpodRemoveContainer(ctx, id, &swagger.ContainersApiLibpodRemoveContainerOpts{
+	_, err := backend.cli.ContainersApi.LibpodRemoveContainer(ctx, id, &swagger.ContainersApiLibpodRemoveContainerOpts{
 		Force: optional.NewBool(true),
 		V:     optional.NewBool(true),
 	})
@@ -440,9 +441,9 @@ func (podman *Podman) ContainerDelete(ctx context.Context, id string) error {
 	return err
 }
 
-func (podman *Podman) SystemInfo(ctx context.Context) (*SystemInfo, error) {
+func (backend *Podman) SystemInfo(ctx context.Context) (*SystemInfo, error) {
 	// nolint:bodyclose // already closed by Swagger-generated code
-	info, _, err := podman.cli.SystemApi.LibpodGetInfo(ctx)
+	info, _, err := backend.cli.SystemApi.LibpodGetInfo(ctx)
 
 	// Enrich the error with it's cause if possible
 	if err != nil {

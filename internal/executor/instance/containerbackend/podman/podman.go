@@ -1,18 +1,14 @@
-package containerbackend
+package podman
 
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/docker/cli/cli/config"
-	"io/ioutil"
-	"strings"
+	"github.com/containers/image/v5/pkg/docker/config"
+	"github.com/containers/image/v5/types"
 )
 
 func XRegistryAuthForImage(reference string) (string, error) {
-	dockerConfig := config.LoadDefaultConfigFile(ioutil.Discard)
-	referenceParts := strings.SplitN(reference, "/", 2)
-
-	authConfig, err := dockerConfig.GetAuthConfig(referenceParts[0])
+	authConfig, err := config.GetCredentials(&types.SystemContext{}, reference)
 	if err != nil {
 		return "", err
 	}
