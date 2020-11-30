@@ -30,7 +30,7 @@ var verbose bool
 
 // Container-related flags.
 var containerBackend string
-var containerNoPull bool
+var containerPull bool
 
 // Container-related flags: Dockerfile as CI environment[1] feature.
 // [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
@@ -116,7 +116,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Container-related options
 	executorOpts = append(executorOpts, executor.WithContainerOptions(options.ContainerOptions{
-		NoPull:    containerNoPull,
+		Pull:      containerPull,
 		NoCleanup: debugNoCleanup,
 
 		DockerfileImageTemplate: dockerfileImageTemplate,
@@ -162,19 +162,14 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&containerBackend, "container-backend", containerbackend.BackendAuto,
 		fmt.Sprintf("container engine backend to use, either \"%s\", \"%s\" or \"%s\"",
 			containerbackend.BackendDocker, containerbackend.BackendPodman, containerbackend.BackendAuto))
-	cmd.PersistentFlags().BoolVar(&containerNoPull, "container-no-pull", false,
-		"don't attempt to pull the images before starting containers")
+	cmd.PersistentFlags().BoolVar(&containerPull, "container-pull", false,
+		"force pull the images before starting containers")
 
 	// Container-related flags: Dockerfile as CI environment feature
 	cmd.PersistentFlags().StringVar(&dockerfileImageTemplate, "dockerfile-image-template",
 		"gcr.io/cirrus-ci-community/%s:latest", "image that Dockerfile as CI environment feature should produce")
 	cmd.PersistentFlags().BoolVar(&dockerfileImagePush, "dockerfile-image-push",
 		false, "whether to push whe image produced by the Dockerfile as CI environment feature")
-
-	// Deprecated flags
-	cmd.PersistentFlags().BoolVar(&containerNoPull, "docker-no-pull", false,
-		"don't attempt to pull the images before starting containers")
-	_ = cmd.PersistentFlags().MarkDeprecated("docker-no-pull", "use --container-no-pull instead")
 
 	// Flags useful for debugging
 	cmd.PersistentFlags().BoolVar(&debugNoCleanup, "debug-no-cleanup", false,

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -207,8 +208,17 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 	assert.Contains(t, buf.String(), "'from_starlark' script succeeded")
 }
 
-// TestRunDockerNoPull ensures that --docker-no-pull argument actually disables the container image pulling.
-func TestRunDockerNoPull(t *testing.T) {
+// TestRunContainerPull ensures that --docker-pull argument actually forces the container images to be pulled.
+func TestRunContainerPull(t *testing.T) {
+	backend, err := containerbackend.New(containerbackend.BackendAuto)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := backend.ImagePull(context.Background(), "debian:latest"); err != nil {
+		t.Fatal(err)
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/docker-no-pull")
 
 	// Create os.Stderr writer that duplicates it's output to buf
@@ -216,14 +226,14 @@ func TestRunDockerNoPull(t *testing.T) {
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "--docker-no-pull"})
+	command.SetArgs([]string{"run", "-v", "-o simple", "--container-pull"})
 	command.SetOut(writer)
 	command.SetErr(writer)
-	err := command.Execute()
+	err = command.Execute()
 
-	require.NotNil(t, err)
-	assert.NotContains(t, buf.String(), "pulling image")
-	assert.Contains(t, strings.ToLower(buf.String()), "no such image")
+	require.Nil(t, err)
+	assert.Contains(t, strings.ToLower(buf.String()), "pulling image")
+	assert.NotContains(t, strings.ToLower(buf.String()), "no such image")
 }
 
 // TestRunTaskFilteringByLabel ensures that task filtering logic is label-aware.
@@ -314,7 +324,7 @@ func TestRunPrebuiltImageTemplate(t *testing.T) {
 	image := fmt.Sprintf("testing.invalid/%s:latest", uuid.New().String())
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "--dockerfile-image-template=" + image, "--container-no-pull"})
+	command.SetArgs([]string{"run", "-v", "-o simple", "--dockerfile-image-template=" + image})
 	err := command.Execute()
 	require.NoError(t, err)
 

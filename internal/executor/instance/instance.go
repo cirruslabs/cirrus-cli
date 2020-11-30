@@ -142,7 +142,7 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 		additionalContainer.Memory = clampMemory(additionalContainer.Memory, availableMemory)
 	}
 
-	if config.ContainerOptions.ShouldPullImage(params.Image) {
+	if config.ContainerOptions.ShouldPullImage(ctx, backend, params.Image) {
 		dockerPullLogger := logger.Scoped("image pull")
 		dockerPullLogger.Infof("Pulling image %s...", params.Image)
 		if err := backend.ImagePull(ctx, params.Image); err != nil {
