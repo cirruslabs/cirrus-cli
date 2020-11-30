@@ -187,16 +187,13 @@ func (backend *Podman) ImagePull(ctx context.Context, reference string) error {
 }
 
 func (backend *Podman) ImagePush(ctx context.Context, reference string) error {
-	// Work around https://github.com/containers/buildah/issues/1034
-	podmanReference := "localhost/" + reference
-
 	auth, err := podman.XRegistryAuthForImage(reference)
 	if err != nil {
 		return err
 	}
 
 	// nolint:bodyclose // already closed by Swagger-generated code
-	_, _, err = backend.cli.ImagesApi.LibpodPushImage(ctx, podmanReference, &swagger.ImagesApiLibpodPushImageOpts{
+	_, _, err = backend.cli.ImagesApi.LibpodPushImage(ctx, reference, &swagger.ImagesApiLibpodPushImageOpts{
 		Destination:   optional.NewString(reference),
 		XRegistryAuth: optional.NewString(auth),
 	})
@@ -270,6 +267,20 @@ func (backend *Podman) ImageBuild(
 		if err := resp.Body.Close(); err != nil {
 			errChan <- err
 			return
+		}
+
+		// Work around https://github.com/containers/buildah/issues/1034
+		if len(input.Tags) > 0 {
+			tagParts := strings.Split(input.Tags[0], ":")
+			const expectedNumberOfTagParts = 2
+
+			if len(tagParts) == expectedNumberOfTagParts {
+				// nolint:bodyclose // already closed by Swagger-generated code
+				_, _ = backend.cli.ImagesApi.LibpodTagImage(ctx, "localhost/"+input.Tags[0], &swagger.ImagesApiLibpodTagImageOpts{
+					Repo: optional.NewString(tagParts[0]),
+					Tag:  optional.NewString(tagParts[1]),
+				})
+			}
 		}
 
 		errChan <- ErrDone
