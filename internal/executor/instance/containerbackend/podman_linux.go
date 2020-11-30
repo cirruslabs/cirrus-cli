@@ -197,7 +197,7 @@ func (backend *Podman) ImagePush(ctx context.Context, reference string) error {
 
 	// nolint:bodyclose // already closed by Swagger-generated code
 	_, _, err = backend.cli.ImagesApi.LibpodPushImage(ctx, podmanReference, &swagger.ImagesApiLibpodPushImageOpts{
-		Destination: optional.NewString(reference),
+		Destination:   optional.NewString(reference),
 		XRegistryAuth: optional.NewString(auth),
 	})
 
