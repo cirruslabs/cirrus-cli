@@ -32,6 +32,11 @@ var verbose bool
 var containerBackend string
 var containerNoPull bool
 
+// Container-related flags: Dockerfile as CI environment[1] feature.
+// [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
+var dockerfileImageTemplate string
+var dockerfileImagePush bool
+
 // Flags useful for debugging.
 var debugNoCleanup bool
 
@@ -113,6 +118,9 @@ func run(cmd *cobra.Command, args []string) error {
 	executorOpts = append(executorOpts, executor.WithContainerOptions(options.ContainerOptions{
 		NoPull:    containerNoPull,
 		NoCleanup: debugNoCleanup,
+
+		DockerfileImageTemplate: dockerfileImageTemplate,
+		DockerfileImagePush:     dockerfileImagePush,
 	}))
 
 	// Environment
@@ -156,6 +164,12 @@ func newRunCmd() *cobra.Command {
 			containerbackend.BackendDocker, containerbackend.BackendPodman, containerbackend.BackendAuto))
 	cmd.PersistentFlags().BoolVar(&containerNoPull, "container-no-pull", false,
 		"don't attempt to pull the images before starting containers")
+
+	// Container-related flags: Dockerfile as CI environment feature
+	cmd.PersistentFlags().StringVar(&dockerfileImageTemplate, "dockerfile-image-template",
+		"gcr.io/cirrus-ci-community/%s:latest", "image that Dockerfile as CI environment feature should produce")
+	cmd.PersistentFlags().BoolVar(&dockerfileImagePush, "dockerfile-image-push",
+		false, "whether to push whe image produced by the Dockerfile as CI environment feature")
 
 	// Deprecated flags
 	cmd.PersistentFlags().BoolVar(&containerNoPull, "docker-no-pull", false,

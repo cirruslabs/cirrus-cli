@@ -3,10 +3,12 @@ package commands_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -301,4 +303,28 @@ func TestRunNonStandardExtension(t *testing.T) {
 	err := command.Execute()
 
 	assert.Nil(t, err)
+}
+
+// TestRunPrebuiltImageTemplate ensures that the user can customize the image name
+// that gets built as a part of Dockerfile as CI environment feature[1].
+// [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
+func TestRunPrebuiltImageTemplate(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-prebuilt")
+
+	image := fmt.Sprintf("testing.invalid/%s:latest", uuid.New().String())
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-v", "-o simple", "--dockerfile-image-template=" + image, "--container-no-pull"})
+	err := command.Execute()
+	require.NoError(t, err)
+
+	// Make sure the image exists
+	backend := testutil.ContainerBackendFromEnv(t)
+	err = backend.ImageInspect(context.Background(), image)
+	require.NoError(t, err)
+
+	// Cleanup the image
+	if err := backend.ImageDelete(context.Background(), image); err != nil {
+		t.Fatal(err)
+	}
 }
