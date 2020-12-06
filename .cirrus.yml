@@ -1,5 +1,5 @@
 docker_builder:
-  name: Test (Docker)
+  name: Test (Linux with Docker)
   alias: Tests
   test_script:
     - wget --no-verbose -O - https://golang.org/dl/go1.15.linux-amd64.tar.gz | tar -C /usr/local -xz
@@ -9,7 +9,7 @@ docker_builder:
     HOME: /root
 
 docker_builder:
-  name: Test (Podman)
+  name: Test (Linux with Podman)
   alias: Tests
   install_podman_script:
     - . /etc/os-release
@@ -27,6 +27,17 @@ docker_builder:
   env:
     HOME: /root
     CIRRUS_CONTAINER_BACKEND: podman
+
+docker_builder:
+  name: Test (Windows)
+  alias: Tests
+  platform: windows
+  os_version: 2019
+  test_script:
+    - choco install -y golang
+    - refreshenv
+    - md C:\Windows\system32\config\systemprofile\AppData\Local\Temp
+    - go test ./...
 
 task:
   name: Release (Dry Run)
