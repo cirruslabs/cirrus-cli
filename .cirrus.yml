@@ -52,8 +52,6 @@ apple_silicon: &APPLE_SILICON_BUILD
     - gotip version
   build_script:
     - CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 gotip build -o cirrus-darwin-arm64 -ldflags "-X github.com/cirruslabs/cirrus-cli/internal/version.Version=$CIRRUS_TAG" cmd/cirrus/main.go
-  sign_script:
-    - codesign --sign - cirrus-darwin-arm64
 
 task:
   name: Release Apple Silicon (Dry Run)
