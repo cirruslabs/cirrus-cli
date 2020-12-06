@@ -157,7 +157,7 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 	input := containerbackend.ContainerCreateInput{
 		Image: params.Image,
 		Entrypoint: []string{
-			path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent),
+			path.Join(WorkingVolumeMountpoint, WorkingVolumeAgentBinary),
 			"-api-endpoint",
 			config.ContainerEndpoint,
 			"-server-token",

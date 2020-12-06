@@ -25,7 +25,7 @@ const (
 	WorkingVolumeMountpoint = "/tmp/cirrus-ci"
 
 	// Agent binary relative to the WorkingVolumeMountpoint.
-	WorkingVolumeAgent = "cirrus-ci-agent"
+	WorkingVolumeAgentBinary = "cirrus-ci-agent"
 
 	// Working directory relative to the WorkingVolumeMountpoint.
 	WorkingVolumeWorkingDir = "working-dir"
@@ -81,7 +81,7 @@ func CreateWorkingVolume(
 
 	// Create and start a helper container that will copy the agent and project directory
 	// (if not specified otherwise) into the working volume
-	copyCmd := fmt.Sprintf("cp /bin/cirrus-ci-agent %s", path.Join(WorkingVolumeMountpoint, WorkingVolumeAgent))
+	copyCmd := fmt.Sprintf("cp /bin/cirrus-ci-agent %s", path.Join(WorkingVolumeMountpoint, WorkingVolumeAgentBinary))
 
 	if !dontPopulate {
 		copyCmd += fmt.Sprintf(" && rsync -r --filter=':- .gitignore' %s/ %s",
