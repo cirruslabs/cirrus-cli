@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/google/uuid"
 	"path"
+	"runtime"
 )
 
 var (
@@ -108,9 +109,11 @@ func CreateWorkingVolume(
 			ReadOnly: true,
 		})
 
-		// Disable SELinux confinement for this container, otherwise
-		// the rsync might fail when accessing the project directory
-		input.DisableSELinux = true
+		if runtime.GOOS == "linux" {
+			// Disable SELinux confinement for this container, otherwise
+			// the rsync might fail when accessing the project directory
+			input.DisableSELinux = true
+		}
 	}
 
 	containerName := fmt.Sprintf("cirrus-helper-container-%s", uuid.New().String())
