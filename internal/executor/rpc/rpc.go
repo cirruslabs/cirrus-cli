@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -82,6 +83,7 @@ func (r *RPC) ClientSecret() string {
 func (r *RPC) Start(ctx context.Context) error {
 	network := "tcp"
 	address := "localhost:0"
+	var socketDir string
 
 	// Work around host.docker.internal missing on Linux
 	//
@@ -93,9 +95,19 @@ func (r *RPC) Start(ctx context.Context) error {
 			network = "tcp"
 			address = fmt.Sprintf("%s:0", cloudBuildIP)
 		} else {
-			network = networkUnix
-			address = fmt.Sprintf("/tmp/cli-%s.sock", uuid.New().String())
+			socketDir = fmt.Sprintf("/tmp/cli-%s", uuid.New().String())
 		}
+	} else if runtime.GOOS == "windows" && heuristic.IsRunningWindowsContainers(ctx) {
+		socketDir = fmt.Sprintf("C:\\Windows\\Temp\\cli-%s", uuid.New().String())
+	}
+
+	if socketDir != "" {
+		if err := os.Mkdir(socketDir, 0700); err != nil {
+			return err
+		}
+
+		network = networkUnix
+		address = filepath.Join(socketDir, "cli.sock")
 	}
 
 	listener, err := net.Listen(network, address)
@@ -123,11 +135,12 @@ func (r *RPC) Start(ctx context.Context) error {
 // ContainerEndpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag
 // when running inside of a container.
 func (r *RPC) ContainerEndpoint() string {
-	if runtime.GOOS == "linux" {
-		if r.listener.Addr().Network() == networkUnix {
-			return "unix://" + r.listener.Addr().String()
-		}
+	if r.listener.Addr().Network() == networkUnix {
+		return "unix:" + r.listener.Addr().String()
+	}
 
+	// There's no host.docker.internal on Linux
+	if runtime.GOOS == "linux" {
 		return fmt.Sprintf("http://%s", r.listener.Addr().String())
 	}
 

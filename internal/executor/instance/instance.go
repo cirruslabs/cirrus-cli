@@ -8,11 +8,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/echelon"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"math"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -43,11 +45,24 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 
 	switch instance := dynamicInstance.Message.(type) {
 	case *api.ContainerInstance:
+		var containerPlatform platform.Platform
+
+		switch instance.Platform {
+		case api.Platform_LINUX:
+			containerPlatform = platform.NewUnix()
+		case api.Platform_WINDOWS:
+			containerPlatform = platform.NewWindows()
+		default:
+			return nil, fmt.Errorf("%w: unsupported container instance platform: %s",
+				ErrFailedToCreateInstance, instance.Platform.String())
+		}
+
 		return &ContainerInstance{
 			Image:                instance.Image,
 			CPU:                  instance.Cpu,
 			Memory:               instance.Memory,
 			AdditionalContainers: instance.AdditionalContainers,
+			Platform:             containerPlatform,
 		}, nil
 	case *api.PipeInstance:
 		stages, err := PipeStagesFromCommands(commands)
@@ -76,7 +91,7 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 	case *api.PersistentWorkerInstance:
 		return NewPersistentWorkerInstance()
 	case *api.DockerBuilder:
-		// Ensure that we're not trying to run e.g. Windows-specific scripts on macOS
+		// Ensures that we're not trying to run e.g. Windows-specific scripts on macOS
 		instanceOS := strings.ToLower(instance.Platform.String())
 		if runtime.GOOS != instanceOS {
 			return nil, fmt.Errorf("%w: cannot run %s Docker Builder instance on this platform",
@@ -104,7 +119,7 @@ type RunConfig struct {
 
 func (rc *RunConfig) GetAgentVersion() string {
 	if rc.agentVersion == "" {
-		return DefaultAgentVersion
+		return platform.DefaultAgentVersion
 	}
 
 	return rc.agentVersion
@@ -120,6 +135,7 @@ type Params struct {
 	Memory                 uint32
 	AdditionalContainers   []*api.AdditionalContainer
 	CommandFrom, CommandTo string
+	Platform               platform.Platform
 	WorkingVolumeName      string
 }
 
@@ -157,7 +173,7 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 	input := containerbackend.ContainerCreateInput{
 		Image: params.Image,
 		Entrypoint: []string{
-			path.Join(WorkingVolumeMountpoint, WorkingVolumeAgentBinary),
+			params.Platform.AgentBinaryPath(),
 			"-api-endpoint",
 			config.ContainerEndpoint,
 			"-server-token",
@@ -176,7 +192,7 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 			{
 				Type:   containerbackend.MountTypeVolume,
 				Source: params.WorkingVolumeName,
-				Target: WorkingVolumeMountpoint,
+				Target: params.Platform.WorkingVolumeMountpoint(),
 			},
 		},
 		Resources: containerbackend.ContainerResources{
@@ -192,16 +208,6 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 			// itself is containerized (so we can't mount a Unix domain socket
 			// because we don't know the path to it on the host)
 			input.Network = heuristic.CloudBuildNetworkName
-		} else {
-			// Mount a Unix domain socket in all other Linux cases, assuming that
-			// we run in the same mount namespace as the Docker daemon
-			socketPath := strings.TrimPrefix(config.ContainerEndpoint, "unix://")
-
-			input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
-				Type:   containerbackend.MountTypeBind,
-				Source: socketPath,
-				Target: socketPath,
-			})
 		}
 
 		// Disable SELinux confinement for this container
@@ -212,12 +218,25 @@ func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Param
 		input.DisableSELinux = true
 	}
 
+	// Mount the  directory with the CLI's Unix domain socket in case it's used,
+	// assuming that we run in the same mount namespace as the Docker daemon
+	if strings.HasPrefix(config.ContainerEndpoint, "unix:") {
+		socketPath := strings.TrimPrefix(config.ContainerEndpoint, "unix:")
+		socketDir := filepath.Dir(socketPath)
+
+		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
+			Type:   containerbackend.MountTypeBind,
+			Source: socketDir,
+			Target: socketDir,
+		})
+	}
+
 	// In dirty mode we mount the project directory in read-write mode
 	if config.DirtyMode {
 		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
 			Type:   containerbackend.MountTypeBind,
 			Source: config.ProjectDir,
-			Target: path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir),
+			Target: path.Join(params.Platform.WorkingVolumeMountpoint(), platform.WorkingVolumeWorkingDir),
 		})
 	}
 

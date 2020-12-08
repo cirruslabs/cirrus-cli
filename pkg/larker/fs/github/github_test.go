@@ -47,7 +47,7 @@ func TestGetDirectory(t *testing.T) {
 	_, err := selfFS().Get(context.Background(), ".")
 
 	require.Error(t, err)
-	assert.True(t, errors.Is(err, syscall.EISDIR))
+	assert.True(t, errors.Is(err, fs.ErrNormalizedIsADirectory))
 }
 
 func TestGetNonExistentFile(t *testing.T) {

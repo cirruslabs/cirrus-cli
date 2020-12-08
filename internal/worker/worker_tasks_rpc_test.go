@@ -1,3 +1,5 @@
+// +build !windows
+
 package worker_test
 
 import (

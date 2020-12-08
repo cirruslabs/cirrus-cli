@@ -59,3 +59,18 @@ func GetCloudBuildIP(ctx context.Context) string {
 
 	return ""
 }
+
+func IsRunningWindowsContainers(ctx context.Context) bool {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return false
+	}
+	defer cli.Close()
+
+	info, err := cli.Info(ctx)
+	if err != nil {
+		return false
+	}
+
+	return info.OSType == "windows"
+}

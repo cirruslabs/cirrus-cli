@@ -1,3 +1,5 @@
+// +build !windows
+
 package executor_test
 
 import (
