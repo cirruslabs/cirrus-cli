@@ -27,6 +27,14 @@ OS-specific instructions can be found here: https://docs.docker.com/get-docker/
 
 Distribution-specific instructions can be found here: https://podman.io/getting-started/installation
 
+When Podman binary is found on the system it'll be used automatically, however, if there's also a Docker installed, then it will be preferred instead.
+
+To force the CLI to use Podman backend, pass the `--container-backend=podman` flag when running a build:
+
+```
+cirrus run --container-backend=podman Lint
+```
+
 ### Rootless builds
 
 Follow the Podman's official [rootless tutorial](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md) to configure a rootless environment.
