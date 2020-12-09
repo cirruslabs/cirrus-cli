@@ -17,7 +17,7 @@ Since currently CLI runs all of it's tasks either in [Docker](https://www.docker
 
 ## Docker
 
-Docker is available on a variety operating systems and distributions.
+[Docker](https://docker.com/) is available on a variety operating systems and distributions.
 
 OS-specific instructions can be found here: https://docs.docker.com/get-docker/
 
