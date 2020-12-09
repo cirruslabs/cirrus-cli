@@ -3,6 +3,7 @@ package instance
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"path"
 )
 
@@ -11,10 +12,11 @@ type ContainerInstance struct {
 	CPU                  float32
 	Memory               uint32
 	AdditionalContainers []*api.AdditionalContainer
+	Platform             platform.Platform
 }
 
 func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err error) {
-	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config)
+	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config, inst.Platform)
 	if err != nil {
 		return err
 	}
@@ -37,6 +39,7 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err 
 		CPU:                  inst.CPU,
 		Memory:               inst.Memory,
 		AdditionalContainers: inst.AdditionalContainers,
+		Platform:             inst.Platform,
 		WorkingVolumeName:    workingVolume.Name(),
 	}
 
@@ -48,5 +51,5 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err 
 }
 
 func (inst *ContainerInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {
-	return path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir)
+	return path.Join(inst.Platform.WorkingVolumeMountpoint(), platform.WorkingVolumeWorkingDir)
 }

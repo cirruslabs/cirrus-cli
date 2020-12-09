@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -22,10 +24,12 @@ func TestWorkingVolumeSmoke(t *testing.T) {
 	volume, err := instance.CreateWorkingVolume(
 		context.Background(),
 		backend,
+		options.ContainerOptions{},
 		desiredVolumeName,
 		dir,
 		false,
-		instance.DefaultAgentVersion,
+		platform.DefaultAgentVersion,
+		platform.Auto(),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -45,10 +49,12 @@ func TestCleanupOnFailure(t *testing.T) {
 	_, err := instance.CreateWorkingVolume(
 		context.Background(),
 		testutil.ContainerBackendFromEnv(t),
+		options.ContainerOptions{},
 		desiredVolumeName,
 		"/non-existent",
 		false,
-		instance.DefaultAgentVersion,
+		platform.DefaultAgentVersion,
+		platform.Auto(),
 	)
 	require.Error(t, err)
 

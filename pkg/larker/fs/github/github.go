@@ -52,7 +52,7 @@ func (gh *GitHub) Get(ctx context.Context, path string) ([]byte, error) {
 
 	// Simulate os.Read() behavior in case the supplied path points to a directory
 	if fileContent == nil {
-		return nil, syscall.EISDIR
+		return nil, fs.ErrNormalizedIsADirectory
 	}
 
 	fileBytes, err := base64.StdEncoding.DecodeString(*fileContent.Content)

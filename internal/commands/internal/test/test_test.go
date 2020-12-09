@@ -2,12 +2,14 @@ package test_test
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -26,5 +28,7 @@ func TestSimple(t *testing.T) {
 	err := command.Execute()
 
 	require.Nil(t, err)
-	assert.Contains(t, buf.String(), "'dir/subdir' succeeded")
+
+	adaptedPath := filepath.FromSlash("dir/subdir")
+	assert.Contains(t, buf.String(), fmt.Sprintf("'%s' succeeded", adaptedPath))
 }

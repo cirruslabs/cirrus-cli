@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"syscall"
 	"testing"
 )
 
@@ -65,7 +65,7 @@ func TestGetDirectory(t *testing.T) {
 	_, err := local.New(dir).Get(context.Background(), ".")
 
 	require.Error(t, err)
-	assert.True(t, errors.Is(err, syscall.EISDIR))
+	assert.True(t, errors.Is(err, fs.ErrNormalizedIsADirectory))
 }
 
 func TestGetNonExistentFile(t *testing.T) {
@@ -86,7 +86,7 @@ func TestPivotNoDotDotBreakout(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "/chroot/etc/passwd", pivotedPath)
+	assert.Equal(t, filepath.FromSlash("/chroot/etc/passwd"), pivotedPath)
 }
 
 func TestChdir(t *testing.T) {
@@ -99,5 +99,5 @@ func TestChdir(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "/tmp/working-directory", pivotedPath)
+	assert.Equal(t, filepath.FromSlash("/tmp/working-directory"), pivotedPath)
 }

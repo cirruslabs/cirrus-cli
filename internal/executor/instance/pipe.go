@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"path"
 )
 
@@ -51,7 +52,9 @@ func PipeStagesFromCommands(commands []*api.Command) ([]PipeStage, error) {
 }
 
 func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) (err error) {
-	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config)
+	platform := platform.NewUnix()
+
+	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config, platform)
 	if err != nil {
 		return err
 	}
@@ -76,6 +79,7 @@ func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) (err error) 
 			Memory:            pi.Memory,
 			CommandFrom:       stage.CommandFrom,
 			CommandTo:         stage.CommandTo,
+			Platform:          platform,
 			WorkingVolumeName: workingVolume.Name(),
 		}
 
@@ -88,5 +92,5 @@ func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) (err error) 
 }
 
 func (pi *PipeInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {
-	return path.Join(WorkingVolumeMountpoint, WorkingVolumeWorkingDir)
+	return path.Join(platform.NewUnix().WorkingVolumeMountpoint(), platform.WorkingVolumeWorkingDir)
 }

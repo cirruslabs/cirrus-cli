@@ -3,6 +3,7 @@ package instance_test
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"runtime"
@@ -13,7 +14,7 @@ import (
 func TestRetrieveAgentBinary(t *testing.T) {
 	// Does it work?
 	firstPath, err := instance.RetrieveAgentBinary(context.Background(),
-		instance.DefaultAgentVersion, runtime.GOOS, runtime.GOARCH)
+		platform.DefaultAgentVersion, runtime.GOOS, runtime.GOARCH)
 	if err != nil {
 		t.Fatal()
 	}
@@ -26,7 +27,7 @@ func TestRetrieveAgentBinary(t *testing.T) {
 	cachedRetrievalStart := time.Now()
 
 	secondPath, err := instance.RetrieveAgentBinary(context.Background(),
-		instance.DefaultAgentVersion, runtime.GOOS, runtime.GOARCH)
+		platform.DefaultAgentVersion, runtime.GOOS, runtime.GOARCH)
 	if err != nil {
 		t.Fatal()
 	}

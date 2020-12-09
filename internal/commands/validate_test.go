@@ -9,7 +9,7 @@ import (
 )
 
 // A simplest possible, but valid configuration.
-var validConfig = []byte("container:\n  image: debian:latest\n\ntask:\n  script: true")
+var validConfig = []byte("container:\n  image: debian:latest\n\ntask:\n  script: true\n")
 
 func TestValidateNoArgsNoFile(t *testing.T) {
 	testutil.TempChdir(t)
