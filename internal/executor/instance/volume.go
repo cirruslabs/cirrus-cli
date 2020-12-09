@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/google/uuid"
 	"runtime"
@@ -28,7 +29,7 @@ func CreateWorkingVolumeFromConfig(
 	initLogger := config.Logger.Scoped("Preparing execution environment...")
 	initLogger.Infof("Preparing volume to work with...")
 	desiredVolumeName := fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String())
-	v, err := CreateWorkingVolume(ctx, config.ContainerBackend, desiredVolumeName,
+	v, err := CreateWorkingVolume(ctx, config.ContainerBackend, config.ContainerOptions, desiredVolumeName,
 		config.ProjectDir, config.DirtyMode, config.GetAgentVersion(), platform)
 	if err != nil {
 		initLogger.Warnf("Failed to create a volume from working directory: %v", err)
@@ -43,6 +44,7 @@ func CreateWorkingVolumeFromConfig(
 func CreateWorkingVolume(
 	ctx context.Context,
 	backend containerbackend.ContainerBackend,
+	containerOptions options.ContainerOptions,
 	name string,
 	projectDir string,
 	dontPopulate bool,
@@ -52,8 +54,10 @@ func CreateWorkingVolume(
 	agentImage := platform.AgentImage(agentVersion)
 
 	// Retrieve the latest agent image
-	if err := backend.ImagePull(ctx, agentImage); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
+	if containerOptions.ShouldPullImage(ctx, backend, agentImage) {
+		if err := backend.ImagePull(ctx, agentImage); err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
+		}
 	}
 
 	if err := backend.VolumeCreate(ctx, name); err != nil {

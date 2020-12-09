@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/google/uuid"
@@ -23,6 +24,7 @@ func TestWorkingVolumeSmoke(t *testing.T) {
 	volume, err := instance.CreateWorkingVolume(
 		context.Background(),
 		backend,
+		options.ContainerOptions{},
 		desiredVolumeName,
 		dir,
 		false,
@@ -47,6 +49,7 @@ func TestCleanupOnFailure(t *testing.T) {
 	_, err := instance.CreateWorkingVolume(
 		context.Background(),
 		testutil.ContainerBackendFromEnv(t),
+		options.ContainerOptions{},
 		desiredVolumeName,
 		"/non-existent",
 		false,
