@@ -1,0 +1,7 @@
+windows_container:
+  image: mcr.microsoft.com/windows/servercore:ltsc2019
+
+task:
+  script:
+    - ps: "!(Test-Path -Path file.txt -PathType leaf)"
+    - type nul > file.txt

@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
@@ -70,4 +71,19 @@ func TestExecutorClone(t *testing.T) {
 	if err := e.Run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// TestDirtyMode ensures that files created in dirty mode exist on the host.
+func TestDirtyMode(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/dirty-mode-windows")
+
+	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	err := testutil.ExecuteWithOptions(t, dir, executor.WithLogger(logger), executor.WithDirtyMode())
+	assert.NoError(t, err)
+
+	// Check that the file was created
+	_, err = os.Stat(filepath.Join(dir, "file.txt"))
+	assert.NoError(t, err)
 }
