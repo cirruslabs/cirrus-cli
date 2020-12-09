@@ -51,7 +51,7 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 		case api.Platform_LINUX:
 			containerPlatform = platform.NewUnix()
 		case api.Platform_WINDOWS:
-			containerPlatform = platform.NewWindows()
+			containerPlatform = platform.NewWindows(instance.OsVersion)
 		default:
 			return nil, fmt.Errorf("%w: unsupported container instance platform: %s",
 				ErrFailedToCreateInstance, instance.Platform.String())

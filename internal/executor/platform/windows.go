@@ -5,10 +5,25 @@ import (
 	"path/filepath"
 )
 
-type WindowsPlatform struct{}
+type WindowsPlatform struct {
+	image string
+}
 
-func NewWindows() Platform {
-	return &WindowsPlatform{}
+func NewWindows(osVersion string) Platform {
+	var image string
+
+	switch osVersion {
+	case "1709":
+		image = "mcr.microsoft.com/windows/servercore:1709"
+	case "1803":
+		image = "mcr.microsoft.com/windows/servercore:1803"
+	default:
+		image = "mcr.microsoft.com/windows/servercore:ltsc2019"
+	}
+
+	return &WindowsPlatform{
+		image: image,
+	}
 }
 
 func (platform *WindowsPlatform) ProjectDirMountpoint() string {
@@ -20,7 +35,7 @@ func (platform *WindowsPlatform) WorkingVolumeMountpoint() string {
 }
 
 func (platform *WindowsPlatform) AgentImage(version string) string {
-	return "mcr.microsoft.com/windows/servercore:ltsc2019"
+	return platform.image
 }
 
 func (platform *WindowsPlatform) CopyCommand(populate bool) []string {
