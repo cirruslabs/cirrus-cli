@@ -1,5 +1,3 @@
-// +build !windows
-
 package instance_test
 
 import (
@@ -29,7 +27,7 @@ func TestWorkingVolumeSmoke(t *testing.T) {
 		dir,
 		false,
 		platform.DefaultAgentVersion,
-		platform.NewUnix(),
+		platform.Auto(),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -53,7 +51,7 @@ func TestCleanupOnFailure(t *testing.T) {
 		"/non-existent",
 		false,
 		platform.DefaultAgentVersion,
-		platform.NewUnix(),
+		platform.Auto(),
 	)
 	require.Error(t, err)
 
