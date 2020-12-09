@@ -13,7 +13,7 @@
 
 # Prequisites
 
-Since currently CLI runs all of it's tasks either in [Docker](https://www.docker.com/) or [Podman](https://podman.io/), make sure one of these is installed.
+Since currently CLI runs all of it's tasks either via [Docker](#docker) or [Podman](#podman), make sure one of these is installed.
 
 ## Docker
 
