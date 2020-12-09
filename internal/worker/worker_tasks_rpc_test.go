@@ -1,11 +1,10 @@
-// +build !windows
-
 package worker_test
 
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"io"
+	"runtime"
 )
 
 type TasksRPC struct {
@@ -18,6 +17,13 @@ func (tasksRPC *TasksRPC) InitialCommands(
 	ctx context.Context,
 	request *api.InitialCommandsRequest,
 ) (*api.CommandsResponse, error) {
+	var checkScript string
+	if runtime.GOOS == "windows" {
+		checkScript = "type go.mod"
+	} else {
+		checkScript = "test -e go.mod"
+	}
+
 	return &api.CommandsResponse{
 		Environment: map[string]string{
 			"CIRRUS_REPO_CLONE_URL": "http://github.com/cirruslabs/cirrus-cli.git",
@@ -34,9 +40,7 @@ func (tasksRPC *TasksRPC) InitialCommands(
 				Name: "check",
 				Instruction: &api.Command_ScriptInstruction{
 					ScriptInstruction: &api.ScriptInstruction{
-						Scripts: []string{
-							"test -e go.mod",
-						},
+						Scripts: []string{checkScript},
 					},
 				},
 			},
