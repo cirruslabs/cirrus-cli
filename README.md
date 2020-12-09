@@ -27,7 +27,7 @@ the tasks will be executed the same way years from now regardless what versions 
 Cirrus CLI reuses the [same YAML configuration format as Cirrus CI](https://cirrus-ci.org/guide/writing-tasks/) which allows to
 reuse a large [list of examples](https://cirrus-ci.org/examples/) created by Cirrus CI community.
 
-**Note:** Cirrus CLI can be used in any environment that has Docker installed. It can be your laptop or any CI system you already have
+**Note:** Cirrus CLI can be used in any environment that has [Docker](https://docker.com/) or [Podman](https://podman.io/) installed. It can be your laptop or any CI system you already have
 like Jenkins, GitHub Actions, Travis CI, etc. With Cirrus CLI it's no longer a requirement to use Cirrus CI in order to benefit from Cirrus
 configuration format that we (Cirrus Labs) have crafted for so long and really proud of.
 
@@ -117,7 +117,7 @@ cirrus run --environment CIRRUS_HTTP_CACHE_HOST=http-cache-host.internal:8080
 Cirrus CLI aims to run in different environments, but in some environments we choose to provide more usability at the cost of some security trade-offs:
 
 * SELinux
-  * both the task container and the helper container that copies the project directory into a per-task Docker volume using `rsync` run unconfined
+  * both the task container and the helper container (that copies the project directory into a per-task container volume using `rsync`) run unconfined
 
 Please [open an issue](https://github.com/cirruslabs/cirrus-cli/issues/new) if your use-case requires a different approach.
 

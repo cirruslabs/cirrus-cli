@@ -13,7 +13,33 @@
 
 # Prequisites
 
-Since currently CLI runs all of it's tasks in [Docker](https://www.docker.com/), make sure it's [installed](https://docs.docker.com/get-docker/).
+Since currently CLI runs all of it's tasks either via [Docker](#docker) or [Podman](#podman), make sure one of these is installed.
+
+## Docker
+
+[Docker](https://docker.com/) is available on a variety operating systems and distributions.
+
+OS-specific instructions can be found here: https://docs.docker.com/get-docker/
+
+## Podman
+
+[Podman](https://podman.io/) is generally only available on Linux.
+
+Distribution-specific instructions can be found here: https://podman.io/getting-started/installation
+
+When Podman binary is found on the system it'll be used automatically, however, if there's also a Docker installed, then it will be preferred instead.
+
+To force the CLI to use Podman backend, pass the `--container-backend=podman` flag when running a build:
+
+```
+cirrus run --container-backend=podman Lint
+```
+
+### Rootless builds
+
+Follow the Podman's official [rootless tutorial](https://github.com/containers/podman/blob/master/docs/tutorials/rootless_tutorial.md) to configure a rootless environment.
+
+Once this is done, you can use the Podman backend as you'd normally do, without becoming a `root`
 
 # Installation
 
