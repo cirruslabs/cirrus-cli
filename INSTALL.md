@@ -23,7 +23,7 @@ OS-specific instructions can be found here: https://docs.docker.com/get-docker/
 
 ## Podman
 
-Podman is generally only available on Linux.
+[Podman](https://podman.io/) is generally only available on Linux.
 
 Distribution-specific instructions can be found here: https://podman.io/getting-started/installation
 
