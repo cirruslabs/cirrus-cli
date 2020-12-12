@@ -11,7 +11,7 @@
   * [Cloud Build](#cloud-build)
   * [Cirrus CI](#cirrus-ci)
 
-# Prequisites
+# Prerequisites
 
 Since currently CLI runs all of it's tasks either via [Docker](#docker) or [Podman](#podman), make sure one of these is installed.
 
