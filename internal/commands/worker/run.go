@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
 )
 
 var ErrRun = errors.New("run failed")
@@ -60,7 +61,8 @@ func NewRunCmd() *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(&configPath, "file", "f", "", "configuration file path (e.g. /etc/cirrus/worker.yml)")
 
-	cmd.PersistentFlags().StringVar(&name, "name", "%hostname-%n", "worker name to use when registering in the pool")
+	hostname, _ := os.Hostname()
+	cmd.PersistentFlags().StringVar(&name, "name", hostname, "worker name to use when registering in the pool")
 	_ = viper.BindPFlag("name", cmd.PersistentFlags().Lookup("name"))
 
 	cmd.PersistentFlags().StringVar(&token, "token", "", "pool registration token")
