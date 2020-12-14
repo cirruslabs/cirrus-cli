@@ -1,10 +1,10 @@
-# Persistent worker mode
+# Persistent Worker Mode
 
 CLI can run in a persistent worker mode and receive tasks from the Cirrus Cloud. This allows you to go beyond the [cloud offerings](https://cirrus-ci.org/guide/supported-computing-services/) and use your own infrastructure for running cloud tasks.
 
 ## Installation
 
-Follow the instruction in the [INSTALL.md](https://github.com/cirruslabs/cirrus-cli/blob/master/INSTALL.md).
+Follow the instruction in the [INSTALL.md](INSTALL.md) but note that Docker or Podman installation is not required.
 
 ## Running
 
