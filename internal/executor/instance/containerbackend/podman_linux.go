@@ -369,6 +369,10 @@ func (backend *Podman) ContainerCreate(
 		}
 	}
 
+	if input.DisableSELinux {
+		specGen.SelinuxOpts = []string{"disable"}
+	}
+
 	// nolint:bodyclose // already closed by Swagger-generated code
 	cont, _, err := backend.cli.ContainersApi.LibpodCreateContainer(ctx, &swagger.ContainersApiLibpodCreateContainerOpts{
 		Body: optional.NewInterface(&specGen),
