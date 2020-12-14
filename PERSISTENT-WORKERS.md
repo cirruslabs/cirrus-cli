@@ -16,7 +16,7 @@ cirrus worker run --token <poll registration token>
 
 This will start the persistent worker that periodically poll for new tasks in the foreground mode.
 
-By default, the worker's name is equal to `hostname`. Specify `--name` to explicitly provide the worker's name:
+By default, the worker's name is equal to the name of the current system. Specify `--name` to explicitly provide the worker's name:
 
 ```
 cirrus worker run --token <poll registration token> --name z390-worker
