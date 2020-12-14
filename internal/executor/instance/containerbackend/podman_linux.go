@@ -370,7 +370,7 @@ func (backend *Podman) ContainerCreate(
 	}
 
 	if input.DisableSELinux {
-		specGen.Annotations = map[string]string{"io.podman.annotations.label": "disable"}
+		specGen.SelinuxOpts = []string{"disable"}
 	}
 
 	// nolint:bodyclose // already closed by Swagger-generated code
