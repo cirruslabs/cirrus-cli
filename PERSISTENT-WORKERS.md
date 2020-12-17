@@ -1,6 +1,8 @@
 # Persistent Worker Mode
 
-CLI can run in a persistent worker mode and receive tasks from the Cirrus Cloud. This allows you to go beyond the [cloud offerings](https://cirrus-ci.org/guide/supported-computing-services/) and use your own infrastructure for running cloud tasks.
+CLI can run in a persistent worker mode and receive tasks from the Cirrus Cloud. This allows you to go beyond the [cloud offerings](https://cirrus-ci.org/)
+and use your own infrastructure for running cloud tasks. The main use case is to run Cirrus tasks directly on a hardware
+without any isolation and not in a virtual ephemeral environment.
 
 ## Installation
 
@@ -33,7 +35,7 @@ Example configuration:
 ```yaml
 token: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
-name: "MacMini-Slot-1"
+name: "MacMini-Rack-1-Slot-2"
 
 labels:
   connected-device: iPhone12ProMax
@@ -50,5 +52,6 @@ task:
   persistent_worker:
     labels:
       os: darwin
+      arch: arm64
   script: echo "running on-premise"
 ```
