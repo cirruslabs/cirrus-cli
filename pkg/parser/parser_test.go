@@ -30,6 +30,7 @@ var validCases = []string{
 	"example-mysql",
 	"example-rust",
 	"instance-persistent_worker",
+	"collectible-order",
 }
 
 var invalidCases = []string{
@@ -80,7 +81,37 @@ func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.
 		t.Fatal(err)
 	}
 
-	assert.JSONEq(t, string(expected), string(actual))
+	// Compare two schemas
+	var referenceArray []interface{}
+	if err := json.Unmarshal(expected, &referenceArray); err != nil {
+		t.Fatal(err)
+	}
+
+	var ourArray []interface{}
+	if err := json.Unmarshal(actual, &ourArray); err != nil {
+		t.Fatal(err)
+	}
+
+	differ := gojsondiff.New()
+	d := differ.CompareArrays(referenceArray, ourArray)
+
+	if d.Modified() {
+		var diffString string
+
+		config := formatter.AsciiFormatterConfig{
+			ShowArrayIndex: true,
+			Coloring:       true,
+		}
+
+		diffString, err = formatter.NewAsciiFormatter(referenceArray, config).Format(d)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fmt.Print(diffString)
+
+		t.Fail()
+	}
 }
 
 func TestInvalidConfigs(t *testing.T) {
