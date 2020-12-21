@@ -30,6 +30,7 @@ type Task struct {
 	parseable.DefaultParser
 }
 
+// nolint:gocognit // it's a parser helper, there is a lot of boilerplate
 func NewTask(
 	env map[string]string,
 	boolevator *boolevator.Boolevator,
@@ -47,6 +48,31 @@ func NewTask(
 			instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
 			func(node *node.Node) error {
 				inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
+				containerInstance, err := inst.Parse(node)
+				if err != nil {
+					return err
+				}
+
+				// Retrieve the platform to update the environment
+				task.proto.Environment = environment.Merge(
+					task.proto.Environment,
+					map[string]string{"CIRRUS_OS": strings.ToLower(containerInstance.Platform.String())},
+				)
+
+				anyInstance, err := ptypes.MarshalAny(containerInstance)
+				if err != nil {
+					return err
+				}
+				task.proto.Instance = anyInstance
+
+				return nil
+			})
+	}
+	if _, ok := additionalInstances["windows_container"]; !ok {
+		task.CollectibleField("windows_container",
+			instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
+			func(node *node.Node) error {
+				inst := instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
 				containerInstance, err := inst.Parse(node)
 				if err != nil {
 					return err
