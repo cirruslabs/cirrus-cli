@@ -1,0 +1,9 @@
+task:
+  persistent_worker: {}
+  container:
+    image: debian:latest
+
+task:
+  container:
+    image: debian:latest
+  persistent_worker: {}

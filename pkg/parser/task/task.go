@@ -77,6 +77,9 @@ func NewTask(
 					return err
 				}
 
+				// Clean CIRRUS_OS since we don't know where we will be running
+				delete(task.proto.Environment, "CIRRUS_OS")
+
 				anyInstance, err := ptypes.MarshalAny(persistentWorkerInstance)
 				if err != nil {
 					return err
