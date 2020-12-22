@@ -11,11 +11,6 @@ import (
 	"strconv"
 )
 
-const (
-	defaultWindowsCPU    = 1.0
-	defaultWindowsMemory = 1024
-)
-
 type WindowsContainer struct {
 	proto *api.ContainerInstance
 
@@ -114,10 +109,10 @@ func (container *WindowsContainer) Parse(node *node.Node) (*api.ContainerInstanc
 
 	// Resource defaults
 	if container.proto.Cpu == 0 {
-		container.proto.Cpu = defaultWindowsCPU
+		container.proto.Cpu = defaultCPU
 	}
 	if container.proto.Memory == 0 {
-		container.proto.Memory = defaultWindowsMemory
+		container.proto.Memory = defaultMemory
 	}
 
 	return container.proto, nil
