@@ -1,0 +1,9 @@
+windows_container:
+  dockerfile: ci/Dockerfile.windows
+  os_version: 1803
+
+task:
+  name: task1
+  script:
+    - ./test1.sh
+    - ./test2.sh

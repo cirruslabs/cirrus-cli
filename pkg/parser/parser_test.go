@@ -338,7 +338,6 @@ func TestSchema(t *testing.T) {
 		"gcp_credentials",
 		"gke_container",
 		"osx_instance",
-		"windows_container",
 	}
 
 	for _, ignoredInstance := range ignoredInstances {

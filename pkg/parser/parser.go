@@ -14,7 +14,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/lestrrat-go/jsschema"
@@ -351,6 +350,18 @@ func (p *Parser) createServiceTask(
 		dockerBuildArgs += fmt.Sprintf(" --build-arg %s", dockerBuildArg)
 	}
 
+	script := fmt.Sprintf("docker build "+
+		"--tag gcr.io/%s:%s "+
+		"--file %s%s ",
+		prebuiltInstance.Repository, prebuiltInstance.Reference,
+		taskContainer.Dockerfile, dockerBuildArgs)
+
+	if taskContainer.Platform == api.Platform_WINDOWS {
+		script += "."
+	} else {
+		script += "${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+	}
+
 	serviceTask := &api.Task{
 		Name:         fmt.Sprintf("Prebuild %s%s", taskContainer.Dockerfile, buildArgs),
 		LocalGroupId: p.NextTaskID(),
@@ -360,12 +371,7 @@ func (p *Parser) createServiceTask(
 				Name: "build",
 				Instruction: &api.Command_ScriptInstruction{
 					ScriptInstruction: &api.ScriptInstruction{
-						Scripts: []string{fmt.Sprintf("docker build "+
-							"--tag gcr.io/%s:%s "+
-							"--file %s%s "+
-							"${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}",
-							prebuiltInstance.Repository, prebuiltInstance.Reference,
-							taskContainer.Dockerfile, dockerBuildArgs)},
+						Scripts: []string{script},
 					},
 				},
 			},
@@ -421,11 +427,6 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 		taskContainer, ok := dynamicInstance.Message.(*api.ContainerInstance)
 		if !ok {
 			continue
-		}
-
-		if taskContainer.Platform != api.Platform_LINUX {
-			return nil, fmt.Errorf("%w: unsupported platform for building Dockerfile: %s",
-				parsererror.ErrParsing, taskContainer.Platform.String())
 		}
 
 		if taskContainer.Dockerfile == "" {
