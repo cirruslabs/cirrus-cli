@@ -99,6 +99,8 @@ github.com/cirruslabs/podmanapi v0.1.0 h1:JRRVDNKdg2fYooyQaTMEqrCVyPDmEqqPLtLflO
 github.com/cirruslabs/podmanapi v0.1.0/go.mod h1:Wpm7jzVEmeRCw1H2lW++/DCId83DSa4KJ3ZfjUWCdwU=
 github.com/cirruslabs/yaml v0.0.0-20201005110149-09a333859ff2 h1:dxpyIpu++pKq0fSQ2N8MbDbbG7hjq2BbOYOG2dfzCB4=
 github.com/cirruslabs/yaml v0.0.0-20201005110149-09a333859ff2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
+github.com/cirruslabs/yaml v0.0.0-20201223192638-1984d0f98f29 h1:Xup+l4/hePD8+OpwiPEyW02lJZR7s7g+mHuvwpW4jDU=
+github.com/cirruslabs/yaml v0.0.0-20201223192638-1984d0f98f29/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/containerd/cgroups v0.0.0-20190919134610-bf292b21730f/go.mod h1:OApqhQ4XNSNC13gXIwDjhOQxjWa/NxkwZXJ1EvqT0ko=
