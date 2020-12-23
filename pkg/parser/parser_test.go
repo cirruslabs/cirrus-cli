@@ -31,6 +31,7 @@ var validCases = []string{
 	"example-rust",
 	"instance-persistent_worker",
 	"collectible-order",
+	"yaml-12-booleans-only",
 }
 
 var invalidCases = []string{

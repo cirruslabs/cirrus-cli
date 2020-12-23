@@ -3,7 +3,7 @@ module github.com/cirruslabs/cirrus-cli
 go 1.14
 
 // https://github.com/go-yaml/yaml/pull/364
-replace gopkg.in/yaml.v2 => github.com/cirruslabs/yaml v0.0.0-20201005110149-09a333859ff2
+replace gopkg.in/yaml.v2 => github.com/cirruslabs/yaml v0.0.0-20201223192638-1984d0f98f29
 
 require (
 	github.com/Microsoft/hcsshim v0.8.10 // indirect

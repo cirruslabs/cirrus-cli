@@ -1,0 +1,7 @@
+container:
+  image: debian:latest
+
+task:
+  env:
+    DO_IT: YES
+  script: doit
