@@ -66,9 +66,13 @@ func convert(parent *Node, name string, obj interface{}) (*Node, error) {
 			result.Children = append(result.Children, mapSubtree)
 		}
 	default:
+		scalar := &ScalarValue{}
+		if typedObj != nil {
+			scalar.Value = fmt.Sprintf("%v", typedObj)
+		}
 		result = &Node{
 			Name:   name,
-			Value:  &ScalarValue{Value: fmt.Sprintf("%v", typedObj)},
+			Value:  scalar,
 			Parent: parent,
 		}
 	}
