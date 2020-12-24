@@ -24,7 +24,8 @@
     "environment": {
       "CIRRUS_OS": "linux",
       "CPU": "4",
-      "MEMORY": "12G"
+      "MEMORY": "12G",
+      "NOT_EXISTING_ONE": ""
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
@@ -61,7 +62,9 @@
     "environment": {
       "CIRRUS_OS": "linux",
       "CPU": "4",
+      "FOO": "${NOT_EXISTING_ONE}",
       "MEMORY": "12G",
+      "NOT_EXISTING_ONE": "",
       "SHARD": "tests",
       "TAG": "latest"
     },
@@ -101,7 +104,9 @@
     "environment": {
       "CIRRUS_OS": "linux",
       "CPU": "4",
+      "FOO": "${NOT_EXISTING_ONE}",
       "MEMORY": "12G",
+      "NOT_EXISTING_ONE": "",
       "SHARD": "tool_tests",
       "TAG": "latest"
     },

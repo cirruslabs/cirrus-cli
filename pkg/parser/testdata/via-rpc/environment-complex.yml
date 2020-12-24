@@ -4,6 +4,7 @@ container:
 env:
   CPU: 4
   MEMORY: 12G
+  NOT_EXISTING_ONE: # :-(
 
 task:
   clone_script: echo 'clone'
@@ -16,6 +17,7 @@ task:
   name: $SHARD-windows
   env:
     TAG: latest
+    FOO: ${NOT_EXISTING_ONE}
     matrix:
       SHARD: tests
       SHARD: tool_tests
