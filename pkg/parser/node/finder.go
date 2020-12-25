@@ -1,36 +1,42 @@
 package node
 
-func (node *Node) DeepFindChild(name string) *Node {
+func (node *Node) DeepFindCollectible(name string) *Node {
 	var fulfilledAtLeastOnce bool
 	var virtualNode Node
+
+	// Accumulate collectible nodes in descending order of priority
+	// (e.g. "env" field from the root YAML map comes first, then "env" field from the task's map, etc.)
+	var traverseChain []*Node
 
 	for current := node; current != nil; current = current.Parent {
 		for i := len(current.Children) - 1; i >= 0; i-- {
 			child := current.Children[i]
 
-			if child.Name != name {
-				continue
+			if child.Name == name {
+				traverseChain = append(traverseChain, child)
 			}
+		}
+	}
 
-			if !fulfilledAtLeastOnce {
-				virtualNode = *child
-				fulfilledAtLeastOnce = true
-			}
+	// Starting from the lowest priority node,
+	// merge the rest of the nodes into it
+	for i := len(traverseChain) - 1; i >= 0; i-- {
+		child := traverseChain[i]
 
-			for i := len(child.Children) - 1; i >= 0; i-- {
-				subChild := child.Children[i]
-
-				// Append fields from child that we don't have
-				if !virtualNode.HasChild(subChild.Name) {
-					virtualNode.Children = append(virtualNode.Children, subChild)
-				}
-			}
+		if !fulfilledAtLeastOnce {
+			virtualNode = *child
+			fulfilledAtLeastOnce = true
+		} else {
+			virtualNode.MergeFrom(child)
 		}
 	}
 
 	if !fulfilledAtLeastOnce {
 		return nil
 	}
+
+	// Simulate Cirrus Cloud parser behavior
+	virtualNode.Deduplicate()
 
 	return &virtualNode
 }
