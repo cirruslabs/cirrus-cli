@@ -111,7 +111,7 @@ func (parser *DefaultParser) CollectibleFields() []CollectibleField {
 }
 
 func evaluateCollectible(node *node.Node, field CollectibleField) error {
-	children := node.DeepFindChild(field.Name)
+	children := node.DeepFindCollectible(field.Name)
 
 	if children == nil {
 		return nil

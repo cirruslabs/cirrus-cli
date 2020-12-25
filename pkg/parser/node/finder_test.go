@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestDeepFindChildren(t *testing.T) {
+func TestDeepFindCollectible(t *testing.T) {
 	yamlSlice := yaml.MapSlice{
 		// First tree's children
 		{Key: "env", Value: yaml.MapSlice{
@@ -26,9 +26,9 @@ func TestDeepFindChildren(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	virtualNode := tree.Children[1].DeepFindChild("env")
-	assert.Equal(t, "KEY2", virtualNode.Children[0].Name)
-	assert.Equal(t, "KEY1", virtualNode.Children[1].Name)
+	virtualNode := tree.Children[1].DeepFindCollectible("env")
+	assert.Equal(t, "KEY1", virtualNode.Children[0].Name)
+	assert.Equal(t, "KEY2", virtualNode.Children[1].Name)
 }
 
 func TestDeepFindChildrenSameLevel(t *testing.T) {
@@ -48,10 +48,10 @@ func TestDeepFindChildrenSameLevel(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	virtualNode := tree.Children[0].DeepFindChild("env")
+	virtualNode := tree.Children[0].DeepFindCollectible("env")
 	assert.Len(t, virtualNode.Children, 2)
-	assert.Equal(t, "KEY1", virtualNode.Children[1].Name)
-	assert.Equal(t, "KEY2", virtualNode.Children[0].Name)
+	assert.Equal(t, "KEY1", virtualNode.Children[0].Name)
+	assert.Equal(t, "KEY2", virtualNode.Children[1].Name)
 }
 
 func TestHasChildren(t *testing.T) {

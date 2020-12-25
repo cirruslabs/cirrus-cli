@@ -1,0 +1,13 @@
+task:
+  container:
+    image: debian:latest
+  container:
+    image: debian:latest
+    additional_containers:
+      - name: nginx
+        memory: 10Gb
+        image: nginx:latest
+        port: 80
+    additional_containers:
+      - memory: 20Gb
+  script: true
