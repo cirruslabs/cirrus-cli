@@ -221,3 +221,22 @@ func TestSchemaValid(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestAffectedFiles(t *testing.T) {
+	yamlConfig := `
+container:
+  image: debian:latest
+
+task:
+  only_if: "changesInclude('.cirrus.yml', 'dev/**', 'bin/**') && $CIRRUS_PR != ''"
+  script: true
+`
+
+	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
+		YamlConfig:    yamlConfig,
+		AffectedFiles: []string{"bin/internal/external"},
+		Environment:   map[string]string{"CIRRUS_PR": "1234"},
+	})
+	require.NoError(t, err)
+	require.Len(t, response.Tasks, 1)
+}

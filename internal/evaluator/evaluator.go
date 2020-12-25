@@ -110,6 +110,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 	// Parse combined YAML
 	p := parser.New(
 		parser.WithEnvironment(request.Environment),
+		parser.WithAffectedFiles(request.AffectedFiles),
 		parser.WithFileSystem(fs),
 		parser.WithAdditionalInstances(additionalInstances),
 	)
