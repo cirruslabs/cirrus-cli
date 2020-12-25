@@ -110,7 +110,6 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			}
 
 			taskLike.SetID(p.NextTaskID())
-			taskLike.SetIndexWithinBuild(p.NextTaskLocalIndex())
 
 			// Set task's name if not set in the definition
 			if taskLike.Name() == "" {
@@ -132,6 +131,8 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			if !enabled {
 				continue
 			}
+
+			taskLike.SetIndexWithinBuild(p.NextTaskLocalIndex())
 
 			tasks = append(tasks, taskLike)
 		}
