@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
@@ -142,7 +143,7 @@ func (e *Executor) Run(ctx context.Context) error {
 
 		// Prepare task's instance
 		taskInstance := task.Instance
-		instanceRunOpts := instance.RunConfig{
+		instanceRunOpts := runconfig.RunConfig{
 			ContainerBackend:  e.containerBackend,
 			ProjectDir:        e.build.ProjectDir,
 			ContainerEndpoint: e.rpc.ContainerEndpoint(),

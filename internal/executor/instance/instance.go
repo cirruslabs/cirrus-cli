@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/echelon"
@@ -33,7 +34,7 @@ const (
 )
 
 type Instance interface {
-	Run(context.Context, *RunConfig) error
+	Run(context.Context, *runconfig.RunConfig) error
 	WorkingDirectory(projectDir string, dirtyMode bool) string
 }
 
@@ -104,31 +105,6 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 	}
 }
 
-type RunConfig struct {
-	ContainerBackend           containerbackend.ContainerBackend
-	ProjectDir                 string
-	ContainerEndpoint          string
-	DirectEndpoint             string
-	ServerSecret, ClientSecret string
-	TaskID                     int64
-	Logger                     *echelon.Logger
-	DirtyMode                  bool
-	ContainerOptions           options.ContainerOptions
-	agentVersion               string
-}
-
-func (rc *RunConfig) GetAgentVersion() string {
-	if rc.agentVersion == "" {
-		return platform.DefaultAgentVersion
-	}
-
-	return rc.agentVersion
-}
-
-func (rc *RunConfig) SetAgentVersion(agentVersion string) {
-	rc.agentVersion = agentVersion
-}
-
 type Params struct {
 	Image                  string
 	CPU                    float32
@@ -139,7 +115,7 @@ type Params struct {
 	WorkingVolumeName      string
 }
 
-func RunContainerizedAgent(ctx context.Context, config *RunConfig, params *Params) error {
+func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, params *Params) error {
 	logger := config.Logger
 	backend := config.ContainerBackend
 

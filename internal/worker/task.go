@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"google.golang.org/grpc"
 )
 
@@ -38,7 +39,7 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			return
 		}
 
-		if err := inst.Run(taskCtx, &instance.RunConfig{
+		if err := inst.Run(taskCtx, &runconfig.RunConfig{
 			ProjectDir:        "",
 			ContainerEndpoint: worker.rpcEndpoint,
 			DirectEndpoint:    worker.rpcEndpoint,

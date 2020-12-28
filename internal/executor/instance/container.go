@@ -3,6 +3,7 @@ package instance
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"path"
 )
@@ -15,7 +16,7 @@ type ContainerInstance struct {
 	Platform             platform.Platform
 }
 
-func (inst *ContainerInstance) Run(ctx context.Context, config *RunConfig) (err error) {
+func (inst *ContainerInstance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
 	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config, inst.Platform)
 	if err != nil {
 		return err

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/agent"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/otiai10/copy"
 	"io/ioutil"
 	"os"
@@ -37,7 +38,7 @@ func NewPersistentWorkerInstance() (*PersistentWorkerInstance, error) {
 	}, nil
 }
 
-func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *RunConfig) (err error) {
+func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
 	// Retrieve the agent's binary
 	agentPath, err := agent.RetrieveBinary(ctx, config.GetAgentVersion(), runtime.GOOS, runtime.GOARCH)
 	if err != nil {
