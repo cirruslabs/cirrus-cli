@@ -40,6 +40,13 @@ func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
 		return nil, fmt.Errorf("%w: failed to clone VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
 	}
 
+	// Ensure that the VM is isolated[1] from the host (e.g. shared folders, clipboard, etc.)
+	// [1]: https://download.parallels.com/desktop/v14/docs/en_US/Parallels%20Desktop%20Pro%20Edition%20Command-Line%20Reference/43645.htm
+	_, stderr, err = Prlctl(ctx, "set", vmNameFrom, "--isolate-vm", "on")
+	if err != nil {
+		return nil, fmt.Errorf("%w: failed to isolate VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
+	}
+
 	_, stderr, err = Prlctl(ctx, "start", vm.name)
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to start VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
