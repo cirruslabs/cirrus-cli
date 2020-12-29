@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
@@ -33,12 +35,7 @@ const (
 	nano = 1_000_000_000
 )
 
-type Instance interface {
-	Run(context.Context, *runconfig.RunConfig) error
-	WorkingDirectory(projectDir string, dirtyMode bool) string
-}
-
-func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, error) {
+func NewFromProto(anyInstance *any.Any, commands []*api.Command) (abstract.Instance, error) {
 	var dynamicInstance ptypes.DynamicAny
 	if err := ptypes.UnmarshalAny(anyInstance, &dynamicInstance); err != nil {
 		return nil, err
@@ -90,7 +87,7 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 			Arguments:  instance.Arguments,
 		}, nil
 	case *api.PersistentWorkerInstance:
-		return NewPersistentWorkerInstance()
+		return persistentworker.New(instance.Isolation)
 	case *api.DockerBuilder:
 		// Ensures that we're not trying to run e.g. Windows-specific scripts on macOS
 		instanceOS := strings.ToLower(instance.Platform.String())
@@ -99,7 +96,11 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command) (Instance, erro
 				ErrFailedToCreateInstance, strings.Title(instanceOS))
 		}
 
-		return NewPersistentWorkerInstance()
+		return persistentworker.New(&api.Isolation{
+			Type: &api.Isolation_None_{
+				None: &api.Isolation_None{},
+			},
+		})
 	default:
 		return nil, fmt.Errorf("%w: %T", ErrUnsupportedInstance, instance)
 	}

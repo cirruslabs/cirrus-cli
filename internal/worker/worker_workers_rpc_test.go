@@ -11,6 +11,8 @@ import (
 const taskID = 42
 
 type WorkersRPC struct {
+	Isolation *api.Isolation
+
 	WorkerWasRegistered bool
 	TaskWasAssigned     bool
 	TaskWasStarted      bool
@@ -42,6 +44,7 @@ func (workersRPC *WorkersRPC) Poll(ctx context.Context, request *api.PollRequest
 					TaskId:       taskID,
 					ClientSecret: clientSecret,
 					ServerSecret: serverSecret,
+					Isolation:    workersRPC.Isolation,
 				},
 			},
 		}, nil

@@ -1,4 +1,4 @@
-package instance
+package none
 
 import (
 	"context"
@@ -23,7 +23,7 @@ type PersistentWorkerInstance struct {
 	cleanup func() error
 }
 
-func NewPersistentWorkerInstance() (*PersistentWorkerInstance, error) {
+func New() (*PersistentWorkerInstance, error) {
 	// Create a working directory that will be used if no dirty mode is requested in Run()
 	tempDir, err := ioutil.TempDir("", "")
 	if err != nil {

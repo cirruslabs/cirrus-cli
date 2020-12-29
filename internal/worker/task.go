@@ -3,7 +3,7 @@ package worker
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"google.golang.org/grpc"
 )
@@ -17,7 +17,7 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 	taskCtx, cancel := context.WithCancel(ctx)
 	worker.tasks[agentAwareTask.TaskId] = cancel
 
-	inst, err := instance.NewPersistentWorkerInstance()
+	inst, err := persistentworker.New(agentAwareTask.Isolation)
 	if err != nil {
 		worker.logger.Errorf("failed to create an instance for the task %d: %v", agentAwareTask.TaskId, err)
 		return

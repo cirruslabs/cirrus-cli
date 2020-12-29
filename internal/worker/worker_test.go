@@ -3,6 +3,7 @@ package worker_test
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
@@ -10,6 +11,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"net"
+	"os"
 	"testing"
 )
 
@@ -54,15 +56,41 @@ func unaryInterceptor(
 }
 
 func TestWorker(t *testing.T) {
+	ip := "0.0.0.0"
+	var isolation *api.Isolation
+
+	// Support Parallels isolation testing configured via environment variables
+	image, imageOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_SSH_PASSWORD")
+	if imageOk && userOk && passwordOk {
+		sharedNetworkHostIP, err := parallels.SharedNetworkHostIP(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		ip = sharedNetworkHostIP
+		isolation = &api.Isolation{
+			Type: &api.Isolation_Parallels_{
+				Parallels: &api.Isolation_Parallels{
+					Image:    image,
+					User:     user,
+					Password: password,
+					Platform: api.Platform_DARWIN,
+				},
+			},
+		}
+	}
+
 	// Start the RPC server
-	lis, err := net.Listen("tcp", "localhost:0")
+	lis, err := net.Listen("tcp", ip+":0")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	server := grpc.NewServer(grpc.UnaryInterceptor(unaryInterceptor))
 
-	workersRPC := &WorkersRPC{}
+	workersRPC := &WorkersRPC{Isolation: isolation}
 	api.RegisterCirrusWorkersServiceServer(server, workersRPC)
 	tasksRPC := &TasksRPC{}
 	api.RegisterCirrusCIServiceServer(server, tasksRPC)
