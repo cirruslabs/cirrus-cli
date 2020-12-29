@@ -48,6 +48,15 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			TaskID:            agentAwareTask.TaskId,
 		}); err != nil {
 			worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
+
+			_, err := worker.rpcClient.TaskFailed(taskCtx, &api.TaskFailedRequest{
+				TaskIdentification: taskIdentification,
+				Message:            err.Error(),
+			}, grpc.PerRPCCredentials(worker))
+			if err != nil {
+				worker.logger.Errorf("failed to notify the server about the failed task %d: %v",
+					agentAwareTask.TaskId, err)
+			}
 		}
 
 		_, err = worker.rpcClient.TaskStopped(taskCtx, taskIdentification, grpc.PerRPCCredentials(worker))
