@@ -12,7 +12,7 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/bmatcuk/doublestar v1.3.2
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
-	github.com/cirruslabs/cirrus-ci-agent v1.24.0
+	github.com/cirruslabs/cirrus-ci-agent v1.25.1
 	github.com/cirruslabs/echelon v1.4.0
 	github.com/cirruslabs/podmanapi v0.1.0
 	github.com/containerd/containerd v1.4.1 // indirect
@@ -41,6 +41,7 @@ require (
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/otiai10/copy v1.2.0
+	github.com/pkg/sftp v1.12.0
 	github.com/qri-io/starlib v0.4.2
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.1.1
@@ -52,6 +53,7 @@ require (
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20201118183435-e55f603d8c79
+	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
 	golang.org/x/net v0.0.0-20201022231255-08b38378de70 // indirect
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 	golang.org/x/sys v0.0.0-20201022201747-fb209a7c41cd

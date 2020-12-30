@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,7 +23,7 @@ type Task struct {
 	Name        string
 	Labels      []string
 	status      taskstatus.Status
-	Instance    instance.Instance
+	Instance    abstract.Instance
 	Timeout     time.Duration
 	Environment map[string]string
 	Commands    []*Command

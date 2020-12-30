@@ -3,7 +3,8 @@ package worker
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"google.golang.org/grpc"
 )
 
@@ -16,7 +17,7 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 	taskCtx, cancel := context.WithCancel(ctx)
 	worker.tasks[agentAwareTask.TaskId] = cancel
 
-	inst, err := instance.NewPersistentWorkerInstance()
+	inst, err := persistentworker.New(agentAwareTask.Isolation)
 	if err != nil {
 		worker.logger.Errorf("failed to create an instance for the task %d: %v", agentAwareTask.TaskId, err)
 		return
@@ -38,7 +39,7 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			return
 		}
 
-		if err := inst.Run(taskCtx, &instance.RunConfig{
+		if err := inst.Run(taskCtx, &runconfig.RunConfig{
 			ProjectDir:        "",
 			ContainerEndpoint: worker.rpcEndpoint,
 			DirectEndpoint:    worker.rpcEndpoint,
@@ -47,6 +48,15 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			TaskID:            agentAwareTask.TaskId,
 		}); err != nil {
 			worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
+
+			_, err := worker.rpcClient.TaskFailed(taskCtx, &api.TaskFailedRequest{
+				TaskIdentification: taskIdentification,
+				Message:            err.Error(),
+			}, grpc.PerRPCCredentials(worker))
+			if err != nil {
+				worker.logger.Errorf("failed to notify the server about the failed task %d: %v",
+					agentAwareTask.TaskId, err)
+			}
 		}
 
 		_, err = worker.rpcClient.TaskStopped(taskCtx, taskIdentification, grpc.PerRPCCredentials(worker))

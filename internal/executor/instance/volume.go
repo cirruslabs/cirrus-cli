@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ type Volume struct {
 // CreateWorkingVolumeFromConfig returns name of the working volume created according to the specification in config.
 func CreateWorkingVolumeFromConfig(
 	ctx context.Context,
-	config *RunConfig,
+	config *runconfig.RunConfig,
 	platform platform.Platform,
 ) (*Volume, error) {
 	initLogger := config.Logger.Scoped("Preparing execution environment...")

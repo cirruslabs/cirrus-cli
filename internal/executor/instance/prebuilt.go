@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"io"
 	"io/ioutil"
 	"os"
@@ -82,7 +83,7 @@ func CreateTempArchive(dir string) (string, error) {
 	return tmpFile.Name(), nil
 }
 
-func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *RunConfig) error {
+func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *runconfig.RunConfig) error {
 	logger := config.Logger
 	backend := config.ContainerBackend
 

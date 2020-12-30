@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"path"
 )
@@ -51,7 +52,7 @@ func PipeStagesFromCommands(commands []*api.Command) ([]PipeStage, error) {
 	return stages, nil
 }
 
-func (pi *PipeInstance) Run(ctx context.Context, config *RunConfig) (err error) {
+func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
 	platform := platform.NewUnix()
 
 	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config, platform)
