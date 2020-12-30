@@ -6,13 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"strings"
 )
 
 var ErrVMFailed = errors.New("Parallels VM operation failed")
 
 type VM struct {
+	uuid string
 	name string
 }
 
@@ -27,55 +27,67 @@ type HardwareInfo struct {
 type VirtualMachineInfo struct {
 	ID       string
 	Name     string
+	State    string
+	Home     string
 	Hardware HardwareInfo
 }
 
 func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
-	vm := &VM{
-		name: "cirrus-" + uuid.New().String(),
-	}
-
-	_, stderr, err := Prlctl(ctx, "clone", vmNameFrom, "--linked", "--name", vm.name)
+	// We use different cloning strategy depending on the source VM's state
+	vmInfoFrom, err := retrieveInfo(ctx, vmNameFrom)
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to clone VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
+		return nil, err
 	}
 
+	if vmInfoFrom.State == "suspended" {
+		return cloneFromSuspended(ctx, vmInfoFrom.Home)
+	}
+
+	return cloneFromDefault(ctx, vmInfoFrom.Name)
+}
+
+// Returns an identifier suitable for use in Parallels CLI commands.
+func (vm *VM) Ident() string {
+	if vm.uuid != "" {
+		return vm.uuid
+	}
+
+	return vm.name
+}
+
+func (vm *VM) isolate(ctx context.Context) error {
 	// Ensure that the VM is isolated[1] from the host (e.g. shared folders, clipboard, etc.)
 	// nolint:lll // https://github.com/walle/lll/issues/12
 	// [1]: https://download.parallels.com/desktop/v14/docs/en_US/Parallels%20Desktop%20Pro%20Edition%20Command-Line%20Reference/43645.htm
-	_, stderr, err = Prlctl(ctx, "set", vmNameFrom, "--isolate-vm", "on")
+	_, stderr, err := Prlctl(ctx, "set", vm.Ident(), "--isolate-vm", "on")
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to isolate VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
-	}
-
-	_, stderr, err = Prlctl(ctx, "start", vm.name)
-	if err != nil {
-		return nil, fmt.Errorf("%w: failed to start VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
-	}
-
-	return vm, nil
-}
-
-func (vm *VM) Close() error {
-	ctx := context.Background()
-
-	_, stderr, err := Prlctl(ctx, "stop", vm.name, "--kill")
-	if err != nil {
-		return fmt.Errorf("%w: failed to stop VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
-	}
-
-	_, stderr, err = Prlctl(ctx, "delete", vm.name)
-	if err != nil {
-		return fmt.Errorf("%w: failed to delete VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
+		return fmt.Errorf("%w: failed to isolate VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
 	}
 
 	return nil
 }
 
-func (vm *VM) retrieveInfo(ctx context.Context) (*VirtualMachineInfo, error) {
-	stdout, stderr, err := Prlctl(ctx, "list", "--info", "--json", vm.name)
+func (vm *VM) Close() error {
+	ctx := context.Background()
+
+	_, stderr, err := Prlctl(ctx, "stop", vm.Ident(), "--kill")
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to get VM %q info: %q", ErrVMFailed, vm.name, firstLine(stderr))
+		return fmt.Errorf("%w: failed to stop VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
+	}
+
+	_, stderr, err = Prlctl(ctx, "delete", vm.Ident())
+	if err != nil {
+		return fmt.Errorf("%w: failed to delete VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
+	}
+
+	return nil
+}
+
+func retrieveInfo(ctx context.Context, ident string) (*VirtualMachineInfo, error) {
+	stdout, stderr, err := Prlctl(ctx, "list", "--info", "--json", ident)
+	if err != nil {
+		return nil, fmt.Errorf("%w: failed to get info for VM with %q UUID or name: %q",
+			ErrVMFailed, ident, firstNonEmptyLine(stderr))
 	}
 
 	var vmInfos []VirtualMachineInfo
@@ -84,17 +96,18 @@ func (vm *VM) retrieveInfo(ctx context.Context) (*VirtualMachineInfo, error) {
 		return nil, err
 	}
 
-	for _, vmInfo := range vmInfos {
-		if vmInfo.Name == vm.name {
-			return &vmInfo, nil
-		}
+	switch len(vmInfos) {
+	case 0:
+		return nil, fmt.Errorf("%w: failed to find VM with %q UUID or name", ErrVMFailed, ident)
+	case 1:
+		return &vmInfos[0], nil
+	default:
+		return nil, fmt.Errorf("%w: more than one VM found with %q UUID or name", ErrVMFailed, ident)
 	}
-
-	return nil, fmt.Errorf("%w: failed to find VM %q", ErrVMFailed, vm.name)
 }
 
 func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
-	vmInfo, err := vm.retrieveInfo(ctx)
+	vmInfo, err := retrieveInfo(ctx, vm.Ident())
 	if err != nil {
 		return "", err
 	}
@@ -102,7 +115,7 @@ func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
 	mac, err := hex.DecodeString(vmInfo.Hardware.Net0.MAC)
 	if err != nil {
 		return "", fmt.Errorf("%w: failed to decode MAC %q for VM %q: %v",
-			ErrVMFailed, vmInfo.Hardware.Net0.MAC, vm.name, err)
+			ErrVMFailed, vmInfo.Hardware.Net0.MAC, vm.Ident(), err)
 	}
 
 	snooper := &DHCPSnooper{}
@@ -114,6 +127,12 @@ func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
 	return lease.IP, nil
 }
 
-func firstLine(lines string) string {
-	return strings.Split(lines, "\n")[0]
+func firstNonEmptyLine(lines string) string {
+	for _, line := range strings.Split(lines, "\n") {
+		if line != "" {
+			return line
+		}
+	}
+
+	return ""
 }
