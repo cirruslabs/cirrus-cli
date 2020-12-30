@@ -59,20 +59,20 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("%w: failed to connect to the VM %q via SSH: %v", ErrFailed, vm.name, err)
+		return fmt.Errorf("%w: failed to connect to the VM %q via SSH: %v", ErrFailed, vm.Ident(), err)
 	}
 	defer cli.Close()
 
 	remoteAgentPath, err := uploadAgent(ctx, cli, parallels.agentOS, config.GetAgentVersion())
 	if err != nil {
 		return fmt.Errorf("%w: failed to upload agent to the VM %q via SFTP: %v",
-			ErrFailed, vm.name, err)
+			ErrFailed, vm.Ident(), err)
 	}
 
 	// Start the agent and wait for it to terminate
 	sess, err := cli.NewSession()
 	if err != nil {
-		return fmt.Errorf("%w: failed to open SSH session on VM %q: %v", ErrFailed, vm.name, err)
+		return fmt.Errorf("%w: failed to open SSH session on VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 
 	command := []string{
@@ -89,7 +89,7 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 
 	err = sess.Run(strings.Join(command, " "))
 	if err != nil {
-		return fmt.Errorf("%w: failed to run agent on VM %q: %v", ErrFailed, vm.name, err)
+		return fmt.Errorf("%w: failed to run agent on VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 
 	return nil
