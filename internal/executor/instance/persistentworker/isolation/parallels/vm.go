@@ -37,7 +37,7 @@ func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
 
 	_, stderr, err := Prlctl(ctx, "clone", vmNameFrom, "--linked", "--name", vm.name)
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to clone VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
+		return nil, fmt.Errorf("%w: failed to clone VM %q: %q", ErrVMFailed, vm.name, firstNonEmptyLine(stderr))
 	}
 
 	// Ensure that the VM is isolated[1] from the host (e.g. shared folders, clipboard, etc.)
@@ -45,12 +45,12 @@ func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
 	// [1]: https://download.parallels.com/desktop/v14/docs/en_US/Parallels%20Desktop%20Pro%20Edition%20Command-Line%20Reference/43645.htm
 	_, stderr, err = Prlctl(ctx, "set", vmNameFrom, "--isolate-vm", "on")
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to isolate VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
+		return nil, fmt.Errorf("%w: failed to isolate VM %q: %q", ErrVMFailed, vm.name, firstNonEmptyLine(stderr))
 	}
 
 	_, stderr, err = Prlctl(ctx, "start", vm.name)
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to start VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
+		return nil, fmt.Errorf("%w: failed to start VM %q: %q", ErrVMFailed, vm.name, firstNonEmptyLine(stderr))
 	}
 
 	return vm, nil
@@ -61,12 +61,12 @@ func (vm *VM) Close() error {
 
 	_, stderr, err := Prlctl(ctx, "stop", vm.name, "--kill")
 	if err != nil {
-		return fmt.Errorf("%w: failed to stop VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
+		return fmt.Errorf("%w: failed to stop VM %q: %q", ErrVMFailed, vm.name, firstNonEmptyLine(stderr))
 	}
 
 	_, stderr, err = Prlctl(ctx, "delete", vm.name)
 	if err != nil {
-		return fmt.Errorf("%w: failed to delete VM %q: %q", ErrVMFailed, vm.name, firstLine(stderr))
+		return fmt.Errorf("%w: failed to delete VM %q: %q", ErrVMFailed, vm.name, firstNonEmptyLine(stderr))
 	}
 
 	return nil
@@ -75,7 +75,7 @@ func (vm *VM) Close() error {
 func (vm *VM) retrieveInfo(ctx context.Context) (*VirtualMachineInfo, error) {
 	stdout, stderr, err := Prlctl(ctx, "list", "--info", "--json", vm.name)
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to get VM %q info: %q", ErrVMFailed, vm.name, firstLine(stderr))
+		return nil, fmt.Errorf("%w: failed to get VM %q info: %q", ErrVMFailed, vm.name, firstNonEmptyLine(stderr))
 	}
 
 	var vmInfos []VirtualMachineInfo
@@ -114,6 +114,12 @@ func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
 	return lease.IP, nil
 }
 
-func firstLine(lines string) string {
-	return strings.Split(lines, "\n")[0]
+func firstNonEmptyLine(lines string) string {
+	for _, line := range strings.Split(lines, "\n") {
+		if line != "" {
+			return line
+		}
+	}
+
+	return ""
 }
