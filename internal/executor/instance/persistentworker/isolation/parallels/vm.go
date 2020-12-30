@@ -73,7 +73,7 @@ func (vm *VM) Close() error {
 }
 
 func (vm *VM) retrieveInfo(ctx context.Context) (*VirtualMachineInfo, error) {
-	stdout, stderr, err := Prlctl(ctx, "list", "--info", "--json")
+	stdout, stderr, err := Prlctl(ctx, "list", "--info", "--json", vm.name)
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to get VM %q info: %q", ErrVMFailed, vm.name, firstLine(stderr))
 	}
