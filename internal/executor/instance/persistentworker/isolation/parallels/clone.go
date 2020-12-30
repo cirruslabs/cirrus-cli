@@ -47,7 +47,7 @@ func cloneFromDefault(ctx context.Context, vmNameFrom string) (*VM, error) {
 		name: fmt.Sprintf("cirrus-%s", uuid.New().String()),
 	}
 
-	_, stderr, err := Prlctl(ctx, "clone", vmNameFrom, "--linked", "--name", vm.Ident())
+	_, stderr, err := Prlctl(ctx, "clone", vmNameFrom, "--name", vm.Ident())
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to clone VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
 	}
