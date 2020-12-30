@@ -1,3 +1,5 @@
+// +build !darwin
+
 package parallels
 
 import "github.com/otiai10/copy"
