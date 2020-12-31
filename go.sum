@@ -411,8 +411,8 @@ github.com/opencontainers/selinux v1.5.1/go.mod h1:yTcKuYAh6R95iDpefGLQaPaRwJFwy
 github.com/opencontainers/selinux v1.6.0/go.mod h1:VVGKuOLlE7v4PJyT6h7mNWvq1rzqiriPsEqVhc+svHE=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/ostreedev/ostree-go v0.0.0-20190702140239-759a8c1ac913/go.mod h1:J6OG6YJVEWopen4avK3VNQSnALmmjvniMmni/YFYAwc=
-github.com/otiai10/copy v1.4.1 h1:T1Ggae54qC0G+0VA5B/3CJQorvvaNVStzDn3YLZHdLI=
-github.com/otiai10/copy v1.4.1/go.mod h1:XWfuS3CrI0R6IE0FbgHsEazaXO8G0LpMp9o8tos0x4E=
+github.com/otiai10/copy v1.4.2-0.20201231083354-164f56a259c1 h1:W/rW6B76L8f1joSrABuRaXxqe2EYO5W82e3d9tv3z2o=
+github.com/otiai10/copy v1.4.2-0.20201231083354-164f56a259c1/go.mod h1:XWfuS3CrI0R6IE0FbgHsEazaXO8G0LpMp9o8tos0x4E=
 github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJG+0mI8eUu6xqkFDYS2kb2saOteoSB3cE=
 github.com/otiai10/curr v1.0.0 h1:TJIWdbX0B+kpNagQrjgq8bCMrbhiuX73M2XwgtDMoOI=
 github.com/otiai10/curr v1.0.0/go.mod h1:LskTG5wDwr8Rs+nNQ+1LlxRjAtTZZjtJW4rMXl6j4vs=
