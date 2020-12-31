@@ -40,7 +40,7 @@ require (
 	github.com/lestrrat-go/structinfo v0.0.0-20190212233437-acd51874663b // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
-	github.com/otiai10/copy v1.4.1
+	github.com/otiai10/copy v1.4.2-0.20201231083354-164f56a259c1
 	github.com/pkg/sftp v1.12.0
 	github.com/qri-io/starlib v0.4.2
 	github.com/sirupsen/logrus v1.7.0
