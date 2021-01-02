@@ -225,7 +225,7 @@ func (backend *Docker) ContainerCreate(
 		hostConfig.SecurityOpt = []string{"label=disable"}
 	}
 
-	cont, err := backend.cli.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, name)
+	cont, err := backend.cli.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, nil, name)
 	if err != nil {
 		return nil, err
 	}
