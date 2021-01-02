@@ -43,8 +43,9 @@ task:
   name: Release (Dry Run)
   only_if: $CIRRUS_TAG == ''
   container:
-    image: goreleaser/goreleaser:latest
-  release_script: goreleaser build --snapshot
+    image: golang:latest
+  install_script: curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
+  release_script: ./bin/goreleaser build --snapshot
   binaries_artifacts:
     path: "dist/cirrus_*/cirrus*"
 
@@ -80,8 +81,9 @@ task:
   env:
     GITHUB_TOKEN: ENCRYPTED[!98ace8259c6024da912c14d5a3c5c6aac186890a8d4819fad78f3e0c41a4e0cd3a2537dd6e91493952fb056fa434be7c!]
   container:
-    image: goreleaser/goreleaser:latest
-  release_script: goreleaser
+    image: golang:latest
+  install_script: curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
+  release_script: ./bin/goreleaser
 
 task:
   name: Release Apple Silicon
