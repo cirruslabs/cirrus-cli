@@ -3,3 +3,9 @@
 
 # GoReleaser
 dist/
+
+# IntelliJ Run Configurations
+.run
+
+# binary files like goreleaser binary
+bin
