@@ -69,10 +69,17 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 			ErrFailed, vm.Ident(), err)
 	}
 
-	// Start the agent and wait for it to terminate
 	sess, err := cli.NewSession()
 	if err != nil {
 		return fmt.Errorf("%w: failed to open SSH session on VM %q: %v", ErrFailed, vm.Ident(), err)
+	}
+
+	stdinBuf, _ := sess.StdinPipe()
+
+	// start a login shell so all the customization from ~/.zprofile will be picked up
+	err = sess.Shell()
+	if err != nil {
+		return fmt.Errorf("%w: failed to start a shell on VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 
 	command := []string{
@@ -87,7 +94,12 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 		strconv.FormatInt(config.TaskID, 10),
 	}
 
-	err = sess.Run(strings.Join(command, " "))
+	// Start the agent and wait for it to terminate
+	_, err = stdinBuf.Write([]byte(strings.Join(command, " ") + "\nexit\n"))
+	if err != nil {
+		return fmt.Errorf("%w: failed to start agent on VM %q: %v", ErrFailed, vm.Ident(), err)
+	}
+	err = sess.Wait()
 	if err != nil {
 		return fmt.Errorf("%w: failed to run agent on VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
