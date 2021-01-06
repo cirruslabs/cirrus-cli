@@ -39,6 +39,20 @@ func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
 		return nil, err
 	}
 
+	// Check if VM is packed
+	if strings.HasSuffix(vmInfoFrom.Home, ".pvmp") {
+		// Let's unpack it!
+		_, stderr, err := Prlctl(ctx, "unpack", vmNameFrom)
+		if err != nil {
+			return nil, fmt.Errorf("%w: failed to unpack VM %q: %q", ErrVMFailed, vmNameFrom, firstNonEmptyLine(stderr))
+		}
+		// Update info after unpacking
+		vmInfoFrom, err = retrieveInfo(ctx, vmNameFrom)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if vmInfoFrom.State == "suspended" {
 		return cloneFromSuspended(ctx, vmInfoFrom.Home)
 	}
