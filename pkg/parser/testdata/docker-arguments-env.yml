@@ -1,0 +1,8 @@
+task:
+  env:
+    VERSION: latest
+  container:
+    dockerfile: ci/Dockerfile
+    docker_arguments:
+      version: $VERSION
+  script: ./test1.sh

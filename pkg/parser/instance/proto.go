@@ -61,7 +61,7 @@ func NewProtoParser(
 				switch {
 				case field.IsMap():
 					fieldInstance := instance.proto.NewField(field)
-					mapping, err := node.GetStringMapping()
+					mapping, err := node.GetExpandedStringMapping(mergedEnv)
 					if err != nil {
 						return err
 					}
