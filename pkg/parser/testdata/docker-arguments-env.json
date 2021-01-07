@@ -1,0 +1,94 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "./test1.sh"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux",
+      "VERSION": "latest"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "dockerArguments": {
+        "version": "latest"
+      },
+      "dockerfile": "ci/Dockerfile",
+      "image": "gcr.io/cirrus-ci-community/0aae68cc1f2f068c7b1862659ce24ec1:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main",
+    "requiredGroups": [
+      "1"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/0aae68cc1f2f068c7b1862659ce24ec1:latest --file ci/Dockerfile --build-arg version=\"latest\" ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/0aae68cc1f2f068c7b1862659ce24ec1:latest"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux",
+      "VERSION": "latest"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "arguments": {
+        "version": "latest"
+      },
+      "dockerfile": "ci/Dockerfile",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/0aae68cc1f2f068c7b1862659ce24ec1"
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "1",
+        "skip_notifications": "true",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild ci/Dockerfile version=latest"
+  }
+]

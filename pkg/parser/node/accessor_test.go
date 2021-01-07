@@ -53,6 +53,30 @@ func TestGetStringMapping(t *testing.T) {
 	}, mapping)
 }
 
+func TestGetExpandedStringMapping(t *testing.T) {
+	env := map[string]string{
+		"FOO": "Hi!",
+	}
+	yamlSlice := yaml.MapSlice{
+		{Key: "env", Value: yaml.MapSlice{
+			{Key: "KEY1", Value: "$FOO"},
+		}},
+	}
+
+	tree, err := node.NewFromSlice(yamlSlice)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mapping, err := tree.Children[0].GetExpandedStringMapping(env)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, map[string]string{
+		"KEY1": "Hi!",
+	}, mapping)
+}
+
 func TestGetSliceOfNonEmptyStrings(t *testing.T) {
 	yamlSlice := yaml.MapSlice{
 		{Key: "script_single_scalar", Value: "command1"},
