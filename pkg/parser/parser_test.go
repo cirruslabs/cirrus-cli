@@ -76,7 +76,7 @@ func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.
 	actual := testutil.TasksToJSON(t, result.Tasks)
 
 	// uncomment to update test data
-	//ioutil.WriteFile(actualFixturePath, actual, 0600)
+	// ioutil.WriteFile(actualFixturePath, actual, 0600)
 
 	expected, err := ioutil.ReadFile(actualFixturePath)
 	if err != nil {
