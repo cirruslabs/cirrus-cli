@@ -81,8 +81,8 @@ func TestMultipleGetAndPut(t *testing.T) {
 	}
 }
 
-func getRandomBlob(t *testing.T, len int) []byte {
-	buf := make([]byte, len)
+func getRandomBlob(t *testing.T, size int) []byte {
+	buf := make([]byte, size)
 
 	_, err := rand.Read(buf)
 	if err != nil {
