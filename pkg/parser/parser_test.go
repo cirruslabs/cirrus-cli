@@ -25,13 +25,12 @@ import (
 )
 
 var validCases = []string{
-	"collectible-order",
-	"docker-arguments-env",
 	"example-android",
 	"example-flutter-web",
 	"example-mysql",
 	"example-rust",
 	"instance-persistent_worker",
+	"collectible-order",
 	"yaml-12-booleans-only",
 }
 
@@ -76,7 +75,7 @@ func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.
 	actual := testutil.TasksToJSON(t, result.Tasks)
 
 	// uncomment to update test data
-	// ioutil.WriteFile(actualFixturePath, actual, 0600)
+	// ioutil.WriteFile(absolutize(actualFixturePath+".json"), actual, 0600)
 
 	expected, err := ioutil.ReadFile(actualFixturePath)
 	if err != nil {

@@ -47,7 +47,7 @@ func NewWindowsCommunityContainer(mergedEnv map[string]string, boolevator *boole
 	dockerArgumentsNameable := nameable.NewSimpleNameable("docker_arguments")
 	dockerArgumentsSchema := schema.Map("Arguments for Docker build")
 	container.OptionalField(dockerArgumentsNameable, dockerArgumentsSchema, func(node *node.Node) error {
-		dockerArguments, err := node.GetExpandedStringMapping(mergedEnv)
+		dockerArguments, err := node.GetStringMapping()
 		if err != nil {
 			return err
 		}

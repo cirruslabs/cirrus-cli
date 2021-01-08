@@ -78,18 +78,6 @@ func (node *Node) GetSliceOfExpandedStrings(env map[string]string) ([]string, er
 	return result, nil
 }
 
-func (node *Node) GetExpandedStringMapping(env map[string]string) (map[string]string, error) {
-	mapping, err := node.GetStringMapping()
-	if err != nil {
-		return mapping, err
-	}
-	result := make(map[string]string, len(mapping))
-	for key, value := range mapping {
-		result[key] = ExpandEnvironmentVariables(value, env)
-	}
-	return result, nil
-}
-
 func (node *Node) GetStringMapping() (map[string]string, error) {
 	result := make(map[string]string)
 
