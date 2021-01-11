@@ -1,0 +1,13 @@
+container:
+  image: debian:latest
+
+env:
+  KEK: RIGHT
+
+task:
+  env:
+    KEK: WRONG
+  script: true
+
+task:
+  script: true
