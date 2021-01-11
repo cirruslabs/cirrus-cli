@@ -51,7 +51,7 @@ Worker automatically populates the following lables:
 * `arch` - `GOARCH` of the CLI binary (for example, `amd64`, `arm64`, etc.).
 * `version` - CLI's version.
 * `hostname` - host name reported by the host kernel.
-* `name` - worker name passed via `--name` flag of the YAML configuration. Defaults to `hostname`.
+* `name` - worker name passed via `--name` flag of the YAML configuration. Defaults to `hostname` with stripped common suffixes like `.local` and `.lan`.
 
 ## Writing tasks
 
