@@ -300,7 +300,7 @@ func resolveDependenciesShallow(tasks []task.ParseableTaskLike) {
 		var dependsOnIDs []int64
 		for _, dependsOnName := range task.DependsOnNames() {
 			for _, subTask := range tasks {
-				if subTask.Name() == dependsOnName {
+				if subTask.Name() == dependsOnName || subTask.Alias() == dependsOnName {
 					dependsOnIDs = append(dependsOnIDs, subTask.ID())
 				}
 			}

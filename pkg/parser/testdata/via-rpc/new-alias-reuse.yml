@@ -1,0 +1,14 @@
+container:
+  image: debian:latest
+
+test1_task:
+  alias: Tests
+  script: test something 1
+
+test2_task:
+  alias: Tests
+  script: test something 2
+
+release_task:
+  depends_on: Tests
+  script: release stuff

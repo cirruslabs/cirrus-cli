@@ -125,15 +125,15 @@ func (dbuilder *DockerBuilder) Parse(node *node.Node) error {
 }
 
 func (dbuilder *DockerBuilder) Name() string {
-	if dbuilder.alias != "" {
-		return dbuilder.alias
-	}
-
 	return dbuilder.proto.Name
 }
 
 func (dbuilder *DockerBuilder) SetName(name string) {
 	dbuilder.proto.Name = name
+}
+
+func (dbuilder *DockerBuilder) Alias() string {
+	return dbuilder.alias
 }
 
 func (dbuilder *DockerBuilder) DependsOnNames() []string {

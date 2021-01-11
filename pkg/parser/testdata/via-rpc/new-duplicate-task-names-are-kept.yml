@@ -1,0 +1,10 @@
+# Ensures that we treat task aliases separately from their names.
+
+container:
+  image: debian:latest
+
+Test_task:
+  alias: Tests
+  matrix:
+    script: echo 1
+    script: echo 2
