@@ -206,15 +206,15 @@ func (task *Task) Parse(node *node.Node) error {
 }
 
 func (task *Task) Name() string {
-	if task.alias != "" {
-		return task.alias
-	}
-
 	return task.proto.Name
 }
 
 func (task *Task) SetName(name string) {
 	task.proto.Name = name
+}
+
+func (task *Task) Alias() string {
+	return task.alias
 }
 
 func (task *Task) DependsOnNames() []string {

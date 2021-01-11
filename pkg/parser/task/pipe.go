@@ -263,15 +263,15 @@ func (pipe *DockerPipe) Parse(node *node.Node) error {
 }
 
 func (pipe *DockerPipe) Name() string {
-	if pipe.alias != "" {
-		return pipe.alias
-	}
-
 	return pipe.proto.Name
 }
 
 func (pipe *DockerPipe) SetName(name string) {
 	pipe.proto.Name = name
+}
+
+func (pipe *DockerPipe) Alias() string {
+	return pipe.alias
 }
 
 func (pipe *DockerPipe) DependsOnNames() []string {

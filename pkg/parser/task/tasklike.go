@@ -8,6 +8,7 @@ import (
 type ParseableTaskLike interface {
 	Name() string
 	SetName(name string)
+	Alias() string
 	DependsOnNames() []string
 
 	ID() int64
