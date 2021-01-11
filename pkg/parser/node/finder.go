@@ -23,11 +23,10 @@ func (node *Node) DeepFindCollectible(name string) *Node {
 	for i := len(traverseChain) - 1; i >= 0; i-- {
 		child := traverseChain[i]
 
+		virtualNode.MergeFrom(child)
+
 		if !fulfilledAtLeastOnce {
-			virtualNode = *child
 			fulfilledAtLeastOnce = true
-		} else {
-			virtualNode.MergeFrom(child)
 		}
 	}
 

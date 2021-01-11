@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"reflect"
+	"strings"
 )
 
 type Node struct {
@@ -21,6 +22,41 @@ type ScalarValue struct {
 }
 
 var ErrNodeConversionFailed = errors.New("node conversion failed")
+
+func (node *Node) String() string {
+	switch value := node.Value.(type) {
+	case *MapValue:
+		var children []string
+		for _, child := range node.Children {
+			children = append(children, fmt.Sprintf("%s=%s", child.Name, child.String()))
+		}
+		return fmt.Sprintf("MapValue(%s)", strings.Join(children, ", "))
+	case *ListValue:
+		var children []string
+		for _, child := range node.Children {
+			children = append(children, child.String())
+		}
+		return fmt.Sprintf("ListValue(%s)", strings.Join(children, ", "))
+	case *ScalarValue:
+		return fmt.Sprintf("ScalarValue(%s)", value.Value)
+	default:
+		return "UnknownNodeType()"
+	}
+}
+
+func (node *Node) CopyWithParent(parent *Node) *Node {
+	result := &Node{
+		Name:   node.Name,
+		Value:  node.Value,
+		Parent: parent,
+	}
+
+	for _, child := range node.Children {
+		result.Children = append(result.Children, child.CopyWithParent(result))
+	}
+
+	return result
+}
 
 func (node *Node) Deduplicate() {
 	// Split children into two groups
@@ -53,7 +89,12 @@ func (node *Node) MergeFrom(other *Node) {
 
 	if reflect.TypeOf(node.Value) != reflect.TypeOf(other.Value) {
 		node.Value = other.Value
-		node.Children = other.Children
+
+		// Simply overwrite node's children with other's children
+		node.Children = node.Children[:0]
+		for _, child := range other.Children {
+			node.Children = append(node.Children, child.CopyWithParent(node))
+		}
 		return
 	}
 
@@ -70,7 +111,7 @@ func (node *Node) MergeFrom(other *Node) {
 			if ok {
 				existingChild.MergeFrom(otherChild)
 			} else {
-				node.Children = append(node.Children, otherChild)
+				node.Children = append(node.Children, otherChild.CopyWithParent(node))
 			}
 		}
 	case *ListValue:
@@ -80,7 +121,7 @@ func (node *Node) MergeFrom(other *Node) {
 				node.Children[i].MergeFrom(otherChild)
 			} else {
 				// They have more children that we do, simply append them one by one
-				node.Children = append(node.Children, otherChild)
+				node.Children = append(node.Children, otherChild.CopyWithParent(node))
 			}
 		}
 	case *ScalarValue:
