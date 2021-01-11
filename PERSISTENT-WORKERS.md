@@ -43,6 +43,16 @@ labels:
 
 Currently, configuration files support the same set of options exposed via the command-line flags, but in the future the only way to configure certain options would be using the configuration file.
 
+### Reserved Labels
+
+Worker automatically populates the following lables:
+
+* `os` - `GOOS` of the CLI binary (for example, `linux`, `windows`, `darwin`, `solaris`, etc.).
+* `arch` - `GOARCH` of the CLI binary (for example, `amd64`, `arm64`, etc.).
+* `version` - CLI's version.
+* `hostname` - host name reported by the host kernel.
+* `name` - worker name passed via `--name` flag of the YAML configuration. Defaults to `hostname`.
+
 ## Writing tasks
 
 Here's an example of how to run a task on one of the persistent workers [registered in the dashboard](https://cirrus-ci.com/):
