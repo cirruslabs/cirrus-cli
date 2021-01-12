@@ -378,3 +378,14 @@ func TestSchema(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestTasksCountBeforeFiltering(t *testing.T) {
+	p := parser.New()
+	result, err := p.ParseFromFile(context.Background(), "testdata/tasks-count-before-filtering.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Empty(t, result.Errors)
+	assert.EqualValues(t, 2, result.TasksCountBeforeFiltering)
+}

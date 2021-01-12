@@ -50,11 +50,15 @@ type Parser struct {
 	idNumbering         int64
 	indexNumbering      int64
 	additionalInstances map[string]protoreflect.MessageDescriptor
+
+	tasksCountBeforeFiltering int64
 }
 
 type Result struct {
 	Errors []string
 	Tasks  []*api.Task
+
+	TasksCountBeforeFiltering int64
 }
 
 func New(opts ...Option) *Parser {
@@ -122,6 +126,8 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			taskSpecificEnv := map[string]string{
 				"CIRRUS_TASK_NAME": taskLike.Name(),
 			}
+
+			p.tasksCountBeforeFiltering++
 
 			enabled, err := taskLike.Enabled(environment.Merge(taskSpecificEnv, p.environment), p.boolevator)
 			if err != nil {
@@ -225,7 +231,8 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 	})
 
 	return &Result{
-		Tasks: protoTasks,
+		Tasks:                     protoTasks,
+		TasksCountBeforeFiltering: p.tasksCountBeforeFiltering,
 	}, nil
 }
 
