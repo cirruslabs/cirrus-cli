@@ -36,6 +36,8 @@ func (node *Node) DeepFindCollectible(name string) *Node {
 
 	// Simulate Cirrus Cloud parser behavior
 	virtualNode.Deduplicate()
+	// link to the tree so collectible sub-fields will work
+	virtualNode.Parent = node
 
 	return &virtualNode
 }
