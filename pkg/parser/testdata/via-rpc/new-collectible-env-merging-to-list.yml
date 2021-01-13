@@ -1,0 +1,9 @@
+container:
+  image: golang:latest
+
+env:
+  - A: B
+
+task:
+  env:
+    C: D
