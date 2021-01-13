@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+foo_task:
+  container:
+    dockerfile: Dockerfile.ci
+
+bar_task:
+  only_if: false

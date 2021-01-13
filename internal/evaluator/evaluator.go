@@ -124,7 +124,10 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		return nil, status.Error(codes.InvalidArgument, result.Errors[0])
 	}
 
-	return &api.EvaluateConfigResponse{Tasks: result.Tasks}, nil
+	return &api.EvaluateConfigResponse{
+		Tasks:                     result.Tasks,
+		TasksCountBeforeFiltering: result.TasksCountBeforeFiltering,
+	}, nil
 }
 
 func (r *ConfigurationEvaluatorServiceServer) JSONSchema(
