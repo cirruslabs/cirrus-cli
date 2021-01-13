@@ -84,8 +84,41 @@ func (node *Node) Deduplicate() {
 	node.Children = unique
 }
 
+func (node *Node) MergeListOfMapsToSingleMap() {
+	_, ok := node.Value.(*ListValue)
+	if !ok {
+		return
+	}
+
+	var virtualNode Node
+
+	for _, child := range node.Children {
+		if _, ok := child.Value.(*MapValue); !ok {
+			return
+		}
+
+		virtualNode.MergeFrom(child)
+	}
+
+	node.Children = virtualNode.Children
+
+	// Rewrite parents from virtualNode to node
+	for _, child := range virtualNode.Children {
+		child.Parent = node
+	}
+
+	// This is now a map
+	node.Value = &MapValue{}
+}
+
 func (node *Node) MergeFrom(other *Node) {
 	node.Name = other.Name
+
+	// Special treatment for environment variables since they can also be represented as a list of maps
+	if node.Name == "env" || node.Name == "environment" {
+		node.MergeListOfMapsToSingleMap()
+		other.MergeListOfMapsToSingleMap()
+	}
 
 	if reflect.TypeOf(node.Value) != reflect.TypeOf(other.Value) {
 		node.Value = other.Value
