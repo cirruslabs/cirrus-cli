@@ -34,7 +34,6 @@ type DockerPipe struct {
 	parseable.DefaultParser
 }
 
-//nolint:gocognit // it's a parser, there is a lot of boilerplate
 func NewDockerPipe(
 	env map[string]string,
 	boolevator *boolevator.Boolevator,

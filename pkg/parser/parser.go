@@ -80,10 +80,13 @@ func New(opts ...Option) *Parser {
 	}))
 
 	// Register parsers
+	taskParser := task.NewTask(nil, nil, parser.additionalInstances, parser.additionalTaskProperties)
+	pipeParser := task.NewDockerPipe(nil, nil, parser.additionalTaskProperties)
+	builderParser := task.NewDockerBuilder(nil, nil, parser.additionalTaskProperties)
 	parser.parsers = map[nameable.Nameable]parseable.Parseable{
-		nameable.NewRegexNameable("^(.*)task$"):           task.NewTask(nil, nil, parser.additionalInstances, parser.additionalTaskProperties),
-		nameable.NewRegexNameable("^(.*)pipe$"):           task.NewDockerPipe(nil, nil, parser.additionalTaskProperties),
-		nameable.NewRegexNameable("^(.*)docker_builder$"): task.NewDockerBuilder(nil, nil, parser.additionalTaskProperties),
+		nameable.NewRegexNameable("^(.*)task$"):           taskParser,
+		nameable.NewRegexNameable("^(.*)pipe$"):           pipeParser,
+		nameable.NewRegexNameable("^(.*)docker_builder$"): builderParser,
 	}
 
 	return parser

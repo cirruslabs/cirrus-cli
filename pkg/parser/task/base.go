@@ -128,7 +128,6 @@ func AttachBaseTaskFields(
 	}
 }
 
-// nolint:gocognit // it's a parser helper, there is a lot of boilerplate
 func AttachBaseTaskInstructions(
 	parser *parseable.DefaultParser,
 	task *api.Task,
