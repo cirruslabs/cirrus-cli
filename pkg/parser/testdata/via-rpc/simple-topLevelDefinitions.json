@@ -28,7 +28,6 @@
         "allow_failures": "true",
         "experimental": "false",
         "indexWithinBuild": "0",
-        "skip_notifications": "true",
         "timeout_in": "900",
         "trigger_type": "AUTOMATIC"
       }

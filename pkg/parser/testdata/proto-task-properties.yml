@@ -1,0 +1,5 @@
+container:
+  image: alpine:latest
+
+task:
+  custom_bool: true

@@ -15,6 +15,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task"
+	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -46,10 +47,11 @@ type Parser struct {
 
 	boolevator *boolevator.Boolevator
 
-	parsers             map[nameable.Nameable]parseable.Parseable
-	idNumbering         int64
-	indexNumbering      int64
-	additionalInstances map[string]protoreflect.MessageDescriptor
+	parsers                  map[nameable.Nameable]parseable.Parseable
+	idNumbering              int64
+	indexNumbering           int64
+	additionalInstances      map[string]protoreflect.MessageDescriptor
+	additionalTaskProperties []*descriptor.FieldDescriptorProto
 
 	tasksCountBeforeFiltering int64
 }
@@ -79,9 +81,9 @@ func New(opts ...Option) *Parser {
 
 	// Register parsers
 	parser.parsers = map[nameable.Nameable]parseable.Parseable{
-		nameable.NewRegexNameable("^(.*)task$"):           task.NewTask(nil, nil, parser.additionalInstances),
-		nameable.NewRegexNameable("^(.*)pipe$"):           task.NewDockerPipe(nil, nil),
-		nameable.NewRegexNameable("^(.*)docker_builder$"): task.NewDockerBuilder(nil, nil),
+		nameable.NewRegexNameable("^(.*)task$"):           task.NewTask(nil, nil, parser.additionalInstances, parser.additionalTaskProperties),
+		nameable.NewRegexNameable("^(.*)pipe$"):           task.NewDockerPipe(nil, nil, parser.additionalTaskProperties),
+		nameable.NewRegexNameable("^(.*)docker_builder$"): task.NewDockerBuilder(nil, nil, parser.additionalTaskProperties),
 	}
 
 	return parser
@@ -95,11 +97,11 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			var taskLike task.ParseableTaskLike
 			switch value.(type) {
 			case *task.Task:
-				taskLike = task.NewTask(environment.Copy(p.environment), p.boolevator, p.additionalInstances)
+				taskLike = task.NewTask(environment.Copy(p.environment), p.boolevator, p.additionalInstances, p.additionalTaskProperties)
 			case *task.DockerPipe:
-				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.boolevator)
+				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.boolevator, p.additionalTaskProperties)
 			case *task.DockerBuilder:
-				taskLike = task.NewDockerBuilder(environment.Copy(p.environment), p.boolevator)
+				taskLike = task.NewDockerBuilder(environment.Copy(p.environment), p.boolevator, p.additionalTaskProperties)
 			default:
 				panic("unknown task-like object")
 			}
@@ -401,10 +403,6 @@ func (p *Parser) createServiceTask(
 				},
 			),
 		},
-	}
-
-	if value, ok := protoTask.Metadata.Properties["auto_cancellation"]; ok {
-		serviceTask.Metadata.Properties["auto_cancellation"] = value
 	}
 
 	// Some metadata property fields duplicate other fields

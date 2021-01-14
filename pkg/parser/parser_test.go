@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/memory"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
+	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/stretchr/testify/require"
 	"github.com/yudai/gojsondiff"
 	"github.com/yudai/gojsondiff/formatter"
@@ -69,6 +70,24 @@ func TestAdditionalInstances(t *testing.T) {
 	require.NotEmpty(t, result.Tasks)
 
 	assertExpectedTasks(t, absolutize("proto-instance.json"), result)
+}
+
+func TestAdditionalTaskProperties(t *testing.T) {
+	protoName := "custom_bool"
+	protoType := descriptor.FieldDescriptorProto_Type(8)
+	p := parser.New(parser.WithAdditionalTaskPropertiesInstances([]*descriptor.FieldDescriptorProto{
+		{
+			Name: &protoName,
+			Type: &protoType,
+		},
+	}))
+	result, err := p.ParseFromFile(context.Background(), absolutize("proto-task-properties.yml"))
+
+	require.Nil(t, err)
+	require.Empty(t, result.Errors)
+	require.NotEmpty(t, result.Tasks)
+
+	assertExpectedTasks(t, absolutize("proto-task-properties.json"), result)
 }
 
 func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.Result) {
@@ -326,7 +345,8 @@ func TestSchema(t *testing.T) {
 	// Remove cloud instances from the reference schema since they're not present in our schema
 	delete(referenceObject["patternProperties"].(map[string]interface{}), "^(.*)gke_pipe$")
 
-	ignoredInstances := []string{
+	ignoredProperties := []string{
+		// instances
 		"anka_instance",
 		"aws_credentials",
 		"azure_container_instance",
@@ -339,13 +359,30 @@ func TestSchema(t *testing.T) {
 		"gcp_credentials",
 		"gke_container",
 		"osx_instance",
+		"macos_instance",
+		"persistent_worker",
+		// cloud task properties
+		"auto_cancellation",
+		"execution_lock",
+		"experimental",
+		"required_pr_labels",
+		"skip_notifications",
+		"stateful",
+		"trigger_type",
+		"use_compute_credits",
 	}
 
-	for _, ignoredInstance := range ignoredInstances {
-		delete(referenceObject["properties"].(map[string]interface{}), ignoredInstance)
+	for _, ignoredProperty := range ignoredProperties {
+		delete(referenceObject["properties"].(map[string]interface{}), ignoredProperty)
 
 		patternedTask := referenceObject["patternProperties"].(map[string]interface{})["^(.*)task$"]
-		delete(patternedTask.(map[string]interface{})["properties"].(map[string]interface{}), ignoredInstance)
+		delete(patternedTask.(map[string]interface{})["properties"].(map[string]interface{}), ignoredProperty)
+
+		patternedDockerBuilder := referenceObject["patternProperties"].(map[string]interface{})["^(.*)docker_builder$"]
+		delete(patternedDockerBuilder.(map[string]interface{})["properties"].(map[string]interface{}), ignoredProperty)
+
+		patternedPipe := referenceObject["patternProperties"].(map[string]interface{})["^(.*)pipe$"]
+		delete(patternedPipe.(map[string]interface{})["properties"].(map[string]interface{}), ignoredProperty)
 	}
 
 	delete(referenceObject, "fileMatch")

@@ -12,6 +12,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
+	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/golang/protobuf/ptypes"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -36,13 +37,15 @@ func NewTask(
 	env map[string]string,
 	boolevator *boolevator.Boolevator,
 	additionalInstances map[string]protoreflect.MessageDescriptor,
+	additionalTaskProperties []*descriptor.FieldDescriptorProto,
 ) *Task {
 	task := &Task{}
 
 	// Don't force required fields in schema
 	task.SetCollectible(true)
 
-	AttachBaseTaskFields(&task.DefaultParser, &task.proto, env, boolevator)
+	AttachBaseTaskFields(&task.DefaultParser, &task.proto, env, boolevator, additionalTaskProperties)
+	AttachBaseTaskInstructions(&task.DefaultParser, &task.proto, env, boolevator)
 
 	if _, ok := additionalInstances["container"]; !ok {
 		task.CollectibleField("container",

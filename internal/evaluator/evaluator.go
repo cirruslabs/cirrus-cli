@@ -113,6 +113,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		parser.WithAffectedFiles(request.AffectedFiles),
 		parser.WithFileSystem(fs),
 		parser.WithAdditionalInstances(additionalInstances),
+		parser.WithAdditionalTaskPropertiesInstances(request.AdditionalTaskProperties),
 	)
 
 	result, err := p.Parse(ctx, strings.Join(yamlConfigs, "\n"))

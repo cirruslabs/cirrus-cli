@@ -2,7 +2,6 @@ container:
   image: node:latest
 
 allow_failures: true
-skip_notifications: true
 timeout_in: 15
 
 task:
