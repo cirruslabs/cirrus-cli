@@ -100,7 +100,12 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			var taskLike task.ParseableTaskLike
 			switch value.(type) {
 			case *task.Task:
-				taskLike = task.NewTask(environment.Copy(p.environment), p.boolevator, p.additionalInstances, p.additionalTaskProperties)
+				taskLike = task.NewTask(
+					environment.Copy(p.environment),
+					p.boolevator,
+					p.additionalInstances,
+					p.additionalTaskProperties,
+				)
 			case *task.DockerPipe:
 				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.boolevator, p.additionalTaskProperties)
 			case *task.DockerBuilder:
