@@ -83,12 +83,12 @@ func opRegexEquals(a, b interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	equalsOneWay, err := regexp.MatchString(EnsureFullMatch(a.(string)), b.(string))
+	equalsOneWay, err := regexp.MatchString(EnsureFullMultilineMatch(a.(string)), b.(string))
 	if err != nil {
 		return false, err
 	}
 
-	equalsOtherWay, err := regexp.MatchString(EnsureFullMatch(b.(string)), a.(string))
+	equalsOtherWay, err := regexp.MatchString(EnsureFullMultilineMatch(b.(string)), a.(string))
 	if err != nil {
 		return false, err
 	}
@@ -121,7 +121,7 @@ func handleError(arguments ...interface{}) error {
 	return nil
 }
 
-func EnsureFullMatch(r string) string {
+func EnsureFullMultilineMatch(r string) string {
 	var newPrefix, newSuffix string
 
 	alreadyFullyPrefixed := strings.HasPrefix(r, "^(?s)") || strings.HasPrefix(r, "(?s)^")
