@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/ptypes"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
@@ -120,6 +121,10 @@ func (dbuilder *DockerBuilder) Parse(node *node.Node) error {
 	}
 
 	dbuilder.proto.Instance = anyInstance
+
+	// Since the parsing is almost done and other commands are expected,
+	// we can safely append cache upload commands, if applicable
+	dbuilder.proto.Commands = append(dbuilder.proto.Commands, command.GenUploadCacheCmds(dbuilder.proto.Commands)...)
 
 	return nil
 }

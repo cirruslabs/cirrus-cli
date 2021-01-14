@@ -11,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/ptypes"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -182,25 +183,9 @@ func (task *Task) Parse(node *node.Node) error {
 		return fmt.Errorf("%w: task %s has no instance attached", parsererror.ErrParsing, task.Name())
 	}
 
-	// Generate cache upload instructions
-	for _, command := range task.proto.Commands {
-		_, ok := command.Instruction.(*api.Command_CacheInstruction)
-		if !ok {
-			continue
-		}
-
-		uploadCommand := &api.Command{
-			Name: fmt.Sprintf("Upload '%s' cache", command.Name),
-			Instruction: &api.Command_UploadCacheInstruction{
-				UploadCacheInstruction: &api.UploadCacheInstruction{
-					CacheName: command.Name,
-				},
-			},
-			ExecutionBehaviour: command.ExecutionBehaviour,
-		}
-
-		task.proto.Commands = append(task.proto.Commands, uploadCommand)
-	}
+	// Since the parsing is almost done and other commands are expected,
+	// we can safely append cache upload commands, if applicable
+	task.proto.Commands = append(task.proto.Commands, command.GenUploadCacheCmds(task.proto.Commands)...)
 
 	return nil
 }

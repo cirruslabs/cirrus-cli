@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
@@ -128,4 +129,27 @@ func (cache *CacheCommand) Schema() *jsschema.Schema {
 	modifiedSchema.Description = "Folder Cache Definition."
 
 	return modifiedSchema
+}
+
+func GenUploadCacheCmds(commands []*api.Command) (result []*api.Command) {
+	for _, command := range commands {
+		_, ok := command.Instruction.(*api.Command_CacheInstruction)
+		if !ok {
+			continue
+		}
+
+		uploadCommand := &api.Command{
+			Name: fmt.Sprintf("Upload '%s' cache", command.Name),
+			Instruction: &api.Command_UploadCacheInstruction{
+				UploadCacheInstruction: &api.UploadCacheInstruction{
+					CacheName: command.Name,
+				},
+			},
+			ExecutionBehaviour: command.ExecutionBehaviour,
+		}
+
+		result = append(result, uploadCommand)
+	}
+
+	return
 }
