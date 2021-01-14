@@ -1,0 +1,47 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "folder": "$HOME/.gradle/caches",
+          "reuploadOnChanges": true
+        },
+        "name": "gradle"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "./gradlew build"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'gradle' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "gradle"
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.DockerBuilder"
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  }
+]
