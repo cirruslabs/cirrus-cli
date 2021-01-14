@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+dummy_task:
+  script: date
+
+actual_task:
+  only_if: $CIRRUS_TAG =~ 'v.*'
+  script: date

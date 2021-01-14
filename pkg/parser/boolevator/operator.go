@@ -83,12 +83,12 @@ func opRegexEquals(a, b interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	equalsOneWay, err := regexp.MatchString(a.(string), b.(string))
+	equalsOneWay, err := regexp.MatchString(EnsureFullMatch(a.(string)), b.(string))
 	if err != nil {
 		return false, err
 	}
 
-	equalsOtherWay, err := regexp.MatchString(b.(string), a.(string))
+	equalsOtherWay, err := regexp.MatchString(EnsureFullMatch(b.(string)), a.(string))
 	if err != nil {
 		return false, err
 	}
@@ -119,4 +119,28 @@ func handleError(arguments ...interface{}) error {
 	}
 
 	return nil
+}
+
+func EnsureFullMatch(r string) string {
+	var newPrefix, newSuffix string
+
+	alreadyFullyPrefixed := strings.HasPrefix(r, "^(?s)") || strings.HasPrefix(r, "(?s)^")
+
+	// Enable Pattern.DOTALL[1] alternative in Go because otherwise simply adding ^ and $ will be too restricting,
+	// since we actually support multi-line matches.
+	//
+	// [1]: https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html#DOTALL
+	if !alreadyFullyPrefixed && !strings.HasPrefix(r, "(?s)") {
+		newPrefix += "(?s)"
+	}
+
+	if !alreadyFullyPrefixed && !strings.HasPrefix(r, "^") {
+		newPrefix += "^"
+	}
+
+	if !strings.HasSuffix(r, "$") {
+		newSuffix += "$"
+	}
+
+	return newPrefix + r + newSuffix
 }
