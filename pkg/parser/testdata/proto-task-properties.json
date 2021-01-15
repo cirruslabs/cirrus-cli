@@ -2,8 +2,7 @@
   {
     "commands": [
       {
-        "cloneInstruction": {
-        },
+        "cloneInstruction": {},
         "name": "clone"
       }
     ],
