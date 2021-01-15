@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PaesslerAG/gval"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/expander"
 	"strconv"
 	"strings"
 	"text/scanner"
@@ -59,8 +60,21 @@ func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, er
 			variableName = parser.TokenText()
 		}
 
-		// Lookup variable
-		expandedVariable := env[variableName]
+		normalizedVariable := "$" + variableName
+
+		// Options to provide backwards compatibility
+		const maxExpansionIterations = 2
+		opts := []expander.Option{
+			expander.WithMaxExpansionIterations(maxExpansionIterations),
+			expander.WithPrecise(),
+		}
+
+		expandedVariable := expander.ExpandEnvironmentVariables(normalizedVariable, env, opts...)
+
+		// Handle case when no expansion was done
+		if expandedVariable == normalizedVariable {
+			expandedVariable = ""
+		}
 
 		return parser.Const(expandedVariable), nil
 	}

@@ -1,6 +1,7 @@
 package node_test
 
 import (
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/expander"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -100,8 +101,8 @@ func TestExpandEnvironmentVariablesIsDeterministic(t *testing.T) {
 		"CIRRUS_BRANC":  "not deterministic",
 	}
 
-	assert.Equal(t, "main", node.ExpandEnvironmentVariables("$CIRRUS_BRANCH", env))
+	assert.Equal(t, "main", expander.ExpandEnvironmentVariables("$CIRRUS_BRANCH", env))
 
-	assert.Equal(t, "true main", node.ExpandEnvironmentVariables("$CIRRUS $CIRRUS_BRANCH", env))
-	assert.Equal(t, "main true", node.ExpandEnvironmentVariables("$CIRRUS_BRANCH $CIRRUS", env))
+	assert.Equal(t, "true main", expander.ExpandEnvironmentVariables("$CIRRUS $CIRRUS_BRANCH", env))
+	assert.Equal(t, "main true", expander.ExpandEnvironmentVariables("$CIRRUS_BRANCH $CIRRUS", env))
 }
