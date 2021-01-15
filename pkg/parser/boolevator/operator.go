@@ -28,10 +28,10 @@ func (ephctx *ephemeralContext) opIn() OperatorFunc {
 			return nil, err
 		}
 
-		expandedA := ephctx.getLiteralValue(a)
-		expandedB := ephctx.getLiteralValue(b)
+		expandedAndLowerA := strings.ToLower(ephctx.getLiteralValue(a))
+		expandedAndLowerB := strings.ToLower(ephctx.getLiteralValue(b))
 
-		return strconv.FormatBool(strings.Contains(expandedB, expandedA)), nil
+		return strconv.FormatBool(strings.Contains(expandedAndLowerB, expandedAndLowerA)), nil
 	}
 }
 
