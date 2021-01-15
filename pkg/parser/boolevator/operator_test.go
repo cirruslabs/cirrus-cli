@@ -7,10 +7,10 @@ import (
 	"testing"
 )
 
-// TestEnsureFullMultilineMatch ensures that a regular expression passed to EnsureFullMultilineMatch()
+// TestEnsureFullMultilineMatch ensures that a regular expression passed to PrepareRegexp()
 // will be forced to match the whole string instead of only a part of it.
 func TestEnsureFullMultilineMatch(t *testing.T) {
-	match, err := regexp.MatchString(boolevator.EnsureFullMultilineMatch("s"), "something")
+	match, err := regexp.MatchString(boolevator.PrepareRegexp("s"), "something")
 	if err != nil {
 		t.Fatal(err)
 	}
