@@ -32,7 +32,7 @@ func WithAdditionalInstances(additionalInstances map[string]protoreflect.Message
 	}
 }
 
-func WithAdditionalTaskPropertiesInstances(additionalTaskProperties []*descriptor.FieldDescriptorProto) Option {
+func WithAdditionalTaskProperties(additionalTaskProperties []*descriptor.FieldDescriptorProto) Option {
 	return func(parser *Parser) {
 		parser.additionalTaskProperties = additionalTaskProperties
 	}

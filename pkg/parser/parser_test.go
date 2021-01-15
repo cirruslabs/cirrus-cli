@@ -75,7 +75,7 @@ func TestAdditionalInstances(t *testing.T) {
 func TestAdditionalTaskProperties(t *testing.T) {
 	protoName := "custom_bool"
 	protoType := descriptor.FieldDescriptorProto_Type(8)
-	p := parser.New(parser.WithAdditionalTaskPropertiesInstances([]*descriptor.FieldDescriptorProto{
+	p := parser.New(parser.WithAdditionalTaskProperties([]*descriptor.FieldDescriptorProto{
 		{
 			Name: &protoName,
 			Type: &protoType,
@@ -94,7 +94,7 @@ func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.
 	actual := testutil.TasksToJSON(t, result.Tasks)
 
 	// uncomment to update test data
-	// ioutil.WriteFile(absolutize(actualFixturePath+".json"), actual, 0600)
+	// ioutil.WriteFile(actualFixturePath, actual, 0600)
 
 	expected, err := ioutil.ReadFile(actualFixturePath)
 	if err != nil {
