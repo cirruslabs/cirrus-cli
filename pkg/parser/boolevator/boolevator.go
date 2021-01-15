@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PaesslerAG/gval"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/expander"
 	"strconv"
 	"strings"
 	"text/scanner"
@@ -43,6 +44,11 @@ func parseString(ctx context.Context, parser *gval.Parser) (gval.Evaluable, erro
 func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, error) {
 	// Work around text/scanner stopping at newline when scanning strings
 	expr = strings.ReplaceAll(expr, "\n", "\\n")
+
+	// Pre-expand environment variables
+	for key, value := range env {
+		env[key] = expander.ExpandEnvironmentVariables(value, env)
+	}
 
 	// We declare this as a closure since we need a way to pass the env map inside
 	expandVariable := func(ctx context.Context, parser *gval.Parser) (gval.Evaluable, error) {

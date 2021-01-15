@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/expander"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"golang.org/x/text/encoding/unicode"
-	"sort"
 	"strings"
 )
 
@@ -40,7 +40,7 @@ func (node *Node) GetExpandedStringValue(env map[string]string) (string, error) 
 		return "", fmt.Errorf("%w: not a scalar value", parsererror.ErrParsing)
 	}
 
-	return ExpandEnvironmentVariables(valueNode.Value, env), nil
+	return expander.ExpandEnvironmentVariables(valueNode.Value, env), nil
 }
 
 func (node *Node) GetSliceOfStrings() ([]string, error) {
@@ -72,7 +72,7 @@ func (node *Node) GetSliceOfExpandedStrings(env map[string]string) ([]string, er
 	var result []string
 
 	for _, sliceString := range sliceStrings {
-		result = append(result, ExpandEnvironmentVariables(sliceString, env))
+		result = append(result, expander.ExpandEnvironmentVariables(sliceString, env))
 	}
 
 	return result, nil
@@ -166,36 +166,4 @@ func (node *Node) GetEnvironment() (map[string]string, error) {
 	default:
 		return nil, fmt.Errorf("%w: field should be a map or a list of maps", parsererror.ErrParsing)
 	}
-}
-
-func ExpandEnvironmentVariables(s string, env map[string]string) string {
-	const maxExpansionIterations = 10
-
-	// Create a sorted view of the environment map keys to expand the longest keys first
-	// and avoid cases where "$CIRRUS_BRANCH" is expanded into "true_BRANCH", assuming
-	// env = map[string]string{"CIRRUS": "true", "CIRRUS_BRANCH": "main"})
-	var sortedKeys []string
-	for key := range env {
-		sortedKeys = append(sortedKeys, key)
-	}
-	sort.Slice(sortedKeys, func(i, j int) bool {
-		return !(sortedKeys[i] < sortedKeys[j])
-	})
-
-	for i := 0; i < maxExpansionIterations; i++ {
-		beforeExpansion := s
-
-		for _, key := range sortedKeys {
-			s = strings.ReplaceAll(s, fmt.Sprintf("$%s", key), env[key])
-			s = strings.ReplaceAll(s, fmt.Sprintf("${%s}", key), env[key])
-			s = strings.ReplaceAll(s, fmt.Sprintf("%%%s%%", key), env[key])
-		}
-
-		// Don't wait till the end of the loop if we are not progressing
-		if s == beforeExpansion {
-			break
-		}
-	}
-
-	return s
 }
