@@ -1476,6 +1476,10 @@
           },
           "type": "object"
         },
+        "skip": {
+          "description": "Boolean expression that can use environment variables.",
+          "type": "string"
+        },
         "skip_notifications": {
           "description": "Boolean expression that can use environment variables.",
           "type": "string"
@@ -3263,6 +3267,16 @@
           },
           "type": "object"
         },
+        "macos_instance": {
+          "description": "macOS Virtual Machine definition for Community Cluster.",
+          "properties": {
+            "image": {
+              "description": "macOS VM image.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
         "name": {
           "type": "string"
         },
@@ -3549,6 +3563,49 @@
           "properties": {
             "image": {
               "description": "macOS VM image.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "persistent_worker": {
+          "description": "Persistent Worker definition.",
+          "properties": {
+            "isolation": {
+              "description": "Persistent Worker isolation.",
+              "properties": {
+                "parallels": {
+                  "description": "Parallels VM isolation.",
+                  "properties": {
+                    "image": {
+                      "description": "Image name.",
+                      "type": "string"
+                    },
+                    "password": {
+                      "description": "SSH password",
+                      "type": "string"
+                    },
+                    "platform": {
+                      "description": "Image Platform.",
+                      "enum": [
+                        "freebsd",
+                        "linux",
+                        "windows",
+                        "solaris"
+                      ]
+                    },
+                    "user": {
+                      "description": "SSH username",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "type": "object"
+            },
+            "labels": {
+              "description": "Labels for selection.",
               "type": "string"
             }
           },
@@ -4562,6 +4619,16 @@
       },
       "type": "object"
     },
+    "macos_instance": {
+      "description": "macOS Virtual Machine definition for Community Cluster.",
+      "properties": {
+        "image": {
+          "description": "macOS VM image.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "only_if": {
       "description": "Boolean expression that can use environment variables.",
       "type": "string"
@@ -4571,6 +4638,49 @@
       "properties": {
         "image": {
           "description": "macOS VM image.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "persistent_worker": {
+      "description": "Persistent Worker definition.",
+      "properties": {
+        "isolation": {
+          "description": "Persistent Worker isolation.",
+          "properties": {
+            "parallels": {
+              "description": "Parallels VM isolation.",
+              "properties": {
+                "image": {
+                  "description": "Image name.",
+                  "type": "string"
+                },
+                "password": {
+                  "description": "SSH password",
+                  "type": "string"
+                },
+                "platform": {
+                  "description": "Image Platform.",
+                  "enum": [
+                    "freebsd",
+                    "linux",
+                    "windows",
+                    "solaris"
+                  ]
+                },
+                "user": {
+                  "description": "SSH username",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "labels": {
+          "description": "Labels for selection.",
           "type": "string"
         }
       },

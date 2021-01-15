@@ -77,7 +77,6 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
-        "execution_lock": "master",
         "experimental": "false",
         "indexWithinBuild": "0",
         "timeout_in": "3600",

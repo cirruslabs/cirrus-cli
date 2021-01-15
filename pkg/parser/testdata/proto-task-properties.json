@@ -4,14 +4,6 @@
       {
         "cloneInstruction": {},
         "name": "clone"
-      },
-      {
-        "name": "main",
-        "scriptInstruction": {
-          "scripts": [
-            "npm ci"
-          ]
-        }
       }
     ],
     "environment": {
@@ -20,15 +12,16 @@
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "cpu": 2,
-      "image": "node:latest",
+      "image": "alpine:latest",
       "memory": 4096
     },
     "metadata": {
       "properties": {
-        "allow_failures": "true",
+        "allow_failures": "false",
+        "custom_bool": "true",
         "experimental": "false",
         "indexWithinBuild": "0",
-        "timeout_in": "900",
+        "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }
     },

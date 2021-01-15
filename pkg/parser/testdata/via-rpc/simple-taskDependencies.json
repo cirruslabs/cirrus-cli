@@ -104,7 +104,7 @@
         "experimental": "false",
         "indexWithinBuild": "2",
         "timeout_in": "3600",
-        "trigger_type": "MANUAL"
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Deploy",

@@ -11,5 +11,4 @@ test_task:
 task:
   name: Deploy
   depends_on: test
-  trigger_type: manual
   script: ./test.sh

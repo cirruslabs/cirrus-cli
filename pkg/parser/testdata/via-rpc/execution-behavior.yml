@@ -2,7 +2,6 @@ container:
   image: alpine:latest
 
 task:
-  execution_lock: $CIRRUS_BRANCH
   exit_script: exit 1
   always:
     node_cache:

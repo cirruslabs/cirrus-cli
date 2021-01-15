@@ -62,7 +62,7 @@
     "metadata": {
       "properties": {
         "allow_failures": "true",
-        "experimental": "true",
+        "experimental": "false",
         "indexWithinBuild": "1",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"

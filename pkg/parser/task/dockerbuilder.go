@@ -11,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
+	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/golang/protobuf/ptypes"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
@@ -31,10 +32,15 @@ type DockerBuilder struct {
 	parseable.DefaultParser
 }
 
-func NewDockerBuilder(env map[string]string, boolevator *boolevator.Boolevator) *DockerBuilder {
+func NewDockerBuilder(
+	env map[string]string,
+	boolevator *boolevator.Boolevator,
+	additionalTaskProperties []*descriptor.FieldDescriptorProto,
+) *DockerBuilder {
 	dbuilder := &DockerBuilder{}
 
-	AttachBaseTaskFields(&dbuilder.DefaultParser, &dbuilder.proto, env, boolevator)
+	AttachBaseTaskFields(&dbuilder.DefaultParser, &dbuilder.proto, env, boolevator, additionalTaskProperties)
+	AttachBaseTaskInstructions(&dbuilder.DefaultParser, &dbuilder.proto, env, boolevator)
 
 	dbuilder.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 

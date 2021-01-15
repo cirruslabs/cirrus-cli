@@ -9,4 +9,3 @@ task:
 task2_task:
   script: ./test2.sh
   allow_failures: $CIRRUS_BRANCH != 'master'
-  experimental: true

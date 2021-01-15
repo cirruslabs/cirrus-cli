@@ -9,6 +9,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
+	"github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"google.golang.org/protobuf/types/descriptorpb"
 	"strconv"
 	"strings"
 )
@@ -19,6 +21,7 @@ func AttachBaseTaskFields(
 	task *api.Task,
 	env map[string]string,
 	boolevator *boolevator.Boolevator,
+	additionalTaskProperties []*descriptor.FieldDescriptorProto,
 ) {
 	task.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
@@ -54,6 +57,83 @@ func AttachBaseTaskFields(
 		return nil
 	})
 
+	parser.CollectibleField("skip", schema.Condition(""), func(node *node.Node) error {
+		skipped, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		if skipped {
+			task.Status = api.Task_SKIPPED
+		}
+		return nil
+	})
+
+	parser.CollectibleField("allow_failures", schema.Condition(""), func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
+		if err != nil {
+			return err
+		}
+		task.Metadata.Properties["allow_failures"] = strconv.FormatBool(evaluation)
+		return nil
+	})
+
+	parser.CollectibleField("timeout_in", schema.Number("Task timeout in minutes"), func(node *node.Node) error {
+		timeout, err := handleTimeoutIn(node, environment.Merge(task.Environment, env))
+		if err != nil {
+			return err
+		}
+
+		task.Metadata.Properties["timeout_in"] = timeout
+
+		return nil
+	})
+
+	for _, additionalTaskProperty := range additionalTaskProperties {
+		fieldNamePtr := additionalTaskProperty.Name
+		fieldTypePtr := additionalTaskProperty.Type
+		if fieldNamePtr == nil || fieldTypePtr == nil {
+			continue
+		}
+		fieldName := *fieldNamePtr
+		fieldType := *fieldTypePtr
+		switch fieldType {
+		case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
+			parser.CollectibleField(fieldName, schema.Condition(""), func(node *node.Node) error {
+				evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
+				if err != nil {
+					return err
+				}
+				task.Metadata.Properties[fieldName] = strconv.FormatBool(evaluation)
+				return nil
+			})
+		case descriptorpb.FieldDescriptorProto_TYPE_GROUP:
+			parser.CollectibleField(fieldName, schema.StringOrListOfStrings(""), func(node *node.Node) error {
+				evaluation, err := node.GetSliceOfExpandedStrings(environment.Merge(task.Environment, env))
+				if err != nil {
+					return err
+				}
+				task.Metadata.Properties[fieldName] = strings.Join(evaluation, "\n")
+				return nil
+			})
+		default:
+			parser.CollectibleField(fieldName, schema.String(""), func(node *node.Node) error {
+				evaluation, err := node.GetExpandedStringValue(environment.Merge(task.Environment, env))
+				if err != nil {
+					return err
+				}
+				task.Metadata.Properties[fieldName] = evaluation
+				return nil
+			})
+		}
+	}
+}
+
+func AttachBaseTaskInstructions(
+	parser *parseable.DefaultParser,
+	task *api.Task,
+	env map[string]string,
+	boolevator *boolevator.Boolevator,
+) {
 	bgNameable := nameable.NewRegexNameable("^(.*)background_script$")
 	parser.OptionalField(bgNameable, schema.Script(""), func(node *node.Node) error {
 		command, err := handleBackgroundScript(node, bgNameable)
@@ -132,111 +212,4 @@ func AttachBaseTaskFields(
 			return nil
 		})
 	}
-
-	parser.CollectibleField("skip", schema.Condition(""), func(node *node.Node) error {
-		skipped, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		if skipped {
-			task.Status = api.Task_SKIPPED
-		}
-		return nil
-	})
-
-	parser.CollectibleField("allow_failures", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.Metadata.Properties["allow_failures"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	// for cloud only
-	parser.CollectibleField("skip_notifications", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.Metadata.Properties["skip_notifications"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	// for cloud only
-	parser.CollectibleField("auto_cancellation", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	// for cloud only
-	parser.CollectibleField("use_compute_credits", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.Metadata.Properties["use_compute_credits"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	// for cloud only
-	parser.CollectibleField("stateful", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.Metadata.Properties["stateful"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	// no-op
-	labelsSchema := schema.StringOrListOfStrings("List of required labels on a PR.")
-	parser.OptionalField(nameable.NewSimpleNameable("required_pr_labels"), labelsSchema, func(node *node.Node) error {
-		return nil
-	})
-
-	parser.CollectibleField("experimental", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
-		if err != nil {
-			return err
-		}
-		task.Metadata.Properties["experimental"] = strconv.FormatBool(evaluation)
-		return nil
-	})
-
-	parser.CollectibleField("timeout_in", schema.Number("Task timeout in minutes"), func(node *node.Node) error {
-		timeout, err := handleTimeoutIn(node, environment.Merge(task.Environment, env))
-		if err != nil {
-			return err
-		}
-
-		task.Metadata.Properties["timeout_in"] = timeout
-
-		return nil
-	})
-
-	parser.CollectibleField("trigger_type", schema.TriggerType(), func(node *node.Node) error {
-		triggerType, err := node.GetExpandedStringValue(environment.Merge(task.Environment, env))
-		if err != nil {
-			return err
-		}
-		task.Metadata.Properties["trigger_type"] = strings.ToUpper(triggerType)
-		return nil
-	})
-
-	lockSchema := schema.String("Lock name for triggering and execution")
-	parser.OptionalField(nameable.NewSimpleNameable("execution_lock"), lockSchema, func(node *node.Node) error {
-		lockName, err := node.GetExpandedStringValue(environment.Merge(task.Environment, env))
-		if err != nil {
-			return err
-		}
-
-		task.Metadata.Properties["execution_lock"] = lockName
-
-		return nil
-	})
 }
