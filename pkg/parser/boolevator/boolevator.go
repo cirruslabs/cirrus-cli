@@ -16,6 +16,11 @@ type Boolevator struct {
 	functions map[string]Function
 }
 
+// Per-eval context.
+type ephemeralContext struct {
+	env map[string]string
+}
+
 var ErrInternal = errors.New("internal boolevator error")
 
 func New(opts ...Option) *Boolevator {
@@ -41,6 +46,11 @@ func parseString(ctx context.Context, parser *gval.Parser) (gval.Evaluable, erro
 }
 
 func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, error) {
+	// Initialize per-eval context
+	ephctx := ephemeralContext{
+		env: env,
+	}
+
 	// Work around text/scanner stopping at newline when scanning strings
 	expr = strings.ReplaceAll(expr, "\n", "\\n")
 
@@ -78,13 +88,13 @@ func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, er
 		gval.PrefixExtension('$', expandVariable),
 		// Operators
 		gval.PrefixOperator("!", opNot),
-		gval.InfixOperator("in", opIn),
+		gval.InfixOperator("in", ephctx.opIn()),
 		gval.InfixOperator("&&", opAnd),
 		gval.InfixOperator("||", opOr),
-		gval.InfixOperator("==", opEquals),
-		gval.InfixOperator("!=", opNotEquals),
-		gval.InfixOperator("=~", opRegexEquals),
-		gval.InfixOperator("!=~", opRegexNotEquals),
+		gval.InfixOperator("==", ephctx.opEquals()),
+		gval.InfixOperator("!=", ephctx.opNotEquals()),
+		gval.InfixOperator("=~", ephctx.opRegexEquals()),
+		gval.InfixOperator("!=~", ephctx.opRegexNotEquals()),
 		// Operator precedence
 		//
 		// Identical to https://introcs.cs.princeton.edu/java/11precedence/
@@ -116,4 +126,15 @@ func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, er
 	}
 
 	return booleanValue, nil
+}
+
+func (ephctx *ephemeralContext) getLiteralValue(s interface{}) string {
+	str := s.(string)
+
+	if strings.HasPrefix(str, "$") {
+		variableName := strings.TrimSuffix(strings.TrimPrefix(str, "${"), "}")
+		return ephctx.env[variableName]
+	}
+
+	return str
 }

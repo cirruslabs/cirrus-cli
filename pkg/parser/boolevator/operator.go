@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+type OperatorFunc func(a, b interface{}) (interface{}, error)
+
 func opNot(ctx context.Context, parameter interface{}) (interface{}, error) {
 	if err := handleError(parameter); err != nil {
 		return nil, err
@@ -20,12 +22,17 @@ func opNot(ctx context.Context, parameter interface{}) (interface{}, error) {
 	return strconv.FormatBool(!val), nil
 }
 
-func opIn(a, b interface{}) (interface{}, error) {
-	if err := handleError(a, b); err != nil {
-		return nil, err
-	}
+func (ephctx *ephemeralContext) opIn() OperatorFunc {
+	return func(a, b interface{}) (interface{}, error) {
+		if err := handleError(a, b); err != nil {
+			return nil, err
+		}
 
-	return strconv.FormatBool(strings.Contains(b.(string), a.(string))), nil
+		expandedA := ephctx.getLiteralValue(a)
+		expandedB := ephctx.getLiteralValue(b)
+
+		return strconv.FormatBool(strings.Contains(expandedB, expandedA)), nil
+	}
 }
 
 func opAnd(a, b interface{}) (interface{}, error) {
@@ -62,51 +69,68 @@ func opOr(a, b interface{}) (interface{}, error) {
 	return strconv.FormatBool(left || right), nil
 }
 
-func opEquals(a, b interface{}) (interface{}, error) {
-	if err := handleError(a, b); err != nil {
-		return nil, err
-	}
+func (ephctx *ephemeralContext) opEquals() OperatorFunc {
+	return func(a, b interface{}) (interface{}, error) {
+		if err := handleError(a, b); err != nil {
+			return nil, err
+		}
 
-	return strconv.FormatBool(a == b), nil
+		expandedA := ephctx.getLiteralValue(a)
+		expandedB := ephctx.getLiteralValue(b)
+
+		return strconv.FormatBool(expandedA == expandedB), nil
+	}
 }
 
-func opNotEquals(a, b interface{}) (interface{}, error) {
-	if err := handleError(a, b); err != nil {
-		return nil, err
-	}
+func (ephctx *ephemeralContext) opNotEquals() OperatorFunc {
+	return func(a, b interface{}) (interface{}, error) {
+		if err := handleError(a, b); err != nil {
+			return nil, err
+		}
 
-	return strconv.FormatBool(a != b), nil
+		expandedA := ephctx.getLiteralValue(a)
+		expandedB := ephctx.getLiteralValue(b)
+
+		return strconv.FormatBool(expandedA != expandedB), nil
+	}
 }
 
-func opRegexEquals(a, b interface{}) (interface{}, error) {
-	if err := handleError(a, b); err != nil {
-		return nil, err
-	}
+func (ephctx *ephemeralContext) opRegexEquals() OperatorFunc {
+	return func(a, b interface{}) (interface{}, error) {
+		if err := handleError(a, b); err != nil {
+			return nil, err
+		}
 
-	equalsOneWay, err := regexp.MatchString(EnsureFullMultilineMatch(a.(string)), b.(string))
-	if err != nil {
-		return false, err
-	}
+		expandedA := ephctx.getLiteralValue(a)
+		expandedB := ephctx.getLiteralValue(b)
 
-	equalsOtherWay, err := regexp.MatchString(EnsureFullMultilineMatch(b.(string)), a.(string))
-	if err != nil {
-		return false, err
-	}
+		equalsOneWay, err := regexp.MatchString(EnsureFullMultilineMatch(expandedA), expandedB)
+		if err != nil {
+			return false, err
+		}
 
-	return strconv.FormatBool(equalsOneWay || equalsOtherWay), nil
+		equalsOtherWay, err := regexp.MatchString(EnsureFullMultilineMatch(expandedB), expandedA)
+		if err != nil {
+			return false, err
+		}
+
+		return strconv.FormatBool(equalsOneWay || equalsOtherWay), nil
+	}
 }
 
-func opRegexNotEquals(a, b interface{}) (interface{}, error) {
-	if err := handleError(a, b); err != nil {
-		return nil, err
-	}
+func (ephctx *ephemeralContext) opRegexNotEquals() OperatorFunc {
+	return func(a, b interface{}) (interface{}, error) {
+		if err := handleError(a, b); err != nil {
+			return nil, err
+		}
 
-	result, err := opRegexEquals(a, b)
-	if err != nil {
-		return "", nil
-	}
+		result, err := ephctx.opRegexEquals()(a, b)
+		if err != nil {
+			return "", nil
+		}
 
-	return strconv.FormatBool(result == "false"), nil
+		return strconv.FormatBool(result == "false"), nil
+	}
 }
 
 // handleError is a helper to catch and propagate errors from user-defined functions

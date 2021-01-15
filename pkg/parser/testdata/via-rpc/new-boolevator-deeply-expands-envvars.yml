@@ -1,0 +1,13 @@
+env:
+  DISTRO_FEDORA: "fedora-31"
+  DISTRO: "${DISTRO_FEDORA}"
+
+container:
+  image: debian:latest
+
+dummy_task:
+  script: true
+
+actual_task:
+  only_if: $DISTRO =~ '.*FEDORA.*'
+  script: true
