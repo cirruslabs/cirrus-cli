@@ -11,9 +11,13 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
 
-var ErrFailed = errors.New("Parallels isolation failed")
+var (
+	ErrFailed            = errors.New("Parallels isolation failed")
+	AttemptsToRetrieveIP = uint(60) // each attempt every second
+)
 
 type Parallels struct {
 	vmImage     string
@@ -44,7 +48,7 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	if err := retry.Do(func() error {
 		ip, err = vm.RetrieveIP(ctx)
 		return err
-	}); err != nil {
+	}, retry.Attempts(AttemptsToRetrieveIP), retry.Delay(time.Second)); err != nil {
 		return fmt.Errorf("%w: failed to retrieve VM %q IP-address: %v", ErrFailed, vm.name, err)
 	}
 
