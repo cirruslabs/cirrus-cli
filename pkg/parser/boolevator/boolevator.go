@@ -45,9 +45,15 @@ func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, er
 	// Work around text/scanner stopping at newline when scanning strings
 	expr = strings.ReplaceAll(expr, "\n", "\\n")
 
-	// Pre-expand environment variables
+	// Ensure that we keep the env as is
+	localEnv := make(map[string]string)
 	for key, value := range env {
-		env[key] = expander.ExpandEnvironmentVariables(value, env)
+		localEnv[key] = value
+	}
+
+	// Pre-expand environment variables
+	for key, value := range localEnv {
+		localEnv[key] = expander.ExpandEnvironmentVariables(value, localEnv)
 	}
 
 	// We declare this as a closure since we need a way to pass the env map inside
@@ -66,7 +72,7 @@ func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, er
 		}
 
 		// Lookup variable
-		expandedVariable := env[variableName]
+		expandedVariable := localEnv[variableName]
 
 		return parser.Const(expandedVariable), nil
 	}
