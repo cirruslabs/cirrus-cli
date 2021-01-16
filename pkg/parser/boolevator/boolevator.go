@@ -48,12 +48,7 @@ func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, er
 	// Ensure that we keep the env as is
 	localEnv := make(map[string]string)
 	for key, value := range env {
-		localEnv[key] = value
-	}
-
-	// Pre-expand environment variables
-	for key, value := range localEnv {
-		localEnv[key] = expander.ExpandEnvironmentVariables(value, localEnv)
+		localEnv[key] = expander.ExpandEnvironmentVariables(value, env)
 	}
 
 	// We declare this as a closure since we need a way to pass the env map inside
