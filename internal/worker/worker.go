@@ -181,7 +181,7 @@ func (worker *Worker) poll(ctx context.Context) error {
 	// De-register completed tasks
 	worker.registerTaskCompletions()
 
-	worker.logger.Infof("polling %s", worker.rpcEndpoint)
+	worker.logger.Debugf("polling %s", worker.rpcEndpoint)
 
 	request := &api.PollRequest{
 		WorkerInfo:   worker.info(),
