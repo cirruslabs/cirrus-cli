@@ -1,0 +1,289 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "echo 1"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "echo 2"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "1",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "echo 3"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "2",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "echo 4"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "localGroupId": "3",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "3",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "echo 5"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "localGroupId": "4",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "4",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "echo 6"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "localGroupId": "5",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "5",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "echo 7"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "localGroupId": "6",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "6",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "echo 8"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "localGroupId": "7",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "7",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  }
+]

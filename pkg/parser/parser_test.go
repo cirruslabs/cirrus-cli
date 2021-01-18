@@ -72,6 +72,25 @@ func TestAdditionalInstances(t *testing.T) {
 	assertExpectedTasks(t, absolutize("proto-instance.json"), result)
 }
 
+func TestAdditionalInstanceStability(t *testing.T) {
+	containerInstanceReflect := (&api.ContainerInstance{}).ProtoReflect()
+	p := parser.New(parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
+		"red_instance":    containerInstanceReflect.Descriptor(),
+		"orange_instance": containerInstanceReflect.Descriptor(),
+		"yellow_instance": containerInstanceReflect.Descriptor(),
+		"green_instance":  containerInstanceReflect.Descriptor(),
+		"blue_instance":   containerInstanceReflect.Descriptor(),
+		"purple_instance": containerInstanceReflect.Descriptor(),
+	}))
+	result, err := p.ParseFromFile(context.Background(), absolutize("additional-instance-stability.yml"))
+
+	require.Nil(t, err)
+	require.Empty(t, result.Errors)
+	require.NotEmpty(t, result.Tasks)
+
+	assertExpectedTasks(t, absolutize("additional-instance-stability.json"), result)
+}
+
 func TestAdditionalTaskProperties(t *testing.T) {
 	protoName := "custom_bool"
 	protoType := descriptor.FieldDescriptorProto_Type(8)

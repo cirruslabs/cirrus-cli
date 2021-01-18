@@ -1,0 +1,13 @@
+container:
+  image: debian:latest
+
+task:
+  matrix:
+    script: echo 1
+    script: echo 2
+    script: echo 3
+    script: echo 4
+    script: echo 5
+    script: echo 6
+    script: echo 7
+    script: echo 8
