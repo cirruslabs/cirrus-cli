@@ -41,17 +41,36 @@ labels:
   connected-device: iPhone12ProMax
 ```
 
-Currently, configuration files support the same set of options exposed via the command-line flags, but in the future the only way to configure certain options would be using the configuration file.
+Currently configuration files support the same set of options exposed via the command-line flags, while the rest of the options can only be configured via configuration file and are documented here.
 
 ### Reserved Labels
 
 Worker automatically populates the following lables:
 
-* `os` - `GOOS` of the CLI binary (for example, `linux`, `windows`, `darwin`, `solaris`, etc.).
-* `arch` - `GOARCH` of the CLI binary (for example, `amd64`, `arm64`, etc.).
-* `version` - CLI's version.
-* `hostname` - host name reported by the host kernel.
-* `name` - worker name passed via `--name` flag of the YAML configuration. Defaults to `hostname` with stripped common suffixes like `.local` and `.lan`.
+* `os` — `GOOS` of the CLI binary (for example, `linux`, `windows`, `darwin`, `solaris`, etc.).
+* `arch` — `GOARCH` of the CLI binary (for example, `amd64`, `arm64`, etc.).
+* `version` — CLI's version.
+* `hostname` — host name reported by the host kernel.
+* `name` — worker name passed via `--name` flag of the YAML configuration. Defaults to `hostname` with stripped common suffixes like `.local` and `.lan`.
+
+### Logging
+
+Can be configured in the `log` section of the configuration file. The following things can be customized:
+
+* `level` — logging level to use, either `panic`, `fatal`, `error`, `warning`, `info`, `debug` or `trace` (defaults to `info`)
+* `file` — log to the specified file instead of terminal
+* `rotate-every` — rotate the log file if it reaches the specified size, e.g. 640 KB or 100 MiB (defaults to no rotation)
+* `max-rotations` — how many already rotated files to keep (defaults to no limit)
+
+Example:
+
+```yaml
+log:
+  level: warning
+  file: cirrus-worker.log
+  rotate-every: 100 MB
+  max-rotations: 10
+```
 
 ## Writing tasks
 
