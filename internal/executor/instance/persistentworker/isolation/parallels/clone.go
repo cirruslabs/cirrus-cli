@@ -33,6 +33,10 @@ func cloneFromSuspended(ctx context.Context, vmPathFrom string) (*VM, error) {
 		return nil, fmt.Errorf("%w: failed to start VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
 	}
 
+	if err := vm.renewDHCP(ctx); err != nil {
+		return nil, err
+	}
+
 	// Here isolation is done after the VM is started because
 	// it's impossible to change suspended VM's settings
 	if err := vm.isolate(ctx); err != nil {

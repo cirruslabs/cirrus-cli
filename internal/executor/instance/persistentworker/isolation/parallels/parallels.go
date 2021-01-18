@@ -11,10 +11,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"time"
 )
-
-const AttemptsToRetrieveIP = 60 // each attempt every second
 
 var (
 	ErrFailed = errors.New("Parallels isolation failed")
@@ -49,7 +46,7 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	if err := retry.Do(func() error {
 		ip, err = vm.RetrieveIP(ctx)
 		return err
-	}, retry.Attempts(AttemptsToRetrieveIP), retry.Delay(time.Second)); err != nil {
+	}); err != nil {
 		return fmt.Errorf("%w: failed to retrieve VM %q IP-address: %v", ErrFailed, vm.name, err)
 	}
 
