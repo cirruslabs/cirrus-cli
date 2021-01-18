@@ -13,8 +13,6 @@ import (
 	"strings"
 )
 
-const AttemptsToRetrieveIP = 60 // each attempt every second
-
 var (
 	ErrFailed = errors.New("Parallels isolation failed")
 )
