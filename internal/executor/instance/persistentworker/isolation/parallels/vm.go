@@ -81,6 +81,16 @@ func (vm *VM) isolate(ctx context.Context) error {
 	return nil
 }
 
+func (vm *VM) renewDHCP(ctx context.Context) error {
+	// Poke DHCP to renew a lease because suspended on another host VMs don't yet have IPs on the current host
+	_, stderr, err := Prlctl(ctx, "set", vm.Ident(), "--dhcp", "yes", "--dhcp6", "yes")
+	if err != nil {
+		return fmt.Errorf("%w: failed to poke DHCP for VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
+	}
+
+	return nil
+}
+
 func (vm *VM) Close() error {
 	ctx := context.Background()
 
