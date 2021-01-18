@@ -34,11 +34,20 @@ func instanceLabels(
 	taskInstance *anypb.Any,
 	additionalInstances map[string]protoreflect.MessageDescriptor,
 ) ([]string, error) {
-	for instanceName, descriptor := range additionalInstances {
+	// Provide stable iteration order
+	var sortedInstanceKeys []string
+	for key := range additionalInstances {
+		sortedInstanceKeys = append(sortedInstanceKeys, key)
+	}
+	sort.Strings(sortedInstanceKeys)
+
+	for _, instanceName := range sortedInstanceKeys {
+		descriptor := additionalInstances[instanceName]
 		if strings.HasSuffix(taskInstance.GetTypeUrl(), string(descriptor.FullName())) {
 			return extractProtoInstanceLabels(taskInstance, instanceName, descriptor)
 		}
 	}
+
 	// Instance-specific labels
 	var labels []string
 

@@ -14,9 +14,10 @@ import (
 	"time"
 )
 
+const AttemptsToRetrieveIP = 60 // each attempt every second
+
 var (
-	ErrFailed            = errors.New("Parallels isolation failed")
-	AttemptsToRetrieveIP = uint(60) // each attempt every second
+	ErrFailed = errors.New("Parallels isolation failed")
 )
 
 type Parallels struct {
