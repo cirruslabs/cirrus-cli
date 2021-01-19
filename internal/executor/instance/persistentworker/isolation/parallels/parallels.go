@@ -63,7 +63,14 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	if err != nil {
 		return fmt.Errorf("%w: failed to connect to the VM %q via SSH: %v", ErrFailed, vm.Ident(), err)
 	}
-	defer cli.Close()
+
+	// Work around x/crypto/ssh not being context.Context-friendly (e.g. https://github.com/golang/go/issues/20288)
+	monitorCtx, monitorCancel := context.WithCancel(ctx)
+	go func() {
+		<-monitorCtx.Done()
+		_ = cli.Close()
+	}()
+	defer monitorCancel()
 
 	remoteAgentPath, err := uploadAgent(ctx, cli, parallels.agentOS, config.GetAgentVersion())
 	if err != nil {
