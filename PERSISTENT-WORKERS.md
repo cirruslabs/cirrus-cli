@@ -59,7 +59,7 @@ Can be configured in the `log` section of the configuration file. The following 
 
 * `level` — logging level to use, either `panic`, `fatal`, `error`, `warning`, `info`, `debug` or `trace` (defaults to `info`)
 * `file` — log to the specified file instead of terminal
-* `rotate-every` — rotate the log file if it reaches the specified size, e.g. 640 KB or 100 MiB (defaults to no rotation)
+* `rotate-size` — rotate the log file if it reaches the specified size, e.g. 640 KB or 100 MiB (defaults to no rotation)
 * `max-rotations` — how many already rotated files to keep (defaults to no limit)
 
 Example:
@@ -68,7 +68,7 @@ Example:
 log:
   level: warning
   file: cirrus-worker.log
-  rotate-every: 100 MB
+  rotate-size: 100 MB
   max-rotations: 10
 ```
 
