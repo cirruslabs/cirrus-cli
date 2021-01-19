@@ -74,23 +74,23 @@ func run(cmd *cobra.Command, args []string) error {
 	// Configure logging
 	logger := logrus.New()
 
-	level, err := logrus.ParseLevel(logLevel)
+	level, err := logrus.ParseLevel(viper.GetString("log.level"))
 	if err != nil {
 		return err
 	}
 	logger.SetLevel(level)
 
 	var output io.Writer
-	if logFile != "" {
-		logRotateSizeBytes, err := humanize.ParseBytes(logRotateSize)
+	if viper.GetString("log.file") != "" {
+		logRotateSizeBytes, err := humanize.ParseBytes(viper.GetString("log.rotate-size"))
 		if err != nil {
 			return err
 		}
 
 		output = &lumberjack.Logger{
-			Filename:   logFile,
+			Filename:   viper.GetString("log.file"),
 			MaxSize:    int(logRotateSizeBytes / humanize.MByte),
-			MaxBackups: int(logMaxRotations),
+			MaxBackups: int(viper.GetUint("log.max-rotations")),
 		}
 	} else {
 		output = cmd.ErrOrStderr()
