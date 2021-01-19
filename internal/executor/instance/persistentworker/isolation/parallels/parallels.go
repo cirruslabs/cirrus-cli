@@ -51,7 +51,16 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	}
 
 	// Connect to the VM and upload the agent
-	cli, err := ssh.Dial("tcp", ip+":22", &ssh.ClientConfig{
+	addr := ip + ":22"
+
+	dialer := net.Dialer{}
+
+	netConn, err := dialer.DialContext(ctx, "tcp", addr)
+	if err != nil {
+		return fmt.Errorf("%w: failed to connect to the VM %q on SSH port: %v", ErrFailed, vm.Ident(), err)
+	}
+
+	sshConfig := &ssh.ClientConfig{
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		},
@@ -59,10 +68,14 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 		Auth: []ssh.AuthMethod{
 			ssh.Password(parallels.sshPassword),
 		},
-	})
+	}
+
+	sshConn, chans, reqs, err := ssh.NewClientConn(netConn, addr, sshConfig)
 	if err != nil {
 		return fmt.Errorf("%w: failed to connect to the VM %q via SSH: %v", ErrFailed, vm.Ident(), err)
 	}
+
+	cli := ssh.NewClient(sshConn, chans, reqs)
 
 	// Work around x/crypto/ssh not being context.Context-friendly (e.g. https://github.com/golang/go/issues/20288)
 	monitorCtx, monitorCancel := context.WithCancel(ctx)
