@@ -81,7 +81,7 @@ func run(cmd *cobra.Command, args []string) error {
 	logger.SetLevel(level)
 
 	var output io.Writer
-	if viper.GetString("log.file") != "" {
+	if viper.IsSet("log.file") {
 		logRotateSizeBytes, err := humanize.ParseBytes(viper.GetString("log.rotate-size"))
 		if err != nil {
 			return err
