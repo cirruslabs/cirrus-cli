@@ -82,9 +82,12 @@ func run(cmd *cobra.Command, args []string) error {
 
 	var output io.Writer
 	if viper.IsSet("log.file") {
-		logRotateSizeBytes, err := humanize.ParseBytes(viper.GetString("log.rotate-size"))
-		if err != nil {
-			return err
+		logRotateSizeBytes := uint64(0)
+		if viper.IsSet("log.rotate-size") {
+			logRotateSizeBytes, err = humanize.ParseBytes(viper.GetString("log.rotate-size"))
+			if err != nil {
+				return fmt.Errorf("failed to parse log size for rotation: %w", err)
+			}
 		}
 
 		output = &lumberjack.Logger{
