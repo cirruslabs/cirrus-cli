@@ -22,6 +22,7 @@ require (
 	github.com/docker/cli v20.10.1+incompatible
 	github.com/docker/docker v20.10.1+incompatible
 	github.com/docker/go-units v0.4.0
+	github.com/dustin/go-humanize v1.0.0
 	github.com/go-git/go-billy/v5 v5.0.0
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/go-test/deep v1.0.7
@@ -72,6 +73,7 @@ require (
 	google.golang.org/grpc v1.34.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	gotest.tools/v3 v3.0.3 // indirect

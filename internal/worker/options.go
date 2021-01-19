@@ -1,6 +1,14 @@
 package worker
 
+import "github.com/sirupsen/logrus"
+
 type Option func(*Worker)
+
+func WithLogger(logger logrus.FieldLogger) Option {
+	return func(e *Worker) {
+		e.logger = logger
+	}
+}
 
 func WithName(name string) Option {
 	return func(e *Worker) {
