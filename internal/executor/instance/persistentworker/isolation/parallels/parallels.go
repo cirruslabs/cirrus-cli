@@ -83,6 +83,10 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	if err != nil {
 		return fmt.Errorf("%w: failed to start a shell on VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
+	_, err = stdinBuf.Write([]byte("sudo sntp -sS time.apple.com || true\n"))
+	if err != nil {
+		return fmt.Errorf("%w: failed to sync time on VM %q: %v", ErrFailed, vm.Ident(), err)
+	}
 
 	command := []string{
 		remoteAgentPath,
