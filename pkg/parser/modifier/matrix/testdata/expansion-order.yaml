@@ -1,0 +1,29 @@
+task:
+  container:
+    matrix:
+      - dockerfile: Dockerfile.python2
+      - dockerfile: Dockerfile.python3
+  matrix:
+    - { env: { VERSION: 0.1.0 } }
+    - { env: { VERSION: 0.2.0 } }
+---
+task:
+  container:
+    dockerfile: Dockerfile.python2
+  env:
+    VERSION: 0.1.0
+task:
+  container:
+    dockerfile: Dockerfile.python2
+  env:
+    VERSION: 0.2.0
+task:
+  container:
+    dockerfile: Dockerfile.python3
+  env:
+    VERSION: 0.1.0
+task:
+  container:
+    dockerfile: Dockerfile.python3
+  env:
+    VERSION: 0.2.0

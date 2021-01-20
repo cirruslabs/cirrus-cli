@@ -72,6 +72,7 @@ var goodCases = []string{
 	"multiple-matrices-on-the-same-level.yaml",
 	"parallel.yaml",
 	"one-sized-matrix.yaml",
+	"expansion-order.yaml",
 }
 
 var badCases = []struct {
