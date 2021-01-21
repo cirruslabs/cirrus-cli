@@ -84,3 +84,32 @@ task:
       arch: arm64
   script: echo "running on-premise"
 ```
+
+### Isolation
+
+By default, a persistent worker does not isolate execution of a task. All the task instructions are executed directly on
+the worker which can have side effects. This is intended since the main use case for persistent workers is to test on
+bare metal. There are options to enable isolation of task execution:
+
+#### Parallels Desktop for Mac
+
+If your host has [Parallels Desktop](https://www.parallels.com/products/desktop/) installed, then a persistent worker
+can execute tasks in available Parallels VMs (worker will clone a VM, run the task and then remote the temporary cloned
+VM).
+
+Here is an example of how to instruct a persistent worker to use Parallels isolation:
+
+```yaml
+task:
+  persistent_worker:
+    labels:
+      os: darwin
+    isolation:
+      paralllels:
+        image: big-sur-xcode # locally registered VM
+        # username and password for SSHing into the VM to start a task
+        user: admin
+        password: admin
+        platform: darwin # VM platform. Only darwin is supported at the moment.
+  script: echo "running on-premise in a Parallels VM"
+```
