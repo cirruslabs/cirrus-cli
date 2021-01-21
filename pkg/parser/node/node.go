@@ -178,6 +178,13 @@ func convert(parent *Node, name string, obj interface{}) (*Node, error) {
 		}
 
 		for _, arrayItem := range typedObj {
+			// Ignore null[1] array elements for backwards compatibility
+			//
+			// [1]: https://yaml.org/type/null.html
+			if arrayItem == nil {
+				continue
+			}
+
 			listSubtree, err := convert(result, "", arrayItem)
 			if err != nil {
 				return nil, err

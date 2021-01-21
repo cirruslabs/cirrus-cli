@@ -1,0 +1,8 @@
+container:
+  image: debian:latest
+
+task:
+  script:
+    - echo 1
+    - # some clearly misplaced comment
+    - echo 2
