@@ -11,14 +11,20 @@ type callback func(item *yaml.MapItem) error
 
 // Implements preorder traversal of the YAML parse tree.
 func traverse(item *yaml.MapItem, f callback) error {
+	if item.Key != "matrix" {
+		// Dig deeper into the tree
+		if err := process(item.Value, f); err != nil {
+			return err
+		}
+	}
+
 	// Call the traversal function
 	err := f(item)
 	if err != nil {
 		return err
 	}
 
-	// Dig deeper into the tree
-	return process(item.Value, f)
+	return nil
 }
 
 // Recursive descent helper for traverse().
