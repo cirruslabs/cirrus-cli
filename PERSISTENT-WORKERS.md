@@ -113,3 +113,14 @@ task:
         platform: darwin # VM platform. Only darwin is supported at the moment.
   script: echo "running on-premise in a Parallels VM"
 ```
+
+**Note**: Persistent worker supports packed Parallels VMs (it will unpack such VMs first before cloning). This can help
+with the process of updating VMs on persistent workers. If one need to update a VM named `VM_NAME` which is already unpacked
+on the host at `~/Parallels/VM_NAME.pvm`, then you can simply distribute a packed `VM_NAME.pvmp` file to `~/Parallels/VM_NAME.pvmp`
+and run a script similar to the one below to update the VM almost atomically:
+
+```bash
+prlctl unregister VM_NAME
+rm -rf ~/Parallels/VM_NAME.pvm
+prlctl register ~/Parallels/VM_NAME.pvmp
+```
