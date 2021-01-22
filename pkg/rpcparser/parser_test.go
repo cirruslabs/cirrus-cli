@@ -1,8 +1,10 @@
 package rpcparser_test
 
 import (
+	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"log"
@@ -33,8 +35,8 @@ func TestValidConfigs(t *testing.T) {
 	for _, validCase := range validCases {
 		file := validCase
 		t.Run(file, func(t *testing.T) {
-			p := rpcparser.Parser{}
-			result, err := p.ParseFromFile(absolutize(file))
+			p := parser.New()
+			result, err := p.ParseFromFile(context.Background(), absolutize(file))
 
 			require.Nil(t, err)
 			assert.Empty(t, result.Errors)
@@ -46,8 +48,8 @@ func TestInvalidConfigs(t *testing.T) {
 	for _, invalidCase := range invalidCases {
 		file := invalidCase
 		t.Run(file, func(t *testing.T) {
-			p := rpcparser.Parser{}
-			result, err := p.ParseFromFile(absolutize(file))
+			p := parser.New()
+			result, err := p.ParseFromFile(context.Background(), absolutize(file))
 
 			require.Nil(t, err)
 			assert.NotEmpty(t, result.Errors)
