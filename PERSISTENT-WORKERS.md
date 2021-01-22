@@ -94,7 +94,7 @@ bare metal. There are options to enable isolation of task execution:
 #### Parallels Desktop for Mac
 
 If your host has [Parallels Desktop](https://www.parallels.com/products/desktop/) installed, then a persistent worker
-can execute tasks in available Parallels VMs (worker will clone a VM, run the task and then remote the temporary cloned
+can execute tasks in available Parallels VMs (worker will clone a VM, run the task and then remove the temporary cloned
 VM).
 
 Here is an example of how to instruct a persistent worker to use Parallels isolation:
