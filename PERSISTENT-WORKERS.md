@@ -84,3 +84,43 @@ task:
       arch: arm64
   script: echo "running on-premise"
 ```
+
+### Isolation
+
+By default, a persistent worker does not isolate execution of a task. All the task instructions are executed directly on
+the worker which can have side effects. This is intended since the main use case for persistent workers is to test on
+bare metal. There are options to enable isolation of task execution:
+
+#### Parallels Desktop for Mac
+
+If your host has [Parallels Desktop](https://www.parallels.com/products/desktop/) installed, then a persistent worker
+can execute tasks in available Parallels VMs (worker will clone a VM, run the task and then remove the temporary cloned
+VM).
+
+Here is an example of how to instruct a persistent worker to use Parallels isolation:
+
+```yaml
+task:
+  persistent_worker:
+    labels:
+      os: darwin
+    isolation:
+      paralllels:
+        image: big-sur-xcode # locally registered VM
+        # username and password for SSHing into the VM to start a task
+        user: admin
+        password: admin
+        platform: darwin # VM platform. Only darwin is supported at the moment.
+  script: echo "running on-premise in a Parallels VM"
+```
+
+**Note**: Persistent worker supports packed Parallels VMs (it will unpack such VMs first before cloning). This can help
+with the process of updating VMs on persistent workers. If one need to update a VM named `VM_NAME` which is already unpacked
+on the host at `~/Parallels/VM_NAME.pvm`, then you can simply distribute a packed `VM_NAME.pvmp` file to `~/Parallels/VM_NAME.pvmp`
+and run a script similar to the one below to update the VM almost atomically:
+
+```bash
+prlctl unregister VM_NAME
+rm -rf ~/Parallels/VM_NAME.pvm
+prlctl register ~/Parallels/VM_NAME.pvmp
+```
