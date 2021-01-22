@@ -41,7 +41,7 @@ var dockerfileImagePush bool
 var debugNoCleanup bool
 
 // Experimental features flags.
-var experimentalParser bool
+var experimentalOldParser bool
 
 func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
@@ -69,7 +69,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Parse
 	var result *parser.Result
-	if experimentalParser {
+	if !experimentalOldParser {
 		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment))
 		result, err = p.Parse(cmd.Context(), combinedYAML)
 		if err != nil {
@@ -176,8 +176,8 @@ func newRunCmd() *cobra.Command {
 		"don't remove containers and volumes after execution")
 
 	// Experimental features flags
-	cmd.PersistentFlags().BoolVar(&experimentalParser, "experimental-parser", false,
-		"use local configuration parser instead of sending parse request to Cirrus Cloud")
+	cmd.PersistentFlags().BoolVar(&experimentalOldParser, "legacy-remote-parser", false,
+		"use old configuration parser that sends parse requests to the Cirrus Cloud")
 
 	return cmd
 }

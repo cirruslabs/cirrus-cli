@@ -12,7 +12,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
-	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/stretchr/testify/assert"
@@ -328,8 +329,8 @@ func filesContentsSingleVariation(t *testing.T, dir, dockerfileContents string) 
 	}
 
 	// Re-parse the configuration
-	p := rpcparser.Parser{}
-	result, err := p.ParseFromFile(filepath.Join(dir, ".cirrus.yml"))
+	p := parser.New(parser.WithFileSystem(local.New(dir)))
+	result, err := p.ParseFromFile(context.Background(), filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
 		t.Fatal(err)
 	}

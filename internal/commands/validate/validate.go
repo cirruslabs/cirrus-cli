@@ -20,7 +20,7 @@ var validateFile string
 var environment []string
 
 // Experimental features flags.
-var experimentalParser bool
+var experimentalOldParser bool
 
 var yaml bool
 
@@ -64,7 +64,7 @@ func validate(cmd *cobra.Command, args []string) error {
 	// Parse
 	var result *parser.Result
 
-	if experimentalParser {
+	if !experimentalOldParser {
 		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment))
 		result, err = p.Parse(cmd.Context(), configuration)
 		if err != nil {
@@ -113,8 +113,8 @@ func NewValidateCmd() *cobra.Command {
 		"use file as the configuration file (the path should end with either .yml or ..star)")
 
 	// Experimental features flags
-	cmd.PersistentFlags().BoolVar(&experimentalParser, "experimental-parser", false,
-		"use local configuration parser instead of sending parse request to Cirrus Cloud")
+	cmd.PersistentFlags().BoolVar(&experimentalOldParser, "legacy-remote-parser", false,
+		"use old configuration parser that sends parse requests to the Cirrus Cloud")
 
 	// A hidden flag to dump YAML representation of tasks and aid in generating test
 	// cases for smooth rpcparser → parser transition
