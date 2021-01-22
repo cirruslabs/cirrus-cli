@@ -113,7 +113,7 @@ func NewValidateCmd() *cobra.Command {
 		"use file as the configuration file (the path should end with either .yml or ..star)")
 
 	// Experimental features flags
-	cmd.PersistentFlags().BoolVar(&experimentalOldParser, "experimental-old-parser", false,
+	cmd.PersistentFlags().BoolVar(&experimentalOldParser, "legacy-remote-parser", false,
 		"use old configuration parser that sends parse requests to the Cirrus Cloud")
 
 	// A hidden flag to dump YAML representation of tasks and aid in generating test

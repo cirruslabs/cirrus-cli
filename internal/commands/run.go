@@ -176,7 +176,7 @@ func newRunCmd() *cobra.Command {
 		"don't remove containers and volumes after execution")
 
 	// Experimental features flags
-	cmd.PersistentFlags().BoolVar(&experimentalOldParser, "experimental-old-parser", false,
+	cmd.PersistentFlags().BoolVar(&experimentalOldParser, "legacy-remote-parser", false,
 		"use old configuration parser that sends parse requests to the Cirrus Cloud")
 
 	return cmd
