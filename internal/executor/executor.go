@@ -216,15 +216,17 @@ func (e *Executor) transformDockerfileImageIfNeeded(reference string, strict boo
 	}
 
 	// Extract the already calculated hash
+	const expectedMatches = 2
 	re := regexp.MustCompile(`^gcr\.io/cirrus-ci-community/(.*):latest$`)
-	hash := re.FindString(reference)
-	if hash == "" {
+	matches := re.FindStringSubmatch(reference)
+	if len(matches) != expectedMatches {
 		if strict {
 			return "", fmt.Errorf("%w: unknown prebuilt image format: %s", ErrBuildFailed, reference)
 		}
 
 		return reference, nil
 	}
+	hash := matches[1]
 
 	// Render the template
 	return strings.ReplaceAll(e.containerOptions.DockerfileImageTemplate, "%s", hash), nil
