@@ -84,8 +84,7 @@ func TestMultipleGetAndPut(t *testing.T) {
 func getRandomBlob(t *testing.T, size int) []byte {
 	buf := make([]byte, size)
 
-	_, err := rand.Read(buf)
-	if err != nil {
+	if _, err := rand.Read(buf); err != nil {
 		t.Fatal(err)
 	}
 
