@@ -14,9 +14,6 @@
         }
       }
     ],
-    "environment": {
-      "CIRRUS_OS": "linux"
-    },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
       "labels": {

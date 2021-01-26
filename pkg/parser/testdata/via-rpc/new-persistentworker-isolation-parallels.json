@@ -15,7 +15,7 @@
       }
     ],
     "environment": {
-      "CIRRUS_OS": "linux"
+      "CIRRUS_OS": "darwin"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
