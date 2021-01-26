@@ -3588,10 +3588,9 @@
                     "platform": {
                       "description": "Image Platform.",
                       "enum": [
-                        "freebsd",
+                        "darwin",
                         "linux",
-                        "windows",
-                        "solaris"
+                        "windows"
                       ]
                     },
                     "user": {
@@ -4663,10 +4662,9 @@
                 "platform": {
                   "description": "Image Platform.",
                   "enum": [
-                    "freebsd",
+                    "darwin",
                     "linux",
-                    "windows",
-                    "solaris"
+                    "windows"
                   ]
                 },
                 "user": {

@@ -32,7 +32,7 @@ type Task struct {
 	parseable.DefaultParser
 }
 
-// nolint:gocognit // it's a parser helper, there is a lot of boilerplate
+// nolint:gocognit,nestif // it's a parser helper, there is a lot of boilerplate
 func NewTask(
 	env map[string]string,
 	boolevator *boolevator.Boolevator,
@@ -99,16 +99,27 @@ func NewTask(
 	}
 	if _, ok := additionalInstances["persistent_worker"]; !ok {
 		task.CollectibleField("persistent_worker",
-			instance.NewPersistentWorker().Schema(),
+			instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env)).Schema(),
 			func(node *node.Node) error {
-				inst := instance.NewPersistentWorker()
+				inst := instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env))
 				persistentWorkerInstance, err := inst.Parse(node)
 				if err != nil {
 					return err
 				}
 
-				// Clean CIRRUS_OS since we don't know where we will be running
-				delete(task.proto.Environment, "CIRRUS_OS")
+				if isolation := persistentWorkerInstance.Isolation; isolation != nil {
+					if parallels, ok := isolation.Type.(*api.Isolation_Parallels_); ok {
+						if parallels.Parallels != nil {
+							task.proto.Environment = environment.Merge(
+								task.proto.Environment,
+								map[string]string{"CIRRUS_OS": strings.ToLower(parallels.Parallels.Platform.String())},
+							)
+						}
+					}
+				} else {
+					// Clear CIRRUS_OS since we don't know where we will be running
+					delete(task.proto.Environment, "CIRRUS_OS")
+				}
 
 				anyInstance, err := ptypes.MarshalAny(persistentWorkerInstance)
 				if err != nil {
