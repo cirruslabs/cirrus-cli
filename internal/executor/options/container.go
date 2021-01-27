@@ -15,18 +15,18 @@ type ContainerOptions struct {
 	DockerfileImagePush     bool
 }
 
-func (do ContainerOptions) ShouldPullImage(
+func (copts ContainerOptions) ShouldPullImage(
 	ctx context.Context,
 	backend containerbackend.ContainerBackend,
 	image string,
 ) bool {
-	for _, noPullImage := range do.NoPullImages {
+	for _, noPullImage := range copts.NoPullImages {
 		if noPullImage == image {
 			return false
 		}
 	}
 
-	if do.Pull {
+	if copts.Pull {
 		return true
 	}
 

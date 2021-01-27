@@ -3,6 +3,7 @@ package containerbackend
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 )
@@ -24,11 +25,18 @@ func unrollStream(reader io.Reader, logChan chan<- string, errChan chan<- error)
 
 		// Each line is a JSON object with the actual message wrapped in it
 		msg := &struct {
-			Stream string
+			Stream      string
+			ErrorDetail struct {
+				Message string
+			}
 		}{}
 		if err := json.Unmarshal(line, &msg); err != nil {
 			errChan <- err
 			return
+		}
+
+		if msg.ErrorDetail.Message != "" {
+			errChan <- fmt.Errorf("%w: %s", ErrBuildFailed, msg.ErrorDetail.Message)
 		}
 
 		// We're only interested with messages containing the "stream" field, as these are the most helpful
