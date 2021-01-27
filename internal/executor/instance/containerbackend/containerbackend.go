@@ -12,6 +12,7 @@ var (
 	ErrNotFound       = errors.New("not found")
 	ErrDone           = errors.New("done")
 	ErrNewFailed      = errors.New("failed to create container backend")
+	ErrBuildFailed    = errors.New("failed to build image")
 	ErrPushFailed     = errors.New("failed to push container")
 	ErrNotImplemented = errors.New("unimplemented container backend method")
 )
