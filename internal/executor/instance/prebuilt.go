@@ -112,9 +112,8 @@ func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *runconfig.Run
 		return err
 	}
 	defer func() {
-		if err := file.Close(); err != nil {
-			logger.Warnf("while closing temporary archive file: %v", err)
-		}
+		// Don't bother with catching the error since the file may be already closed by a container backend
+		_ = file.Close()
 
 		if err := os.Remove(archivePath); err != nil {
 			logger.Warnf("while removing temporary archive file: %v", err)
