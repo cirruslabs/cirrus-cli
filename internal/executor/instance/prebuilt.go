@@ -132,7 +132,7 @@ Outer:
 	for {
 		select {
 		case line := <-logChan:
-			logger.Debugf("%s", line)
+			logger.Infof("%s", line)
 		case err := <-errChan:
 			if errors.Is(containerbackend.ErrDone, err) {
 				break Outer
