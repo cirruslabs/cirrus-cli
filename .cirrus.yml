@@ -20,6 +20,10 @@ docker_builder:
     - sudo apt-get -y install podman
   run_podman_background_script:
     - podman system service -t 0 unix:///tmp/podman.sock
+  remove_docker_credentials:
+    # This is needed after https://github.com/cirruslabs/vm-images/commit/59d95c79b83559f9ee16dc5e47986248c38968f8
+    # to ensure Podman pulls gcr.io images without credential errors from gcloud credential helper
+    - rm $HOME/.docker/config.json
   test_script:
     - wget --no-verbose -O - https://golang.org/dl/go1.15.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
