@@ -379,7 +379,6 @@ func TestSchema(t *testing.T) {
 		"gke_container",
 		"osx_instance",
 		"macos_instance",
-		"persistent_worker",
 		// cloud task properties
 		"auto_cancellation",
 		"execution_lock",
@@ -405,12 +404,6 @@ func TestSchema(t *testing.T) {
 	}
 
 	delete(referenceObject, "fileMatch")
-
-	// Remove persistent_worker instance from our schema since it's not present in the reference schema
-	delete(ourObject["properties"].(map[string]interface{}), "persistent_worker")
-
-	patternedTask := ourObject["patternProperties"].(map[string]interface{})["^(.*)task$"]
-	delete(patternedTask.(map[string]interface{})["properties"].(map[string]interface{}), "persistent_worker")
 
 	// Compare two schemas
 	differ := gojsondiff.New()

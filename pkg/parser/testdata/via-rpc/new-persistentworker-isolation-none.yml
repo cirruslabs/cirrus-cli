@@ -1,0 +1,5 @@
+task:
+  persistent_worker:
+    labels:
+      device: iPhone12ProMax
+  script: ./ci/integration-tests.sh

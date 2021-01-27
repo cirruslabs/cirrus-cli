@@ -2,28 +2,64 @@ package instance
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	jsschema "github.com/lestrrat-go/jsschema"
 )
 
 type PersistentWorker struct {
-	proto *api.PersistentWorkerInstance
+	proto api.PersistentWorkerInstance
 
 	parseable.DefaultParser
 }
 
-func NewPersistentWorker() *PersistentWorker {
-	persistentWorker := &PersistentWorker{
-		proto: &api.PersistentWorkerInstance{},
-	}
+func NewPersistentWorker(mergedEnv map[string]string) *PersistentWorker {
+	pworker := &PersistentWorker{}
 
-	return persistentWorker
+	labelsSchema := schema.String("Labels for selection.")
+	pworker.OptionalField(nameable.NewSimpleNameable("labels"), labelsSchema, func(node *node.Node) error {
+		labels, err := node.GetStringMapping()
+		if err != nil {
+			return err
+		}
+
+		pworker.proto.Labels = labels
+
+		return nil
+	})
+
+	isolationSchema := isolation.NewIsolation(mergedEnv).Schema()
+	pworker.OptionalField(nameable.NewSimpleNameable("isolation"), isolationSchema, func(node *node.Node) error {
+		isolation := isolation.NewIsolation(mergedEnv)
+
+		if err := isolation.Parse(node); err != nil {
+			return err
+		}
+
+		pworker.proto.Isolation = isolation.Proto()
+
+		return nil
+	})
+
+	return pworker
 }
 
-func (persistentWorker *PersistentWorker) Parse(node *node.Node) (*api.PersistentWorkerInstance, error) {
-	if err := persistentWorker.DefaultParser.Parse(node); err != nil {
+func (pworker *PersistentWorker) Parse(node *node.Node) (*api.PersistentWorkerInstance, error) {
+	if err := pworker.DefaultParser.Parse(node); err != nil {
 		return nil, err
 	}
 
-	return persistentWorker.proto, nil
+	return &pworker.proto, nil
+}
+
+func (pworker *PersistentWorker) Schema() *jsschema.Schema {
+	modifiedSchema := pworker.DefaultParser.Schema()
+
+	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
+	modifiedSchema.Description = "Persistent Worker definition."
+
+	return modifiedSchema
 }

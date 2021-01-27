@@ -30,8 +30,7 @@ func (r FoldableLogsRenderer) RenderMessage(entry *echelon.LogEntryMessage) {
 }
 
 func (r FoldableLogsRenderer) printFoldMessage(scopes []string, template string) {
-	scopesCount := len(scopes)
-	if scopesCount > 0 {
+	if scopesCount := len(scopes); scopesCount > 0 {
 		lastScope := scopes[scopesCount-1]
 
 		if r.escapeFunc != nil {
