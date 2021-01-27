@@ -123,6 +123,7 @@ func (backend *Docker) ImageBuild(
 			Dockerfile: input.Dockerfile,
 			BuildArgs:  pointyArguments,
 			Remove:     true,
+			PullParent: input.Pull,
 		})
 		if err != nil {
 			errChan <- err

@@ -42,6 +42,7 @@ type ImageBuildInput struct {
 	Tags       []string
 	Dockerfile string
 	BuildArgs  map[string]string
+	Pull       bool
 }
 
 type ContainerCreateInput struct {

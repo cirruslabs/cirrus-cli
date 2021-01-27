@@ -240,6 +240,10 @@ func (backend *Podman) ImageBuild(
 		}
 		q.Add("buildargs", string(jsonArgs))
 
+		if input.Pull {
+			q.Add("pull", "true")
+		}
+
 		q.Add("rm", "true")
 
 		buildURL.RawQuery = q.Encode()
