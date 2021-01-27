@@ -1,5 +1,21 @@
 package node
 
+// DeepFindChild recursively traverses node's children
+// and returns the first node found named name.
+func (node *Node) DeepFindChild(name string) *Node {
+	for _, child := range node.Children {
+		if child.Name == name {
+			return child
+		}
+
+		if found := child.DeepFindChild(name); found != nil {
+			return found
+		}
+	}
+
+	return nil
+}
+
 func (node *Node) DeepFindCollectible(name string) *Node {
 	var fulfilledAtLeastOnce bool
 	var virtualNode Node

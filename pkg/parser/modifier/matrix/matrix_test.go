@@ -2,6 +2,7 @@ package matrix_test
 
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/matrix"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/go-test/deep"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
@@ -50,8 +51,6 @@ func yamlAsStruct(t *testing.T, yamlText string) (result yaml.MapSlice) {
 var goodCases = []string{
 	// Just a document with an empty map
 	"empty.yaml",
-	// Ensure that only normal tasks and Docker Builder tasks are expanded when matrix modification is used
-	"only-task-and-docker-builder-expand.yaml",
 	// Examples from Google Docs document
 	"gdoc-example1.yaml",
 	"gdoc-example2.yaml",
@@ -81,21 +80,28 @@ var badCases = []struct {
 }{
 	{"bad-matrix-without-collection.yaml", matrix.ErrMatrixNeedsCollection},
 	{"bad-matrix-with-list-of-scalars.yaml", matrix.ErrMatrixNeedsListOfMaps},
+	{"bad-only-task-and-docker-builder-expand.yaml", matrix.ErrMatrixIsMisplaced},
 }
 
-func runPreprocessor(input string) (string, error) {
-	var tree yaml.MapSlice
-	err := yaml.Unmarshal([]byte(input), &tree)
+func runPreprocessor(input string, expand bool) (string, error) {
+	var parsed yaml.MapSlice
+	err := yaml.Unmarshal([]byte(input), &parsed)
 	if err != nil {
 		return "", err
 	}
 
-	expanded, err := matrix.ExpandMatrices(tree)
+	tree, err := node.NewFromSlice(parsed)
 	if err != nil {
 		return "", err
 	}
 
-	outputBytes, err := yaml.Marshal(&expanded)
+	if expand {
+		if err := matrix.ExpandMatrices(tree); err != nil {
+			return "", err
+		}
+	}
+
+	outputBytes, err := yaml.Marshal(&tree)
 	if err != nil {
 		return "", err
 	}
@@ -107,9 +113,14 @@ func runPreprocessor(input string) (string, error) {
 func TestGoodCases(t *testing.T) {
 	for _, goodFile := range goodCases {
 		input := getDocument(t, goodFile, 1)
-		expectedOutput := getDocument(t, goodFile, 2)
+		output, err := runPreprocessor(input, true)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
 
-		output, err := runPreprocessor(input)
+		expectedOutput := getDocument(t, goodFile, 2)
+		expectedOutput, err = runPreprocessor(expectedOutput, false)
 		if err != nil {
 			t.Error(err)
 			continue
@@ -137,7 +148,7 @@ func TestBadCases(t *testing.T) {
 			continue
 		}
 
-		_, err = runPreprocessor(string(testCaseBytes))
+		_, err = runPreprocessor(string(testCaseBytes), true)
 		assert.Equal(t, badCase.Error, err)
 	}
 }

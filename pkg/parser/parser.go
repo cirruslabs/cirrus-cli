@@ -165,16 +165,15 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 		return nil, err
 	}
 
-	// Run modifiers on it
-	modified, err := matrix.ExpandMatrices(parsed)
+	// Convert the parsed and nested YAML structure into a tree
+	// to get the ability to walk parents
+	tree, err := node.NewFromSlice(parsed)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert the parsed and nested YAML structure into a tree
-	// to get the ability to walk parents
-	tree, err := node.NewFromSlice(modified)
-	if err != nil {
+	// Run modifiers on it
+	if err := matrix.ExpandMatrices(tree); err != nil {
 		return nil, err
 	}
 
