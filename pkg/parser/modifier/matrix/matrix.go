@@ -2,7 +2,7 @@ package matrix
 
 import (
 	"errors"
-	"gopkg.in/yaml.v2"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"strings"
 )
 
@@ -14,84 +14,60 @@ var ErrMatrixNeedsCollection = errors.New("matrix should contain a collection")
 // something other than maps (e.g. lists or scalars) as it's items.
 var ErrMatrixNeedsListOfMaps = errors.New("matrix with a list can only contain maps as it's items")
 
-// errExpansionCommenced is returned when the matrix modifier gets expanded
-// and we need to do another pass to see if there's more.
-var errExpansionCommenced = errors.New("single expansion commenced")
+// ErrMatrixIsMisplaced is returned when the matrix modifier is attached
+// to a task type other than task or docker_builder.
+var ErrMatrixIsMisplaced = errors.New("matrix can be defined only under a task or docker_builder")
 
 // errNoExpansionDone is returned when a single pass yields no matrix expansions.
 var errNoExpansionDone = errors.New("no matrix expansion was done")
 
-// Recursively processes each "outer" map key of the loaded YAML document
-// in an attempt to produce multiple keys as a result of matrix expansion.
-func singlePass(inputTree yaml.MapSlice) (yaml.MapSlice, error) {
-	var outputTree yaml.MapSlice
-	var atLeastOneExpansion bool
-
-	if len(inputTree) == 0 {
-		return nil, errNoExpansionDone
+func singlePass(inputTree *node.Node) error {
+	// Find a matrix node to expand
+	matrixNode := inputTree.DeepFindChild("matrix")
+	if matrixNode == nil {
+		return errNoExpansionDone
 	}
 
-	for i := range inputTree {
-		var treeToExpand yaml.MapItem
-		// deepcopy since expandIfMatrix has side effects
-		if err := deepcopy(&treeToExpand, inputTree[i]); err != nil {
-			return nil, err
-		}
+	// Ensure this matrix node is attached to either a task or a docker_builder
+	taskNode := matrixNode.FindParent(func(nodeName string) bool {
+		return strings.HasSuffix(nodeName, "task") || strings.HasSuffix(nodeName, "docker_builder")
+	})
+	if taskNode == nil {
+		return ErrMatrixIsMisplaced
+	}
 
-		// Ensure that <>
-		if !strings.HasSuffix(inputTree[i].Key.(string), "task") &&
-			!strings.HasSuffix(inputTree[i].Key.(string), "docker_builder") {
-			outputTree = append(outputTree, treeToExpand)
-			continue
-		}
+	var newTasks []*node.Node
 
-		var expandedTrees []yaml.MapItem
-		expandedTreesCollector := func(item *yaml.MapItem) error {
-			newTrees, expandErr := expandIfMatrix(&treeToExpand, item)
-			// stop once found any expansion
-			if len(newTrees) != 0 {
-				expandedTrees = newTrees
-				return errExpansionCommenced
+	switch matrixNode.Value.(type) {
+	case *node.MapValue:
+		for _, child := range matrixNode.Children {
+			newTasks = append(newTasks, taskNode.DeepCopyWithReplacements(matrixNode, []*node.Node{child}))
+		}
+	case *node.ListValue:
+		for _, child := range matrixNode.Children {
+			if _, ok := child.Value.(*node.MapValue); !ok {
+				return ErrMatrixNeedsListOfMaps
 			}
-			return expandErr
-		}
 
-		err := traverse(&treeToExpand, expandedTreesCollector)
-		if err != nil && !errors.Is(err, errExpansionCommenced) {
-			return nil, err
+			newTasks = append(newTasks, taskNode.DeepCopyWithReplacements(matrixNode, child.Children))
 		}
-
-		if len(expandedTrees) == 0 {
-			outputTree = append(outputTree, treeToExpand)
-		} else {
-			outputTree = append(outputTree, expandedTrees...)
-			atLeastOneExpansion = true
-		}
+	default:
+		return ErrMatrixNeedsCollection
 	}
 
-	if atLeastOneExpansion {
-		return outputTree, nil
-	}
+	taskNode.ReplaceWith(newTasks)
 
-	return nil, errNoExpansionDone
+	return nil
 }
 
-func ExpandMatrices(tree yaml.MapSlice) (yaml.MapSlice, error) {
+func ExpandMatrices(tree *node.Node) error {
 	for {
-		expandedTree, err := singlePass(tree)
-		if err != nil {
-			// Consider the preprocessing done once singlePass() stops expanding the document
-			// (which means no "matrix" modifier was found)
+		if err := singlePass(tree); err != nil {
 			if errors.Is(err, errNoExpansionDone) {
-				break
+				return nil
 			}
 
-			return nil, err
+			return err
 		}
-
-		// Update tree
-		tree = expandedTree
 	}
-
-	return tree, nil
 }
