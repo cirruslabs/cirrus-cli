@@ -11,6 +11,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -103,7 +104,9 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	if err != nil {
 		return fmt.Errorf("%w: failed to start a shell on VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
-	_, err = stdinBuf.Write([]byte("sudo sntp -sS time.apple.com || true\n"))
+
+	// Synchronize time
+	_, err = stdinBuf.Write([]byte(TimeSyncCommand(time.Now().UTC())))
 	if err != nil {
 		return fmt.Errorf("%w: failed to sync time on VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
@@ -135,4 +138,8 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 
 func (parallels *Parallels) WorkingDirectory(projectDir string, dirtyMode bool) string {
 	return platform.NewUnix().WorkingVolumeMountpoint() + platform.WorkingVolumeWorkingDir
+}
+
+func TimeSyncCommand(t time.Time) string {
+	return fmt.Sprintf("sudo date %s\n", t.Format("010215042006"))
 }
