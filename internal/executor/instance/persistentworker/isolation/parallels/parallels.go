@@ -141,5 +141,5 @@ func (parallels *Parallels) WorkingDirectory(projectDir string, dirtyMode bool) 
 }
 
 func TimeSyncCommand(t time.Time) string {
-	return fmt.Sprintf("sudo date %s\n", t.Format("010215042006"))
+	return fmt.Sprintf("sudo date -u %s\n", t.Format("010215042006"))
 }
