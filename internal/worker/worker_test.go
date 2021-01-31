@@ -64,6 +64,7 @@ func TestWorker(t *testing.T) {
 	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_SSH_USER")
 	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_SSH_PASSWORD")
 	if imageOk && userOk && passwordOk {
+		t.Logf("Using Parallels VM %s for testing...", image)
 		sharedNetworkHostIP, err := parallels.SharedNetworkHostIP(context.Background())
 		if err != nil {
 			t.Fatal(err)
