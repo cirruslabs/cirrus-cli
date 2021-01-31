@@ -41,6 +41,22 @@ docker_builder:
     - go test ./...
 
 task:
+  name: Test (macOS with Docker and Parallels)
+  alias: Tests
+  persistent_worker:
+    labels:
+      os: darwin
+      docker: installed
+      parallels: installed
+  env:
+    CIRRUS_INTERNAL_PARALLELS_VM: big-sur-base
+    CIRRUS_INTERNAL_PARALLELS_SSH_USER: admin
+    CIRRUS_INTERNAL_PARALLELS_SSH_PASSWORD: admin
+  test_script:
+    - go version
+    - go test ./...
+
+task:
   name: Release (Dry Run)
   only_if: $CIRRUS_TAG == ''
   container:
