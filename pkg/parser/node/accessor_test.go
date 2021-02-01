@@ -4,16 +4,23 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
+	yamlv3 "gopkg.in/yaml.v3"
 	"testing"
 )
 
-func TestGetExpandedStringValue(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "name", Value: "Batched $VALUE-${I}"},
+func YamlNodeFromString(t *testing.T, yaml string) *yamlv3.Node {
+	var result yamlv3.Node
+
+	if err := yamlv3.Unmarshal([]byte(yaml), &result); err != nil {
+		t.Fatal(err)
 	}
 
-	tree, err := node.NewFromSlice(yamlSlice)
+	return &result
+}
+
+func TestGetExpandedStringValue(t *testing.T) {
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `name: Batched $VALUE-${I}
+`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,14 +38,10 @@ func TestGetExpandedStringValue(t *testing.T) {
 }
 
 func TestGetStringMapping(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "env", Value: yaml.MapSlice{
-			{Key: "KEY1", Value: "VALUE1"},
-			{Key: "KEY2", Value: "VALUE2"},
-		}},
-	}
-
-	tree, err := node.NewFromSlice(yamlSlice)
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `env:
+  KEY1: VALUE1
+  KEY2: VALUE2
+`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,18 +57,13 @@ func TestGetStringMapping(t *testing.T) {
 }
 
 func TestGetSliceOfNonEmptyStrings(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "script_single_scalar", Value: "command1"},
-		{Key: "script_single_list", Value: []interface{}{
-			"command1",
-		}},
-		{Key: "script_multiple_list", Value: []interface{}{
-			"command1",
-			"command2",
-		}},
-	}
-
-	tree, err := node.NewFromSlice(yamlSlice)
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `script_single_scalar: command1
+script_single_list:
+  - command1
+script_multiple_list:
+  - command1
+  - command2
+`))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,0 +1,13 @@
+container:
+  image: debian:latest
+
+template: &TEMPLATE
+  - env:
+      DEVICE: iPhone
+  - env:
+      DEVICE: Android
+
+task:
+  matrix:
+    << : *TEMPLATE
+  script: echo 123

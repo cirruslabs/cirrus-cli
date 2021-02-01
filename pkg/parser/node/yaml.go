@@ -3,7 +3,7 @@ package node
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v2"
+	yamlv2 "gopkg.in/yaml.v2"
 )
 
 var ErrFailedToMarshal = errors.New("failed to marshal to YAML")
@@ -11,7 +11,7 @@ var ErrFailedToMarshal = errors.New("failed to marshal to YAML")
 func (node *Node) MarshalYAML() (interface{}, error) {
 	switch obj := node.Value.(type) {
 	case *MapValue:
-		var result yaml.MapSlice
+		var result yamlv2.MapSlice
 
 		for _, child := range node.Children {
 			marshalledItem, err := child.MarshalYAML()
@@ -19,7 +19,7 @@ func (node *Node) MarshalYAML() (interface{}, error) {
 				return nil, err
 			}
 
-			result = append(result, yaml.MapItem{
+			result = append(result, yamlv2.MapItem{
 				Key:   child.Name,
 				Value: marshalledItem,
 			})

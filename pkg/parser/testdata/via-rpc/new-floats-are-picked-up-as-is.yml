@@ -1,0 +1,6 @@
+container:
+  image: debian:latest
+
+task:
+  env:
+    VERSION: 1.0
