@@ -111,11 +111,11 @@ func runPreprocessor(input string, expand bool) (string, error) {
 
 // Ensures that preprocessing works as expected.
 func TestGoodCases(t *testing.T) {
-	//t.Parallel()
+	t.Parallel()
 	for _, goodFile := range goodCases {
 		currentFile := goodFile
 		t.Run(currentFile, func(t *testing.T) {
-			//t.Parallel()
+			t.Parallel()
 			input := getDocument(t, currentFile, 0)
 			output, err := runPreprocessor(input, true)
 			if err != nil {
