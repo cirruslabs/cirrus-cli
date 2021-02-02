@@ -11,6 +11,7 @@ import (
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v3"
+	"strings"
 )
 
 var (
@@ -119,10 +120,17 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 		serializableMainResult = append(serializableMainResult, listItem)
 	}
 
-	yamlBytes, err := yaml.Marshal(utils.NewMapNode(serializableMainResult))
+	builder := &strings.Builder{}
+	encoder := yaml.NewEncoder(builder)
+	encoder.SetIndent(2)
+	err := encoder.Encode(utils.NewMapNode(serializableMainResult))
 	if err != nil {
 		return "", fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
 	}
+	err = encoder.Close()
+	if err != nil {
+		return "", fmt.Errorf("%w: cannot finish marshaling into YAML: %v", ErrMainUnexpectedResult, err)
+	}
 
-	return string(yamlBytes), nil
+	return builder.String(), nil
 }

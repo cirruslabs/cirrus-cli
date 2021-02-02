@@ -1,4 +1,4 @@
 task:
-    container:
-        image: debian:latest
-    script: sleep 5
+  container:
+    image: debian:latest
+  script: sleep 5
