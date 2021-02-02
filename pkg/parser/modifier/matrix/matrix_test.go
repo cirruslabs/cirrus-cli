@@ -37,18 +37,8 @@ func getDocument(t *testing.T, path string, first bool) string {
 
 	if first {
 		return fileContent[:index]
-	} else {
-		return fileContent[(index + len(divider)):]
 	}
-}
-
-// Unmarshals YAML specified by yamlText to a yaml.MapSlice to simplify comparison.
-func yamlAsStruct(t *testing.T, yamlText string) (result *yaml.Node) {
-	if err := yaml.Unmarshal([]byte(yamlText), result); err != nil {
-		t.Fatal(err)
-	}
-
-	return
+	return fileContent[(index + len(divider)):]
 }
 
 var goodCases = []string{
@@ -124,15 +114,17 @@ func runPreprocessor(input string, expand bool) (string, error) {
 // Ensures that preprocessing works as expected.
 func TestGoodCases(t *testing.T) {
 	for _, goodFile := range goodCases {
-		t.Run(goodFile, func(t *testing.T) {
-			input := getDocument(t, goodFile, true)
+		currentFile := goodFile
+		t.Run(currentFile, func(t *testing.T) {
+			t.Parallel()
+			input := getDocument(t, currentFile, true)
 			output, err := runPreprocessor(input, true)
 			if err != nil {
 				t.Error(err)
 				return
 			}
 
-			expectedOutput := getDocument(t, goodFile, false)
+			expectedOutput := getDocument(t, currentFile, false)
 			expectedOutput, err = runPreprocessor(expectedOutput, false)
 			if err != nil {
 				t.Error(err)

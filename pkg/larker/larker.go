@@ -21,6 +21,8 @@ var (
 	ErrMainUnexpectedResult = errors.New("main returned unexpected result")
 )
 
+const DefaultYamlMarshalIndent = 2
+
 type Larker struct {
 	fs  fs.FileSystem
 	env map[string]string
@@ -122,7 +124,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 
 	builder := &strings.Builder{}
 	encoder := yaml.NewEncoder(builder)
-	encoder.SetIndent(2)
+	encoder.SetIndent(DefaultYamlMarshalIndent)
 	err := encoder.Encode(utils.NewMapNode(serializableMainResult))
 	if err != nil {
 		return "", fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
