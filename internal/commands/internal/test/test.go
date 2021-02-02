@@ -83,9 +83,7 @@ func test(cmd *cobra.Command, args []string) error {
 		currentTestSucceeded := len(diff) == 0
 
 		if !currentTestSucceeded {
-			for _, line := range diff {
-				logger.Warnf("%s", line)
-			}
+			logger.Warnf(diff)
 			someTestsFailed = true
 		}
 
