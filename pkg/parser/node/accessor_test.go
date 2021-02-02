@@ -4,14 +4,14 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	yamlv3 "gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v3"
 	"testing"
 )
 
-func YamlNodeFromString(t *testing.T, yaml string) *yamlv3.Node {
-	var result yamlv3.Node
+func YamlNodeFromString(t *testing.T, text string) *yaml.Node {
+	var result yaml.Node
 
-	if err := yamlv3.Unmarshal([]byte(yaml), &result); err != nil {
+	if err := yaml.Unmarshal([]byte(text), &result); err != nil {
 		t.Fatal(err)
 	}
 
