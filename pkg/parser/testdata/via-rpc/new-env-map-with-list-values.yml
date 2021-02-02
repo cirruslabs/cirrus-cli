@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+task:
+  env:
+    DAEMON_OPTS:
+      - --daemonize
+        --verbose
+  script: daemon $DAEMON_OPTS

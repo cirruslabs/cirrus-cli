@@ -86,16 +86,37 @@ func (node *Node) GetStringMapping() (map[string]string, error) {
 	}
 
 	for _, child := range node.Children {
-		scalarValue, ok := child.Value.(*ScalarValue)
-		if !ok {
-			return nil, fmt.Errorf("%w: attempted to retrieve mapping for a mapping node with non-scalar values",
-				parsererror.ErrParsing)
+		flattenedValue, err := child.FlattenedValue()
+		if err != nil {
+			return nil, err
 		}
 
-		result[child.Name] = scalarValue.Value
+		result[child.Name] = flattenedValue
 	}
 
 	return result, nil
+}
+
+func (node *Node) FlattenedValue() (string, error) {
+	switch obj := node.Value.(type) {
+	case *ScalarValue:
+		return obj.Value, nil
+	case *ListValue:
+		var listValues []string
+
+		for _, child := range node.Children {
+			scalar, ok := child.Value.(*ScalarValue)
+			if !ok {
+				return "", fmt.Errorf("%w: sequence should only contain scalar values", parsererror.ErrParsing)
+			}
+
+			listValues = append(listValues, scalar.Value)
+		}
+
+		return strings.Join(listValues, "\n"), nil
+	default:
+		return "", fmt.Errorf("%w: node should be a scalar or a sequence with scalar values", parsererror.ErrParsing)
+	}
 }
 
 func (node *Node) GetSliceOfNonEmptyStrings() ([]string, error) {
