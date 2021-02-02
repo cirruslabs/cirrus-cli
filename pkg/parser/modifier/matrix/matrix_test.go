@@ -139,15 +139,20 @@ func TestGoodCases(t *testing.T) {
 
 // Ensures that we return correct errors for expected edge-cases.
 func TestBadCases(t *testing.T) {
+	t.Parallel()
 	for _, badCase := range badCases {
-		newPath := filepath.Join("testdata", badCase.File)
-		testCaseBytes, err := ioutil.ReadFile(newPath)
-		if err != nil {
-			assert.Equal(t, badCase.Error, err)
-			continue
-		}
+		currentCase := badCase
+		t.Run(currentCase.File, func(t *testing.T) {
+			t.Parallel()
+			newPath := filepath.Join("testdata", currentCase.File)
+			testCaseBytes, err := ioutil.ReadFile(newPath)
+			if err != nil {
+				assert.Equal(t, currentCase.Error, err)
+				return
+			}
 
-		_, err = runPreprocessor(string(testCaseBytes), true)
-		assert.Equal(t, badCase.Error, err)
+			_, err = runPreprocessor(string(testCaseBytes), true)
+			assert.Equal(t, currentCase.Error, err)
+		})
 	}
 }
