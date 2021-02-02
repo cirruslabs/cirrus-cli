@@ -3,44 +3,54 @@ package node
 import (
 	"errors"
 	"fmt"
-	yamlv2 "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var ErrFailedToMarshal = errors.New("failed to marshal to YAML")
 
-func (node *Node) MarshalYAML() (interface{}, error) {
+func (node *Node) MarshalYAML() (*yaml.Node, error) {
 	switch obj := node.Value.(type) {
 	case *MapValue:
-		var result yamlv2.MapSlice
+		var result yaml.Node
+		result.Kind = yaml.MappingNode
+		result.Tag = "!!map"
 
+		var resultChildren []*yaml.Node
 		for _, child := range node.Children {
 			marshalledItem, err := child.MarshalYAML()
 			if err != nil {
 				return nil, err
 			}
 
-			result = append(result, yamlv2.MapItem{
-				Key:   child.Name,
-				Value: marshalledItem,
-			})
+			var keyNode yaml.Node
+			keyNode.SetString(child.Name)
+
+			resultChildren = append(resultChildren, &keyNode)
+			resultChildren = append(resultChildren, marshalledItem)
 		}
 
-		return result, nil
+		result.Content = resultChildren
+		return &result, nil
 	case *ListValue:
-		var result []interface{}
+		var result yaml.Node
+		result.Kind = yaml.SequenceNode
+		result.Tag = "!!seq"
 
+		var resultChildren []*yaml.Node
 		for _, child := range node.Children {
 			marshalledItem, err := child.MarshalYAML()
 			if err != nil {
 				return nil, err
 			}
 
-			result = append(result, marshalledItem)
+			resultChildren = append(resultChildren, marshalledItem)
 		}
 
-		return result, nil
+		return &result, nil
 	case *ScalarValue:
-		return obj.Value, nil
+		var valueNode yaml.Node
+		valueNode.SetString(obj.Value)
+		return &valueNode, nil
 	default:
 		return nil, fmt.Errorf("%w: unknown node type: %T", ErrFailedToMarshal, node.Value)
 	}

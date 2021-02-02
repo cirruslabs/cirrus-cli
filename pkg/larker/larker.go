@@ -9,7 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -105,21 +105,26 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 	// starlark.Dict's to yaml.MapSlice's to make them YAML-serializable
 	yamlList := convertList(starlarkList)
 
-	if len(yamlList) == 0 {
+	if yamlList == nil || len(yamlList.Content) == 0 {
 		return "", nil
 	}
 
 	// Adapt a list of tasks to a YAML configuration format that expects a map on it's outer layer
-	var serializableMainResult yaml.MapSlice
-	for _, listItem := range yamlList {
-		serializableMainResult = append(serializableMainResult, yaml.MapItem{
-			Key:   "task",
-			Value: listItem,
-		})
+	var serializableMainResult []*yaml.Node
+	for _, listItem := range yamlList.Content {
+		var keyNode yaml.Node
+		keyNode.SetString("task")
+		serializableMainResult = append(serializableMainResult, &keyNode)
+		serializableMainResult = append(serializableMainResult, listItem)
 	}
 
 	// Produce the YAML configuration
-	yamlBytes, err := yaml.Marshal(&serializableMainResult)
+	var serializableDocument yaml.Node
+	serializableDocument.Kind = yaml.MappingNode
+	serializableDocument.Tag = "!!map"
+	serializableDocument.Content = serializableMainResult
+
+	yamlBytes, err := yaml.Marshal(&serializableDocument)
 	if err != nil {
 		return "", fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
 	}

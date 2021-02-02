@@ -2,50 +2,64 @@ package larker
 
 import (
 	"go.starlark.net/starlark"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
+	"strings"
 )
 
-func convertList(l *starlark.List) (result []interface{}) {
+func convertList(l *starlark.List) *yaml.Node {
 	iter := l.Iterate()
 	defer iter.Done()
 
 	var listValue starlark.Value
 
+	var items []*yaml.Node
 	for iter.Next(&listValue) {
 		switch value := listValue.(type) {
 		case *starlark.List:
-			result = append(result, convertList(value))
+			items = append(items, convertList(value))
 		case *starlark.Dict:
-			result = append(result, convertDict(value))
+			items = append(items, convertDict(value))
 		default:
-			result = append(result, convertPrimitive(value))
+			var valueNode yaml.Node
+			_ = valueNode.Encode(convertPrimitive(value))
+			items = append(items, &valueNode)
 		}
 	}
 
-	return
+	var result yaml.Node
+	result.Kind = yaml.SequenceNode
+	result.Tag = "!!seq"
+	result.Content = items
+
+	return &result
 }
 
-func convertDict(d *starlark.Dict) yaml.MapSlice {
-	var slice yaml.MapSlice
+func convertDict(d *starlark.Dict) *yaml.Node {
+	var items []*yaml.Node
 
 	for _, dictTuple := range d.Items() {
-		var sliceItem yaml.MapItem
-
-		key := dictTuple[0]
+		var keyNode yaml.Node
+		keyNode.SetString(strings.Trim(dictTuple[0].String(), "'\""))
+		items = append(items, &keyNode)
 
 		switch value := dictTuple[1].(type) {
 		case *starlark.List:
-			sliceItem = yaml.MapItem{Key: key, Value: convertList(value)}
+			items = append(items, convertList(value))
 		case *starlark.Dict:
-			sliceItem = yaml.MapItem{Key: key, Value: convertDict(value)}
+			items = append(items, convertDict(value))
 		default:
-			sliceItem = yaml.MapItem{Key: key, Value: convertPrimitive(value)}
+			var valueNode yaml.Node
+			_ = valueNode.Encode(convertPrimitive(value))
+			items = append(items, &valueNode)
 		}
-
-		slice = append(slice, sliceItem)
 	}
 
-	return slice
+	var result yaml.Node
+	result.Kind = yaml.MappingNode
+	result.Tag = "!!map"
+	result.Content = items
+
+	return &result
 }
 
 func convertPrimitive(value starlark.Value) interface{} {
