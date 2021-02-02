@@ -104,3 +104,23 @@ func (node *Node) ReplaceWith(with []*Node) {
 
 	node.Parent.Children = newChildren
 }
+
+func (node *Node) MergeMapsOrOverwrite(with *Node) {
+	_, nodeIsMap := node.Value.(*MapValue)
+	_, withIsMap := with.Value.(*MapValue)
+	if nodeIsMap && withIsMap {
+		for _, child := range with.Children {
+			child.Parent = node.Parent
+			node.Children = append(node.Children, child)
+		}
+
+		return
+	}
+
+	node.Value = with.Value
+	node.Children = node.Children[:0]
+	for _, child := range with.Children {
+		child.Parent = node.Parent
+		node.Children = append(node.Children, child)
+	}
+}

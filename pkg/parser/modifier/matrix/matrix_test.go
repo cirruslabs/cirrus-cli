@@ -5,7 +5,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/go-test/deep"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
+	yamlv2 "gopkg.in/yaml.v2"
+	yamlv3 "gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -22,8 +23,8 @@ func getDocument(t *testing.T, path string, index int) string {
 	}
 	defer file.Close()
 
-	decoder := yaml.NewDecoder(file)
-	var document yaml.MapSlice
+	decoder := yamlv2.NewDecoder(file)
+	var document yamlv2.MapSlice
 
 	for i := 0; i < index; i++ {
 		if err := decoder.Decode(&document); err != nil {
@@ -31,7 +32,7 @@ func getDocument(t *testing.T, path string, index int) string {
 		}
 	}
 
-	bytes, err := yaml.Marshal(document)
+	bytes, err := yamlv2.Marshal(document)
 	if err != nil {
 		t.Fatalf("%s: %s", newPath, err)
 	}
@@ -40,8 +41,8 @@ func getDocument(t *testing.T, path string, index int) string {
 }
 
 // Unmarshals YAML specified by yamlText to a yaml.MapSlice to simplify comparison.
-func yamlAsStruct(t *testing.T, yamlText string) (result yaml.MapSlice) {
-	if err := yaml.Unmarshal([]byte(yamlText), &result); err != nil {
+func yamlAsStruct(t *testing.T, yamlText string) (result yamlv2.MapSlice) {
+	if err := yamlv2.Unmarshal([]byte(yamlText), &result); err != nil {
 		t.Fatal(err)
 	}
 
@@ -84,13 +85,13 @@ var badCases = []struct {
 }
 
 func runPreprocessor(input string, expand bool) (string, error) {
-	var parsed yaml.MapSlice
-	err := yaml.Unmarshal([]byte(input), &parsed)
+	var parsed yamlv3.Node
+	err := yamlv3.Unmarshal([]byte(input), &parsed)
 	if err != nil {
 		return "", err
 	}
 
-	tree, err := node.NewFromSlice(parsed)
+	tree, err := node.NewFromNode(&parsed)
 	if err != nil {
 		return "", err
 	}
@@ -101,7 +102,7 @@ func runPreprocessor(input string, expand bool) (string, error) {
 		}
 	}
 
-	outputBytes, err := yaml.Marshal(&tree)
+	outputBytes, err := yamlv2.Marshal(tree)
 	if err != nil {
 		return "", err
 	}

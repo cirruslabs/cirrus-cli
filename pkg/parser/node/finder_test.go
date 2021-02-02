@@ -4,27 +4,20 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
 	"testing"
 )
 
 func TestDeepFindChild(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "task", Value: yaml.MapSlice{
-			{Key: "container", Value: yaml.MapSlice{
-				{Key: "matrix", Value: yaml.MapSlice{
-					{Key: "image", Value: "debian:latest"},
-					{Key: "image", Value: "ubuntu:latest"},
-				}},
-			}},
-			{Key: "matrix", Value: yaml.MapSlice{
-				{Key: "name", Value: "First task"},
-				{Key: "name", Value: "Second task"},
-			}},
-		}},
-	}
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `task:
+  container:
+    matrix:
+      image: debian:latest
+      image: ubuntu:latest
 
-	tree, err := node.NewFromSlice(yamlSlice)
+    matrix:
+      name: First task
+      name: Second task
+`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,20 +29,13 @@ func TestDeepFindChild(t *testing.T) {
 }
 
 func TestDeepFindCollectible(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		// First tree's children
-		{Key: "env", Value: yaml.MapSlice{
-			{Key: "KEY1", Value: "VALUE1"},
-		}},
-		// Second tree's children
-		{Key: "alpha", Value: yaml.MapSlice{
-			{Key: "env", Value: yaml.MapSlice{
-				{Key: "KEY2", Value: "VALUE2"},
-			}},
-		}},
-	}
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `env:
+  KEY1: VALUE1
 
-	tree, err := node.NewFromSlice(yamlSlice)
+alpha:
+  env:
+    KEY2: VALUE2
+`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,18 +46,12 @@ func TestDeepFindCollectible(t *testing.T) {
 }
 
 func TestDeepFindChildrenSameLevel(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "alpha", Value: yaml.MapSlice{
-			{Key: "env", Value: yaml.MapSlice{
-				{Key: "KEY1", Value: "VALUE1"},
-			}},
-			{Key: "env", Value: yaml.MapSlice{
-				{Key: "KEY2", Value: "VALUE2"},
-			}},
-		}},
-	}
-
-	tree, err := node.NewFromSlice(yamlSlice)
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `alpha:
+  env:
+    KEY1: VALUE1
+  env:
+    KEY2: VALUE2
+`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,11 +63,8 @@ func TestDeepFindChildrenSameLevel(t *testing.T) {
 }
 
 func TestHasChildren(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "some name", Value: "some value"},
-	}
-
-	tree, err := node.NewFromSlice(yamlSlice)
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `some name: some value
+`))
 	if err != nil {
 		t.Fatal(err)
 	}

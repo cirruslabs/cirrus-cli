@@ -2,9 +2,6 @@ module github.com/cirruslabs/cirrus-cli
 
 go 1.14
 
-// https://github.com/go-yaml/yaml/pull/364
-replace gopkg.in/yaml.v2 => github.com/cirruslabs/yaml v0.0.0-20201223192638-1984d0f98f29
-
 require (
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/PaesslerAG/gval v1.1.0
@@ -75,6 +72,6 @@ require (
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 	gotest.tools/v3 v3.0.3 // indirect
 )

@@ -14,7 +14,7 @@ import (
 	"github.com/yudai/gojsondiff"
 	"github.com/yudai/gojsondiff/formatter"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path/filepath"

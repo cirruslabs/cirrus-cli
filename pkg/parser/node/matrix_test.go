@@ -3,22 +3,15 @@ package node_test
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
 	"testing"
 )
 
 func TestFindParent(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "a", Value: yaml.MapSlice{
-			{Key: "b", Value: yaml.MapSlice{
-				{Key: "c", Value: 42},
-				{Key: "d", Value: 43},
-			}},
-		},
-		},
-	}
-
-	tree, err := node.NewFromSlice(yamlSlice)
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `a:
+  b:
+    c: 42
+    d: 43
+`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,17 +33,11 @@ func TestReversePath(t *testing.T) {
 }
 
 func TestPathUpwardsUpto(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "a", Value: yaml.MapSlice{
-			{Key: "b", Value: yaml.MapSlice{
-				{Key: "c", Value: 42},
-				{Key: "d", Value: 43},
-			}},
-		},
-		},
-	}
-
-	tree, err := node.NewFromSlice(yamlSlice)
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `a:
+  b:
+    c: 42
+    d: 43
+`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,17 +47,11 @@ func TestPathUpwardsUpto(t *testing.T) {
 }
 
 func TestGetPath(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "a", Value: yaml.MapSlice{
-			{Key: "b", Value: yaml.MapSlice{
-				{Key: "c", Value: 42},
-				{Key: "d", Value: 43},
-			}},
-		},
-		},
-	}
-
-	tree, err := node.NewFromSlice(yamlSlice)
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `a:
+  b:
+    c: 42
+    d: 43
+`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,17 +61,11 @@ func TestGetPath(t *testing.T) {
 }
 
 func TestDeepCopy(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "a", Value: yaml.MapSlice{
-			{Key: "b", Value: yaml.MapSlice{
-				{Key: "c", Value: 42},
-				{Key: "d", Value: 43},
-			}},
-		},
-		},
-	}
-
-	tree, err := node.NewFromSlice(yamlSlice)
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `a:
+  b:
+    c: 42
+    d: 43
+`))
 	if err != nil {
 		t.Fatal(err)
 	}

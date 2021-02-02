@@ -3,22 +3,16 @@ package node_test
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v2"
 	"testing"
 )
 
 func TestScalarToString(t *testing.T) {
-	yamlSlice := yaml.MapSlice{
-		{Key: "boolTrue", Value: true},
-		{Key: "boolFalse", Value: false},
-		{Key: "string", Value: "some value"},
-		{Key: "int", Value: 42},
-		{Key: "uint", Value: uint(42)},
-		{Key: "float32", Value: float32(3.14159)},
-		{Key: "float64", Value: float64(3.14159)},
-	}
-
-	tree, err := node.NewFromSlice(yamlSlice)
+	tree, err := node.NewFromNode(YamlNodeFromString(t, `boolTrue: true
+boolFalse: false
+string: "some value"
+integer: 42
+float: 3.14159
+`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,8 +22,6 @@ func TestScalarToString(t *testing.T) {
 		"false",
 		"some value",
 		"42",
-		"42",
-		"3.14159",
 		"3.14159",
 	}
 
