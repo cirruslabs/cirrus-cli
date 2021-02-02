@@ -8,11 +8,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
-func getDocument(t *testing.T, path string, first bool) string {
+// Retrieves the specified document (where the first document index is 1) from YAML file located at path.
+func getDocument(t *testing.T, path string, index int) string {
 	newPath := filepath.Join("testdata", path)
 
 	file, err := os.Open(newPath)
@@ -21,24 +21,22 @@ func getDocument(t *testing.T, path string, first bool) string {
 	}
 	defer file.Close()
 
-	fileContentBytes, err := ioutil.ReadAll(file)
+	decoder := yaml.NewDecoder(file)
+	var document yaml.Node
+
+	for i := 0; i <= index; i++ {
+		if err := decoder.Decode(&document); err != nil {
+			t.Fatalf("%s: %s", newPath, err)
+		}
+	}
+
+	// the actual node is the first and only child of the document
+	bytes, err := yaml.Marshal(document.Content[0])
 	if err != nil {
 		t.Fatalf("%s: %s", newPath, err)
 	}
 
-	fileContent := string(fileContentBytes)
-	divider := "---\n"
-
-	index := strings.Index(fileContent, divider)
-
-	if index < 0 {
-		t.Fatalf("Can't find test case divider '%s' in test case %s", divider, path)
-	}
-
-	if first {
-		return fileContent[:index]
-	}
-	return fileContent[(index + len(divider)):]
+	return string(bytes)
 }
 
 var goodCases = []string{
@@ -113,19 +111,19 @@ func runPreprocessor(input string, expand bool) (string, error) {
 
 // Ensures that preprocessing works as expected.
 func TestGoodCases(t *testing.T) {
-	t.Parallel()
+	//t.Parallel()
 	for _, goodFile := range goodCases {
 		currentFile := goodFile
 		t.Run(currentFile, func(t *testing.T) {
-			t.Parallel()
-			input := getDocument(t, currentFile, true)
+			//t.Parallel()
+			input := getDocument(t, currentFile, 0)
 			output, err := runPreprocessor(input, true)
 			if err != nil {
 				t.Error(err)
 				return
 			}
 
-			expectedOutput := getDocument(t, currentFile, false)
+			expectedOutput := getDocument(t, currentFile, 1)
 			expectedOutput, err = runPreprocessor(expectedOutput, false)
 			if err != nil {
 				t.Error(err)
