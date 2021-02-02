@@ -1,6 +1,7 @@
 package larker
 
 import (
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/utils"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -26,12 +27,7 @@ func convertList(l *starlark.List) *yaml.Node {
 		}
 	}
 
-	var result yaml.Node
-	result.Kind = yaml.SequenceNode
-	result.Tag = "!!seq"
-	result.Content = items
-
-	return &result
+	return utils.NewSeqNode(items)
 }
 
 func convertDict(d *starlark.Dict) *yaml.Node {
@@ -54,12 +50,7 @@ func convertDict(d *starlark.Dict) *yaml.Node {
 		}
 	}
 
-	var result yaml.Node
-	result.Kind = yaml.MappingNode
-	result.Tag = "!!map"
-	result.Content = items
-
-	return &result
+	return utils.NewMapNode(items)
 }
 
 func convertPrimitive(value starlark.Value) interface{} {

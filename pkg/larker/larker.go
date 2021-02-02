@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/utils"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v3"
@@ -118,13 +119,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 		serializableMainResult = append(serializableMainResult, listItem)
 	}
 
-	// Produce the YAML configuration
-	var serializableDocument yaml.Node
-	serializableDocument.Kind = yaml.MappingNode
-	serializableDocument.Tag = "!!map"
-	serializableDocument.Content = serializableMainResult
-
-	yamlBytes, err := yaml.Marshal(&serializableDocument)
+	yamlBytes, err := yaml.Marshal(utils.NewMapNode(serializableMainResult))
 	if err != nil {
 		return "", fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
 	}

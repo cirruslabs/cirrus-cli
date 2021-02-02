@@ -3,6 +3,7 @@ package node
 import (
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -11,10 +12,6 @@ var ErrFailedToMarshal = errors.New("failed to marshal to YAML")
 func (node *Node) MarshalYAML() (*yaml.Node, error) {
 	switch obj := node.Value.(type) {
 	case *MapValue:
-		var result yaml.Node
-		result.Kind = yaml.MappingNode
-		result.Tag = "!!map"
-
 		var resultChildren []*yaml.Node
 		for _, child := range node.Children {
 			marshalledItem, err := child.MarshalYAML()
@@ -29,13 +26,8 @@ func (node *Node) MarshalYAML() (*yaml.Node, error) {
 			resultChildren = append(resultChildren, marshalledItem)
 		}
 
-		result.Content = resultChildren
-		return &result, nil
+		return utils.NewMapNode(resultChildren), nil
 	case *ListValue:
-		var result yaml.Node
-		result.Kind = yaml.SequenceNode
-		result.Tag = "!!seq"
-
 		var resultChildren []*yaml.Node
 		for _, child := range node.Children {
 			marshalledItem, err := child.MarshalYAML()
@@ -46,7 +38,7 @@ func (node *Node) MarshalYAML() (*yaml.Node, error) {
 			resultChildren = append(resultChildren, marshalledItem)
 		}
 
-		return &result, nil
+		return utils.NewSeqNode(resultChildren), nil
 	case *ScalarValue:
 		var valueNode yaml.Node
 		valueNode.SetString(obj.Value)
