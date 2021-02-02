@@ -8,8 +8,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
-	"github.com/google/go-cmp/cmp"
+	"github.com/go-test/deep"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -79,11 +80,26 @@ func test(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 
-		diff := cmp.Diff(string(expectedConfigBytes), generatedConfigString)
+		// Compare generated configuration with the expected configuration
+		var expectedConfig yaml.Node
+		err = yaml.Unmarshal(expectedConfigBytes, &expectedConfig)
+		if err != nil {
+			return fmt.Errorf("%w: %v", ErrTest, err)
+		}
+
+		var generatedConfig yaml.Node
+		err = yaml.Unmarshal([]byte(generatedConfigString), &generatedConfig)
+		if err != nil {
+			return fmt.Errorf("%w: %v", ErrTest, err)
+		}
+
+		diff := deep.Equal(expectedConfig, generatedConfig)
 		currentTestSucceeded := len(diff) == 0
 
 		if !currentTestSucceeded {
-			logger.Warnf(diff)
+			for _, line := range diff {
+				logger.Warnf("%s", line)
+			}
 			someTestsFailed = true
 		}
 
