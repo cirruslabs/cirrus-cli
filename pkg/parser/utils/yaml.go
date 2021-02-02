@@ -17,3 +17,9 @@ func NewMapNode(content []*yaml.Node) *yaml.Node {
 	result.Content = content
 	return &result
 }
+
+func NewStringNode(text string) *yaml.Node {
+	var result yaml.Node
+	result.SetString(text)
+	return &result
+}

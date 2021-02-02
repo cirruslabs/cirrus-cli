@@ -34,9 +34,7 @@ func convertDict(d *starlark.Dict) *yaml.Node {
 	var items []*yaml.Node
 
 	for _, dictTuple := range d.Items() {
-		var keyNode yaml.Node
-		keyNode.SetString(strings.Trim(dictTuple[0].String(), "'\""))
-		items = append(items, &keyNode)
+		items = append(items, utils.NewStringNode(strings.Trim(dictTuple[0].String(), "'\"")))
 
 		switch value := dictTuple[1].(type) {
 		case *starlark.List:

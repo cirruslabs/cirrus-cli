@@ -116,9 +116,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 	// Adapt a list of tasks to a YAML configuration format that expects a map on it's outer layer
 	var serializableMainResult []*yaml.Node
 	for _, listItem := range yamlList.Content {
-		var keyNode yaml.Node
-		keyNode.SetString("task")
-		serializableMainResult = append(serializableMainResult, &keyNode)
+		serializableMainResult = append(serializableMainResult, utils.NewStringNode("task"))
 		serializableMainResult = append(serializableMainResult, listItem)
 	}
 

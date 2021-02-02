@@ -19,10 +19,7 @@ func (node *Node) MarshalYAML() (*yaml.Node, error) {
 				return nil, err
 			}
 
-			var keyNode yaml.Node
-			keyNode.SetString(child.Name)
-
-			resultChildren = append(resultChildren, &keyNode)
+			resultChildren = append(resultChildren, utils.NewStringNode(child.Name))
 			resultChildren = append(resultChildren, marshalledItem)
 		}
 
@@ -40,9 +37,7 @@ func (node *Node) MarshalYAML() (*yaml.Node, error) {
 
 		return utils.NewSeqNode(resultChildren), nil
 	case *ScalarValue:
-		var valueNode yaml.Node
-		valueNode.SetString(obj.Value)
-		return &valueNode, nil
+		return utils.NewStringNode(obj.Value), nil
 	default:
 		return nil, fmt.Errorf("%w: unknown node type: %T", ErrFailedToMarshal, node.Value)
 	}
