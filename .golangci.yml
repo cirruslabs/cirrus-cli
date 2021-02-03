@@ -56,10 +56,11 @@ linters:
     # Enough parallelism for now.
     - paralleltest
 
-    # https://github.com/cirruslabs/cirrus-cli/issues/210
-    - makezero
-    - thelper
+    # Ill-based assumptions about identifiers like fmt.Println without taking context into account.
     - forbidigo
+
+    # Advantages of using t.Helper() are too small to waste developer's cognitive stamina on it.
+    - thelper
 
 issues:
   # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.
