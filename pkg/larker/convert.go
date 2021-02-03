@@ -1,54 +1,58 @@
 package larker
 
 import (
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/utils"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"go.starlark.net/starlark"
-	"gopkg.in/yaml.v3"
 	"strings"
 )
 
-func convertList(l *starlark.List) *yaml.Node {
+func convertList(l *starlark.List) *node.Node {
 	iter := l.Iterate()
 	defer iter.Done()
+	return convertIterator(iter)
+}
 
+func convertIterator(iter starlark.Iterator) *node.Node {
 	var listValue starlark.Value
 
-	var items []*yaml.Node
+	var items []*node.Node
 	for iter.Next(&listValue) {
 		switch value := listValue.(type) {
 		case *starlark.List:
 			items = append(items, convertList(value))
+		case starlark.Tuple:
+			items = append(items, convertIterator(value.Iterate()))
 		case *starlark.Dict:
 			items = append(items, convertDict(value))
 		default:
-			var valueNode yaml.Node
-			_ = valueNode.Encode(convertPrimitive(value))
-			items = append(items, &valueNode)
+			items = append(items, node.NewNodeFromScalar(convertPrimitive(value)))
 		}
 	}
 
-	return utils.NewSeqNode(items)
+	return node.NewNodeList(items)
 }
 
-func convertDict(d *starlark.Dict) *yaml.Node {
-	var items []*yaml.Node
+func convertDict(d *starlark.Dict) *node.Node {
+	var items []*node.Node
 
 	for _, dictTuple := range d.Items() {
-		items = append(items, utils.NewStringNode(strings.Trim(dictTuple[0].String(), "'\"")))
+		var currentNode *node.Node
 
 		switch value := dictTuple[1].(type) {
 		case *starlark.List:
-			items = append(items, convertList(value))
+			currentNode = convertList(value)
+		case starlark.Tuple:
+			currentNode = convertIterator(value.Iterate())
 		case *starlark.Dict:
-			items = append(items, convertDict(value))
+			currentNode = convertDict(value)
 		default:
-			var valueNode yaml.Node
-			_ = valueNode.Encode(convertPrimitive(value))
-			items = append(items, &valueNode)
+			currentNode = node.NewNodeFromScalar(convertPrimitive(value))
 		}
+		currentNode.Name = strings.Trim(dictTuple[0].String(), "'\"")
+		items = append(items, currentNode)
 	}
 
-	return utils.NewMapNode(items)
+	return node.NewNodeMap(items)
 }
 
 func convertPrimitive(value starlark.Value) interface{} {
@@ -56,6 +60,12 @@ func convertPrimitive(value starlark.Value) interface{} {
 	case starlark.Int:
 		res, _ := typedValue.Int64()
 		return res
+	case starlark.Float:
+		return float64(typedValue)
+	case starlark.Bool:
+		return bool(typedValue)
+	case starlark.String:
+		return typedValue.GoString()
 	default:
 		return typedValue
 	}

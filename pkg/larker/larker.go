@@ -7,10 +7,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/utils"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
-	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -20,8 +18,6 @@ var (
 	ErrMainFailed           = errors.New("failed to call main")
 	ErrMainUnexpectedResult = errors.New("main returned unexpected result")
 )
-
-const DefaultYamlMarshalIndent = 2
 
 type Larker struct {
 	fs  fs.FileSystem
@@ -107,29 +103,22 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 
 	// Recurse into starlarkList and convert starlark.List's to []interface{}'s and
 	// starlark.Dict's to yaml.MapSlice's to make them YAML-serializable
-	yamlList := convertList(starlarkList)
+	node := convertList(starlarkList)
 
-	if yamlList == nil || len(yamlList.Content) == 0 {
+	if node == nil || len(node.Children) == 0 {
 		return "", nil
 	}
 
 	// Adapt a list of tasks to a YAML configuration format that expects a map on it's outer layer
-	var serializableMainResult []*yaml.Node
-	for _, listItem := range yamlList.Content {
-		serializableMainResult = append(serializableMainResult, utils.NewStringNode("task"))
-		serializableMainResult = append(serializableMainResult, listItem)
-	}
-
 	builder := &strings.Builder{}
-	encoder := yaml.NewEncoder(builder)
-	encoder.SetIndent(DefaultYamlMarshalIndent)
-	err := encoder.Encode(utils.NewMapNode(serializableMainResult))
-	if err != nil {
-		return "", fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
-	}
-	err = encoder.Close()
-	if err != nil {
-		return "", fmt.Errorf("%w: cannot finish marshaling into YAML: %v", ErrMainUnexpectedResult, err)
+	for _, child := range node.Children {
+		child.Name = "task"
+		prettyYAML, err := child.MarshalPrettyYAML()
+		if err != nil {
+			return "", err
+		}
+		builder.WriteString(prettyYAML)
+		builder.WriteString("\n")
 	}
 
 	return builder.String(), nil

@@ -17,7 +17,7 @@ func (node *Node) GetStringValue() (string, error) {
 		return "", fmt.Errorf("%w: not a scalar value", parsererror.ErrParsing)
 	}
 
-	return valueNode.Value, nil
+	return valueNode.StringValue(), nil
 }
 
 func (node *Node) GetBoolValue(env map[string]string, boolevator *boolevator.Boolevator) (bool, error) {
@@ -40,7 +40,7 @@ func (node *Node) GetExpandedStringValue(env map[string]string) (string, error) 
 		return "", fmt.Errorf("%w: not a scalar value", parsererror.ErrParsing)
 	}
 
-	return expander.ExpandEnvironmentVariables(valueNode.Value, env), nil
+	return expander.ExpandEnvironmentVariables(valueNode.StringValue(), env), nil
 }
 
 func (node *Node) GetSliceOfStrings() ([]string, error) {
@@ -57,7 +57,7 @@ func (node *Node) GetSliceOfStrings() ([]string, error) {
 			return nil, fmt.Errorf("%w: %s node's list items should be scalars", parsererror.ErrParsing, node.Name)
 		}
 
-		result = append(result, scalar.Value)
+		result = append(result, scalar.StringValue())
 	}
 
 	return result, nil
@@ -100,7 +100,7 @@ func (node *Node) GetStringMapping() (map[string]string, error) {
 func (node *Node) FlattenedValue() (string, error) {
 	switch obj := node.Value.(type) {
 	case *ScalarValue:
-		return obj.Value, nil
+		return obj.StringValue(), nil
 	case *ListValue:
 		var listValues []string
 
@@ -110,7 +110,7 @@ func (node *Node) FlattenedValue() (string, error) {
 				return "", fmt.Errorf("%w: sequence should only contain scalar values", parsererror.ErrParsing)
 			}
 
-			listValues = append(listValues, scalar.Value)
+			listValues = append(listValues, scalar.StringValue())
 		}
 
 		return strings.Join(listValues, "\n"), nil
@@ -122,7 +122,7 @@ func (node *Node) FlattenedValue() (string, error) {
 func (node *Node) GetSliceOfNonEmptyStrings() ([]string, error) {
 	switch value := node.Value.(type) {
 	case *ScalarValue:
-		return []string{value.Value}, nil
+		return []string{value.StringValue()}, nil
 	case *ListValue:
 		return node.GetSliceOfStrings()
 	default:
@@ -133,14 +133,14 @@ func (node *Node) GetSliceOfNonEmptyStrings() ([]string, error) {
 func (node *Node) GetScript() ([]string, error) {
 	switch value := node.Value.(type) {
 	case *ScalarValue:
-		return strings.Split(value.Value, "\n"), nil
+		return strings.Split(value.StringValue(), "\n"), nil
 	case *ListValue:
 		var result []string
 
 		for _, child := range node.Children {
 			switch childValue := child.Value.(type) {
 			case *ScalarValue:
-				result = append(result, strings.Split(childValue.Value, "\n")...)
+				result = append(result, strings.Split(childValue.StringValue(), "\n")...)
 			case *MapValue:
 				// support powershell trick
 				psValueNode := child.FindChild("ps")

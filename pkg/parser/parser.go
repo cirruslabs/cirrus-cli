@@ -20,7 +20,6 @@ import (
 	"github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -158,16 +157,9 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 }
 
 func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
-	var parsed yaml.Node
-
-	// Unmarshal YAML
-	if err := yaml.Unmarshal([]byte(config), &parsed); err != nil {
-		return nil, err
-	}
-
 	// Convert the parsed and nested YAML structure into a tree
 	// to get the ability to walk parents
-	tree, err := node.NewFromNode(&parsed)
+	tree, err := node.NewFromText(config)
 	if err != nil {
 		return nil, err
 	}

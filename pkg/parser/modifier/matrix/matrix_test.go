@@ -92,21 +92,13 @@ func runPreprocessor(input string, expand bool) (string, error) {
 		}
 	}
 
-	marshalYAML, err := tree.MarshalYAML()
+	marshalYAML, err := tree.MarshalPrettyYAML()
 
 	if err != nil {
 		return "", err
 	}
-	if marshalYAML == nil {
-		return "", nil
-	}
 
-	outputBytes, err := yaml.Marshal(&marshalYAML)
-	if err != nil {
-		return "", err
-	}
-
-	return string(outputBytes), nil
+	return marshalYAML, nil
 }
 
 // Ensures that preprocessing works as expected.
