@@ -162,7 +162,14 @@ func (node *Node) MergeFrom(other *Node) {
 	}
 }
 
-func NewFromNode(yamlNode *yaml.Node) (*Node, error) {
+func NewFromText(text string) (*Node, error) {
+	var yamlNode yaml.Node
+
+	// Unmarshal YAML
+	if err := yaml.Unmarshal([]byte(text), &yamlNode); err != nil {
+		return nil, err
+	}
+
 	// Empty document
 	if yamlNode.Kind == 0 || len(yamlNode.Content) == 0 {
 		return &Node{Name: "root"}, nil
