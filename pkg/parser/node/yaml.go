@@ -3,44 +3,41 @@ package node
 import (
 	"errors"
 	"fmt"
-	yamlv2 "gopkg.in/yaml.v2"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/utils"
+	"gopkg.in/yaml.v3"
 )
 
 var ErrFailedToMarshal = errors.New("failed to marshal to YAML")
 
-func (node *Node) MarshalYAML() (interface{}, error) {
+func (node *Node) MarshalYAML() (*yaml.Node, error) {
 	switch obj := node.Value.(type) {
 	case *MapValue:
-		var result yamlv2.MapSlice
-
+		var resultChildren []*yaml.Node
 		for _, child := range node.Children {
 			marshalledItem, err := child.MarshalYAML()
 			if err != nil {
 				return nil, err
 			}
 
-			result = append(result, yamlv2.MapItem{
-				Key:   child.Name,
-				Value: marshalledItem,
-			})
+			resultChildren = append(resultChildren, utils.NewStringNode(child.Name))
+			resultChildren = append(resultChildren, marshalledItem)
 		}
 
-		return result, nil
+		return utils.NewMapNode(resultChildren), nil
 	case *ListValue:
-		var result []interface{}
-
+		var resultChildren []*yaml.Node
 		for _, child := range node.Children {
 			marshalledItem, err := child.MarshalYAML()
 			if err != nil {
 				return nil, err
 			}
 
-			result = append(result, marshalledItem)
+			resultChildren = append(resultChildren, marshalledItem)
 		}
 
-		return result, nil
+		return utils.NewSeqNode(resultChildren), nil
 	case *ScalarValue:
-		return obj.Value, nil
+		return utils.NewStringNode(obj.Value), nil
 	default:
 		return nil, fmt.Errorf("%w: unknown node type: %T", ErrFailedToMarshal, node.Value)
 	}

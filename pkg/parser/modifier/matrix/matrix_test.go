@@ -3,10 +3,8 @@ package matrix_test
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/matrix"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
-	"github.com/go-test/deep"
 	"github.com/stretchr/testify/assert"
-	yamlv2 "gopkg.in/yaml.v2"
-	yamlv3 "gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -23,30 +21,22 @@ func getDocument(t *testing.T, path string, index int) string {
 	}
 	defer file.Close()
 
-	decoder := yamlv2.NewDecoder(file)
-	var document yamlv2.MapSlice
+	decoder := yaml.NewDecoder(file)
+	var document yaml.Node
 
-	for i := 0; i < index; i++ {
+	for i := 0; i <= index; i++ {
 		if err := decoder.Decode(&document); err != nil {
 			t.Fatalf("%s: %s", newPath, err)
 		}
 	}
 
-	bytes, err := yamlv2.Marshal(document)
+	// the actual node is the first and only child of the document
+	bytes, err := yaml.Marshal(document.Content[0])
 	if err != nil {
 		t.Fatalf("%s: %s", newPath, err)
 	}
 
 	return string(bytes)
-}
-
-// Unmarshals YAML specified by yamlText to a yaml.MapSlice to simplify comparison.
-func yamlAsStruct(t *testing.T, yamlText string) (result yamlv2.MapSlice) {
-	if err := yamlv2.Unmarshal([]byte(yamlText), &result); err != nil {
-		t.Fatal(err)
-	}
-
-	return
 }
 
 var goodCases = []string{
@@ -85,8 +75,8 @@ var badCases = []struct {
 }
 
 func runPreprocessor(input string, expand bool) (string, error) {
-	var parsed yamlv3.Node
-	err := yamlv3.Unmarshal([]byte(input), &parsed)
+	var parsed yaml.Node
+	err := yaml.Unmarshal([]byte(input), &parsed)
 	if err != nil {
 		return "", err
 	}
@@ -102,7 +92,16 @@ func runPreprocessor(input string, expand bool) (string, error) {
 		}
 	}
 
-	outputBytes, err := yamlv2.Marshal(tree)
+	marshalYAML, err := tree.MarshalYAML()
+
+	if err != nil {
+		return "", err
+	}
+	if marshalYAML == nil {
+		return "", nil
+	}
+
+	outputBytes, err := yaml.Marshal(&marshalYAML)
 	if err != nil {
 		return "", err
 	}
@@ -112,44 +111,46 @@ func runPreprocessor(input string, expand bool) (string, error) {
 
 // Ensures that preprocessing works as expected.
 func TestGoodCases(t *testing.T) {
+	t.Parallel()
 	for _, goodFile := range goodCases {
-		input := getDocument(t, goodFile, 1)
-		output, err := runPreprocessor(input, true)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
-
-		expectedOutput := getDocument(t, goodFile, 2)
-		expectedOutput, err = runPreprocessor(expectedOutput, false)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
-
-		t.Run(goodFile, func(t *testing.T) {
-			diff := deep.Equal(yamlAsStruct(t, expectedOutput), yamlAsStruct(t, output))
-			if diff != nil {
-				t.Error("found difference")
-				for _, d := range diff {
-					t.Log(d)
-				}
+		currentFile := goodFile
+		t.Run(currentFile, func(t *testing.T) {
+			t.Parallel()
+			input := getDocument(t, currentFile, 0)
+			output, err := runPreprocessor(input, true)
+			if err != nil {
+				t.Error(err)
+				return
 			}
+
+			expectedOutput := getDocument(t, currentFile, 1)
+			expectedOutput, err = runPreprocessor(expectedOutput, false)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+
+			assert.Equal(t, expectedOutput, output)
 		})
 	}
 }
 
 // Ensures that we return correct errors for expected edge-cases.
 func TestBadCases(t *testing.T) {
+	t.Parallel()
 	for _, badCase := range badCases {
-		newPath := filepath.Join("testdata", badCase.File)
-		testCaseBytes, err := ioutil.ReadFile(newPath)
-		if err != nil {
-			assert.Equal(t, badCase.Error, err)
-			continue
-		}
+		currentCase := badCase
+		t.Run(currentCase.File, func(t *testing.T) {
+			t.Parallel()
+			newPath := filepath.Join("testdata", currentCase.File)
+			testCaseBytes, err := ioutil.ReadFile(newPath)
+			if err != nil {
+				assert.Equal(t, currentCase.Error, err)
+				return
+			}
 
-		_, err = runPreprocessor(string(testCaseBytes), true)
-		assert.Equal(t, badCase.Error, err)
+			_, err = runPreprocessor(string(testCaseBytes), true)
+			assert.Equal(t, currentCase.Error, err)
+		})
 	}
 }
