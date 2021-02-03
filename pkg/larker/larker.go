@@ -10,8 +10,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
-	"gopkg.in/yaml.v3"
-	"strings"
 )
 
 var (
@@ -20,8 +18,6 @@ var (
 	ErrMainFailed           = errors.New("failed to call main")
 	ErrMainUnexpectedResult = errors.New("main returned unexpected result")
 )
-
-const DefaultYamlMarshalIndent = 2
 
 type Larker struct {
 	fs  fs.FileSystem
@@ -105,32 +101,14 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 		return "", fmt.Errorf("%w: result is not a list", ErrMainUnexpectedResult)
 	}
 
-	// Recurse into starlarkList and convert starlark.List's to []interface{}'s and
-	// starlark.Dict's to yaml.MapSlice's to make them YAML-serializable
-	yamlList := convertList(starlarkList)
-
-	if yamlList == nil || len(yamlList.Content) == 0 {
+	tasksNode := convertTasks(starlarkList)
+	if tasksNode == nil {
 		return "", nil
 	}
-
-	// Adapt a list of tasks to a YAML configuration format that expects a map on it's outer layer
-	var serializableMainResult []*yaml.Node
-	for _, listItem := range yamlList.Content {
-		serializableMainResult = append(serializableMainResult, yamlhelpers.NewStringNode("task"))
-		serializableMainResult = append(serializableMainResult, listItem)
-	}
-
-	builder := &strings.Builder{}
-	encoder := yaml.NewEncoder(builder)
-	encoder.SetIndent(DefaultYamlMarshalIndent)
-	err := encoder.Encode(yamlhelpers.NewMapNode(serializableMainResult))
+	formattedYaml, err := yamlhelpers.PrettyPrint(tasksNode)
 	if err != nil {
 		return "", fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
 	}
-	err = encoder.Close()
-	if err != nil {
-		return "", fmt.Errorf("%w: cannot finish marshaling into YAML: %v", ErrMainUnexpectedResult, err)
-	}
 
-	return builder.String(), nil
+	return formattedYaml, nil
 }

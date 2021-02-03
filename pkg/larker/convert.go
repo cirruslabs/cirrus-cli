@@ -7,6 +7,23 @@ import (
 	"strings"
 )
 
+func convertTasks(starlarkTasks *starlark.List) *yaml.Node {
+	yamlList := convertList(starlarkTasks)
+
+	if yamlList == nil || len(yamlList.Content) == 0 {
+		return nil
+	}
+
+	// Adapt a list of tasks to a YAML configuration format that expects a map on it's outer layer
+	var serializableMainResult []*yaml.Node
+	for _, listItem := range yamlList.Content {
+		serializableMainResult = append(serializableMainResult, yamlhelpers.NewStringNode("task"))
+		serializableMainResult = append(serializableMainResult, listItem)
+	}
+
+	return yamlhelpers.NewMapNode(serializableMainResult)
+}
+
 func convertList(l *starlark.List) *yaml.Node {
 	iter := l.Iterate()
 	defer iter.Done()
