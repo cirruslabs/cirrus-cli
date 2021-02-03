@@ -213,9 +213,8 @@ func (node *Node) marshalYAML() ([]*yaml.Node, error) {
 	case *ScalarValue:
 		if node.Name != "" {
 			return []*yaml.Node{newStringNode(node.Name), newScalarNode(obj.Value)}, nil
-		} else {
-			return []*yaml.Node{newScalarNode(obj.Value)}, nil
 		}
+		return []*yaml.Node{newScalarNode(obj.Value)}, nil
 	default:
 		return nil, fmt.Errorf("%w: unknown node type: %T", ErrFailedToMarshal, node.Value)
 	}
