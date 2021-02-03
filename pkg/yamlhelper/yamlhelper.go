@@ -1,4 +1,4 @@
-package yaml
+package yamlhelper
 
 import (
 	"gopkg.in/yaml.v3"

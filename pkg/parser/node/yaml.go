@@ -3,7 +3,7 @@ package node
 import (
 	"errors"
 	"fmt"
-	yamlhelpers "github.com/cirruslabs/cirrus-cli/pkg/helpers/yaml"
+	"github.com/cirruslabs/cirrus-cli/pkg/yamlhelper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -19,11 +19,11 @@ func (node *Node) MarshalYAML() (*yaml.Node, error) {
 				return nil, err
 			}
 
-			resultChildren = append(resultChildren, yamlhelpers.NewStringNode(child.Name))
+			resultChildren = append(resultChildren, yamlhelper.NewStringNode(child.Name))
 			resultChildren = append(resultChildren, marshalledItem)
 		}
 
-		return yamlhelpers.NewMapNode(resultChildren), nil
+		return yamlhelper.NewMapNode(resultChildren), nil
 	case *ListValue:
 		var resultChildren []*yaml.Node
 		for _, child := range node.Children {
@@ -35,9 +35,9 @@ func (node *Node) MarshalYAML() (*yaml.Node, error) {
 			resultChildren = append(resultChildren, marshalledItem)
 		}
 
-		return yamlhelpers.NewSeqNode(resultChildren), nil
+		return yamlhelper.NewSeqNode(resultChildren), nil
 	case *ScalarValue:
-		return yamlhelpers.NewStringNode(obj.Value), nil
+		return yamlhelper.NewStringNode(obj.Value), nil
 	default:
 		return nil, fmt.Errorf("%w: unknown node type: %T", ErrFailedToMarshal, node.Value)
 	}

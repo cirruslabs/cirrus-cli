@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	yamlhelpers "github.com/cirruslabs/cirrus-cli/pkg/helpers/yaml"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
+	"github.com/cirruslabs/cirrus-cli/pkg/yamlhelper"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 )
@@ -105,7 +105,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 	if tasksNode == nil {
 		return "", nil
 	}
-	formattedYaml, err := yamlhelpers.PrettyPrint(tasksNode)
+	formattedYaml, err := yamlhelper.PrettyPrint(tasksNode)
 	if err != nil {
 		return "", fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
 	}
