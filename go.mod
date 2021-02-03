@@ -7,10 +7,10 @@ require (
 	github.com/PaesslerAG/gval v1.1.0
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/bmatcuk/doublestar v1.3.4
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
 	github.com/cirruslabs/cirrus-ci-agent v1.27.0
 	github.com/cirruslabs/echelon v1.4.1
+	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.1.0
 	github.com/containerd/containerd v1.4.3 // indirect
 	github.com/containers/image/v5 v5.9.0
@@ -52,7 +52,7 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
