@@ -7,12 +7,12 @@ import (
 )
 
 func TestScalarToString(t *testing.T) {
-	tree, err := node.NewFromNode(YamlNodeFromString(t, `boolTrue: true
+	tree, err := node.NewFromText(`boolTrue: true
 boolFalse: false
 string: "some value"
 integer: 42
 float: 3.14159
-`))
+`)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// Retrieves the specified document (where the first document index is 1) from YAML file located at path.
+// Retrieves the specified document from YAML file located at path.
 func getDocument(t *testing.T, path string, index int) string {
 	newPath := filepath.Join("testdata", path)
 
@@ -75,13 +75,7 @@ var badCases = []struct {
 }
 
 func runPreprocessor(input string, expand bool) (string, error) {
-	var parsed yaml.Node
-	err := yaml.Unmarshal([]byte(input), &parsed)
-	if err != nil {
-		return "", err
-	}
-
-	tree, err := node.NewFromNode(&parsed)
+	tree, err := node.NewFromText(input)
 	if err != nil {
 		return "", err
 	}

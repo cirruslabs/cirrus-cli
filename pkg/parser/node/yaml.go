@@ -12,21 +12,18 @@ var ErrFailedToMarshal = errors.New("failed to marshal to YAML")
 const DefaultYamlMarshalIndent = 2
 
 func NewFromText(text string) (*Node, error) {
-	var parsed yaml.Node
+	var yamlNode yaml.Node
 
 	// Unmarshal YAML
-	if err := yaml.Unmarshal([]byte(text), &parsed); err != nil {
+	if err := yaml.Unmarshal([]byte(text), &yamlNode); err != nil {
 		return nil, err
 	}
 
 	// Convert the parsed and nested YAML structure into a tree
 	// to get the ability to walk parents
-	return NewFromNode(&parsed)
-}
 
-func NewFromNode(yamlNode *yaml.Node) (*Node, error) {
-	// Empty document
 	if yamlNode.Kind == 0 || len(yamlNode.Content) == 0 {
+		// Empty document
 		return &Node{Name: "root"}, nil
 	}
 

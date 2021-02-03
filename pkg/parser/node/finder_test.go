@@ -8,7 +8,7 @@ import (
 )
 
 func TestDeepFindChild(t *testing.T) {
-	tree, err := node.NewFromNode(YamlNodeFromString(t, `task:
+	tree, err := node.NewFromText(`task:
   container:
     matrix:
       image: debian:latest
@@ -17,7 +17,7 @@ func TestDeepFindChild(t *testing.T) {
     matrix:
       name: First task
       name: Second task
-`))
+`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,13 +29,13 @@ func TestDeepFindChild(t *testing.T) {
 }
 
 func TestDeepFindCollectible(t *testing.T) {
-	tree, err := node.NewFromNode(YamlNodeFromString(t, `env:
+	tree, err := node.NewFromText(`env:
   KEY1: VALUE1
 
 alpha:
   env:
     KEY2: VALUE2
-`))
+`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,12 +46,12 @@ alpha:
 }
 
 func TestDeepFindChildrenSameLevel(t *testing.T) {
-	tree, err := node.NewFromNode(YamlNodeFromString(t, `alpha:
+	tree, err := node.NewFromText(`alpha:
   env:
     KEY1: VALUE1
   env:
     KEY2: VALUE2
-`))
+`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,8 +63,8 @@ func TestDeepFindChildrenSameLevel(t *testing.T) {
 }
 
 func TestHasChildren(t *testing.T) {
-	tree, err := node.NewFromNode(YamlNodeFromString(t, `some name: some value
-`))
+	tree, err := node.NewFromText(`some name: some value
+`)
 	if err != nil {
 		t.Fatal(err)
 	}

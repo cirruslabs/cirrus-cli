@@ -7,11 +7,11 @@ import (
 )
 
 func TestFindParent(t *testing.T) {
-	tree, err := node.NewFromNode(YamlNodeFromString(t, `a:
+	tree, err := node.NewFromText(`a:
   b:
     c: 42
     d: 43
-`))
+`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,11 +33,11 @@ func TestReversePath(t *testing.T) {
 }
 
 func TestPathUpwardsUpto(t *testing.T) {
-	tree, err := node.NewFromNode(YamlNodeFromString(t, `a:
+	tree, err := node.NewFromText(`a:
   b:
     c: 42
     d: 43
-`))
+`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,11 +47,11 @@ func TestPathUpwardsUpto(t *testing.T) {
 }
 
 func TestGetPath(t *testing.T) {
-	tree, err := node.NewFromNode(YamlNodeFromString(t, `a:
+	tree, err := node.NewFromText(`a:
   b:
     c: 42
     d: 43
-`))
+`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -61,11 +61,11 @@ func TestGetPath(t *testing.T) {
 }
 
 func TestDeepCopy(t *testing.T) {
-	tree, err := node.NewFromNode(YamlNodeFromString(t, `a:
+	tree, err := node.NewFromText(`a:
   b:
     c: 42
     d: 43
-`))
+`)
 	if err != nil {
 		t.Fatal(err)
 	}
