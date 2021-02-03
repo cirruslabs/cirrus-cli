@@ -1,11 +1,28 @@
 package larker
 
 import (
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/utils"
+	"github.com/cirruslabs/cirrus-cli/pkg/yamlhelper"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v3"
 	"strings"
 )
+
+func convertTasks(starlarkTasks *starlark.List) *yaml.Node {
+	yamlList := convertList(starlarkTasks)
+
+	if yamlList == nil || len(yamlList.Content) == 0 {
+		return nil
+	}
+
+	// Adapt a list of tasks to a YAML configuration format that expects a map on it's outer layer
+	var serializableMainResult []*yaml.Node
+	for _, listItem := range yamlList.Content {
+		serializableMainResult = append(serializableMainResult, yamlhelper.NewStringNode("task"))
+		serializableMainResult = append(serializableMainResult, listItem)
+	}
+
+	return yamlhelper.NewMapNode(serializableMainResult)
+}
 
 func convertList(l *starlark.List) *yaml.Node {
 	iter := l.Iterate()
@@ -27,14 +44,14 @@ func convertList(l *starlark.List) *yaml.Node {
 		}
 	}
 
-	return utils.NewSeqNode(items)
+	return yamlhelper.NewSeqNode(items)
 }
 
 func convertDict(d *starlark.Dict) *yaml.Node {
 	var items []*yaml.Node
 
 	for _, dictTuple := range d.Items() {
-		items = append(items, utils.NewStringNode(strings.Trim(dictTuple[0].String(), "'\"")))
+		items = append(items, yamlhelper.NewStringNode(strings.Trim(dictTuple[0].String(), "'\"")))
 
 		switch value := dictTuple[1].(type) {
 		case *starlark.List:
@@ -48,7 +65,7 @@ func convertDict(d *starlark.Dict) *yaml.Node {
 		}
 	}
 
-	return utils.NewMapNode(items)
+	return yamlhelper.NewMapNode(items)
 }
 
 func convertPrimitive(value starlark.Value) interface{} {
