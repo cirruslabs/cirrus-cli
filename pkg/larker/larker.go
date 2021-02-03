@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	yamlhelpers "github.com/cirruslabs/cirrus-cli/pkg/helpers/yaml"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/utils"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v3"
@@ -116,14 +116,14 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 	// Adapt a list of tasks to a YAML configuration format that expects a map on it's outer layer
 	var serializableMainResult []*yaml.Node
 	for _, listItem := range yamlList.Content {
-		serializableMainResult = append(serializableMainResult, utils.NewStringNode("task"))
+		serializableMainResult = append(serializableMainResult, yamlhelpers.NewStringNode("task"))
 		serializableMainResult = append(serializableMainResult, listItem)
 	}
 
 	builder := &strings.Builder{}
 	encoder := yaml.NewEncoder(builder)
 	encoder.SetIndent(DefaultYamlMarshalIndent)
-	err := encoder.Encode(utils.NewMapNode(serializableMainResult))
+	err := encoder.Encode(yamlhelpers.NewMapNode(serializableMainResult))
 	if err != nil {
 		return "", fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
 	}

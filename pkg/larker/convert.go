@@ -1,7 +1,7 @@
 package larker
 
 import (
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/utils"
+	yamlhelpers "github.com/cirruslabs/cirrus-cli/pkg/helpers/yaml"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v3"
 	"strings"
@@ -27,14 +27,14 @@ func convertList(l *starlark.List) *yaml.Node {
 		}
 	}
 
-	return utils.NewSeqNode(items)
+	return yamlhelpers.NewSeqNode(items)
 }
 
 func convertDict(d *starlark.Dict) *yaml.Node {
 	var items []*yaml.Node
 
 	for _, dictTuple := range d.Items() {
-		items = append(items, utils.NewStringNode(strings.Trim(dictTuple[0].String(), "'\"")))
+		items = append(items, yamlhelpers.NewStringNode(strings.Trim(dictTuple[0].String(), "'\"")))
 
 		switch value := dictTuple[1].(type) {
 		case *starlark.List:
@@ -48,7 +48,7 @@ func convertDict(d *starlark.Dict) *yaml.Node {
 		}
 	}
 
-	return utils.NewMapNode(items)
+	return yamlhelpers.NewMapNode(items)
 }
 
 func convertPrimitive(value starlark.Value) interface{} {
