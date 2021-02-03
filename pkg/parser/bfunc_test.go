@@ -9,7 +9,7 @@ import (
 )
 
 func TestBfuncChangesInclude(t *testing.T) {
-	affectedFiles := []string{"note.txt", "drawing.svg", "go.mod"}
+	affectedFiles := []string{"note.txt", "drawing.svg", "go.mod", "dir/file.go"}
 
 	config := `
 container:
@@ -25,6 +25,10 @@ complex_task:
 
 inverted_task:
   only_if: "!changesInclude('*.go')"
+  script: true
+
+doublestar_task:
+  only_if: "!changesInclude('**.go')"
   script: true
 `
 

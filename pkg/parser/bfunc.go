@@ -2,8 +2,8 @@ package parser
 
 import (
 	"errors"
-	"github.com/bmatcuk/doublestar"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
+	"github.com/cirruslabs/go-java-glob"
 )
 
 var (
@@ -24,12 +24,12 @@ func (p *Parser) bfuncChangesInclude() boolevator.Function {
 					return ErrBfuncArgumentIsNotString
 				}
 
-				matched, err := doublestar.Match(pattern, affectedFile)
+				re, err := glob.ToRegexPattern(pattern, false)
 				if err != nil {
 					return err
 				}
 
-				if matched {
+				if re.MatchString(affectedFile) {
 					return "true"
 				}
 			}
