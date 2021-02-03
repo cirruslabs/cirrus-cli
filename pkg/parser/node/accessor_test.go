@@ -4,19 +4,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
 	"testing"
 )
-
-func YamlNodeFromString(t *testing.T, text string) *yaml.Node {
-	var result yaml.Node
-
-	if err := yaml.Unmarshal([]byte(text), &result); err != nil {
-		t.Fatal(err)
-	}
-
-	return &result
-}
 
 func TestGetExpandedStringValue(t *testing.T) {
 	tree, err := node.NewFromText(`name: Batched $VALUE-${I}
