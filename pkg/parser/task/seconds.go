@@ -1,12 +1,14 @@
 package task
 
 import (
+	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"strconv"
 	"strings"
 	"unicode"
 )
+
+var ErrUnsupportedSuffix = errors.New("unsupported time unit suffix")
 
 func ParseSeconds(s string) (uint32, error) {
 	// Split the string into two parts
@@ -33,7 +35,7 @@ func ParseSeconds(s string) (uint32, error) {
 	case "s":
 		// nothing to do
 	default:
-		return 0, fmt.Errorf("%w: unsupported time unit suffix: '%s'", parsererror.ErrParsing, suffixPart)
+		return 0, fmt.Errorf("%w: %q", ErrUnsupportedSuffix, suffixPart)
 	}
 
 	return parsedDigitsPartU32, nil

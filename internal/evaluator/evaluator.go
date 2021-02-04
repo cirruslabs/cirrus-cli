@@ -121,10 +121,6 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	if len(result.Errors) != 0 {
-		return nil, status.Error(codes.InvalidArgument, result.Errors[0])
-	}
-
 	return &api.EvaluateConfigResponse{
 		Tasks:                     result.Tasks,
 		TasksCountBeforeFiltering: result.TasksCountBeforeFiltering,

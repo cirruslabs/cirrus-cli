@@ -87,7 +87,7 @@ func NewWindowsCommunityContainer(mergedEnv map[string]string, boolevator *boole
 		}
 		memoryParsed, err := ParseMegaBytes(memory)
 		if err != nil {
-			return err
+			return node.ParserError("%s", err.Error())
 		}
 		container.proto.Memory = uint32(memoryParsed)
 		return nil

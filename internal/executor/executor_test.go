@@ -333,9 +333,6 @@ func filesContentsSingleVariation(t *testing.T, dir, dockerfileContents string) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(result.Errors) != 0 {
-		t.Fatal("got parse errors when parsing a known-good configuration")
-	}
 
 	// Extract the resulting container instance's image
 	for _, task := range result.Tasks {

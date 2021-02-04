@@ -5,6 +5,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
@@ -15,7 +16,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/spf13/cobra"
-	"log"
 	"os"
 	"strings"
 )
@@ -68,32 +68,22 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse
-	var result *parser.Result
+	var tasks []*api.Task
+
 	if experimentalParser {
 		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment))
-		result, err = p.Parse(cmd.Context(), combinedYAML)
+		result, err := p.Parse(cmd.Context(), combinedYAML)
 		if err != nil {
 			return err
 		}
+		tasks = result.Tasks
 	} else {
 		p := rpcparser.Parser{Environment: userSpecifiedEnvironment}
-		r, err := p.Parse(combinedYAML)
+		result, err := p.Parse(combinedYAML)
 		if err != nil {
 			return err
 		}
-
-		// Convert into new parser result structure
-		result = &parser.Result{
-			Errors: r.Errors,
-			Tasks:  r.Tasks,
-		}
-	}
-
-	if len(result.Errors) > 0 {
-		for _, e := range result.Errors {
-			log.Println(e)
-		}
-		return ErrRun
+		tasks = result.Tasks
 	}
 
 	var executorOpts []executor.Option
@@ -133,7 +123,7 @@ func run(cmd *cobra.Command, args []string) error {
 	executorOpts = append(executorOpts, executor.WithContainerBackend(backend))
 
 	// Run
-	e, err := executor.New(projectDir, result.Tasks, executorOpts...)
+	e, err := executor.New(projectDir, tasks, executorOpts...)
 	if err != nil {
 		return err
 	}

@@ -1,14 +1,12 @@
 package task
 
 import (
-	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/golang/protobuf/ptypes"
@@ -104,7 +102,7 @@ func NewDockerPipe(
 	stepsSchema := schema.ArrayOf(NewPipeStep(nil, nil).Schema())
 	pipe.RequiredField(nameable.NewSimpleNameable("steps"), stepsSchema, func(stepsNode *node.Node) error {
 		if _, ok := stepsNode.Value.(*node.ListValue); !ok {
-			return fmt.Errorf("%w: steps should be a list node", parsererror.ErrParsing)
+			return stepsNode.ParserError("steps should be a list")
 		}
 
 		for _, child := range stepsNode.Children {
@@ -140,7 +138,7 @@ func NewDockerPipe(
 	pipe.CollectibleField("timeout_in", schema.Number("Task timeout in minutes"), func(node *node.Node) error {
 		timeoutIn, err := handleTimeoutIn(node, environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
-			return err
+			return node.ParserError("%s", err.Error())
 		}
 
 		pipe.proto.Metadata.Properties["timeout_in"] = timeoutIn

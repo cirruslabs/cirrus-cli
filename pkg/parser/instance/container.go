@@ -78,7 +78,7 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 		}
 		memoryParsed, err := ParseMegaBytes(memory)
 		if err != nil {
-			return err
+			return node.ParserError("%s", err.Error())
 		}
 		container.proto.Memory = uint32(memoryParsed)
 		return nil

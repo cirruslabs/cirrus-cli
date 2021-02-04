@@ -40,7 +40,7 @@ func NewPipeResources(mergedEnv map[string]string) *PipeResources {
 		}
 		memoryParsed, err := instance.ParseMegaBytes(memory)
 		if err != nil {
-			return err
+			return node.ParserError("%s", err.Error())
 		}
 		res.memory = uint32(memoryParsed)
 		return nil

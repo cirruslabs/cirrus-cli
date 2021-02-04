@@ -1,7 +1,6 @@
 package task
 
 import (
-	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
@@ -9,7 +8,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -194,7 +192,7 @@ func (task *Task) Parse(node *node.Node) error {
 	}
 
 	if task.proto.Instance == nil {
-		return fmt.Errorf("%w: task %s has no instance attached", parsererror.ErrParsing, task.Name())
+		return node.ParserError("task has no instance attached")
 	}
 
 	// Since the parsing is almost done and other commands are expected,

@@ -14,6 +14,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/golang/protobuf/ptypes"
@@ -26,10 +27,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-)
-
-var (
-	ErrInternal = errors.New("internal error")
 )
 
 type Parser struct {
@@ -56,9 +53,10 @@ type Parser struct {
 }
 
 type Result struct {
-	Errors []string
-	Tasks  []*api.Task
+	Tasks []*api.Task
 
+	// A helper field that lets some external post-processor
+	// to inject new tasks correctly (e.g. Dockerfile build tasks)
 	TasksCountBeforeFiltering int64
 }
 
@@ -156,7 +154,13 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 	return tasks, nil
 }
 
-func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
+func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err error) {
+	defer func() {
+		if re, ok := err.(*parsererror.Rich); ok {
+			re.Enrich(config)
+		}
+	}()
+
 	// Convert the parsed and nested YAML structure into a tree
 	// to get the ability to walk parents
 	tree, err := node.NewFromText(config)
@@ -172,23 +176,18 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 	// Run parsers on the top-level nodes
 	tasks, err := p.parseTasks(tree)
 	if err != nil {
-		return &Result{
-			Errors: []string{err.Error()},
-		}, nil
+		return nil, err
 	}
 
 	resolveDependenciesShallow(tasks)
 
 	if len(tasks) == 0 {
-		return &Result{
-			Errors: []string{"configuration was parsed without errors, but no tasks were found"},
-		}, nil
+		return nil, fmt.Errorf("%w: configuration was parsed without errors, but no tasks were found",
+			parsererror.ErrBasic)
 	}
 
 	if err := validateDependenciesDeep(tasks); err != nil {
-		return &Result{
-			Errors: []string{err.Error()},
-		}, nil
+		return nil, err
 	}
 
 	var protoTasks []*api.Task
@@ -196,9 +195,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 		protoTask := task.Proto().(*api.Task)
 
 		if err := validateTask(protoTask); err != nil {
-			return &Result{
-				Errors: []string{err.Error()},
-			}, nil
+			return nil, err
 		}
 
 		protoTasks = append(protoTasks, protoTask)
@@ -207,9 +204,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 	// Create service tasks
 	serviceTasks, err := p.createServiceTasks(ctx, protoTasks)
 	if err != nil {
-		return &Result{
-			Errors: []string{err.Error()},
-		}, nil
+		return nil, err
 	}
 	protoTasks = append(protoTasks, serviceTasks...)
 
@@ -221,7 +216,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (*Result, error) {
 		// Provide unique labels for identically named tasks
 		uniqueLabelsForTask, err := uniqueLabels(protoTask, protoTasks, p.additionalInstances)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+			return nil, fmt.Errorf("%w: %v", parsererror.ErrInternal, err)
 		}
 		protoTask.Metadata.UniqueLabels = uniqueLabelsForTask
 	}
@@ -333,7 +328,7 @@ func (p *Parser) createServiceTask(
 
 	anyInstance, err := ptypes.MarshalAny(prebuiltInstance)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+		return nil, fmt.Errorf("%w: %v", parsererror.ErrInternal, err)
 	}
 
 	// Craft Docker build arguments: task name
@@ -425,7 +420,7 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 		}
 
 		if err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+			return nil, fmt.Errorf("%w: %v", parsererror.ErrInternal, err)
 		}
 
 		taskContainer, ok := dynamicInstance.Message.(*api.ContainerInstance)
@@ -470,7 +465,7 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 		taskContainer.Image = fmt.Sprintf("gcr.io/cirrus-ci-community/%s:latest", dockerfileHash)
 		updatedInstance, err := ptypes.MarshalAny(taskContainer)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+			return nil, fmt.Errorf("%w: %v", parsererror.ErrInternal, err)
 		}
 		protoTask.Instance = updatedInstance
 	}

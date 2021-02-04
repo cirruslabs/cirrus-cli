@@ -1,8 +1,8 @@
 package instance
 
 import (
+	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"strconv"
 	"strings"
 	"unicode"
@@ -12,6 +12,8 @@ const (
 	usabilityMebibyteBorder = 100
 	kibi                    = 1024
 )
+
+var ErrUnsupportedSuffix = errors.New("unsupported digital information unit suffix")
 
 func ParseMegaBytes(s string) (int64, error) {
 	// Split the string into two parts
@@ -46,7 +48,7 @@ func ParseMegaBytes(s string) (int64, error) {
 	case "g":
 		memoryResult *= kibi
 	default:
-		return 0, fmt.Errorf("%w: unsupported digital information unit suffix: '%s'", parsererror.ErrParsing, suffixPart)
+		return 0, fmt.Errorf("%w: %q", ErrUnsupportedSuffix, suffixPart)
 	}
 
 	return int64(memoryResult), nil

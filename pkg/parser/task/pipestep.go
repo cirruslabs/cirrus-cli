@@ -1,13 +1,11 @@
 package task
 
 import (
-	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	jsschema "github.com/lestrrat-go/jsschema"
@@ -111,8 +109,7 @@ func (step *PipeStep) Parse(node *node.Node) error {
 	}
 
 	if len(step.protoCommands) == 0 {
-		return fmt.Errorf("%w: there are pipe some steps defined without scripts inside them",
-			parsererror.ErrParsing)
+		return node.ParserError("pipe steps defined without scripts inside them")
 	}
 
 	step.protoCommands[0].Properties = make(map[string]string)
