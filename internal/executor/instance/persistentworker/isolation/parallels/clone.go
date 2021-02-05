@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
+	"os"
 	"path/filepath"
 )
 
@@ -28,6 +29,9 @@ func cloneFromSuspended(ctx context.Context, vmPathFrom string) (*VM, error) {
 
 	_, stderr, err := Prlctl(ctx, "register", newHome, "--uuid", vm.uuid)
 	if err != nil {
+		// Cleanup
+		_ = os.RemoveAll(newHome)
+
 		return nil, fmt.Errorf("%w: failed to import VM from %q: %q", ErrVMFailed, newHome, firstNonEmptyLine(stderr))
 	}
 
