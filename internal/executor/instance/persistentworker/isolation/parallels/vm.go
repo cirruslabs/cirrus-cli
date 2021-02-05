@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mitchellh/go-ps"
 	"strings"
+	"syscall"
 )
 
 var ErrVMFailed = errors.New("Parallels VM operation failed")
@@ -33,6 +35,10 @@ type VirtualMachineInfo struct {
 }
 
 func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
+	if err := ensureNoVMsRunning(); err != nil {
+		return nil, fmt.Errorf("%w: failed to cleanup already running VMs: %v", ErrVMFailed, err)
+	}
+
 	// We use different cloning strategy depending on the source VM's state
 	vmInfoFrom, err := retrieveInfo(ctx, vmNameFrom)
 	if err != nil {
@@ -159,4 +165,28 @@ func firstNonEmptyLine(lines string) string {
 	}
 
 	return ""
+}
+
+// Sometimes issuing the prlctl stop --kill command isn't enough, and we're not
+// supposed to be running other VMs anyway, so clean them up by killing processes,
+// according to the hint in the unofficial documentation[1].
+//
+// [1]: https://virtuozzosupport.force.com/s/article/000014272
+func ensureNoVMsRunning() error {
+	processes, err := ps.Processes()
+	if err != nil {
+		return err
+	}
+
+	for _, process := range processes {
+		if process.Executable() != "prl_vm_app" {
+			continue
+		}
+
+		if err := syscall.Kill(process.Pid(), syscall.SIGKILL); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
