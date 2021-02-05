@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
@@ -94,7 +95,26 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	}
 
 	e.build = b
-	e.rpc = rpc.New(b, rpc.WithLogger(e.logger))
+
+	// Instantiate RPC
+	rpcOpts := []rpc.Option{rpc.WithLogger(e.logger)}
+
+	for _, task := range b.Tasks() {
+		if _, ok := task.Instance.(*parallels.Parallels); !ok {
+			continue
+		}
+
+		ip, err := parallels.SharedNetworkHostIP(context.Background())
+		if err != nil {
+			return nil, err
+		}
+
+		rpcOpts = append(rpcOpts, rpc.WithAdditionalEndpoint(ip))
+
+		break
+	}
+
+	e.rpc = rpc.New(b, rpcOpts...)
 
 	for _, task := range b.Tasks() {
 		// Transform Dockerfile image names if the user provided their own template
@@ -143,6 +163,7 @@ func (e *Executor) Run(ctx context.Context) error {
 
 		// Prepare task's instance
 		taskInstance := task.Instance
+
 		instanceRunOpts := runconfig.RunConfig{
 			ContainerBackend:  e.containerBackend,
 			ProjectDir:        e.build.ProjectDir,
@@ -154,6 +175,12 @@ func (e *Executor) Run(ctx context.Context) error {
 			Logger:            taskLogger,
 			DirtyMode:         e.dirtyMode,
 			ContainerOptions:  e.containerOptions,
+		}
+
+		// Parallels-isolated persistent worker instances use different network interface
+		if _, ok := taskInstance.(*parallels.Parallels); ok {
+			instanceRunOpts.ContainerEndpoint = e.rpc.AdditionalEndpoint()
+			instanceRunOpts.DirectEndpoint = e.rpc.AdditionalEndpoint()
 		}
 
 		// Respect custom agent version

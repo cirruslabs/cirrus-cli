@@ -11,3 +11,9 @@ func WithLogger(logger *echelon.Logger) Option {
 		r.logger = logger
 	}
 }
+
+func WithAdditionalEndpoint(ip string) Option {
+	return func(r *RPC) {
+		r.additionalEndpointIP = ip
+	}
+}
