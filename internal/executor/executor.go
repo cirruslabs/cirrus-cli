@@ -162,8 +162,6 @@ func (e *Executor) Run(ctx context.Context) error {
 		taskLogger := e.logger.Scoped(task.UniqueDescription())
 
 		// Prepare task's instance
-		taskInstance := task.Instance
-
 		instanceRunOpts := runconfig.RunConfig{
 			ContainerBackend:  e.containerBackend,
 			ProjectDir:        e.build.ProjectDir,
@@ -178,7 +176,7 @@ func (e *Executor) Run(ctx context.Context) error {
 		}
 
 		// Parallels-isolated persistent worker instances use different network interface
-		if _, ok := taskInstance.(*parallels.Parallels); ok {
+		if _, ok := task.Instance.(*parallels.Parallels); ok {
 			instanceRunOpts.ContainerEndpoint = e.rpc.AdditionalEndpoint()
 			instanceRunOpts.DirectEndpoint = e.rpc.AdditionalEndpoint()
 		}
@@ -193,7 +191,7 @@ func (e *Executor) Run(ctx context.Context) error {
 
 		// Run task
 		var timedOut bool
-		if err := taskInstance.Run(ctx, &instanceRunOpts); err != nil {
+		if err := task.Instance.Run(ctx, &instanceRunOpts); err != nil {
 			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 				timedOut = true
 			} else {
