@@ -27,12 +27,13 @@ func cloneFromSuspended(ctx context.Context, vmPathFrom string) (*VM, error) {
 		return nil, fmt.Errorf("%w: failed to copy VM from %q to %q: %v", ErrVMFailed, vmPathFrom, newHome, err)
 	}
 
-	_, stderr, err := Prlctl(ctx, "register", newHome, "--uuid", vm.uuid)
+	stdout, stderr, err := Prlctl(ctx, "register", newHome, "--uuid", vm.uuid)
 	if err != nil {
 		// Cleanup
 		_ = os.RemoveAll(newHome)
 
-		return nil, fmt.Errorf("%w: failed to import VM from %q: %q", ErrVMFailed, newHome, firstNonEmptyLine(stderr))
+		return nil, fmt.Errorf("%w: failed to import VM from %q: %q", ErrVMFailed, newHome,
+			firstNonEmptyLine(stderr, stdout))
 	}
 
 	return vm, nil
@@ -43,9 +44,10 @@ func cloneFromDefault(ctx context.Context, vmNameFrom string) (*VM, error) {
 		name: fmt.Sprintf("cirrus-%s", uuid.New().String()),
 	}
 
-	_, stderr, err := Prlctl(ctx, "clone", vmNameFrom, "--name", vm.Ident())
+	stdout, stderr, err := Prlctl(ctx, "clone", vmNameFrom, "--name", vm.Ident())
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to clone VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
+		return nil, fmt.Errorf("%w: failed to clone VM %q: %q", ErrVMFailed, vm.Ident(),
+			firstNonEmptyLine(stderr, stdout))
 	}
 
 	return vm, nil

@@ -49,9 +49,10 @@ func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
 	// Check if VM is packed
 	if strings.HasSuffix(vmInfoFrom.Home, ".pvmp") {
 		// Let's unpack it!
-		_, stderr, err := Prlctl(ctx, "unpack", vmNameFrom)
+		stdout, stderr, err := Prlctl(ctx, "unpack", vmNameFrom)
 		if err != nil {
-			return nil, fmt.Errorf("%w: failed to unpack VM %q: %q", ErrVMFailed, vmNameFrom, firstNonEmptyLine(stderr))
+			return nil, fmt.Errorf("%w: failed to unpack VM %q: %q", ErrVMFailed, vmNameFrom,
+				firstNonEmptyLine(stderr, stdout))
 		}
 		// Update info after unpacking
 		vmInfoFrom, err = retrieveInfo(ctx, vmNameFrom)
@@ -74,9 +75,10 @@ func (vm *VM) Start(ctx context.Context) error {
 		}
 	}
 
-	_, stderr, err := Prlctl(ctx, "start", vm.Ident())
+	stdout, stderr, err := Prlctl(ctx, "start", vm.Ident())
 	if err != nil {
-		return fmt.Errorf("%w: failed to start VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
+		return fmt.Errorf("%w: failed to start VM %q: %q", ErrVMFailed, vm.Ident(),
+			firstNonEmptyLine(stderr, stdout))
 	}
 
 	if vm.shouldRenewDHCP {
@@ -107,9 +109,10 @@ func (vm *VM) isolate(ctx context.Context) error {
 	// Ensure that the VM is isolated[1] from the host (e.g. shared folders, clipboard, etc.)
 	// nolint:lll // https://github.com/walle/lll/issues/12
 	// [1]: https://download.parallels.com/desktop/v14/docs/en_US/Parallels%20Desktop%20Pro%20Edition%20Command-Line%20Reference/43645.htm
-	_, stderr, err := Prlctl(ctx, "set", vm.Ident(), "--isolate-vm", "on")
+	stdout, stderr, err := Prlctl(ctx, "set", vm.Ident(), "--isolate-vm", "on")
 	if err != nil {
-		return fmt.Errorf("%w: failed to isolate VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
+		return fmt.Errorf("%w: failed to isolate VM %q: %q", ErrVMFailed, vm.Ident(),
+			firstNonEmptyLine(stderr, stdout))
 	}
 
 	return nil
@@ -117,9 +120,10 @@ func (vm *VM) isolate(ctx context.Context) error {
 
 func (vm *VM) renewDHCP(ctx context.Context) error {
 	// Poke DHCP to renew a lease because suspended on another host VMs don't yet have IPs on the current host
-	_, stderr, err := Prlctl(ctx, "set", vm.Ident(), "--dhcp", "yes", "--dhcp6", "yes")
+	stdout, stderr, err := Prlctl(ctx, "set", vm.Ident(), "--dhcp", "yes", "--dhcp6", "yes")
 	if err != nil {
-		return fmt.Errorf("%w: failed to poke DHCP for VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
+		return fmt.Errorf("%w: failed to poke DHCP for VM %q: %q", ErrVMFailed, vm.Ident(),
+			firstNonEmptyLine(stderr, stdout))
 	}
 
 	return nil
@@ -128,14 +132,16 @@ func (vm *VM) renewDHCP(ctx context.Context) error {
 func (vm *VM) Close() error {
 	ctx := context.Background()
 
-	_, stderr, err := Prlctl(ctx, "stop", vm.Ident(), "--kill")
+	stdout, stderr, err := Prlctl(ctx, "stop", vm.Ident(), "--kill")
 	if err != nil {
-		return fmt.Errorf("%w: failed to stop VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
+		return fmt.Errorf("%w: failed to stop VM %q: %q", ErrVMFailed, vm.Ident(),
+			firstNonEmptyLine(stderr, stdout))
 	}
 
 	_, stderr, err = Prlctl(ctx, "delete", vm.Ident())
 	if err != nil {
-		return fmt.Errorf("%w: failed to delete VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
+		return fmt.Errorf("%w: failed to delete VM %q: %q", ErrVMFailed, vm.Ident(),
+			firstNonEmptyLine(stderr, stdout))
 	}
 
 	return nil
@@ -145,7 +151,7 @@ func retrieveInfo(ctx context.Context, ident string) (*VirtualMachineInfo, error
 	stdout, stderr, err := Prlctl(ctx, "list", "--info", "--json", ident)
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to get info for VM with %q UUID or name: %q",
-			ErrVMFailed, ident, firstNonEmptyLine(stderr))
+			ErrVMFailed, ident, firstNonEmptyLine(stderr, stdout))
 	}
 
 	var vmInfos []VirtualMachineInfo
@@ -185,10 +191,12 @@ func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
 	return lease.IP, nil
 }
 
-func firstNonEmptyLine(lines string) string {
-	for _, line := range strings.Split(lines, "\n") {
-		if line != "" {
-			return line
+func firstNonEmptyLine(outputs ...string) string {
+	for _, output := range outputs {
+		for _, line := range strings.Split(output, "\n") {
+			if line != "" {
+				return line
+			}
 		}
 	}
 
