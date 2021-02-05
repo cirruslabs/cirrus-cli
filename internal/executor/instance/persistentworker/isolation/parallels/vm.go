@@ -33,6 +33,10 @@ type VirtualMachineInfo struct {
 }
 
 func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
+	if err := ensureNoVMsRunning(); err != nil {
+		return nil, err
+	}
+
 	// We use different cloning strategy depending on the source VM's state
 	vmInfoFrom, err := retrieveInfo(ctx, vmNameFrom)
 	if err != nil {
