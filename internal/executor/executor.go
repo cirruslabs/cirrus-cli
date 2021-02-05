@@ -38,7 +38,7 @@ type Executor struct {
 	containerOptions         options.ContainerOptions
 }
 
-func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
+func New(ctx context.Context, projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
 	e := &Executor{
 		taskFilter: taskfilter.MatchAnyTask(),
 		baseEnvironment: environment.Merge(
@@ -104,7 +104,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 			continue
 		}
 
-		ip, err := parallels.SharedNetworkHostIP(context.Background())
+		ip, err := parallels.SharedNetworkHostIP(ctx)
 		if err != nil {
 			return nil, err
 		}

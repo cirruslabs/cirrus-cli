@@ -123,7 +123,7 @@ func run(cmd *cobra.Command, args []string) error {
 	executorOpts = append(executorOpts, executor.WithContainerBackend(backend))
 
 	// Run
-	e, err := executor.New(projectDir, tasks, executorOpts...)
+	e, err := executor.New(cmd.Context(), projectDir, tasks, executorOpts...)
 	if err != nil {
 		return err
 	}

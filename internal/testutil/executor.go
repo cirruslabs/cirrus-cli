@@ -36,6 +36,8 @@ func Execute(t *testing.T, dir string) error {
 }
 
 func ExecuteWithOptions(t *testing.T, dir string, opts ...executor.Option) error {
+	ctx := context.Background()
+
 	p := rpcparser.Parser{}
 	result, err := p.ParseFromFile(filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
@@ -46,16 +48,18 @@ func ExecuteWithOptions(t *testing.T, dir string, opts ...executor.Option) error
 
 	opts = append(opts, executor.WithContainerBackend(ContainerBackendFromEnv(t)))
 
-	e, err := executor.New(dir, result.Tasks, opts...)
+	e, err := executor.New(ctx, dir, result.Tasks, opts...)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return e.Run(context.Background())
+	return e.Run(ctx)
 }
 
 // ExecuteWithOptionsNew is the same thing as ExecuteWithOptions, but uses the new in-house parser.
 func ExecuteWithOptionsNew(t *testing.T, dir string, opts ...executor.Option) error {
+	ctx := context.Background()
+
 	p := parser.New()
 	result, err := p.ParseFromFile(context.Background(), filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
@@ -66,10 +70,10 @@ func ExecuteWithOptionsNew(t *testing.T, dir string, opts ...executor.Option) er
 
 	opts = append(opts, executor.WithContainerBackend(ContainerBackendFromEnv(t)))
 
-	e, err := executor.New(dir, result.Tasks, opts...)
+	e, err := executor.New(ctx, dir, result.Tasks, opts...)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	return e.Run(context.Background())
+	return e.Run(ctx)
 }

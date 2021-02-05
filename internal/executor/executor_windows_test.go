@@ -19,6 +19,8 @@ import (
 func TestExecutorClone(t *testing.T) {
 	dir := testutil.TempDir(t)
 
+	ctx := context.Background()
+
 	// Create a canary file
 	const canaryFile = "canary.file"
 	file, err := os.Create(filepath.Join(dir, canaryFile))
@@ -41,7 +43,7 @@ func TestExecutorClone(t *testing.T) {
 	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
 	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
 
-	e, err := executor.New(dir, []*api.Task{
+	e, err := executor.New(ctx, dir, []*api.Task{
 		{
 			LocalGroupId: 0,
 			Name:         "main",
@@ -68,7 +70,7 @@ func TestExecutorClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := e.Run(context.Background()); err != nil {
+	if err := e.Run(ctx); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
@@ -29,7 +30,7 @@ func TestDockerfileImageTemplate(t *testing.T) {
 		DockerfileImageTemplate: "gcr.io/cirrus-ci-community/%s:latest",
 	}
 
-	e, err := New(".", tasks, WithContainerOptions(containerOpts))
+	e, err := New(context.Background(), ".", tasks, WithContainerOptions(containerOpts))
 	if err != nil {
 		t.Fatal(err)
 	}
