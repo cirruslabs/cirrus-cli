@@ -14,7 +14,7 @@ func GetServerInfo(ctx context.Context) (*ServerInfo, error) {
 	stdout, stderr, err := Prlsrvctl(ctx, "info", "--json")
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to retrieve Parallels server info: %q",
-			ErrVMFailed, firstNonEmptyLine(stderr))
+			ErrVMFailed, firstNonEmptyLine(stderr, stdout))
 	}
 
 	var serverInfo ServerInfo
