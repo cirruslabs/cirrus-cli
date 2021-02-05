@@ -14,6 +14,9 @@ var ErrVMFailed = errors.New("Parallels VM operation failed")
 type VM struct {
 	uuid string
 	name string
+
+	shouldRenewDHCP  bool
+	delayedIsolation bool
 }
 
 type NetworkAdapterInfo struct {
@@ -62,6 +65,33 @@ func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
 	}
 
 	return cloneFromDefault(ctx, vmInfoFrom.Name)
+}
+
+func (vm *VM) Start(ctx context.Context) error {
+	if !vm.delayedIsolation {
+		if err := vm.isolate(ctx); err != nil {
+			return err
+		}
+	}
+
+	_, stderr, err := Prlctl(ctx, "start", vm.Ident())
+	if err != nil {
+		return fmt.Errorf("%w: failed to start VM %q: %q", ErrVMFailed, vm.Ident(), firstNonEmptyLine(stderr))
+	}
+
+	if vm.shouldRenewDHCP {
+		if err := vm.renewDHCP(ctx); err != nil {
+			return err
+		}
+	}
+
+	if vm.delayedIsolation {
+		if err := vm.isolate(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Returns an identifier suitable for use in Parallels CLI commands.

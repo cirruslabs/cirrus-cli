@@ -41,6 +41,10 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	}
 	defer vm.Close()
 
+	if err := vm.Start(ctx); err != nil {
+		return fmt.Errorf("%w: failed to start VM %q: %v", ErrFailed, vm.Ident(), err)
+	}
+
 	// Wait for the VM to start and get it's DHCP address
 	var ip string
 
