@@ -54,7 +54,7 @@ task:
     CIRRUS_INTERNAL_PARALLELS_SSH_PASSWORD: admin
   test_script:
     - go version
-    - go test ./...
+    - go test -p 1 ./...
 
 task:
   name: Release (Dry Run)
