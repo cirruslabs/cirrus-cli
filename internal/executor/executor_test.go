@@ -27,14 +27,12 @@ import (
 func TestExecutorEmpty(t *testing.T) {
 	dir := testutil.TempDir(t)
 
-	ctx := context.Background()
-
-	e, err := executor.New(ctx, dir, []*api.Task{}, executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)))
+	e, err := executor.New(dir, []*api.Task{}, executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := e.Run(ctx); err != nil {
+	if err := e.Run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -42,8 +40,6 @@ func TestExecutorEmpty(t *testing.T) {
 // TestExecutorClone ensures that Executor handles clone instruction properly.
 func TestExecutorClone(t *testing.T) {
 	dir := testutil.TempDir(t)
-
-	ctx := context.Background()
 
 	// Create a canary file
 	const canaryFile = "canary.file"
@@ -55,7 +51,7 @@ func TestExecutorClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	e, err := executor.New(ctx, dir, []*api.Task{
+	e, err := executor.New(dir, []*api.Task{
 		{
 			LocalGroupId: 0,
 			Name:         "main",
@@ -82,7 +78,7 @@ func TestExecutorClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := e.Run(ctx); err != nil {
+	if err := e.Run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -91,12 +87,10 @@ func TestExecutorClone(t *testing.T) {
 func TestExecutorScript(t *testing.T) {
 	dir := testutil.TempDir(t)
 
-	ctx := context.Background()
-
 	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
 	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
 
-	e, err := executor.New(ctx, dir, []*api.Task{
+	e, err := executor.New(dir, []*api.Task{
 		{
 			LocalGroupId: 0,
 			Name:         "mainTask",
@@ -129,7 +123,7 @@ func TestExecutorScript(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := e.Run(ctx); err != nil {
+	if err := e.Run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -139,9 +133,7 @@ func TestExecutorScript(t *testing.T) {
 func TestExecutorFails(t *testing.T) {
 	dir := testutil.TempDir(t)
 
-	ctx := context.Background()
-
-	e, err := executor.New(ctx, dir, []*api.Task{
+	e, err := executor.New(dir, []*api.Task{
 		{
 			LocalGroupId: 0,
 			Name:         "mainTask",
@@ -164,7 +156,7 @@ func TestExecutorFails(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = e.Run(ctx)
+	err = e.Run(context.Background())
 	assert.NotNil(t, err)
 	assert.True(t, errors.Is(err, executor.ErrBuildFailed))
 }

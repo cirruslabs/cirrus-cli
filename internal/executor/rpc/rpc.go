@@ -36,13 +36,8 @@ type RPC struct {
 	// must be embedded to have forward compatible implementations
 	api.UnimplementedCirrusCIServiceServer
 
-	listener net.Listener
-	server   *grpc.Server
-
-	additionalEndpointIP string
-	additionalListener   net.Listener
-	additionalServer     *grpc.Server
-
+	listener                   net.Listener
+	server                     *grpc.Server
 	serverWaitGroup            sync.WaitGroup
 	serverSecret, clientSecret string
 
@@ -73,11 +68,6 @@ func New(build *build.Build, opts ...Option) *RPC {
 		r.logger = echelon.NewLogger(echelon.InfoLevel, renderer)
 	}
 
-	if r.additionalEndpointIP != "" {
-		r.additionalServer = grpc.NewServer()
-		api.RegisterCirrusCIServiceServer(r.additionalServer, r)
-	}
-
 	return r
 }
 
@@ -90,9 +80,8 @@ func (r *RPC) ClientSecret() string {
 }
 
 // Start creates the listener and starts RPC server in a separate goroutine.
-func (r *RPC) Start(ctx context.Context) error {
+func (r *RPC) Start(ctx context.Context, address string) error {
 	network := "tcp"
-	address := "localhost:0"
 	var socketDir string
 
 	// Work around host.docker.internal missing on Linux
@@ -136,31 +125,8 @@ func (r *RPC) Start(ctx context.Context) error {
 		r.serverWaitGroup.Done()
 	}()
 
-	listenInfo := fmt.Sprintf("gRPC server is listening at %s (%s inside of a container)",
+	r.logger.Debugf("gRPC server is listening at %s (%s inside of a container)",
 		r.DirectEndpoint(), r.ContainerEndpoint())
-
-	if r.additionalEndpointIP != "" {
-		listener, err := net.Listen("tcp", r.additionalEndpointIP+":0")
-		if err != nil {
-			return fmt.Errorf("%w: failed to start additional RPC service on %s: %v", ErrRPCFailed, address, err)
-		}
-
-		r.serverWaitGroup.Add(1)
-		go func() {
-			if err := r.server.Serve(listener); err != nil {
-				if !errors.Is(err, grpc.ErrServerStopped) {
-					r.logger.Errorf("RPC server failed: %v", err)
-				}
-			}
-			r.serverWaitGroup.Done()
-		}()
-
-		r.additionalListener = listener
-
-		listenInfo += fmt.Sprintf(" and %s", r.AdditionalEndpoint())
-	}
-
-	r.logger.Debugf(listenInfo)
 
 	return nil
 }
@@ -192,10 +158,6 @@ func (r *RPC) DirectEndpoint() string {
 	return "http://" + r.listener.Addr().String()
 }
 
-func (r *RPC) AdditionalEndpoint() string {
-	return fmt.Sprintf("http://%s", r.additionalListener.Addr().String())
-}
-
 // Stop gracefully stops the RPC server.
 func (r *RPC) Stop() {
 	if r.listener.Addr().Network() == networkUnix {
@@ -203,11 +165,6 @@ func (r *RPC) Stop() {
 	}
 
 	r.server.GracefulStop()
-
-	if r.additionalEndpointIP != "" {
-		r.additionalServer.GracefulStop()
-	}
-
 	r.serverWaitGroup.Wait()
 }
 
