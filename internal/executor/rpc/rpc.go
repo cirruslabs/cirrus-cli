@@ -80,9 +80,8 @@ func (r *RPC) ClientSecret() string {
 }
 
 // Start creates the listener and starts RPC server in a separate goroutine.
-func (r *RPC) Start(ctx context.Context) error {
+func (r *RPC) Start(ctx context.Context, address string) error {
 	network := "tcp"
-	address := "localhost:0"
 	var socketDir string
 
 	// Work around host.docker.internal missing on Linux

@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
@@ -92,9 +93,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	if err != nil {
 		return nil, err
 	}
-
 	e.build = b
-	e.rpc = rpc.New(b, rpc.WithLogger(e.logger))
 
 	for _, task := range b.Tasks() {
 		// Transform Dockerfile image names if the user provided their own template
@@ -126,84 +125,103 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 }
 
 func (e *Executor) Run(ctx context.Context) error {
-	if err := e.rpc.Start(ctx); err != nil {
-		return err
-	}
-	defer e.rpc.Stop()
-
 	for {
 		// Pick next undone task to run
 		task := e.build.GetNextTask()
 		if task == nil {
-			break
+			return nil
 		}
 
-		e.logger.Debugf("running task %s", task.String())
-		taskLogger := e.logger.Scoped(task.UniqueDescription())
+		if err := e.runSingleTask(ctx, task); err != nil {
+			return err
+		}
+	}
+}
 
-		// Prepare task's instance
-		taskInstance := task.Instance
-		instanceRunOpts := runconfig.RunConfig{
-			ContainerBackend:  e.containerBackend,
-			ProjectDir:        e.build.ProjectDir,
-			ContainerEndpoint: e.rpc.ContainerEndpoint(),
-			DirectEndpoint:    e.rpc.DirectEndpoint(),
-			ServerSecret:      e.rpc.ServerSecret(),
-			ClientSecret:      e.rpc.ClientSecret(),
-			TaskID:            task.ID,
-			Logger:            taskLogger,
-			DirtyMode:         e.dirtyMode,
-			ContainerOptions:  e.containerOptions,
+func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
+	// Determine RPC address based on the task type (e.g. Parallels-isolated
+	// persistent worker instances use different network interface)
+	address := "localhost:0"
+
+	if _, ok := task.Instance.(*parallels.Parallels); ok {
+		ip, err := parallels.SharedNetworkHostIP(ctx)
+		if err != nil {
+			return err
 		}
 
-		// Respect custom agent version
-		if agentVersionFromEnv, ok := task.Environment["CIRRUS_AGENT_VERSION"]; ok {
-			instanceRunOpts.SetAgentVersion(agentVersionFromEnv)
-		}
+		address = ip + ":0"
+	}
 
-		// Wrap the context to enforce a timeout for this task
-		ctx, cancel := context.WithTimeout(ctx, task.Timeout)
+	e.rpc = rpc.New(e.build, rpc.WithLogger(e.logger))
+	if err := e.rpc.Start(ctx, address); err != nil {
+		return err
+	}
+	defer e.rpc.Stop()
 
-		// Run task
-		var timedOut bool
-		if err := taskInstance.Run(ctx, &instanceRunOpts); err != nil {
-			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-				timedOut = true
-			} else {
-				cancel()
-				return err
-			}
-		}
-		cancel()
+	e.logger.Debugf("running task %s", task.String())
+	taskLogger := e.logger.Scoped(task.UniqueDescription())
 
-		// Handle timeout
-		if timedOut {
-			task.SetStatus(taskstatus.TimedOut)
-		}
+	// Prepare task's instance
+	instanceRunOpts := runconfig.RunConfig{
+		ContainerBackend:  e.containerBackend,
+		ProjectDir:        e.build.ProjectDir,
+		ContainerEndpoint: e.rpc.ContainerEndpoint(),
+		DirectEndpoint:    e.rpc.DirectEndpoint(),
+		ServerSecret:      e.rpc.ServerSecret(),
+		ClientSecret:      e.rpc.ClientSecret(),
+		TaskID:            task.ID,
+		Logger:            taskLogger,
+		DirtyMode:         e.dirtyMode,
+		ContainerOptions:  e.containerOptions,
+	}
 
-		// Handle prebuilt instance which doesn't require any tasks to be run to be considered successful
-		_, isPrebuilt := task.Instance.(*instance.PrebuiltInstance)
-		if isPrebuilt && task.Status() == taskstatus.New {
-			task.SetStatus(taskstatus.Succeeded)
-		}
+	// Respect custom agent version
+	if agentVersionFromEnv, ok := task.Environment["CIRRUS_AGENT_VERSION"]; ok {
+		instanceRunOpts.SetAgentVersion(agentVersionFromEnv)
+	}
 
-		switch task.Status() {
-		case taskstatus.Succeeded:
-			e.logger.Debugf("task %s %s", task.String(), task.Status().String())
-			taskLogger.Finish(true)
-		case taskstatus.New:
-			taskLogger.Finish(false)
-			return fmt.Errorf("%w: instance terminated before the task %s had a chance to run", ErrBuildFailed, task.String())
-		default:
-			taskLogger.Finish(false)
-			return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
-		}
+	// Wrap the context to enforce a timeout for this task
+	ctx, cancel := context.WithTimeout(ctx, task.Timeout)
 
-		// Bail-out if the task has failed
-		if task.Status() != taskstatus.Succeeded {
-			taskLogger.Finish(false)
-			return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
+	// Run task
+	var timedOut bool
+	if err := task.Instance.Run(ctx, &instanceRunOpts); err != nil {
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			timedOut = true
+		} else {
+			cancel()
+			return err
 		}
+	}
+	cancel()
+
+	// Handle timeout
+	if timedOut {
+		task.SetStatus(taskstatus.TimedOut)
+	}
+
+	// Handle prebuilt instance which doesn't require any tasks to be run to be considered successful
+	_, isPrebuilt := task.Instance.(*instance.PrebuiltInstance)
+	if isPrebuilt && task.Status() == taskstatus.New {
+		task.SetStatus(taskstatus.Succeeded)
+	}
+
+	switch task.Status() {
+	case taskstatus.Succeeded:
+		e.logger.Debugf("task %s %s", task.String(), task.Status().String())
+		taskLogger.Finish(true)
+	case taskstatus.New:
+		taskLogger.Finish(false)
+		return fmt.Errorf("%w: instance terminated before the task %s had a chance to run", ErrBuildFailed, task.String())
+	default:
+		taskLogger.Finish(false)
+		return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
+	}
+
+	// Bail-out if the task has failed
+	if task.Status() != taskstatus.Succeeded {
+		taskLogger.Finish(false)
+		return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
 	}
 
 	return nil
