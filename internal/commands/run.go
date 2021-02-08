@@ -14,6 +14,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/spf13/cobra"
 	"os"
@@ -70,10 +71,15 @@ func run(cmd *cobra.Command, args []string) error {
 	// Parse
 	var tasks []*api.Task
 
+	// nolint:nestif // this will be a no-issue once we switch to Go parser
 	if experimentalParser {
 		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment))
 		result, err := p.Parse(cmd.Context(), combinedYAML)
 		if err != nil {
+			if re, ok := err.(*parsererror.Rich); ok {
+				fmt.Print(re.ContextLines())
+			}
+
 			return err
 		}
 		tasks = result.Tasks

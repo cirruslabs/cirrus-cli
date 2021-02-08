@@ -3,6 +3,7 @@ package parsererror
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 var (
@@ -47,4 +48,31 @@ func (rich *Rich) Line() int {
 
 func (rich *Rich) Column() int {
 	return rich.column
+}
+
+func (rich *Rich) ContextLines() string {
+	var result string
+
+	const contextLines = 5
+
+	zeroBasedLine := rich.line - 1
+	zeroBasedColumn := rich.column - 1
+
+	for i, line := range strings.Split(rich.config, "\n") {
+		// Skip lines that are out of context
+		if i < (zeroBasedLine-contextLines) || i > (zeroBasedLine+contextLines) {
+			continue
+		}
+
+		// Insert line-numbered config line
+		lineNumber := fmt.Sprintf("%d: ", i+1)
+		result += lineNumber + line + "\n"
+
+		// Insert a column indicator if this was a line with error
+		if i == zeroBasedLine {
+			result += strings.Repeat(" ", len(lineNumber)+zeroBasedColumn) + "^\n"
+		}
+	}
+
+	return result
 }
