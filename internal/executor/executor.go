@@ -149,7 +149,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 			return err
 		}
 
-		address = ip
+		address = ip + ":0"
 	}
 
 	e.rpc = rpc.New(e.build, rpc.WithLogger(e.logger))
