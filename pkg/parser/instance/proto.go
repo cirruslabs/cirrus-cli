@@ -321,17 +321,41 @@ func GuessPlatform(anyInstance *anypb.Any, descriptor protoreflect.MessageDescri
 		return "darwin"
 	}
 
-	platformField := descriptor.Fields().ByJSONName("platform")
+	dynamicMessage := dynamicpb.NewMessage(descriptor)
+	_ = proto.Unmarshal(anyInstance.GetValue(), dynamicMessage)
+	platformField := GuessPlatformOfProtoMessage(dynamicMessage, descriptor)
+
+	if platformField != "" {
+		return platformField
+	}
+
+	return "linux"
+}
+
+func GuessPlatformOfProtoMessage(message protoreflect.Message, descriptor protoreflect.MessageDescriptor) string {
+	fields := descriptor.Fields()
+	platformField := fields.ByJSONName("platform")
 	if platformField != nil {
-		dynamicMessage := dynamicpb.NewMessage(descriptor)
-		_ = proto.Unmarshal(anyInstance.GetValue(), dynamicMessage)
-		value := dynamicMessage.Get(platformField)
+		value := message.Get(platformField)
 		valueDescription := platformField.Enum().Values().Get(int(value.Enum()))
 		enumName := string(valueDescription.Name())
 		return strings.ToLower(enumName)
 	}
-
-	return "linux"
+	for i := 0; i < fields.Len(); i++ {
+		field := fields.Get(i)
+		if field.Kind() != protoreflect.MessageKind {
+			continue
+		}
+		if !message.Has(field) {
+			continue
+		}
+		fieldValue := message.Get(field)
+		platformOfField := GuessPlatformOfProtoMessage(fieldValue.Message(), field.Message())
+		if platformOfField != "" {
+			return platformOfField
+		}
+	}
+	return ""
 }
 
 func (p *ProtoInstance) Schema() *jsschema.Schema {
