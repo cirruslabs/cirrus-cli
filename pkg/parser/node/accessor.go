@@ -6,7 +6,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/expander"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"golang.org/x/text/encoding/unicode"
 	"strings"
 )
@@ -14,7 +13,7 @@ import (
 func (node *Node) GetStringValue() (string, error) {
 	valueNode, ok := node.Value.(*ScalarValue)
 	if !ok {
-		return "", fmt.Errorf("%w: not a scalar value", parsererror.ErrParsing)
+		return "", node.ParserError("not a scalar value")
 	}
 
 	return valueNode.Value, nil
@@ -37,7 +36,7 @@ func (node *Node) GetBoolValue(env map[string]string, boolevator *boolevator.Boo
 func (node *Node) GetExpandedStringValue(env map[string]string) (string, error) {
 	valueNode, ok := node.Value.(*ScalarValue)
 	if !ok {
-		return "", fmt.Errorf("%w: not a scalar value", parsererror.ErrParsing)
+		return "", node.ParserError("not a scalar value")
 	}
 
 	return expander.ExpandEnvironmentVariables(valueNode.Value, env), nil
@@ -46,7 +45,7 @@ func (node *Node) GetExpandedStringValue(env map[string]string) (string, error) 
 func (node *Node) GetSliceOfStrings() ([]string, error) {
 	_, ok := node.Value.(*ListValue)
 	if !ok {
-		return nil, fmt.Errorf("%w: expected %s node to be a list", parsererror.ErrParsing, node.Name)
+		return nil, node.ParserError("expected a list")
 	}
 
 	var result []string
@@ -54,7 +53,7 @@ func (node *Node) GetSliceOfStrings() ([]string, error) {
 	for _, child := range node.Children {
 		scalar, ok := child.Value.(*ScalarValue)
 		if !ok {
-			return nil, fmt.Errorf("%w: %s node's list items should be scalars", parsererror.ErrParsing, node.Name)
+			return nil, node.ParserError("list items should be scalars")
 		}
 
 		result = append(result, scalar.Value)
@@ -82,7 +81,7 @@ func (node *Node) GetStringMapping() (map[string]string, error) {
 	result := make(map[string]string)
 
 	if _, ok := node.Value.(*MapValue); !ok {
-		return nil, fmt.Errorf("%w: attempted to retrieve mapping for a non-mapping node", parsererror.ErrParsing)
+		return nil, node.ParserError("expected a map")
 	}
 
 	for _, child := range node.Children {
@@ -107,7 +106,7 @@ func (node *Node) FlattenedValue() (string, error) {
 		for _, child := range node.Children {
 			scalar, ok := child.Value.(*ScalarValue)
 			if !ok {
-				return "", fmt.Errorf("%w: sequence should only contain scalar values", parsererror.ErrParsing)
+				return "", child.ParserError("list should only contain scalar values")
 			}
 
 			listValues = append(listValues, scalar.Value)
@@ -115,7 +114,7 @@ func (node *Node) FlattenedValue() (string, error) {
 
 		return strings.Join(listValues, "\n"), nil
 	default:
-		return "", fmt.Errorf("%w: node should be a scalar or a sequence with scalar values", parsererror.ErrParsing)
+		return "", node.ParserError("expected a scalar value or a list with scalar values")
 	}
 }
 
@@ -126,7 +125,7 @@ func (node *Node) GetSliceOfNonEmptyStrings() ([]string, error) {
 	case *ListValue:
 		return node.GetSliceOfStrings()
 	default:
-		return nil, fmt.Errorf("%w: field should be a string or a list of values", parsererror.ErrParsing)
+		return nil, node.ParserError("expected a scalar value or a list with scalar values")
 	}
 }
 
@@ -145,16 +144,16 @@ func (node *Node) GetScript() ([]string, error) {
 				// support powershell trick
 				psValueNode := child.FindChild("ps")
 				if psValueNode == nil {
-					return nil, fmt.Errorf("%w: script only supports 'ps: ' helper syntax for Powershell", parsererror.ErrParsing)
+					return nil, child.ParserError("script only supports 'ps: ' helper syntax for Powershell")
 				}
 				psValue, err := psValueNode.GetStringValue()
 				if err != nil {
-					return nil, fmt.Errorf("%w: failed to get Powershell script (%v)", parsererror.ErrParsing, err)
+					return nil, err
 				}
 				encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
 				valueBytes, err := encoder.Bytes([]byte(psValue))
 				if err != nil {
-					return nil, fmt.Errorf("%w: failed to encode Powershell script (%v)", parsererror.ErrParsing, err)
+					return nil, child.ParserError("failed to encode Powershell script: %v", err)
 				}
 				encodedValue := base64.StdEncoding.EncodeToString(valueBytes)
 				result = append(result, fmt.Sprintf("powershell.exe -NoLogo -EncodedCommand %s", encodedValue))
@@ -163,7 +162,7 @@ func (node *Node) GetScript() ([]string, error) {
 
 		return result, nil
 	default:
-		return nil, fmt.Errorf("%w: field should be a string or a list of values", parsererror.ErrParsing)
+		return nil, node.ParserError("expected a scalar value or a list with scalar values")
 	}
 }
 
@@ -185,6 +184,6 @@ func (node *Node) GetEnvironment() (map[string]string, error) {
 	case *MapValue:
 		return node.GetStringMapping()
 	default:
-		return nil, fmt.Errorf("%w: field should be a map or a list of maps", parsererror.ErrParsing)
+		return nil, node.ParserError("expected a map or a list of maps")
 	}
 }

@@ -184,7 +184,7 @@ func NewProtoParser(
 					parsedValue, err = strconv.ParseInt(value, 10, 64)
 				}
 				if err != nil {
-					return err
+					return node.ParserError("%s", err.Error())
 				}
 				instance.proto.Set(field, protoreflect.ValueOfInt64(parsedValue))
 				return nil
@@ -204,7 +204,7 @@ func NewProtoParser(
 					parsedValue, err = strconv.ParseInt(value, 10, 64)
 				}
 				if err != nil {
-					return err
+					return node.ParserError("%s", err.Error())
 				}
 				instance.proto.Set(field, protoreflect.ValueOfUint64(uint64(parsedValue)))
 				return nil
@@ -223,7 +223,7 @@ func NewProtoParser(
 					parsedValue, err = ParseMegaBytes(value)
 				}
 				if err != nil {
-					return err
+					return node.ParserError("%s", err.Error())
 				}
 				instance.proto.Set(field, protoreflect.ValueOfInt32(int32(parsedValue)))
 				return nil
@@ -241,7 +241,7 @@ func NewProtoParser(
 					parsedValue, err = ParseMegaBytes(value)
 				}
 				if err != nil {
-					return err
+					return node.ParserError("%s", err.Error())
 				}
 				instance.proto.Set(field, protoreflect.ValueOfUint32(uint32(parsedValue)))
 				return nil

@@ -65,13 +65,10 @@ var goodCases = []string{
 	"expansion-order.yaml",
 }
 
-var badCases = []struct {
-	File  string
-	Error error
-}{
-	{"bad-matrix-without-collection.yaml", matrix.ErrMatrixNeedsCollection},
-	{"bad-matrix-with-list-of-scalars.yaml", matrix.ErrMatrixNeedsListOfMaps},
-	{"bad-only-task-and-docker-builder-expand.yaml", matrix.ErrMatrixIsMisplaced},
+var badCases = []string{
+	"bad-matrix-without-collection.yaml",
+	"bad-matrix-with-list-of-scalars.yaml",
+	"bad-only-task-and-docker-builder-expand.yaml",
 }
 
 func runPreprocessor(input string, expand bool) (string, error) {
@@ -133,18 +130,18 @@ func TestGoodCases(t *testing.T) {
 func TestBadCases(t *testing.T) {
 	t.Parallel()
 	for _, badCase := range badCases {
-		currentCase := badCase
-		t.Run(currentCase.File, func(t *testing.T) {
+		badCase := badCase
+
+		t.Run(badCase, func(t *testing.T) {
 			t.Parallel()
-			newPath := filepath.Join("testdata", currentCase.File)
+			newPath := filepath.Join("testdata", badCase)
 			testCaseBytes, err := ioutil.ReadFile(newPath)
 			if err != nil {
-				assert.Equal(t, currentCase.Error, err)
-				return
+				t.Fatal(err)
 			}
 
 			_, err = runPreprocessor(string(testCaseBytes), true)
-			assert.Equal(t, currentCase.Error, err)
+			assert.Error(t, err)
 		})
 	}
 }

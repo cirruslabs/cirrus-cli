@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/memory"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/stretchr/testify/require"
@@ -51,7 +52,6 @@ func TestValidConfigs(t *testing.T) {
 			result, err := p.ParseFromFile(context.Background(), absolutize(file+".yml"))
 
 			require.Nil(t, err)
-			require.Empty(t, result.Errors)
 
 			assertExpectedTasks(t, absolutize(file+".json"), result)
 		})
@@ -66,7 +66,6 @@ func TestAdditionalInstances(t *testing.T) {
 	result, err := p.ParseFromFile(context.Background(), absolutize("proto-instance.yml"))
 
 	require.Nil(t, err)
-	require.Empty(t, result.Errors)
 	require.NotEmpty(t, result.Tasks)
 
 	assertExpectedTasks(t, absolutize("proto-instance.json"), result)
@@ -85,7 +84,6 @@ func TestAdditionalInstanceStability(t *testing.T) {
 	result, err := p.ParseFromFile(context.Background(), absolutize("additional-instance-stability.yml"))
 
 	require.Nil(t, err)
-	require.Empty(t, result.Errors)
 	require.NotEmpty(t, result.Tasks)
 
 	assertExpectedTasks(t, absolutize("additional-instance-stability.json"), result)
@@ -103,7 +101,6 @@ func TestAdditionalTaskProperties(t *testing.T) {
 	result, err := p.ParseFromFile(context.Background(), absolutize("proto-task-properties.yml"))
 
 	require.Nil(t, err)
-	require.Empty(t, result.Errors)
 	require.NotEmpty(t, result.Tasks)
 
 	assertExpectedTasks(t, absolutize("proto-task-properties.json"), result)
@@ -158,10 +155,8 @@ func TestInvalidConfigs(t *testing.T) {
 		file := invalidCase
 		t.Run(file, func(t *testing.T) {
 			p := parser.New()
-			result, err := p.ParseFromFile(context.Background(), absolutize(file))
-
-			require.Nil(t, err)
-			assert.NotEmpty(t, result.Errors)
+			_, err := p.ParseFromFile(context.Background(), absolutize(file))
+			assert.Error(t, err)
 		})
 	}
 }
@@ -232,9 +227,6 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(localResult.Errors) != 0 {
-		t.Fatal(localResult.Errors)
-	}
 
 	// Compare two schemas
 	var referenceArray []interface{}
@@ -279,9 +271,6 @@ func viaRPCCreateJSONFixture(t *testing.T, yamlBytes []byte, fixturePath string,
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(rpcResult.Errors) != 0 {
-		t.Fatal(rpcResult.Errors)
-	}
 
 	fixtureBytes := testutil.TasksToJSON(t, rpcResult.Tasks)
 	if err := ioutil.WriteFile(fixturePath, fixtureBytes, 0600); err != nil {
@@ -325,15 +314,9 @@ func TestViaRPCInvalid(t *testing.T) {
 			}
 
 			localParser := parser.New()
-			localResult, err := localParser.Parse(context.Background(), string(yamlBytes))
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			require.Empty(t, localResult.Tasks, "parser shouldn't return tasks")
-
-			require.Len(t, localResult.Errors, 1, "parser should return an error")
-			require.Contains(t, localResult.Errors[0], testCase.Message, "parser should return a specific error")
+			_, err = localParser.Parse(context.Background(), string(yamlBytes))
+			require.Error(t, err, "parser should return an error")
+			require.Contains(t, err.Error(), testCase.Message, "parser should return a specific error")
 		})
 	}
 }
@@ -435,6 +418,37 @@ func TestTasksCountBeforeFiltering(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Empty(t, result.Errors)
 	assert.EqualValues(t, 2, result.TasksCountBeforeFiltering)
+}
+
+func TestRichErrors(t *testing.T) {
+	testCases := []struct {
+		File  string
+		Error *parsererror.Rich
+	}{
+		{"testdata/rich-errors-pipe.yml", parsererror.NewRich(2, 10,
+			"steps should be a list")},
+		{"testdata/rich-errors-accessor.yml", parsererror.NewRich(6, 5,
+			"expected a scalar value or a list with scalar values")},
+		{"testdata/rich-errors-matrix.yml", parsererror.NewRich(4, 7,
+			"matrix can be defined only under a task or docker_builder")},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+
+		t.Run(testCase.File, func(t *testing.T) {
+			config, err := ioutil.ReadFile(testCase.File)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			testCase.Error.Enrich(string(config))
+
+			p := parser.New()
+			_, err = p.Parse(context.Background(), string(config))
+			assert.Error(t, err)
+			assert.Equal(t, testCase.Error, err)
+		})
+	}
 }

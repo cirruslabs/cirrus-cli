@@ -3,13 +3,13 @@ package validate
 import (
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	eenvironment "github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/spf13/cobra"
-	"log"
 	"strings"
 )
 
@@ -62,38 +62,26 @@ func validate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse
-	var result *parser.Result
+	var tasks []*api.Task
 
 	if experimentalParser {
 		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment))
-		result, err = p.Parse(cmd.Context(), configuration)
+		result, err := p.Parse(cmd.Context(), configuration)
 		if err != nil {
 			return err
 		}
+		tasks = result.Tasks
 	} else {
 		p := rpcparser.Parser{Environment: userSpecifiedEnvironment}
-		r, err := p.Parse(configuration)
+		result, err := p.Parse(configuration)
 		if err != nil {
 			return err
 		}
-
-		// Convert into new parser result structure
-		result = &parser.Result{
-			Errors: r.Errors,
-			Tasks:  r.Tasks,
-		}
-	}
-
-	// Check for errors
-	if len(result.Errors) > 0 {
-		for _, e := range result.Errors {
-			log.Println(e)
-		}
-		return ErrValidate
+		tasks = result.Tasks
 	}
 
 	if yaml {
-		fmt.Println(string(testutil.TasksToJSON(nil, result.Tasks)))
+		fmt.Println(string(testutil.TasksToJSON(nil, tasks)))
 	}
 
 	return nil

@@ -1,7 +1,6 @@
 package node
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -12,6 +11,9 @@ type Node struct {
 	Value    interface{}
 	Parent   *Node
 	Children []*Node
+
+	Line   int
+	Column int
 }
 
 type MapValue struct{}
@@ -19,8 +21,6 @@ type ListValue struct{}
 type ScalarValue struct {
 	Value string
 }
-
-var ErrNodeConversionFailed = errors.New("node conversion failed")
 
 func (node *Node) String() string {
 	switch value := node.Value.(type) {
@@ -48,6 +48,8 @@ func (node *Node) CopyWithParent(parent *Node) *Node {
 		Name:   node.Name,
 		Value:  node.Value,
 		Parent: parent,
+		Line:   node.Line,
+		Column: node.Column,
 	}
 
 	for _, child := range node.Children {

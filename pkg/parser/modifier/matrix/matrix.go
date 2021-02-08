@@ -6,18 +6,6 @@ import (
 	"strings"
 )
 
-// ErrMatrixNeedsCollection is returned when the matrix modifier
-// does not contain a collection (either map or slice) inside.
-var ErrMatrixNeedsCollection = errors.New("matrix should contain a collection")
-
-// ErrMatrixNeedsListOfMaps is returned when the matrix modifier contains
-// something other than maps (e.g. lists or scalars) as it's items.
-var ErrMatrixNeedsListOfMaps = errors.New("matrix with a list can only contain maps as it's items")
-
-// ErrMatrixIsMisplaced is returned when the matrix modifier is attached
-// to a task type other than task or docker_builder.
-var ErrMatrixIsMisplaced = errors.New("matrix can be defined only under a task or docker_builder")
-
 // errNoExpansionDone is returned when a single pass yields no matrix expansions.
 var errNoExpansionDone = errors.New("no matrix expansion was done")
 
@@ -33,7 +21,7 @@ func singlePass(inputTree *node.Node) error {
 		return strings.HasSuffix(nodeName, "task") || strings.HasSuffix(nodeName, "docker_builder")
 	})
 	if taskNode == nil {
-		return ErrMatrixIsMisplaced
+		return matrixNode.ParserError("matrix can be defined only under a task or docker_builder")
 	}
 
 	var newTasks []*node.Node
@@ -46,13 +34,13 @@ func singlePass(inputTree *node.Node) error {
 	case *node.ListValue:
 		for _, child := range matrixNode.Children {
 			if _, ok := child.Value.(*node.MapValue); !ok {
-				return ErrMatrixNeedsListOfMaps
+				return child.ParserError("matrix with a list can only contain maps as it's items")
 			}
 
 			newTasks = append(newTasks, taskNode.DeepCopyWithReplacements(matrixNode, child.Children))
 		}
 	default:
-		return ErrMatrixNeedsCollection
+		return matrixNode.ParserError("matrix should contain a collection")
 	}
 
 	taskNode.ReplaceWith(newTasks)

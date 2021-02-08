@@ -80,7 +80,7 @@ func AttachBaseTaskFields(
 	parser.CollectibleField("timeout_in", schema.Number("Task timeout in minutes"), func(node *node.Node) error {
 		timeout, err := handleTimeoutIn(node, environment.Merge(task.Environment, env))
 		if err != nil {
-			return err
+			return node.ParserError("%s", err.Error())
 		}
 
 		task.Metadata.Properties["timeout_in"] = timeout

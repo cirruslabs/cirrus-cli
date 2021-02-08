@@ -1,12 +1,10 @@
 package isolation
 
 import (
-	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"sort"
@@ -84,7 +82,7 @@ func NewParallels(mergedEnv map[string]string) *Parallels {
 
 		resolvedPlatform, ok := api.Platform_value[strings.ToUpper(platform)]
 		if !ok {
-			return fmt.Errorf("%w: unsupported platform name: %q", parsererror.ErrParsing, platform)
+			return node.ParserError("unsupported platform name: %q", platform)
 		}
 
 		parallels.proto.Parallels.Platform = api.Platform(resolvedPlatform)

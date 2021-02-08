@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -37,7 +36,6 @@ doublestar_task:
 	if err != nil {
 		t.Fatal(err)
 	}
-	require.Empty(t, result.Errors)
 
 	assert.Len(t, result.Tasks, 3)
 }

@@ -1,0 +1,6 @@
+container:
+  image: debian:latest
+
+task:
+  script:
+    I_AM_PRETTY_SURE: THIS_IS_WRONG

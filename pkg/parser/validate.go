@@ -37,7 +37,7 @@ func validateTask(task *api.Task) error {
 	for _, command := range task.Commands {
 		if seenInstructionName, seen := alreadySeenNames[command.Name]; seen {
 			return fmt.Errorf("%w: task '%s' %s and %s instructions have identical name",
-				parsererror.ErrParsing, task.Name, seenInstructionName, commandInstructionName(command))
+				parsererror.ErrBasic, task.Name, seenInstructionName, commandInstructionName(command))
 		}
 
 		alreadySeenNames[command.Name] = commandInstructionName(command)
@@ -96,7 +96,7 @@ func validateDependenciesDeep(tasks []task.ParseableTaskLike) error {
 		}
 
 		return fmt.Errorf("%w: error in dependencies between tasks: %v",
-			parsererror.ErrParsing, strings.Join(unsatisfiedNames, ", "))
+			parsererror.ErrBasic, strings.Join(unsatisfiedNames, ", "))
 	}
 
 	return nil

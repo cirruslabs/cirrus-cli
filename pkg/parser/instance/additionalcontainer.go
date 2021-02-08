@@ -1,14 +1,12 @@
 package instance
 
 import (
-	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
@@ -40,8 +38,8 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		}
 
 		if name == "main" {
-			return fmt.Errorf("%w: use of reserved name '%s' for an additional container, please choose another one",
-				parsererror.ErrParsing, name)
+			return node.ParserError("use of reserved name '%s' for an additional container,"+
+				" please choose another one", name)
 		}
 
 		isNotLetter := func(r rune) bool {
@@ -49,8 +47,8 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		}
 
 		if strings.IndexFunc(name, isNotLetter) != -1 {
-			return fmt.Errorf("%w: additional container name '%s' is invalid, please only use letters without special symbols",
-				parsererror.ErrParsing, name)
+			return node.ParserError("additional container name '%s' is invalid,"+
+				" please only use letters without special symbols", name)
 		}
 
 		ac.proto.Name = name
@@ -140,7 +138,7 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		}
 		memoryParsed, err := ParseMegaBytes(memory)
 		if err != nil {
-			return err
+			return node.ParserError("%s", err.Error())
 		}
 		ac.proto.Memory = uint32(memoryParsed)
 		return nil

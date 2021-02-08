@@ -19,6 +19,7 @@ import (
 )
 
 var (
+	ErrParsing       = errors.New("failed to parse configuration")
 	ErrRPC           = errors.New("RPC error")
 	ErrFilesContents = errors.New("failed to retrieve files contents")
 )
@@ -41,8 +42,7 @@ const (
 )
 
 type Result struct {
-	Errors []string
-	Tasks  []*api.Task
+	Tasks []*api.Task
 }
 
 func (p *Parser) rpcEndpoint() string {
@@ -104,7 +104,7 @@ func (p *Parser) Parse(config string) (*Result, error) {
 		switch s.Code() {
 		case codes.InvalidArgument:
 			// The configuration that we sent is invalid
-			return &Result{Errors: []string{s.Message()}}, nil
+			return nil, fmt.Errorf("%w: %s", ErrParsing, s.Message())
 		default:
 			// Unexpected error
 			return nil, fmt.Errorf("%w: %v", ErrRPC, err)
@@ -121,7 +121,7 @@ func (p *Parser) ParseFromFile(path string) (*Result, error) {
 	}
 
 	result, err := p.Parse(string(config))
-	if err != nil || len(result.Errors) != 0 {
+	if err != nil {
 		return result, err
 	}
 

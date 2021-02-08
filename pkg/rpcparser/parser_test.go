@@ -34,10 +34,8 @@ func TestValidConfigs(t *testing.T) {
 		file := validCase
 		t.Run(file, func(t *testing.T) {
 			p := rpcparser.Parser{}
-			result, err := p.ParseFromFile(absolutize(file))
-
-			require.Nil(t, err)
-			assert.Empty(t, result.Errors)
+			_, err := p.ParseFromFile(absolutize(file))
+			require.NoError(t, err)
 		})
 	}
 }
@@ -47,10 +45,8 @@ func TestInvalidConfigs(t *testing.T) {
 		file := invalidCase
 		t.Run(file, func(t *testing.T) {
 			p := rpcparser.Parser{}
-			result, err := p.ParseFromFile(absolutize(file))
-
-			require.Nil(t, err)
-			assert.NotEmpty(t, result.Errors)
+			_, err := p.ParseFromFile(absolutize(file))
+			require.Error(t, err)
 		})
 	}
 }

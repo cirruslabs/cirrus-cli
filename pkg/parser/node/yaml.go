@@ -3,6 +3,7 @@ package node
 import (
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/yamlhelper"
 	"gopkg.in/yaml.v3"
 )
@@ -57,22 +58,20 @@ func NewFromText(text string) (*Node, error) {
 	}
 
 	if yamlNode.Kind != yaml.DocumentNode {
-		return nil, fmt.Errorf("%w: expected a YAML document, but got %s at %d:%d", ErrNodeConversionFailed,
-			yamlKindToString(yamlNode.Kind), yamlNode.Line, yamlNode.Column)
+		return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "expected a YAML document, but got %s",
+			yamlKindToString(yamlNode.Kind))
 	}
 
 	if len(yamlNode.Content) > 1 {
 		extraneous := yamlNode.Content[1]
 
-		return nil, fmt.Errorf("%w: YAML document contains extraneous top-level elements,"+
-			" such as %s at %d:%d", ErrNodeConversionFailed, yamlKindToString(extraneous.Kind),
-			extraneous.Line, extraneous.Column)
+		return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "YAML document contains extraneous"+
+			" top-level elements, such as %s", yamlKindToString(extraneous.Kind))
 	}
 
 	if yamlNode.Content[0].Kind != yaml.MappingNode {
-		return nil, fmt.Errorf("%w: YAML document should contain a mapping as it top-level element,"+
-			" but found %s at %d:%d", ErrNodeConversionFailed, yamlKindToString(yamlNode.Kind),
-			yamlNode.Line, yamlNode.Column)
+		return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "YAML document should contain a mapping"+
+			" as it top-level element, but found %s", yamlKindToString(yamlNode.Kind))
 	}
 
 	return convert(nil, "root", yamlNode.Content[0])
@@ -83,6 +82,8 @@ func convert(parent *Node, name string, yamlNode *yaml.Node) (*Node, error) {
 	result := &Node{
 		Name:   name,
 		Parent: parent,
+		Line:   yamlNode.Line,
+		Column: yamlNode.Column,
 	}
 
 	switch yamlNode.Kind {
@@ -108,8 +109,7 @@ func convert(parent *Node, name string, yamlNode *yaml.Node) (*Node, error) {
 		result.Value = &MapValue{}
 
 		if !isEven(len(yamlNode.Content)) {
-			return nil, fmt.Errorf("%w: unbalanced map at %d:%d", ErrNodeConversionFailed,
-				yamlNode.Line, yamlNode.Column)
+			return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "unbalanced map")
 		}
 
 		for i := 0; i < len(yamlNode.Content); i += 2 {
@@ -127,7 +127,7 @@ func convert(parent *Node, name string, yamlNode *yaml.Node) (*Node, error) {
 
 			// Apparently this is possible, so do the sanity check
 			if yamlNode.Content[i].Tag != "!!str" {
-				return nil, fmt.Errorf("%w: map key is not a string", ErrNodeConversionFailed)
+				return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "map key is not a string")
 			}
 
 			mapSubtree, err := convert(result, yamlNode.Content[i].Value, yamlNode.Content[i+1])
@@ -147,8 +147,8 @@ func convert(parent *Node, name string, yamlNode *yaml.Node) (*Node, error) {
 
 		return resolvedAlias, nil
 	default:
-		return nil, fmt.Errorf("%w: unexpected %s at %d:%d", ErrNodeConversionFailed,
-			yamlKindToString(yamlNode.Kind), yamlNode.Line, yamlNode.Column)
+		return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "unexpected %s",
+			yamlKindToString(yamlNode.Kind))
 	}
 
 	return result, nil
