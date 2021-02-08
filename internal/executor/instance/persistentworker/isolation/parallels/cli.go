@@ -6,9 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
-var ErrParallelsCommandNotFound = errors.New("Parallels command not found")
+var (
+	ErrParallelsCommandNotFound = errors.New("Parallels command not found")
+	ErrParallelsCommandNonZero  = errors.New("Parallels command returned non-zero exit code")
+)
 
 func runParallelsCommand(ctx context.Context, commandName string, args ...string) (string, string, error) {
 	cmd := exec.CommandContext(ctx, commandName, args...)
@@ -25,7 +29,8 @@ func runParallelsCommand(ctx context.Context, commandName string, args ...string
 		}
 	}
 
-	return stdout.String(), stderr.String(), err
+	return stdout.String(), stderr.String(), fmt.Errorf("%w: %q", ErrParallelsCommandNonZero,
+		firstNonEmptyLine(stderr.String(), stdout.String()))
 }
 
 func Prlctl(ctx context.Context, args ...string) (string, string, error) {
@@ -34,4 +39,16 @@ func Prlctl(ctx context.Context, args ...string) (string, string, error) {
 
 func Prlsrvctl(ctx context.Context, args ...string) (string, string, error) {
 	return runParallelsCommand(ctx, "prlsrvctl", args...)
+}
+
+func firstNonEmptyLine(outputs ...string) string {
+	for _, output := range outputs {
+		for _, line := range strings.Split(output, "\n") {
+			if line != "" {
+				return line
+			}
+		}
+	}
+
+	return ""
 }

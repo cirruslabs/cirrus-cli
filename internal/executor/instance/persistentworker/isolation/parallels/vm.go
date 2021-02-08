@@ -49,10 +49,9 @@ func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
 	// Check if VM is packed
 	if strings.HasSuffix(vmInfoFrom.Home, ".pvmp") {
 		// Let's unpack it!
-		stdout, stderr, err := Prlctl(ctx, "unpack", vmNameFrom)
+		_, _, err = Prlctl(ctx, "unpack", vmNameFrom)
 		if err != nil {
-			return nil, fmt.Errorf("%w: failed to unpack VM %q: %q", ErrVMFailed, vmNameFrom,
-				firstNonEmptyLine(stderr, stdout))
+			return nil, fmt.Errorf("%w: failed to unpack VM %q: %v", ErrVMFailed, vmNameFrom, err)
 		}
 		// Update info after unpacking
 		vmInfoFrom, err = retrieveInfo(ctx, vmNameFrom)
@@ -75,10 +74,9 @@ func (vm *VM) Start(ctx context.Context) error {
 		}
 	}
 
-	stdout, stderr, err := Prlctl(ctx, "start", vm.Ident())
+	_, _, err := Prlctl(ctx, "start", vm.Ident())
 	if err != nil {
-		return fmt.Errorf("%w: failed to start VM %q: %q", ErrVMFailed, vm.Ident(),
-			firstNonEmptyLine(stderr, stdout))
+		return fmt.Errorf("%w: failed to start VM %q: %v", ErrVMFailed, vm.Ident(), err)
 	}
 
 	if vm.shouldRenewDHCP {
@@ -109,10 +107,9 @@ func (vm *VM) isolate(ctx context.Context) error {
 	// Ensure that the VM is isolated[1] from the host (e.g. shared folders, clipboard, etc.)
 	// nolint:lll // https://github.com/walle/lll/issues/12
 	// [1]: https://download.parallels.com/desktop/v14/docs/en_US/Parallels%20Desktop%20Pro%20Edition%20Command-Line%20Reference/43645.htm
-	stdout, stderr, err := Prlctl(ctx, "set", vm.Ident(), "--isolate-vm", "on")
+	_, _, err := Prlctl(ctx, "set", vm.Ident(), "--isolate-vm", "on")
 	if err != nil {
-		return fmt.Errorf("%w: failed to isolate VM %q: %q", ErrVMFailed, vm.Ident(),
-			firstNonEmptyLine(stderr, stdout))
+		return fmt.Errorf("%w: failed to isolate VM %q: %v", ErrVMFailed, vm.Ident(), err)
 	}
 
 	return nil
@@ -120,10 +117,9 @@ func (vm *VM) isolate(ctx context.Context) error {
 
 func (vm *VM) renewDHCP(ctx context.Context) error {
 	// Poke DHCP to renew a lease because suspended on another host VMs don't yet have IPs on the current host
-	stdout, stderr, err := Prlctl(ctx, "set", vm.Ident(), "--dhcp", "yes", "--dhcp6", "yes")
+	_, _, err := Prlctl(ctx, "set", vm.Ident(), "--dhcp", "yes", "--dhcp6", "yes")
 	if err != nil {
-		return fmt.Errorf("%w: failed to poke DHCP for VM %q: %q", ErrVMFailed, vm.Ident(),
-			firstNonEmptyLine(stderr, stdout))
+		return fmt.Errorf("%w: failed to poke DHCP for VM %q: %v", ErrVMFailed, vm.Ident(), err)
 	}
 
 	return nil
@@ -132,26 +128,23 @@ func (vm *VM) renewDHCP(ctx context.Context) error {
 func (vm *VM) Close() error {
 	ctx := context.Background()
 
-	stdout, stderr, err := Prlctl(ctx, "stop", vm.Ident(), "--kill")
+	_, _, err := Prlctl(ctx, "stop", vm.Ident(), "--kill")
 	if err != nil {
-		return fmt.Errorf("%w: failed to stop VM %q: %q", ErrVMFailed, vm.Ident(),
-			firstNonEmptyLine(stderr, stdout))
+		return fmt.Errorf("%w: failed to stop VM %q: %q", ErrVMFailed, vm.Ident(), err)
 	}
 
-	_, stderr, err = Prlctl(ctx, "delete", vm.Ident())
+	_, _, err = Prlctl(ctx, "delete", vm.Ident())
 	if err != nil {
-		return fmt.Errorf("%w: failed to delete VM %q: %q", ErrVMFailed, vm.Ident(),
-			firstNonEmptyLine(stderr, stdout))
+		return fmt.Errorf("%w: failed to delete VM %q: %q", ErrVMFailed, vm.Ident(), err)
 	}
 
 	return nil
 }
 
 func retrieveInfo(ctx context.Context, ident string) (*VirtualMachineInfo, error) {
-	stdout, stderr, err := Prlctl(ctx, "list", "--info", "--json", ident)
+	stdout, _, err := Prlctl(ctx, "list", "--info", "--json", ident)
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to get info for VM with %q UUID or name: %q",
-			ErrVMFailed, ident, firstNonEmptyLine(stderr, stdout))
+		return nil, fmt.Errorf("%w: failed to get info for VM with %q UUID or name: %v", ErrVMFailed, ident, err)
 	}
 
 	var vmInfos []VirtualMachineInfo
@@ -189,16 +182,4 @@ func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
 	}
 
 	return lease.IP, nil
-}
-
-func firstNonEmptyLine(outputs ...string) string {
-	for _, output := range outputs {
-		for _, line := range strings.Split(output, "\n") {
-			if line != "" {
-				return line
-			}
-		}
-	}
-
-	return ""
 }

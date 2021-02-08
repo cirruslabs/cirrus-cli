@@ -11,10 +11,9 @@ type ServerInfo struct {
 }
 
 func GetServerInfo(ctx context.Context) (*ServerInfo, error) {
-	stdout, stderr, err := Prlsrvctl(ctx, "info", "--json")
+	stdout, _, err := Prlsrvctl(ctx, "info", "--json")
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to retrieve Parallels server info: %q",
-			ErrVMFailed, firstNonEmptyLine(stderr, stdout))
+		return nil, fmt.Errorf("%w: failed to retrieve Parallels server info: %v", ErrVMFailed, err)
 	}
 
 	var serverInfo ServerInfo
