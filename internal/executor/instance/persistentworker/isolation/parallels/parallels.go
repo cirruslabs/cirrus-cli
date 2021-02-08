@@ -51,7 +51,9 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	if err := retry.Do(func() error {
 		ip, err = vm.RetrieveIP(ctx)
 		return err
-	}); err != nil {
+	}, retry.RetryIf(func(err error) bool {
+		return errors.Is(err, ErrDHCPSnoopFailed)
+	})); err != nil {
 		return fmt.Errorf("%w: failed to retrieve VM %q IP-address: %v", ErrFailed, vm.name, err)
 	}
 
