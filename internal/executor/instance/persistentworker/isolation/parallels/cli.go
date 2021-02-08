@@ -27,6 +27,12 @@ func runParallelsCommand(ctx context.Context, commandName string, args ...string
 			return "", "", fmt.Errorf("%w: %q not found in PATH, make sure Parallels is installed",
 				ErrParallelsCommandNotFound, commandName)
 		}
+
+		// We need to weed out other errors like context.Canceled
+		// to only handle exec.ExitError's below
+		if _, ok := err.(*exec.ExitError); !ok {
+			return "", "", err
+		}
 	}
 
 	return stdout.String(), stderr.String(), fmt.Errorf("%w: %q", ErrParallelsCommandNonZero,
