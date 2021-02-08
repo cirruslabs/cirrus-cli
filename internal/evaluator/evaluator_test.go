@@ -175,26 +175,9 @@ proto_task:
     <<: *container_body
 `
 
-	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
-		YamlConfig: yamlConfig,
-		AdditionalInstancesInfo: &api.AdditionalInstancesInfo{
-			Instances: map[string]string{
-				"proto_container": "org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
-			},
-			DescriptorSet: &descriptor.FileDescriptorSet{
-				File: []*descriptor.FileDescriptorProto{
-					protodesc.ToFileDescriptorProto(api.File_cirrus_ci_service_proto),
-					protodesc.ToFileDescriptorProto(anypb.File_google_protobuf_any_proto),
-					protodesc.ToFileDescriptorProto(emptypb.File_google_protobuf_empty_proto),
-					protodesc.ToFileDescriptorProto(descriptorpb.File_google_protobuf_descriptor_proto),
-				},
-			},
-		},
+	evaluateTwoTasksIdentical(t, yamlConfig, map[string]string{
+		"proto_container": "org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
 	})
-	require.NoError(t, err)
-	require.Len(t, response.Tasks, 2)
-	require.JSONEq(t, protojson.Format(response.Tasks[0].Instance), protojson.Format(response.Tasks[1].Instance))
-	require.Equal(t, response.Tasks[0].Environment, response.Tasks[1].Environment)
 }
 
 // TestAdditionalInstances ensures that complex dynamically provided instances are respected.
@@ -217,12 +200,16 @@ proto_task:
     <<: *persistent_worker
 `
 
+	evaluateTwoTasksIdentical(t, yamlConfig, map[string]string{
+		"proto_persistent_worker": "org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
+	})
+}
+
+func evaluateTwoTasksIdentical(t *testing.T, yamlConfig string, additionalInstancesMapping map[string]string) {
 	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
 		YamlConfig: yamlConfig,
 		AdditionalInstancesInfo: &api.AdditionalInstancesInfo{
-			Instances: map[string]string{
-				"proto_persistent_worker": "org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
-			},
+			Instances: additionalInstancesMapping,
 			DescriptorSet: &descriptor.FileDescriptorSet{
 				File: []*descriptor.FileDescriptorProto{
 					protodesc.ToFileDescriptorProto(api.File_cirrus_ci_service_proto),
