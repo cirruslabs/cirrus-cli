@@ -93,9 +93,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	if err != nil {
 		return nil, err
 	}
-
 	e.build = b
-	e.rpc = rpc.New(b, rpc.WithLogger(e.logger))
 
 	for _, task := range b.Tasks() {
 		// Transform Dockerfile image names if the user provided their own template
@@ -154,6 +152,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 		address = ip
 	}
 
+	e.rpc = rpc.New(e.build, rpc.WithLogger(e.logger))
 	if err := e.rpc.Start(ctx, address); err != nil {
 		return err
 	}
