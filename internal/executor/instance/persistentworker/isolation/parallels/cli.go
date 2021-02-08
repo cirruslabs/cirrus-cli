@@ -28,15 +28,14 @@ func runParallelsCommand(ctx context.Context, commandName string, args ...string
 				ErrParallelsCommandNotFound, commandName)
 		}
 
-		// We need to weed out other errors like context.Canceled
-		// to only handle exec.ExitError's below
-		if _, ok := err.(*exec.ExitError); !ok {
-			return "", "", err
+		if _, ok := err.(*exec.ExitError); ok {
+			// Parallels command failed, redefine the error
+			// to be the Parallels-specific output
+			err = fmt.Errorf("%w: %q", ErrParallelsCommandNonZero, firstNonEmptyLine(stderr.String(), stdout.String()))
 		}
 	}
 
-	return stdout.String(), stderr.String(), fmt.Errorf("%w: %q", ErrParallelsCommandNonZero,
-		firstNonEmptyLine(stderr.String(), stdout.String()))
+	return stdout.String(), stderr.String(), err
 }
 
 func Prlctl(ctx context.Context, args ...string) (string, string, error) {
