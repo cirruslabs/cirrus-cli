@@ -151,7 +151,7 @@ def main(ctx):
 }
 
 // TestAdditionalInstances ensures that dynamically provided instances are respected.
-func TestAdditionalInstances(t *testing.T) {
+func TestAdditionalContainerInstances(t *testing.T) {
 	yamlConfig := `
 aliases: &container_body
   image: alpine:latest
@@ -194,6 +194,49 @@ proto_task:
 	require.NoError(t, err)
 	require.Len(t, response.Tasks, 2)
 	require.JSONEq(t, protojson.Format(response.Tasks[0].Instance), protojson.Format(response.Tasks[1].Instance))
+	require.Equal(t, response.Tasks[0].Environment, response.Tasks[1].Environment)
+}
+
+// TestAdditionalInstances ensures that complex dynamically provided instances are respected.
+func TestAdditionalWorkersInstances(t *testing.T) {
+	yamlConfig := `
+aliases: &persistent_worker
+  isolation:
+    parallels:
+      image: big-sur
+      user: admin
+      password: admin
+      platform: darwin
+
+regular_task:
+  persistent_worker:
+    <<: *persistent_worker
+
+proto_task:
+  proto_persistent_worker:
+    <<: *persistent_worker
+`
+
+	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
+		YamlConfig: yamlConfig,
+		AdditionalInstancesInfo: &api.AdditionalInstancesInfo{
+			Instances: map[string]string{
+				"proto_persistent_worker": "org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
+			},
+			DescriptorSet: &descriptor.FileDescriptorSet{
+				File: []*descriptor.FileDescriptorProto{
+					protodesc.ToFileDescriptorProto(api.File_cirrus_ci_service_proto),
+					protodesc.ToFileDescriptorProto(anypb.File_google_protobuf_any_proto),
+					protodesc.ToFileDescriptorProto(emptypb.File_google_protobuf_empty_proto),
+					protodesc.ToFileDescriptorProto(descriptorpb.File_google_protobuf_descriptor_proto),
+				},
+			},
+		},
+	})
+	require.NoError(t, err)
+	require.Len(t, response.Tasks, 2)
+	require.JSONEq(t, protojson.Format(response.Tasks[0].Instance), protojson.Format(response.Tasks[1].Instance))
+	require.Equal(t, response.Tasks[0].Environment, response.Tasks[1].Environment)
 }
 
 func TestSchemaHasFileMatch(t *testing.T) {
