@@ -12,8 +12,7 @@ func cloneFromSuspended(ctx context.Context, vmPathFrom string) (*VM, error) {
 	vm := &VM{
 		uuid: uuid.New().String(),
 
-		shouldRenewDHCP:  true,
-		delayedIsolation: true,
+		clonedFromSuspended: true,
 	}
 
 	serverInfo, err := GetServerInfo(ctx)
