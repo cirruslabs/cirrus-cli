@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 )
 
 var ErrAgentDownloadFailed = errors.New("failed to download agent")
@@ -54,7 +53,7 @@ func RetrieveBinary(
 
 	// Download the agent
 	agentURL := fmt.Sprintf("https://github.com/cirruslabs/cirrus-ci-agent/releases/download/v%s/agent-%s-%s%s",
-		agentVersion, runtime.GOOS, runtime.GOARCH, agentSuffix)
+		agentVersion, agentOS, agentArchitecture, agentSuffix)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", agentURL, http.NoBody)
 	if err != nil {
