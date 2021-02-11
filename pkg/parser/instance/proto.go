@@ -343,7 +343,8 @@ func GuessPlatformOfProtoMessage(message protoreflect.Message, descriptor protor
 	}
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
-		if field.Kind() != protoreflect.MessageKind {
+		// recursively check only message fields but not lists since 'platform' shouldn't be in a repeated field
+		if field.Kind() != protoreflect.MessageKind || field.Cardinality() == protoreflect.Repeated {
 			continue
 		}
 		if !message.Has(field) {
