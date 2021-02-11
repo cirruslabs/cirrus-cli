@@ -51,19 +51,23 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	if err := retry.Do(func() error {
 		ip, err = vm.RetrieveIP(ctx)
 		return err
-	}, retry.RetryIf(func(err error) bool {
+	}, retry.Context(ctx), retry.RetryIf(func(err error) bool {
 		return errors.Is(err, ErrDHCPSnoopFailed)
 	})); err != nil {
 		return fmt.Errorf("%w: failed to retrieve VM %q IP-address: %v", ErrFailed, vm.name, err)
 	}
 
 	// Connect to the VM and upload the agent
+	var netConn net.Conn
 	addr := ip + ":22"
 
-	dialer := net.Dialer{}
+	if err := retry.Do(func() error {
+		dialer := net.Dialer{}
 
-	netConn, err := dialer.DialContext(ctx, "tcp", addr)
-	if err != nil {
+		netConn, err = dialer.DialContext(ctx, "tcp", addr)
+
+		return err
+	}, retry.Context(ctx)); err != nil {
 		return fmt.Errorf("%w: failed to connect to the VM %q on SSH port: %v", ErrFailed, vm.Ident(), err)
 	}
 
