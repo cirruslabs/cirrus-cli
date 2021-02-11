@@ -49,9 +49,12 @@ task:
       docker: installed
       parallels: installed
   env:
-    CIRRUS_INTERNAL_PARALLELS_VM: big-sur-base
-    CIRRUS_INTERNAL_PARALLELS_SSH_USER: admin
-    CIRRUS_INTERNAL_PARALLELS_SSH_PASSWORD: admin
+    CIRRUS_INTERNAL_PARALLELS_DARWIN_VM: big-sur-base
+    CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_USER: admin
+    CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_PASSWORD: admin
+    CIRRUS_INTERNAL_PARALLELS_LINUX_VM: debian
+    CIRRUS_INTERNAL_PARALLELS_LINUX_SSH_USER: parallels
+    CIRRUS_INTERNAL_PARALLELS_LINUX_SSH_PASSWORD: parallels
   test_script:
     - go version
     - go test -p 1 ./...
