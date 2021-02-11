@@ -335,7 +335,7 @@ func GuessPlatform(anyInstance *anypb.Any, descriptor protoreflect.MessageDescri
 func GuessPlatformOfProtoMessage(message protoreflect.Message, descriptor protoreflect.MessageDescriptor) string {
 	fields := descriptor.Fields()
 	platformField := fields.ByJSONName("platform")
-	if platformField != nil {
+	if platformField != nil && message.Has(platformField) {
 		value := message.Get(platformField)
 		valueDescription := platformField.Enum().Values().Get(int(value.Enum()))
 		enumName := string(valueDescription.Name())
