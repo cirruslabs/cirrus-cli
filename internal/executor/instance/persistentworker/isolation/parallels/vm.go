@@ -66,6 +66,10 @@ func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
 	return cloneFromDefault(ctx, vmInfoFrom.Name)
 }
 
+func (vm *VM) ClonedFromSuspended() bool {
+	return vm.clonedFromSuspended
+}
+
 func (vm *VM) Start(ctx context.Context) error {
 	if !vm.clonedFromSuspended {
 		if err := vm.isolate(ctx); err != nil {

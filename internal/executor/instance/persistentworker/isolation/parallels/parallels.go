@@ -111,10 +111,12 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 		return fmt.Errorf("%w: failed to start a shell on VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 
-	// Synchronize time
-	_, err = stdinBuf.Write([]byte(TimeSyncCommand(time.Now().UTC())))
-	if err != nil {
-		return fmt.Errorf("%w: failed to sync time on VM %q: %v", ErrFailed, vm.Ident(), err)
+	// Synchronize time for suspended VMs
+	if vm.ClonedFromSuspended() {
+		_, err = stdinBuf.Write([]byte(TimeSyncCommand(time.Now().UTC())))
+		if err != nil {
+			return fmt.Errorf("%w: failed to sync time on VM %q: %v", ErrFailed, vm.Ident(), err)
+		}
 	}
 
 	command := []string{
