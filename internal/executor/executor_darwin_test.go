@@ -11,15 +11,30 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
 func TestExecutorParallels(t *testing.T) {
 	testutil.TempChdir(t)
 
-	image, imageOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_VM")
-	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_SSH_USER")
-	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_SSH_PASSWORD")
+	for _, platform := range []string{"darwin", "linux"} {
+		t.Run(platform, func(t *testing.T) {
+			commonPrefix := fmt.Sprintf("CIRRUS_INTERNAL_PARALLELS_%s_", strings.ToUpper(platform))
+
+			imageEnvVar := commonPrefix + "VM"
+			userEnvVar := commonPrefix + "SSH_USER"
+			passwordEnvVar := commonPrefix + "SSH_PASSWORD"
+
+			doSingleParallelsExecution(t, platform, imageEnvVar, userEnvVar, passwordEnvVar)
+		})
+	}
+}
+
+func doSingleParallelsExecution(t *testing.T, platform, imageEnvVar, userEnvVar, passwordEnvVar string) {
+	image, imageOk := os.LookupEnv(imageEnvVar)
+	user, userOk := os.LookupEnv(userEnvVar)
+	password, passwordOk := os.LookupEnv(passwordEnvVar)
 	if !imageOk || !userOk || !passwordOk {
 		t.SkipNow()
 	}
@@ -30,11 +45,11 @@ func TestExecutorParallels(t *testing.T) {
       image: %s
       user: %s
       password: %s
-      platform: darwin
+      platform: %s
 
 task:
   parallels_check_script: true
-`, image, user, password)
+`, image, user, password, platform)
 
 	if err := ioutil.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
 		t.Fatal(err)

@@ -15,8 +15,7 @@ type VM struct {
 	uuid string
 	name string
 
-	shouldRenewDHCP  bool
-	delayedIsolation bool
+	clonedFromSuspended bool
 }
 
 type NetworkAdapterInfo struct {
@@ -67,8 +66,12 @@ func NewVMClonedFrom(ctx context.Context, vmNameFrom string) (*VM, error) {
 	return cloneFromDefault(ctx, vmInfoFrom.Name)
 }
 
+func (vm *VM) ClonedFromSuspended() bool {
+	return vm.clonedFromSuspended
+}
+
 func (vm *VM) Start(ctx context.Context) error {
-	if !vm.delayedIsolation {
+	if !vm.clonedFromSuspended {
 		if err := vm.isolate(ctx); err != nil {
 			return err
 		}
@@ -79,13 +82,14 @@ func (vm *VM) Start(ctx context.Context) error {
 		return fmt.Errorf("%w: failed to start VM %q: %v", ErrVMFailed, vm.Ident(), err)
 	}
 
-	if vm.shouldRenewDHCP {
+	if vm.clonedFromSuspended {
 		if err := vm.renewDHCP(ctx); err != nil {
 			return err
 		}
-	}
 
-	if vm.delayedIsolation {
+		// Isolation is delayed for suspended VMs because Parallels
+		// prevents us from modifying this setting before we start
+		// such VM
 		if err := vm.isolate(ctx); err != nil {
 			return err
 		}

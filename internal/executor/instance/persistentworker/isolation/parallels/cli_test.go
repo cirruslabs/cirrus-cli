@@ -11,9 +11,9 @@ import (
 func TestPrlctl(t *testing.T) {
 	ctx := context.Background()
 
-	_, imageOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_VM")
-	_, userOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_SSH_USER")
-	_, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_SSH_PASSWORD")
+	_, imageOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_VM")
+	_, userOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_USER")
+	_, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_PASSWORD")
 	if !imageOk || !userOk || !passwordOk {
 		t.SkipNow()
 	}

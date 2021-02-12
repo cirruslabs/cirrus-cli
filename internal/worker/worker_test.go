@@ -60,9 +60,9 @@ func TestWorker(t *testing.T) {
 	var isolation *api.Isolation
 
 	// Support Parallels isolation testing configured via environment variables
-	image, imageOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_VM")
-	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_SSH_USER")
-	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_SSH_PASSWORD")
+	image, imageOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_PASSWORD")
 	if imageOk && userOk && passwordOk {
 		t.Logf("Using Parallels VM %s for testing...", image)
 		sharedNetworkHostIP, err := parallels.SharedNetworkHostIP(context.Background())
