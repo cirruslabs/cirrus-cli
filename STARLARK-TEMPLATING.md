@@ -18,6 +18,13 @@ Proceed with modifying the `lib.star` to your own liking, additionally splitting
 
 And don't forget to add a `cirrus-template` topic to make your template discoverable!
 
+## Examples
+
+There are couple of template examples available under [`cirrus-templates`](https://github.com/cirrus-templates) organization:
+
+* [`helpers`](https://github.com/cirrus-templates/helpers) - a set of helper functions to build Cirrus tasks from Starlark.
+* [`golang`](https://github.com/cirrus-templates/golang) - template to auto-configure tasks for a Go repository.
+
 ## Differences with Starlark configurations
 
 The treatment of Starlark templates is mostly similar to `.cirrus.star`, but there are some differences that apply only to Starlark templates.
