@@ -314,6 +314,7 @@ func (backend *Docker) SystemInfo(ctx context.Context) (*SystemInfo, error) {
 	}
 
 	return &SystemInfo{
+		Version:          info.ServerVersion,
 		TotalCPUs:        int64(info.NCPU),
 		TotalMemoryBytes: info.MemTotal,
 	}, nil

@@ -86,8 +86,13 @@ type ContainerWaitResult struct {
 }
 
 type SystemInfo struct {
+	Version          string
 	TotalCPUs        int64
 	TotalMemoryBytes int64
+}
+
+type Version struct {
+	Version string
 }
 
 const (

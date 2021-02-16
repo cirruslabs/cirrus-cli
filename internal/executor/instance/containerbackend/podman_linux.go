@@ -31,6 +31,8 @@ type Podman struct {
 	basePath   string
 	httpClient *http.Client
 	cli        *swagger.APIClient
+
+	usingNumericalContainerState bool
 }
 
 func NewPodman() (ContainerBackend, error) {
@@ -73,6 +75,15 @@ func NewPodman() (ContainerBackend, error) {
 		BasePath:   podman.basePath,
 		HTTPClient: podman.httpClient,
 	})
+
+	// Query server's version and activate bug workarounds (if applicable)
+	version, err := podman.SystemInfo(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	if version.Version == "3.0.0" {
+		podman.usingNumericalContainerState = true
+	}
 
 	return podman, nil
 }
@@ -416,9 +427,16 @@ func (backend *Podman) ContainerWait(ctx context.Context, id string) (<-chan Con
 	errChan := make(chan error)
 
 	go func() {
+		condition := "stopped"
+
+		if backend.usingNumericalContainerState {
+			// https://github.com/containers/podman/blob/v3.0.0/libpod/define/containerstate.go#L22
+			condition = "4"
+		}
+
 		// nolint:bodyclose // already closed by Swagger-generated code
 		resp, _, err := backend.cli.ContainersApi.LibpodWaitContainer(ctx, id, &swagger.ContainersApiLibpodWaitContainerOpts{
-			Condition: optional.NewString("stopped"),
+			Condition: optional.NewString(condition),
 		})
 
 		if err != nil {
@@ -524,7 +542,14 @@ func (backend *Podman) SystemInfo(ctx context.Context) (*SystemInfo, error) {
 		return nil, err
 	}
 
+	var version string
+
+	if info.Version != nil {
+		version = info.Version.Version
+	}
+
 	return &SystemInfo{
+		Version:          version,
 		TotalCPUs:        info.Host.Cpus,
 		TotalMemoryBytes: info.Host.MemTotal,
 	}, nil
