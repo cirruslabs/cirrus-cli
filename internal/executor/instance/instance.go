@@ -136,15 +136,8 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 		additionalContainer.Memory = clampMemory(additionalContainer.Memory, availableMemory)
 	}
 
-	if config.ContainerOptions.ShouldPullImage(ctx, backend, params.Image) {
-		dockerPullLogger := logger.Scoped("image pull")
-		dockerPullLogger.Infof("Pulling image %s...", params.Image)
-		if err := backend.ImagePull(ctx, params.Image); err != nil {
-			dockerPullLogger.Errorf("Failed to pull %s: %v", params.Image, err)
-			dockerPullLogger.Finish(false)
-			return err
-		}
-		dockerPullLogger.Finish(true)
+	if err := pullHelper(ctx, params.Image, backend, config.ContainerOptions, logger); err != nil {
+		return err
 	}
 
 	logger.Debugf("creating container using working volume %s", params.WorkingVolumeName)
@@ -329,15 +322,8 @@ func runAdditionalContainer(
 	connectToContainer string,
 	containerOptions options.ContainerOptions,
 ) error {
-	if containerOptions.ShouldPullImage(ctx, backend, additionalContainer.Image) {
-		dockerPullLogger := logger.Scoped("image pull")
-		dockerPullLogger.Infof("Pulling additional container image %s...", additionalContainer.Image)
-		if err := backend.ImagePull(ctx, additionalContainer.Image); err != nil {
-			dockerPullLogger.Errorf("Failed to pull %s: %v", additionalContainer.Image, err)
-			dockerPullLogger.Finish(false)
-			return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
-		}
-		dockerPullLogger.Finish(true)
+	if err := pullHelper(ctx, additionalContainer.Image, backend, containerOptions, logger); err != nil {
+		return err
 	}
 
 	logger.Debugf("creating additional container")
@@ -407,4 +393,34 @@ func clampMemory(requested uint32, available uint32) uint32 {
 	}
 
 	return requested
+}
+
+func pullHelper(
+	ctx context.Context,
+	reference string,
+	backend containerbackend.ContainerBackend,
+	copts options.ContainerOptions,
+	logger *echelon.Logger,
+) error {
+	if !copts.ShouldPullImage(ctx, backend, reference) {
+		return nil
+	}
+
+	if logger == nil {
+		logger = echelon.NewLogger(echelon.ErrorLevel, &RendererStub{})
+	}
+
+	dockerPullLogger := logger.Scoped("image pull")
+	dockerPullLogger.Infof("Pulling image %s...", reference)
+
+	if err := backend.ImagePull(ctx, reference); err != nil {
+		dockerPullLogger.Errorf("Failed to pull %s: %v", reference, err)
+		dockerPullLogger.Finish(false)
+
+		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
+	}
+
+	dockerPullLogger.Finish(true)
+
+	return nil
 }

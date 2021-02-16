@@ -10,7 +10,7 @@ import (
 
 func TestForcePull(t *testing.T) {
 	do := options.ContainerOptions{
-		Pull:         true,
+		EagerPull:    true,
 		NoPullImages: []string{"nonexistent.invalid/should/not/be:pulled"},
 	}
 
@@ -27,7 +27,7 @@ func TestForcePull(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Should be pulled because Pull is set to true
+	// Should be pulled because EagerPull is set to true
 	assert.True(t, do.ShouldPullImage(ctx, backend, "debian:latest"))
 }
 
@@ -42,9 +42,16 @@ func TestNormalPull(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	if err := backend.ImagePull(ctx, "debian:latest"); err != nil {
+		t.Fatal(err)
+	}
+
 	// Shouldn't be pulled because it's blacklisted
 	assert.False(t, do.ShouldPullImage(ctx, backend, "nonexistent.invalid/should/not/be:pulled"))
 
 	// Should be pulled because it doesn't exist
 	assert.True(t, do.ShouldPullImage(ctx, backend, "nonexistent.invalid/some/other:image"))
+
+	// Shouldn't be pulled because it does exist
+	assert.False(t, do.ShouldPullImage(ctx, backend, "debian:latest"))
 }

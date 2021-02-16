@@ -7,7 +7,7 @@ import (
 )
 
 type ContainerOptions struct {
-	Pull         bool
+	EagerPull    bool
 	NoPullImages []string
 	NoCleanup    bool
 
@@ -26,7 +26,7 @@ func (copts ContainerOptions) ShouldPullImage(
 		}
 	}
 
-	if copts.Pull {
+	if copts.EagerPull {
 		return true
 	}
 

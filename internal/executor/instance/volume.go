@@ -54,11 +54,8 @@ func CreateWorkingVolume(
 ) (vol *Volume, err error) {
 	agentImage := platform.AgentImage(agentVersion)
 
-	// Retrieve the latest agent image
-	if containerOptions.ShouldPullImage(ctx, backend, agentImage) {
-		if err := backend.ImagePull(ctx, agentImage); err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
-		}
+	if err := pullHelper(ctx, agentImage, backend, containerOptions, nil); err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
 	}
 
 	if err := backend.VolumeCreate(ctx, name); err != nil {

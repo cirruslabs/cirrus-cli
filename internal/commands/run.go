@@ -31,7 +31,7 @@ var verbose bool
 
 // Container-related flags.
 var containerBackend string
-var containerPull bool
+var containerLazyPull bool
 
 // Container-related flags: Dockerfile as CI environment[1] feature.
 // [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
@@ -112,7 +112,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Container-related options
 	executorOpts = append(executorOpts, executor.WithContainerOptions(options.ContainerOptions{
-		Pull:      containerPull,
+		EagerPull: !containerLazyPull,
 		NoCleanup: debugNoCleanup,
 
 		DockerfileImageTemplate: dockerfileImageTemplate,
@@ -158,8 +158,8 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&containerBackend, "container-backend", containerbackend.BackendAuto,
 		fmt.Sprintf("container engine backend to use, either \"%s\", \"%s\" or \"%s\"",
 			containerbackend.BackendDocker, containerbackend.BackendPodman, containerbackend.BackendAuto))
-	cmd.PersistentFlags().BoolVar(&containerPull, "container-pull", false,
-		"force pull the images before starting containers")
+	cmd.PersistentFlags().BoolVar(&containerLazyPull, "container-lazy-pull", false,
+		"when starting containers only pull images that are not available locally")
 
 	// Container-related flags: Dockerfile as CI environment feature
 	cmd.PersistentFlags().StringVar(&dockerfileImageTemplate, "dockerfile-image-template",

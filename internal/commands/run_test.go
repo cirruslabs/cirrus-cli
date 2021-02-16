@@ -210,7 +210,7 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 	assert.Contains(t, buf.String(), "'from_starlark' script succeeded")
 }
 
-// TestRunContainerPull ensures that --docker-pull argument actually forces the container images to be pulled.
+// TestRunContainerPull ensures that container images are pulled by default.
 func TestRunContainerPull(t *testing.T) {
 	backend, err := containerbackend.New(containerbackend.BackendAuto)
 	if err != nil {
@@ -221,14 +221,14 @@ func TestRunContainerPull(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testutil.TempChdirPopulatedWith(t, "testdata/docker-no-pull")
+	testutil.TempChdirPopulatedWith(t, "testdata/image-pulling-behavior")
 
 	// Create os.Stderr writer that duplicates it's output to buf
 	buf := bytes.NewBufferString("")
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "--container-pull"})
+	command.SetArgs([]string{"run", "-v", "-o simple"})
 	command.SetOut(writer)
 	command.SetErr(writer)
 	err = command.Execute()

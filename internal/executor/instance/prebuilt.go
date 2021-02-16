@@ -125,7 +125,7 @@ func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *runconfig.Run
 		Tags:       []string{prebuilt.Image},
 		Dockerfile: prebuilt.Dockerfile,
 		BuildArgs:  prebuilt.Arguments,
-		Pull:       config.ContainerOptions.Pull,
+		Pull:       config.ContainerOptions.EagerPull,
 	})
 
 Outer:
