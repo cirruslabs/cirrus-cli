@@ -7,12 +7,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/none"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
+	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"strings"
 )
 
 var ErrInvalidIsolation = errors.New("invalid isolation parameters")
 
-func New(isolation *api.Isolation) (abstract.Instance, error) {
+func New(isolation *api.Isolation, logger logger.Lightweight) (abstract.Instance, error) {
 	if isolation == nil {
 		return none.New()
 	}
@@ -26,7 +27,7 @@ func New(isolation *api.Isolation) (abstract.Instance, error) {
 		}
 
 		return parallels.New(iso.Parallels.Image, iso.Parallels.User, iso.Parallels.Password,
-			strings.ToLower(iso.Parallels.Platform.String()))
+			strings.ToLower(iso.Parallels.Platform.String()), parallels.WithLogger(logger))
 	default:
 		return nil, fmt.Errorf("%w: unsupported isolation type %T", ErrInvalidIsolation, iso)
 	}

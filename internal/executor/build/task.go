@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
+	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"strconv"
 	"strings"
 	"sync"
@@ -32,9 +33,9 @@ type Task struct {
 	Mutex sync.RWMutex
 }
 
-func NewFromProto(protoTask *api.Task) (*Task, error) {
+func NewFromProto(protoTask *api.Task, logger logger.Lightweight) (*Task, error) {
 	// Create an instance that this task will run on
-	inst, err := instance.NewFromProto(protoTask.Instance, protoTask.Commands)
+	inst, err := instance.NewFromProto(protoTask.Instance, protoTask.Commands, logger)
 	if err != nil {
 		return nil, err
 	}

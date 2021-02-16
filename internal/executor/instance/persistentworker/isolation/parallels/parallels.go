@@ -1,13 +1,16 @@
 package parallels
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/avast/retry-go"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
+	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"golang.org/x/crypto/ssh"
+	"io"
 	"net"
 	"strconv"
 	"strings"
@@ -19,19 +22,32 @@ var (
 )
 
 type Parallels struct {
+	logger      logger.Lightweight
 	vmImage     string
 	sshUser     string
 	sshPassword string
 	agentOS     string
 }
 
-func New(vmImage, sshUser, sshPassword, agentOS string) (*Parallels, error) {
-	return &Parallels{
+func New(vmImage, sshUser, sshPassword, agentOS string, opts ...Option) (*Parallels, error) {
+	parallels := &Parallels{
 		vmImage:     vmImage,
 		sshUser:     sshUser,
 		sshPassword: sshPassword,
 		agentOS:     agentOS,
-	}, nil
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		opt(parallels)
+	}
+
+	// Apply default options (to cover those that weren't specified)
+	if parallels.logger == nil {
+		parallels.logger = &logger.LightweightStub{}
+	}
+
+	return parallels, nil
 }
 
 func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
@@ -107,7 +123,29 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 		return fmt.Errorf("%w: failed to open SSH session on VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 
-	stdinBuf, _ := sess.StdinPipe()
+	// Log output from the virtual machine
+	stdout, err := sess.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("%w: while opening stdout pipe: %v", ErrFailed, err)
+	}
+	stderr, err := sess.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("%w: while opening stderr pipe: %v", ErrFailed, err)
+	}
+	go func() {
+		output := io.MultiReader(stdout, stderr)
+
+		scanner := bufio.NewScanner(output)
+
+		for scanner.Scan() {
+			parallels.logger.Debugf("VM: %s", scanner.Text())
+		}
+	}()
+
+	stdinBuf, err := sess.StdinPipe()
+	if err != nil {
+		return fmt.Errorf("%w: while opening stdin pipe: %v", ErrFailed, err)
+	}
 
 	// start a login shell so all the customization from ~/.zprofile will be picked up
 	err = sess.Shell()
