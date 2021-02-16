@@ -1,6 +1,7 @@
 package containerbackend
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,6 +10,7 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/podman"
 	"github.com/cirruslabs/podmanapi/pkg/swagger"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/google/uuid"
 	"io"
 	"net"
@@ -441,6 +443,55 @@ func (backend *Podman) ContainerWait(ctx context.Context, id string) (<-chan Con
 	}()
 
 	return waitChan, errChan
+}
+
+func (backend *Podman) ContainerLogs(ctx context.Context, id string) (<-chan string, error) {
+	logChan := make(chan string)
+
+	buildURL, err := url.Parse(backend.basePath + "/containers/" + id + "/logs")
+	if err != nil {
+		return nil, err
+	}
+
+	q := buildURL.Query()
+	q.Add("stdout", "true")
+	q.Add("stderr", "true")
+	q.Add("follow", "true")
+	buildURL.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", buildURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := backend.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: container logs endpoint returned HTTP %d", ErrPodman, resp.StatusCode)
+	}
+
+	pipeReader, pipeWriter := io.Pipe()
+
+	go func() {
+		_, _ = stdcopy.StdCopy(pipeWriter, pipeWriter, resp.Body)
+		_ = pipeWriter.Close()
+		_ = resp.Body.Close()
+	}()
+
+	go func() {
+		scanner := bufio.NewScanner(pipeReader)
+
+		for scanner.Scan() {
+			logChan <- scanner.Text()
+		}
+
+		close(logChan)
+	}()
+
+	return logChan, nil
 }
 
 func (backend *Podman) ContainerDelete(ctx context.Context, id string) error {

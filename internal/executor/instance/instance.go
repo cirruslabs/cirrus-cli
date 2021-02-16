@@ -241,6 +241,9 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 	var additionalContainersWG sync.WaitGroup
 	additionalContainersCtx, additionalContainersCancel := context.WithCancel(context.Background())
 
+	var logReaderWg sync.WaitGroup
+	logReaderWg.Add(1)
+
 	// Schedule all containers for removal
 	defer func() {
 		// We need to remove additional containers first in order to avoid Podman's
@@ -259,6 +262,8 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 				logger.Warnf("error while removing container: %v", err)
 			}
 		}
+
+		logReaderWg.Wait()
 	}()
 
 	// Start additional containers (if any)
@@ -286,6 +291,17 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 	if err := backend.ContainerStart(ctx, cont.ID); err != nil {
 		return err
 	}
+
+	logChan, err := backend.ContainerLogs(ctx, cont.ID)
+	if err != nil {
+		return err
+	}
+	go func() {
+		for logLine := range logChan {
+			logger.Debugf("container: %s", logLine)
+		}
+		logReaderWg.Done()
+	}()
 
 	logger.Debugf("waiting for container %s to finish", cont.ID)
 	waitChan, errChan := backend.ContainerWait(ctx, cont.ID)

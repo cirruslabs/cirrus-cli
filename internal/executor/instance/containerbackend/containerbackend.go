@@ -33,6 +33,7 @@ type ContainerBackend interface {
 	ContainerCreate(ctx context.Context, input *ContainerCreateInput, name string) (*ContainerCreateOutput, error)
 	ContainerStart(ctx context.Context, id string) error
 	ContainerWait(ctx context.Context, id string) (<-chan ContainerWaitResult, <-chan error)
+	ContainerLogs(ctx context.Context, id string) (<-chan string, error)
 	ContainerDelete(ctx context.Context, id string) error
 
 	SystemInfo(ctx context.Context) (*SystemInfo, error)

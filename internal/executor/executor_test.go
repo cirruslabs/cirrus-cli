@@ -17,6 +17,7 @@ import (
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io"
 	"io/ioutil"
 	"os"
@@ -411,4 +412,22 @@ func TestLoggingNoExtraNewlines(t *testing.T) {
 	assert.Contains(t, buf.String(), "big gap incoming\n\nwe're still alive\n\x1b[32m'big_gap' script succeeded")
 	assert.Contains(t, buf.String(), "no newline in the output\n\x1b[32m'no_newline' script succeeded")
 	assert.Contains(t, buf.String(), "double newline in the output\n\n\x1b[32m'double' script succeeded")
+}
+
+// TestContainerLogs ensures that we receive logs from the agent running inside a container.
+func TestContainerLogs(t *testing.T) {
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	// Create a logger and attach it to writer
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	dir := testutil.TempDirPopulatedWith(t, "testdata/container-logs")
+	err := testutil.ExecuteWithOptions(t, dir, executor.WithLogger(logger))
+	require.NoError(t, err)
+	assert.Contains(t, buf.String(), "Getting initial commands...")
+	assert.Regexp(t, "container: [0-9]{4}/[0-9]{2}/[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}"+
+		" Background commands to clean up after: [0-9]+", buf.String())
 }
