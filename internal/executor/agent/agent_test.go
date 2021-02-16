@@ -16,7 +16,7 @@ func TestRetrieveAgentBinary(t *testing.T) {
 	firstPath, err := agent.RetrieveBinary(context.Background(),
 		platform.DefaultAgentVersion, runtime.GOOS, runtime.GOARCH)
 	if err != nil {
-		t.Fatal()
+		t.Fatal(err)
 	}
 	firstPathStat, err := os.Stat(firstPath)
 	if err != nil {
