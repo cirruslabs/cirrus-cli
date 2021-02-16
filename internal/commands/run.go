@@ -170,6 +170,7 @@ func newRunCmd() *cobra.Command {
 	// Flags useful for debugging
 	cmd.PersistentFlags().BoolVar(&debugNoCleanup, "debug-no-cleanup", false,
 		"don't remove containers and volumes after execution")
+	_ = cmd.PersistentFlags().MarkHidden("debug-no-cleanup")
 
 	// Experimental features flags
 	cmd.PersistentFlags().BoolVar(&experimentalOldParser, "legacy-remote-parser", false,
