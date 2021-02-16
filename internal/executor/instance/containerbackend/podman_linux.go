@@ -464,7 +464,7 @@ func (backend *Podman) ContainerWait(ctx context.Context, id string) (<-chan Con
 }
 
 func (backend *Podman) ContainerLogs(ctx context.Context, id string) (<-chan string, error) {
-	logChan := make(chan string)
+	logChan := make(chan string, containerLogsChannelSize)
 
 	buildURL, err := url.Parse(backend.basePath + "/containers/" + id + "/logs")
 	if err != nil {

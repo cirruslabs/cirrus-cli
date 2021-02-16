@@ -268,7 +268,7 @@ func (backend *Docker) ContainerWait(ctx context.Context, id string) (<-chan Con
 }
 
 func (backend *Docker) ContainerLogs(ctx context.Context, id string) (<-chan string, error) {
-	logChan := make(chan string)
+	logChan := make(chan string, containerLogsChannelSize)
 
 	multiplexedStream, err := backend.cli.ContainerLogs(ctx, id, types.ContainerLogsOptions{
 		ShowStdout: true,

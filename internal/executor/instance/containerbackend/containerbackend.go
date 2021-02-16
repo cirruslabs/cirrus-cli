@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+const containerLogsChannelSize = 512
+
 var (
 	ErrNotFound       = errors.New("not found")
 	ErrDone           = errors.New("done")
