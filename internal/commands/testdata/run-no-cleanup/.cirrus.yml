@@ -3,8 +3,8 @@ task:
     image: debian:latest
 
     additional_containers:
-      - name: mysql
-        image: mysql:latest
-        port: 3306
+      - name: redis
+        image: redis:latest
+        port: 6379
 
   script: true

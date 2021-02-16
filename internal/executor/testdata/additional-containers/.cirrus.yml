@@ -4,19 +4,19 @@ container:
 task:
   container:
     additional_containers:
-      - name: mysql
-        image: mysql:latest
-        port: 3306
+      - name: redis
+        image: redis:latest
+        port: 6379
         env:
           MYSQL_ROOT_PASSWORD: insecure
-      - name: postgres
-        image: postgres:latest
-        port: 5432
+      - name: memcached
+        image: memcached:latest
+        port: 11211
         env:
           POSTGRES_PASSWORD: insecure
   prepare_script:
     - apt-get update && apt-get -y install netcat-openbsd wait-for-it
-  mysql_test_script:
-    - wait-for-it --timeout=0 --strict 127.0.0.1:3306 -- true
-  postgres_test_script:
-    - wait-for-it --timeout=0 --strict 127.0.0.1:5432 -- true
+  redis_test_script:
+    - wait-for-it --timeout=0 --strict 127.0.0.1:6379 -- true
+  memcached_test_script:
+    - wait-for-it --timeout=0 --strict 127.0.0.1:11211 -- true
