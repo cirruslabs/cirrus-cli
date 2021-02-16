@@ -329,10 +329,15 @@ func runAdditionalContainer(
 	connectToContainer string,
 	containerOptions options.ContainerOptions,
 ) error {
-	logger.Debugf("pulling additional container image %s", additionalContainer.Image)
-	err := backend.ImagePull(ctx, additionalContainer.Image)
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
+	if containerOptions.ShouldPullImage(ctx, backend, additionalContainer.Image) {
+		dockerPullLogger := logger.Scoped("image pull")
+		dockerPullLogger.Infof("Pulling additional container image %s...", additionalContainer.Image)
+		if err := backend.ImagePull(ctx, additionalContainer.Image); err != nil {
+			dockerPullLogger.Errorf("Failed to pull %s: %v", additionalContainer.Image, err)
+			dockerPullLogger.Finish(false)
+			return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
+		}
+		dockerPullLogger.Finish(true)
 	}
 
 	logger.Debugf("creating additional container")
