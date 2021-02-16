@@ -4,6 +4,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
+	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"path/filepath"
@@ -19,7 +20,7 @@ type Build struct {
 	tasks map[int64]*Task
 }
 
-func New(projectDir string, tasks []*api.Task) (*Build, error) {
+func New(projectDir string, tasks []*api.Task, logger logger.Lightweight) (*Build, error) {
 	// Normalize project directory path on host as it might be
 	// simply ".", which is not suitable for bind mounting it
 	// later to the container
@@ -31,7 +32,7 @@ func New(projectDir string, tasks []*api.Task) (*Build, error) {
 	// Wrap Protocol Buffers tasks
 	wrappedTasks := make(map[int64]*Task)
 	for _, task := range tasks {
-		wrappedTask, err := NewFromProto(task)
+		wrappedTask, err := NewFromProto(task, logger)
 		if err != nil {
 			return nil, err
 		}

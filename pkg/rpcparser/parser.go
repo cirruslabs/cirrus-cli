@@ -133,7 +133,7 @@ func (p *Parser) ParseFromFile(path string) (*Result, error) {
 	// [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
 	filesContents := make(map[string]string)
 	for _, task := range result.Tasks {
-		inst, err := instance.NewFromProto(task.Instance, []*api.Command{})
+		inst, err := instance.NewFromProto(task.Instance, []*api.Command{}, nil)
 		if err != nil {
 			continue
 		}

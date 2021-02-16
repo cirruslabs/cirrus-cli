@@ -338,7 +338,7 @@ func filesContentsSingleVariation(t *testing.T, dir, dockerfileContents string) 
 
 	// Extract the resulting container instance's image
 	for _, task := range result.Tasks {
-		inst, err := instance.NewFromProto(task.Instance, []*api.Command{})
+		inst, err := instance.NewFromProto(task.Instance, []*api.Command{}, nil)
 		if err != nil {
 			continue
 		}

@@ -18,7 +18,7 @@ func TestAuth(t *testing.T) {
 			LocalGroupId: 0,
 			Instance:     testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
-	})
+	}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func TestNoUnresolvedDeps(t *testing.T) {
 			RequiredGroups: []int64{0},
 			Instance:       testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
-	})
+	}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

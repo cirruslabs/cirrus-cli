@@ -42,7 +42,7 @@ func TestCloneInterception(t *testing.T) {
 			task, err := build.NewFromProto(&api.Task{
 				Commands: commands,
 				Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
-			})
+			}, nil)
 			if err != nil {
 				t.Fatal(err)
 			}

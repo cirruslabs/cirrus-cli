@@ -17,7 +17,7 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 	taskCtx, cancel := context.WithCancel(ctx)
 	worker.tasks[agentAwareTask.TaskId] = cancel
 
-	inst, err := persistentworker.New(agentAwareTask.Isolation)
+	inst, err := persistentworker.New(agentAwareTask.Isolation, worker.logger)
 	if err != nil {
 		worker.logger.Errorf("failed to create an instance for the task %d: %v", agentAwareTask.TaskId, err)
 		return

@@ -89,7 +89,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	}
 
 	// Create a build that describes what we're about to do
-	b, err := build.New(projectDir, tasks)
+	b, err := build.New(projectDir, tasks, e.logger)
 	if err != nil {
 		return nil, err
 	}
