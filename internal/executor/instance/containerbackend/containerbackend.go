@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+const containerLogsChannelSize = 512
+
 var (
 	ErrNotFound       = errors.New("not found")
 	ErrDone           = errors.New("done")
@@ -33,6 +35,7 @@ type ContainerBackend interface {
 	ContainerCreate(ctx context.Context, input *ContainerCreateInput, name string) (*ContainerCreateOutput, error)
 	ContainerStart(ctx context.Context, id string) error
 	ContainerWait(ctx context.Context, id string) (<-chan ContainerWaitResult, <-chan error)
+	ContainerLogs(ctx context.Context, id string) (<-chan string, error)
 	ContainerDelete(ctx context.Context, id string) error
 
 	SystemInfo(ctx context.Context) (*SystemInfo, error)
@@ -85,8 +88,13 @@ type ContainerWaitResult struct {
 }
 
 type SystemInfo struct {
+	Version          string
 	TotalCPUs        int64
 	TotalMemoryBytes int64
+}
+
+type Version struct {
+	Version string
 }
 
 const (

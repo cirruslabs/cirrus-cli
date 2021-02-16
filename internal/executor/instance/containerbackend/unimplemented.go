@@ -67,6 +67,10 @@ func (*Unimplemented) ContainerWait(ctx context.Context, id string) (<-chan Cont
 	return waitChan, errChan
 }
 
+func (*Unimplemented) ContainerLogs(ctx context.Context, id string) (<-chan string, error) {
+	return nil, ErrNotImplemented
+}
+
 func (*Unimplemented) ContainerDelete(ctx context.Context, id string) error { return ErrNotImplemented }
 
 func (*Unimplemented) SystemInfo(ctx context.Context) (*SystemInfo, error) {

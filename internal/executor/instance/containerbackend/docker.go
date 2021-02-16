@@ -14,6 +14,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 	"io"
 	"io/ioutil"
 )
@@ -266,6 +267,39 @@ func (backend *Docker) ContainerWait(ctx context.Context, id string) (<-chan Con
 	return waitChan, errChan
 }
 
+func (backend *Docker) ContainerLogs(ctx context.Context, id string) (<-chan string, error) {
+	logChan := make(chan string, containerLogsChannelSize)
+
+	multiplexedStream, err := backend.cli.ContainerLogs(ctx, id, types.ContainerLogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	pipeReader, pipeWriter := io.Pipe()
+
+	go func() {
+		_, _ = stdcopy.StdCopy(pipeWriter, pipeWriter, multiplexedStream)
+		_ = pipeWriter.Close()
+		_ = multiplexedStream.Close()
+	}()
+
+	go func() {
+		scanner := bufio.NewScanner(pipeReader)
+
+		for scanner.Scan() {
+			logChan <- scanner.Text()
+		}
+
+		close(logChan)
+	}()
+
+	return logChan, nil
+}
+
 func (backend *Docker) ContainerDelete(ctx context.Context, id string) error {
 	return backend.cli.ContainerRemove(ctx, id, types.ContainerRemoveOptions{
 		RemoveVolumes: true,
@@ -280,6 +314,7 @@ func (backend *Docker) SystemInfo(ctx context.Context) (*SystemInfo, error) {
 	}
 
 	return &SystemInfo{
+		Version:          info.ServerVersion,
 		TotalCPUs:        int64(info.NCPU),
 		TotalMemoryBytes: info.MemTotal,
 	}, nil

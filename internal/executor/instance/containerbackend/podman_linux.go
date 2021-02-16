@@ -1,6 +1,7 @@
 package containerbackend
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,6 +10,7 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/podman"
 	"github.com/cirruslabs/podmanapi/pkg/swagger"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/google/uuid"
 	"io"
 	"net"
@@ -29,6 +31,8 @@ type Podman struct {
 	basePath   string
 	httpClient *http.Client
 	cli        *swagger.APIClient
+
+	usingNumericalContainerState bool
 }
 
 func NewPodman() (ContainerBackend, error) {
@@ -71,6 +75,15 @@ func NewPodman() (ContainerBackend, error) {
 		BasePath:   podman.basePath,
 		HTTPClient: podman.httpClient,
 	})
+
+	// Query server's version and activate bug workarounds (if applicable)
+	version, err := podman.SystemInfo(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	if version.Version == "3.0.0" {
+		podman.usingNumericalContainerState = true
+	}
 
 	return podman, nil
 }
@@ -414,9 +427,16 @@ func (backend *Podman) ContainerWait(ctx context.Context, id string) (<-chan Con
 	errChan := make(chan error)
 
 	go func() {
+		condition := "stopped"
+
+		if backend.usingNumericalContainerState {
+			// https://github.com/containers/podman/blob/v3.0.0/libpod/define/containerstate.go#L22
+			condition = "4"
+		}
+
 		// nolint:bodyclose // already closed by Swagger-generated code
 		resp, _, err := backend.cli.ContainersApi.LibpodWaitContainer(ctx, id, &swagger.ContainersApiLibpodWaitContainerOpts{
-			Condition: optional.NewString("stopped"),
+			Condition: optional.NewString(condition),
 		})
 
 		if err != nil {
@@ -441,6 +461,56 @@ func (backend *Podman) ContainerWait(ctx context.Context, id string) (<-chan Con
 	}()
 
 	return waitChan, errChan
+}
+
+func (backend *Podman) ContainerLogs(ctx context.Context, id string) (<-chan string, error) {
+	logChan := make(chan string, containerLogsChannelSize)
+
+	buildURL, err := url.Parse(backend.basePath + "/containers/" + id + "/logs")
+	if err != nil {
+		return nil, err
+	}
+
+	q := buildURL.Query()
+	q.Add("stdout", "true")
+	q.Add("stderr", "true")
+	q.Add("follow", "true")
+	buildURL.RawQuery = q.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", buildURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// nolint:bodyclose // it will be closed in the first Goroutine below
+	resp, err := backend.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: container logs endpoint returned HTTP %d", ErrPodman, resp.StatusCode)
+	}
+
+	pipeReader, pipeWriter := io.Pipe()
+
+	go func() {
+		_, _ = stdcopy.StdCopy(pipeWriter, pipeWriter, resp.Body)
+		_ = pipeWriter.Close()
+		_ = resp.Body.Close()
+	}()
+
+	go func() {
+		scanner := bufio.NewScanner(pipeReader)
+
+		for scanner.Scan() {
+			logChan <- scanner.Text()
+		}
+
+		close(logChan)
+	}()
+
+	return logChan, nil
 }
 
 func (backend *Podman) ContainerDelete(ctx context.Context, id string) error {
@@ -473,7 +543,14 @@ func (backend *Podman) SystemInfo(ctx context.Context) (*SystemInfo, error) {
 		return nil, err
 	}
 
+	var version string
+
+	if info.Version != nil {
+		version = info.Version.Version
+	}
+
 	return &SystemInfo{
+		Version:          version,
 		TotalCPUs:        info.Host.Cpus,
 		TotalMemoryBytes: info.Host.MemTotal,
 	}, nil
