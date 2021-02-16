@@ -482,6 +482,7 @@ func (backend *Podman) ContainerLogs(ctx context.Context, id string) (<-chan str
 		return nil, err
 	}
 
+	// nolint:bodyclose // it will be closed in the first Goroutine below
 	resp, err := backend.httpClient.Do(req)
 	if err != nil {
 		return nil, err
