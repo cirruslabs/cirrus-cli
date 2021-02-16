@@ -241,6 +241,7 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 	var additionalContainersWG sync.WaitGroup
 	additionalContainersCtx, additionalContainersCancel := context.WithCancel(context.Background())
 
+	logReaderCtx, cancelLogReaderCtx := context.WithCancel(ctx)
 	var logReaderWg sync.WaitGroup
 	logReaderWg.Add(1)
 
@@ -263,6 +264,8 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 			}
 		}
 
+		logger.Debugf("waiting for the container log reader to finish")
+		cancelLogReaderCtx()
 		logReaderWg.Wait()
 	}()
 
@@ -292,7 +295,7 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 		return err
 	}
 
-	logChan, err := backend.ContainerLogs(ctx, cont.ID)
+	logChan, err := backend.ContainerLogs(logReaderCtx, cont.ID)
 	if err != nil {
 		return err
 	}
