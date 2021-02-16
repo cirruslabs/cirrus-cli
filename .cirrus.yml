@@ -41,7 +41,7 @@ docker_builder:
     - choco install -y golang
     - refreshenv
     - md C:\Windows\system32\config\systemprofile\AppData\Local\Temp
-    - go test ./...
+    - go test -v ./...
 
 task:
   name: Test (macOS with Docker and Parallels)
