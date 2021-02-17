@@ -19,9 +19,6 @@ docker_builder:
     - sudo apt-get update
     - sudo apt-get -y upgrade
     - sudo apt-get -y install podman
-  work_around_podman_issue_9390_script:
-    # https://github.com/containers/podman/issues/9390
-    - echo 'unqualified-search-registries=["docker.io"]' > /etc/containers/registries.conf.d/docker-io.conf
   run_podman_background_script:
     - podman system service -t 0 unix:///tmp/podman.sock
   test_script:
