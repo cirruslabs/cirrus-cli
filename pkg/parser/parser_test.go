@@ -452,3 +452,19 @@ func TestRichErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestWithMissingInstancesAllowed(t *testing.T) {
+	config, err := ioutil.ReadFile("testdata/missing-instances.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p := parser.New(parser.WithMissingInstancesAllowed())
+	result, err := p.Parse(context.Background(), string(config))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, result.Tasks, 1)
+	assert.Nil(t, result.Tasks[0].Instance)
+}
