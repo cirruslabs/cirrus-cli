@@ -31,7 +31,7 @@ func TestRun(t *testing.T) {
 	}
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple"})
 	err := command.Execute()
 
 	assert.Nil(t, err)
@@ -71,7 +71,7 @@ func TestRunTaskFiltering(t *testing.T) {
 			writer := io.MultiWriter(os.Stderr, buf)
 
 			command := commands.NewRootCmd()
-			command.SetArgs([]string{"run", "-v", "-o simple", example.Pattern})
+			command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", example.Pattern})
 			command.SetOut(writer)
 			command.SetErr(writer)
 			err := command.Execute()
@@ -90,7 +90,7 @@ func TestRunTaskDependencyRemoval(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-task-dependency-removal")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "bar"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", "bar"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -101,7 +101,7 @@ func TestRunEnvironmentSet(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "SOMEKEY=good value"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", "-e", "SOMEKEY=good value"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -118,7 +118,7 @@ func TestRunEnvironmentPassThrough(t *testing.T) {
 	}
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "SOMEKEY"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", "-e", "SOMEKEY"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -130,7 +130,7 @@ func TestRunEnvironmentPrecedence(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-precedence")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "SOMEKEY=good value"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", "-e", "SOMEKEY=good value"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -142,7 +142,7 @@ func TestRunEnvironmentOnlyIf(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-only-if")
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "PLEASE_DONT_FAIL=okay"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", "-e", "PLEASE_DONT_FAIL=okay"})
 	err := command.Execute()
 
 	require.Nil(t, err)
@@ -185,7 +185,7 @@ func TestRunEnvironmentStarlark(t *testing.T) {
 	}
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "-e", "USER_VARIABLE=user variable value"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", "-e", "USER_VARIABLE=user variable value"})
 	err = command.Execute()
 
 	require.Nil(t, err)
@@ -200,7 +200,7 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple"})
 	command.SetOut(writer)
 	command.SetErr(writer)
 	err := command.Execute()
@@ -210,7 +210,7 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 	assert.Contains(t, buf.String(), "'from_starlark' script succeeded")
 }
 
-// TestRunContainerPull ensures that --docker-pull argument actually forces the container images to be pulled.
+// TestRunContainerPull ensures that container images are pulled by default.
 func TestRunContainerPull(t *testing.T) {
 	backend, err := containerbackend.New(containerbackend.BackendAuto)
 	if err != nil {
@@ -221,14 +221,14 @@ func TestRunContainerPull(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	testutil.TempChdirPopulatedWith(t, "testdata/docker-no-pull")
+	testutil.TempChdirPopulatedWith(t, "testdata/image-pulling-behavior")
 
 	// Create os.Stderr writer that duplicates it's output to buf
 	buf := bytes.NewBufferString("")
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "--container-pull"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple"})
 	command.SetOut(writer)
 	command.SetErr(writer)
 	err = command.Execute()
@@ -247,7 +247,7 @@ func TestRunTaskFilteringByLabel(t *testing.T) {
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "test VERSION:1.14"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", "test VERSION:1.14"})
 	command.SetOut(writer)
 	command.SetErr(writer)
 	err := command.Execute()
@@ -267,7 +267,7 @@ func TestRunNoCleanup(t *testing.T) {
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "--debug-no-cleanup"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", "--debug-no-cleanup"})
 	command.SetOut(writer)
 	command.SetErr(writer)
 	err := command.Execute()
@@ -311,7 +311,7 @@ func TestRunNonStandardExtension(t *testing.T) {
 	}
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple"})
 	err := command.Execute()
 
 	assert.Nil(t, err)
@@ -326,7 +326,7 @@ func TestRunPrebuiltImageTemplate(t *testing.T) {
 	image := fmt.Sprintf("testing.invalid/%s:latest", uuid.New().String())
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple", "--dockerfile-image-template=" + image})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", "--dockerfile-image-template=" + image})
 	err := command.Execute()
 	require.NoError(t, err)
 

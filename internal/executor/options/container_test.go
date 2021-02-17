@@ -5,12 +5,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/stretchr/testify/assert"
+	"runtime"
 	"testing"
 )
 
 func TestForcePull(t *testing.T) {
 	do := options.ContainerOptions{
-		Pull:         true,
+		EagerPull:    true,
 		NoPullImages: []string{"nonexistent.invalid/should/not/be:pulled"},
 	}
 
@@ -23,12 +24,14 @@ func TestForcePull(t *testing.T) {
 	// Shouldn't be pulled because it's blacklisted
 	assert.False(t, do.ShouldPullImage(ctx, backend, "nonexistent.invalid/should/not/be:pulled"))
 
-	if err := backend.ImagePull(ctx, "debian:latest"); err != nil {
+	// Should be pulled because EagerPull is set to true
+	image := canaryImage()
+
+	if err := backend.ImagePull(ctx, image); err != nil {
 		t.Fatal(err)
 	}
 
-	// Should be pulled because Pull is set to true
-	assert.True(t, do.ShouldPullImage(ctx, backend, "debian:latest"))
+	assert.True(t, do.ShouldPullImage(ctx, backend, image))
 }
 
 func TestNormalPull(t *testing.T) {
@@ -47,4 +50,23 @@ func TestNormalPull(t *testing.T) {
 
 	// Should be pulled because it doesn't exist
 	assert.True(t, do.ShouldPullImage(ctx, backend, "nonexistent.invalid/some/other:image"))
+
+	// Shouldn't be pulled because it does exist
+	image := canaryImage()
+
+	if err := backend.ImagePull(ctx, image); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.False(t, do.ShouldPullImage(ctx, backend, image))
+}
+
+func canaryImage() string {
+	result := "debian:latest"
+
+	if runtime.GOOS == "windows" {
+		result = "mcr.microsoft.com/windows/servercore:ltsc2019"
+	}
+
+	return result
 }

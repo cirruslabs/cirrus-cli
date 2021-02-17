@@ -19,7 +19,7 @@ func TestRun(t *testing.T) {
 	}
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "-v", "-o simple"})
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple"})
 	err := command.Execute()
 
 	assert.Nil(t, err)
