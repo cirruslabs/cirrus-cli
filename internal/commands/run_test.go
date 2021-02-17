@@ -228,7 +228,7 @@ func TestRunContainerPull(t *testing.T) {
 	writer := io.MultiWriter(os.Stderr, buf)
 
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple"})
+	command.SetArgs([]string{"run", "-v", "-o simple"})
 	command.SetOut(writer)
 	command.SetErr(writer)
 	err = command.Execute()
