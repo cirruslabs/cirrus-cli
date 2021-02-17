@@ -94,11 +94,7 @@ func NewParallels(mergedEnv map[string]string) *Parallels {
 }
 
 func (parallels *Parallels) Parse(node *node.Node) error {
-	if err := parallels.DefaultParser.Parse(node); err != nil {
-		return err
-	}
-
-	return nil
+	return parallels.DefaultParser.Parse(node)
 }
 
 func (parallels *Parallels) Proto() *api.Isolation_Parallels_ {

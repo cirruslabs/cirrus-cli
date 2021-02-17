@@ -81,11 +81,7 @@ func NewBehavior(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 }
 
 func (b *Behavior) Parse(node *node.Node) error {
-	if err := b.DefaultParser.Parse(node); err != nil {
-		return err
-	}
-
-	return nil
+	return b.DefaultParser.Parse(node)
 }
 
 func (b *Behavior) Proto() []*api.Command {

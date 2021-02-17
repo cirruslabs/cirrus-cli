@@ -34,11 +34,7 @@ func NewIsolation(mergedEnv map[string]string) *Isolation {
 }
 
 func (isolation *Isolation) Parse(node *node.Node) error {
-	if err := isolation.DefaultParser.Parse(node); err != nil {
-		return err
-	}
-
-	return nil
+	return isolation.DefaultParser.Parse(node)
 }
 
 func (isolation *Isolation) Proto() *api.Isolation {
