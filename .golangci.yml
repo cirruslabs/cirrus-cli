@@ -16,7 +16,6 @@ linters:
   - depguard
   - dogsled
   - dupl
-  - durationcheck
   - errcheck
   - exhaustive
   - exportloopref
@@ -110,6 +109,11 @@ linters:
 
     # Too restrictive defaults, plus there's already a gocyclo linter in place.
     - cyclop
+
+    # Gives false positives for textbook examples[1][2]
+    # [1]: https://github.com/charithe/durationcheck/issues/7
+    # [2]: https://golang.org/pkg/time/ (see "To convert an integer number of units to a Duration, multiply:")
+    - durationcheck
 
 issues:
   # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.
