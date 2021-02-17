@@ -12,7 +12,6 @@ linters:
   enable:
   - asciicheck
   - bodyclose
-  - cyclop
   - deadcode
   - depguard
   - dogsled
@@ -108,6 +107,9 @@ linters:
 
     # Advantages of using t.Helper() are too small to waste developer's cognitive stamina on it.
     - thelper
+
+    # Too restrictive defaults, plus there's already a gocyclo linter in place.
+    - cyclop
 
 issues:
   # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.
