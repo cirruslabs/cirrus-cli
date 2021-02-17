@@ -37,9 +37,15 @@ const (
 )
 
 func NewFromProto(anyInstance *any.Any, commands []*api.Command, logger logger.Lightweight) (abstract.Instance, error) {
+	if anyInstance == nil {
+		return nil, fmt.Errorf("%w: got nil instance which means it's probably not supported by the CLI",
+			ErrFailedToCreateInstance)
+	}
+
 	var dynamicInstance ptypes.DynamicAny
 	if err := ptypes.UnmarshalAny(anyInstance, &dynamicInstance); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: failed to unmarshal task's instance: %v",
+			ErrFailedToCreateInstance, err)
 	}
 
 	switch instance := dynamicInstance.Message.(type) {

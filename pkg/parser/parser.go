@@ -48,6 +48,7 @@ type Parser struct {
 	indexNumbering           int64
 	additionalInstances      map[string]protoreflect.MessageDescriptor
 	additionalTaskProperties []*descriptor.FieldDescriptorProto
+	missingInstancesAllowed  bool
 
 	tasksCountBeforeFiltering int64
 }
@@ -77,7 +78,8 @@ func New(opts ...Option) *Parser {
 	}))
 
 	// Register parsers
-	taskParser := task.NewTask(nil, nil, parser.additionalInstances, parser.additionalTaskProperties)
+	taskParser := task.NewTask(nil, nil, parser.additionalInstances, parser.additionalTaskProperties,
+		parser.missingInstancesAllowed)
 	pipeParser := task.NewDockerPipe(nil, nil, parser.additionalTaskProperties)
 	builderParser := task.NewDockerBuilder(nil, nil, parser.additionalTaskProperties)
 	parser.parsers = map[nameable.Nameable]parseable.Parseable{
@@ -102,6 +104,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 					p.boolevator,
 					p.additionalInstances,
 					p.additionalTaskProperties,
+					p.missingInstancesAllowed,
 				)
 			case *task.DockerPipe:
 				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.boolevator, p.additionalTaskProperties)
@@ -214,7 +217,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 		ensureCloneInstruction(protoTask)
 
 		// Provide unique labels for identically named tasks
-		uniqueLabelsForTask, err := uniqueLabels(protoTask, protoTasks, p.additionalInstances)
+		uniqueLabelsForTask, err := p.uniqueLabels(protoTask, protoTasks, p.additionalInstances)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", parsererror.ErrInternal, err)
 		}
@@ -412,6 +415,10 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 	serviceTasks := make(map[string]*api.Task)
 
 	for _, protoTask := range protoTasks {
+		if protoTask.Instance == nil && p.missingInstancesAllowed {
+			continue
+		}
+
 		var dynamicInstance ptypes.DynamicAny
 		err := ptypes.UnmarshalAny(protoTask.Instance, &dynamicInstance)
 
@@ -420,7 +427,7 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 		}
 
 		if err != nil {
-			return nil, fmt.Errorf("%w: %v", parsererror.ErrInternal, err)
+			return nil, fmt.Errorf("%w: failed to unmarshal task's instance: %v", parsererror.ErrInternal, err)
 		}
 
 		taskContainer, ok := dynamicInstance.Message.(*api.ContainerInstance)

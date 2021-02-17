@@ -1,6 +1,7 @@
 package build
 
 import (
+	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
@@ -17,6 +18,8 @@ import (
 )
 
 const defaultTaskTimeout = 60 * time.Minute
+
+var ErrFailedToCreateTask = errors.New("failed to create task")
 
 type Task struct {
 	ID          int64
@@ -37,7 +40,7 @@ func NewFromProto(protoTask *api.Task, logger logger.Lightweight) (*Task, error)
 	// Create an instance that this task will run on
 	inst, err := instance.NewFromProto(protoTask.Instance, protoTask.Commands, logger)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w %q: %v", ErrFailedToCreateTask, protoTask.Name, err)
 	}
 
 	// Intercept the first clone instruction and remove it

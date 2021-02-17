@@ -27,6 +27,8 @@ type Task struct {
 
 	onlyIfExpression string
 
+	missingInstancesAllowed bool
+
 	parseable.DefaultParser
 }
 
@@ -36,8 +38,11 @@ func NewTask(
 	boolevator *boolevator.Boolevator,
 	additionalInstances map[string]protoreflect.MessageDescriptor,
 	additionalTaskProperties []*descriptor.FieldDescriptorProto,
+	missingInstancesAllowed bool,
 ) *Task {
-	task := &Task{}
+	task := &Task{
+		missingInstancesAllowed: missingInstancesAllowed,
+	}
 
 	// Don't force required fields in schema
 	task.SetCollectible(true)
@@ -191,7 +196,7 @@ func (task *Task) Parse(node *node.Node) error {
 		return err
 	}
 
-	if task.proto.Instance == nil {
+	if task.proto.Instance == nil && !task.missingInstancesAllowed {
 		return node.ParserError("task has no instance attached")
 	}
 

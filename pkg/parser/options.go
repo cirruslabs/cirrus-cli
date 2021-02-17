@@ -37,3 +37,9 @@ func WithAdditionalTaskProperties(additionalTaskProperties []*descriptor.FieldDe
 		parser.additionalTaskProperties = additionalTaskProperties
 	}
 }
+
+func WithMissingInstancesAllowed() Option {
+	return func(parser *Parser) {
+		parser.missingInstancesAllowed = true
+	}
+}
