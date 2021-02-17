@@ -117,9 +117,5 @@ func evaluateCollectible(node *node.Node, field CollectibleField) error {
 		return nil
 	}
 
-	if err := field.onFound(children); err != nil {
-		return err
-	}
-
-	return nil
+	return field.onFound(children)
 }

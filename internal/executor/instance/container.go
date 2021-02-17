@@ -44,11 +44,7 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *runconfig.RunCon
 		WorkingVolumeName:    workingVolume.Name(),
 	}
 
-	if err := RunContainerizedAgent(ctx, config, params); err != nil {
-		return err
-	}
-
-	return nil
+	return RunContainerizedAgent(ctx, config, params)
 }
 
 func (inst *ContainerInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {

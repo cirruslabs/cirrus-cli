@@ -50,11 +50,7 @@ func NewPipeResources(mergedEnv map[string]string) *PipeResources {
 }
 
 func (res *PipeResources) Parse(node *node.Node) error {
-	if err := res.DefaultParser.Parse(node); err != nil {
-		return err
-	}
-
-	return nil
+	return res.DefaultParser.Parse(node)
 }
 
 func (res *PipeResources) Schema() *jsschema.Schema {

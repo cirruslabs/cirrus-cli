@@ -72,11 +72,7 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.
 	}
 
 	// Run the agent
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-
-	return nil
+	return cmd.Run()
 }
 
 func (pwi *PersistentWorkerInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {

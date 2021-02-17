@@ -72,11 +72,7 @@ func (tasksRPC *TasksRPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer
 		}
 	}
 
-	if err := stream.SendAndClose(&api.UploadLogsResponse{}); err != nil {
-		return err
-	}
-
-	return nil
+	return stream.SendAndClose(&api.UploadLogsResponse{})
 }
 
 func (tasksRPC *TasksRPC) Heartbeat(

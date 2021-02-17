@@ -9,14 +9,60 @@ linters-settings:
     default-signifies-exhaustive: true
 
 linters:
-  # Selecting all available presets effectively enables all linters.
-  presets:
-    - bugs
-    - complexity
-    - format
-    - performance
-    - style
-    - unused
+  enable:
+  - asciicheck
+  - bodyclose
+  - deadcode
+  - depguard
+  - dogsled
+  - dupl
+  - durationcheck
+  - errcheck
+  - exhaustive
+  - exportloopref
+  - gochecknoinits
+  - gocognit
+  - goconst
+  - gocritic
+  - gocyclo
+  - godot
+  - godox
+  - goerr113
+  - gofmt
+  - goheader
+  - golint
+  - gomnd
+  - gomodguard
+  - goprintffuncname
+  - gosec
+  - gosimple
+  - govet
+  - ifshort
+  - ineffassign
+  - interfacer
+  - lll
+  - makezero
+  - misspell
+  - nakedret
+  - nestif
+  - noctx
+  - nolintlint
+  - predeclared
+  - revive
+  - rowserrcheck
+  - scopelint
+  - sqlclosecheck
+  - staticcheck
+  - structcheck
+  - stylecheck
+  - testpackage
+  - tparallel
+  - typecheck
+  - unconvert
+  - unparam
+  - unused
+  - varcheck
+  - whitespace
 
   disable:
     # Messages like "struct of size 104 bytes could be of size 96 bytes" from a package
@@ -61,6 +107,9 @@ linters:
 
     # Advantages of using t.Helper() are too small to waste developer's cognitive stamina on it.
     - thelper
+
+    # Too restrictive defaults, plus there's already a gocyclo linter in place.
+    - cyclop
 
 issues:
   # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.
