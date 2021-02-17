@@ -13,10 +13,14 @@ import (
 	"strings"
 )
 
-func labels(
+func (p *Parser) labels(
 	task *api.Task,
 	additionalInstances map[string]protoreflect.MessageDescriptor,
 ) ([]string, error) {
+	if task.Instance == nil && p.missingInstancesAllowed {
+		return []string{}, nil
+	}
+
 	labels, err := instanceLabels(task.Instance, additionalInstances)
 	if err != nil {
 		return labels, err
@@ -139,7 +143,7 @@ func checkFieldIsSet(dynamicInstance *dynamicpb.Message, fd protoreflect.FieldDe
 	return fd != nil && dynamicInstance.Has(fd)
 }
 
-func uniqueLabels(
+func (p *Parser) uniqueLabels(
 	task *api.Task,
 	tasks []*api.Task,
 	additionalInstances map[string]protoreflect.MessageDescriptor,
@@ -162,7 +166,7 @@ func uniqueLabels(
 	commonLabels := make(map[string]int)
 
 	for _, similarlyNamedTask := range similarlyNamedTasks {
-		labels, err := labels(similarlyNamedTask, additionalInstances)
+		labels, err := p.labels(similarlyNamedTask, additionalInstances)
 		if err != nil {
 			return nil, err
 		}
@@ -178,8 +182,8 @@ func uniqueLabels(
 		}
 	}
 
-	// Get labels specific for this task
-	labels, err := labels(task, additionalInstances)
+	// Get labels specific for this task's instance
+	labels, err := p.labels(task, additionalInstances)
 	if err != nil {
 		return nil, err
 	}

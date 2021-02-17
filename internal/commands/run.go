@@ -73,7 +73,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// nolint:nestif // this will be a no-issue once we switch to Go parser
 	if !experimentalOldParser {
-		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment))
+		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), parser.WithMissingInstancesAllowed())
 		result, err := p.Parse(cmd.Context(), combinedYAML)
 		if err != nil {
 			if re, ok := err.(*parsererror.Rich); ok {
