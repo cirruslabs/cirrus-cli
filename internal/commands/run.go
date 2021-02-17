@@ -159,7 +159,7 @@ func newRunCmd() *cobra.Command {
 		fmt.Sprintf("container engine backend to use, either \"%s\", \"%s\" or \"%s\"",
 			containerbackend.BackendDocker, containerbackend.BackendPodman, containerbackend.BackendAuto))
 	cmd.PersistentFlags().BoolVar(&containerLazyPull, "container-lazy-pull", false,
-		"when starting containers only pull images that are not available locally")
+		"attempt to pull images only if they are missing locally (helpful in case of registry rate limits)")
 
 	// Container-related flags: Dockerfile as CI environment feature
 	cmd.PersistentFlags().StringVar(&dockerfileImageTemplate, "dockerfile-image-template",
