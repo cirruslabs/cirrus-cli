@@ -205,6 +205,21 @@ proto_task:
 	})
 }
 
+// TestAdditionalInstances ensures that complex dynamically provided instances are respected.
+func TestAdditionalWorkersEmptyInstances(t *testing.T) {
+	yamlConfig := `
+regular_task:
+  persistent_worker: {}
+
+proto_task:
+  proto_persistent_worker: {}
+`
+
+	evaluateTwoTasksIdentical(t, yamlConfig, map[string]string{
+		"proto_persistent_worker": "org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
+	})
+}
+
 func evaluateTwoTasksIdentical(t *testing.T, yamlConfig string, additionalInstancesMapping map[string]string) {
 	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
 		YamlConfig: yamlConfig,
