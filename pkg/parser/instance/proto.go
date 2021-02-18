@@ -323,13 +323,7 @@ func GuessPlatform(anyInstance *anypb.Any, descriptor protoreflect.MessageDescri
 
 	dynamicMessage := dynamicpb.NewMessage(descriptor)
 	_ = proto.Unmarshal(anyInstance.GetValue(), dynamicMessage)
-	platformField := GuessPlatformOfProtoMessage(dynamicMessage, descriptor)
-
-	if platformField != "" {
-		return platformField
-	}
-
-	return "linux"
+	return GuessPlatformOfProtoMessage(dynamicMessage, descriptor)
 }
 
 func GuessPlatformOfProtoMessage(message protoreflect.Message, descriptor protoreflect.MessageDescriptor) string {
@@ -340,6 +334,10 @@ func GuessPlatformOfProtoMessage(message protoreflect.Message, descriptor protor
 		valueDescription := platformField.Enum().Values().Get(int(value.Enum()))
 		enumName := string(valueDescription.Name())
 		return strings.ToLower(enumName)
+	}
+	if platformField != nil {
+		// there is platform field but it's not set so let's return the default
+		return "linux"
 	}
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
