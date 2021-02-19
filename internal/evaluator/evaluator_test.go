@@ -16,8 +16,10 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/structpb"
 	"net"
 	"testing"
+	"time"
 )
 
 func getClient(t *testing.T) api.CirrusConfigurationEvaluatorServiceClient {
@@ -50,12 +52,16 @@ func getClient(t *testing.T) api.CirrusConfigurationEvaluatorServiceClient {
 	return api.NewCirrusConfigurationEvaluatorServiceClient(conn)
 }
 
-func evaluateHelper(t *testing.T, request *api.EvaluateConfigRequest) (*api.EvaluateConfigResponse, error) {
+func evaluateConfigHelper(t *testing.T, request *api.EvaluateConfigRequest) (*api.EvaluateConfigResponse, error) {
 	return getClient(t).EvaluateConfig(context.Background(), request)
 }
 
 func schemaHelper(t *testing.T, request *api.JSONSchemaRequest) (*api.JSONSchemaResponse, error) {
 	return getClient(t).JSONSchema(context.Background(), request)
+}
+
+func evaluateFunctionHelper(t *testing.T, request *api.EvaluateFunctionRequest) (*api.EvaluateFunctionResponse, error) {
+	return getClient(t).EvaluateFunction(context.Background(), request)
 }
 
 // TestCrossDependencies ensures that tasks declared in YAML and generated from Starlark can reference each other.
@@ -92,7 +98,7 @@ def main(ctx):
     ]
 `
 
-	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
+	response, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{
 		YamlConfig:     yamlConfig,
 		StarlarkConfig: starlarkConfig,
 	})
@@ -135,7 +141,7 @@ def main(ctx):
 
 	// Try specifying a branch
 	env["CIRRUS_CHANGE_IN_REPO"] = "master"
-	_, err := evaluateHelper(t, &api.EvaluateConfigRequest{
+	_, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{
 		StarlarkConfig: starlarkConfig,
 		Environment:    env,
 	})
@@ -143,7 +149,7 @@ def main(ctx):
 
 	// Try specifying a commit currently pointed to by the master branch
 	env["CIRRUS_CHANGE_IN_REPO"] = "65368b9c"
-	_, err = evaluateHelper(t, &api.EvaluateConfigRequest{
+	_, err = evaluateConfigHelper(t, &api.EvaluateConfigRequest{
 		StarlarkConfig: starlarkConfig,
 		Environment:    env,
 	})
@@ -206,7 +212,7 @@ proto_task:
 }
 
 func evaluateTwoTasksIdentical(t *testing.T, yamlConfig string, additionalInstancesMapping map[string]string) {
-	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
+	response, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{
 		YamlConfig: yamlConfig,
 		AdditionalInstancesInfo: &api.AdditionalInstancesInfo{
 			Instances: additionalInstancesMapping,
@@ -216,6 +222,7 @@ func evaluateTwoTasksIdentical(t *testing.T, yamlConfig string, additionalInstan
 					protodesc.ToFileDescriptorProto(anypb.File_google_protobuf_any_proto),
 					protodesc.ToFileDescriptorProto(emptypb.File_google_protobuf_empty_proto),
 					protodesc.ToFileDescriptorProto(descriptorpb.File_google_protobuf_descriptor_proto),
+					protodesc.ToFileDescriptorProto(structpb.File_google_protobuf_struct_proto),
 				},
 			},
 		},
@@ -262,11 +269,61 @@ task:
   script: true
 `
 
-	response, err := evaluateHelper(t, &api.EvaluateConfigRequest{
+	response, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{
 		YamlConfig:    yamlConfig,
 		AffectedFiles: []string{"bin/internal/external"},
 		Environment:   map[string]string{"CIRRUS_PR": "1234"},
 	})
 	require.NoError(t, err)
 	require.Len(t, response.Tasks, 1)
+}
+
+func TestHook(t *testing.T) {
+	config := `def on_build_failure(ctx):
+  print("I'm alive!")
+  return [ctx.build.id, ctx.task.id]
+`
+
+	arguments, err := structpb.NewList([]interface{}{
+		map[string]interface{}{
+			"build": map[string]interface{}{
+				"id": 42,
+			},
+			"task": map[string]interface{}{
+				"id": 43,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := evaluateFunctionHelper(t, &api.EvaluateFunctionRequest{
+		StarlarkConfig: config,
+		FunctionName:   "on_build_failure",
+		Arguments:      arguments,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := []interface{}{
+		42,
+		43,
+	}
+	expectedStructpb, err := structpb.NewValue(expected)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Empty(t, res.ErrorMessage, "hook should evaluate successfully")
+
+	assert.Equal(t, string(res.OutputLogs), "I'm alive!\n", "hook should generate some debugging output")
+
+	assert.Greater(t, res.DurationNanos, int64(0),
+		"execution time doesn't seem to be counted properly")
+	assert.Less(t, res.DurationNanos, (time.Millisecond * 300).Nanoseconds(),
+		"execution time doesn't seem to be counted properly")
+
+	assert.Equal(t, expectedStructpb, res.Result, "hook should return a list of build and task IDs")
 }
