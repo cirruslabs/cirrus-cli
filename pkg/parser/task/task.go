@@ -151,11 +151,14 @@ func NewTask(
 				return err
 			}
 			task.proto.Instance = anyInstance
-			task.proto.Environment = environment.Merge(
-				task.proto.Environment, map[string]string{
-					"CIRRUS_OS": instance.GuessPlatform(anyInstance, scopedDescriptor),
-				},
-			)
+			platform := instance.GuessPlatform(anyInstance, scopedDescriptor)
+			if platform != "" {
+				task.proto.Environment = environment.Merge(
+					task.proto.Environment, map[string]string{
+						"CIRRUS_OS": platform,
+					},
+				)
+			}
 			return nil
 		})
 	}
