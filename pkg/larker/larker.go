@@ -136,10 +136,6 @@ func (larker *Larker) Hook(
 		return nil, fmt.Errorf("%w: empty hook name specified", ErrSanity)
 	}
 
-	if len(arguments) != 1 {
-		return nil, fmt.Errorf("%w: hook takes exactly 1 argument, got %d", ErrSanity, len(arguments))
-	}
-
 	outputLogsBuffer := &bytes.Buffer{}
 
 	thread := &starlark.Thread{
@@ -173,10 +169,17 @@ func (larker *Larker) Hook(
 			return
 		}
 
-		hookArgument, err := interfaceAsStarlarkValue(arguments[0])
-		if err != nil {
-			errCh <- fmt.Errorf("%w: hook's ctx argument should be JSON-compatible: %v", ErrHookFailed, err)
-			return
+		var args starlark.Tuple
+
+		for i, argument := range arguments {
+			argumentStarlark, err := interfaceAsStarlarkValue(argument)
+			if err != nil {
+				errCh <- fmt.Errorf("%w: %s()'s %d argument should be JSON-compatible: %v",
+					ErrHookFailed, name, i+1, err)
+				return
+			}
+
+			args = append(args, argumentStarlark)
 		}
 
 		// Run hook and measure time spent
@@ -188,7 +191,7 @@ func (larker *Larker) Hook(
 		//   * guarding starlark.Call() with runtime.LockOSThread()/runtime.UnlockOSThread()
 		hookStartTime := time.Now()
 
-		hookResult, err := starlark.Call(thread, hook, starlark.Tuple{hookArgument}, nil)
+		hookResult, err := starlark.Call(thread, hook, args, nil)
 		if err != nil {
 			errCh <- fmt.Errorf("%w: %v", ErrExecFailed, err)
 			return
