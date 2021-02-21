@@ -104,6 +104,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 	case err := <-errCh:
 		return "", err
 	case <-ctx.Done():
+		thread.Cancel(ctx.Err().Error())
 		return "", ctx.Err()
 	}
 
@@ -216,6 +217,7 @@ func (larker *Larker) Hook(
 	case err := <-errCh:
 		return &HookResult{ErrorMessage: err.Error()}, err
 	case <-ctx.Done():
+		thread.Cancel(ctx.Err().Error())
 		return nil, ctx.Err()
 	}
 }
