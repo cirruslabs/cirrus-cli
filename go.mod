@@ -8,7 +8,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
-	github.com/cirruslabs/cirrus-ci-agent v1.27.0
+	github.com/cirruslabs/cirrus-ci-agent v1.30.0
 	github.com/cirruslabs/echelon v1.4.1
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.1.0

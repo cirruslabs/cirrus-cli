@@ -18,7 +18,7 @@ func ConsumeSubCommands(cmd *cobra.Command, subCommands []*cobra.Command) *cobra
 	var hasValidSubcommands bool
 
 	for _, subCommand := range subCommands {
-		if cmd == nil {
+		if subCommand == nil {
 			continue
 		}
 

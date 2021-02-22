@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/structpb"
 	"net"
 	"strings"
 )
@@ -158,6 +159,34 @@ func (r *ConfigurationEvaluatorServiceServer) JSONSchema(
 	}
 
 	return &api.JSONSchemaResponse{Schema: string(schemaBytes)}, nil
+}
+
+func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
+	ctx context.Context,
+	request *api.EvaluateFunctionRequest,
+) (*api.EvaluateFunctionResponse, error) {
+	// Run Starlark hook
+	result, err := larker.New().Hook(ctx, request.StarlarkConfig, request.FunctionName, request.Arguments.AsSlice())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
+	}
+
+	response := &api.EvaluateFunctionResponse{
+		ErrorMessage:  result.ErrorMessage,
+		OutputLogs:    result.OutputLogs,
+		DurationNanos: result.DurationNanos,
+	}
+
+	// Convert Hook()'s interface{} return value to structpb-style value
+	resultAsStructpb, err := structpb.NewValue(result.Result)
+	if err != nil {
+		response.ErrorMessage = fmt.Sprintf("%s() hook returned JSON-incompatible value: %v", request.FunctionName, err)
+		return response, nil
+	}
+
+	response.Result = resultAsStructpb
+
+	return response, nil
 }
 
 func transformAdditionalInstances(
