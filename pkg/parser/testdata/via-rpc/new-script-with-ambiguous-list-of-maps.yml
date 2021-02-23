@@ -1,0 +1,8 @@
+container:
+  image: debian:latest
+
+task:
+  script:
+    - echo "TODO:   fix this"
+    - echo "TODO:and this"
+    - echo "TODO   :also this"
