@@ -1,0 +1,11 @@
+container:
+  image: debian:latest
+
+dummy_task:
+  script: true
+
+actual_task:
+  only_if: >
+    $CIRRUS_PR != '' ||
+    $CIRRUS_BRANCH == 'master' ||
+    $CIRRUS_BRANCH =~ 'release/.*'
