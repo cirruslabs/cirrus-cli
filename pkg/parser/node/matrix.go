@@ -110,7 +110,7 @@ func (node *Node) MergeMapsOrOverwrite(with *Node) {
 	_, withIsMap := with.Value.(*MapValue)
 	if nodeIsMap && withIsMap {
 		for _, child := range with.Children {
-			child.Parent = node.Parent
+			child.Parent = node
 			node.Children = append(node.Children, child)
 		}
 
@@ -120,7 +120,7 @@ func (node *Node) MergeMapsOrOverwrite(with *Node) {
 	node.Value = with.Value
 	node.Children = node.Children[:0]
 	for _, child := range with.Children {
-		child.Parent = node.Parent
+		child.Parent = node
 		node.Children = append(node.Children, child)
 	}
 }
