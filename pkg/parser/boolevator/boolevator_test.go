@@ -117,3 +117,9 @@ func TestManyIfs(t *testing.T) {
 		"$CIRRUS_BRANCH == 'stable'", env),
 	)
 }
+
+func TestComplexTag(t *testing.T) {
+	env := map[string]string{"CIRRUS_TAG": "v1.2.3-rc1"}
+
+	assert.True(t, evalHelper(t, "$CIRRUS_TAG =~ 'v\\d+(\\.\\d+){2}(-.*)?'", env))
+}
