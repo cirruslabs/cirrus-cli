@@ -141,22 +141,45 @@ func (node *Node) GetScript() ([]string, error) {
 			case *ScalarValue:
 				result = append(result, strings.Split(childValue.Value, "\n")...)
 			case *MapValue:
-				// support powershell trick
-				psValueNode := child.FindChild("ps")
-				if psValueNode == nil {
-					return nil, child.ParserError("script only supports 'ps: ' helper syntax for Powershell")
+				if psValueNode := child.FindChild("ps"); psValueNode != nil {
+					// Support PowerShell ("ps: ") syntax
+					psValue, err := psValueNode.GetStringValue()
+					if err != nil {
+						return nil, err
+					}
+
+					encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
+
+					valueBytes, err := encoder.Bytes([]byte(psValue))
+					if err != nil {
+						return nil, child.ParserError("failed to encode Powershell script: %v", err)
+					}
+
+					encodedValue := base64.StdEncoding.EncodeToString(valueBytes)
+
+					result = append(result, fmt.Sprintf("powershell.exe -NoLogo -EncodedCommand %s", encodedValue))
+				} else {
+					// Minimally support incorrect, but historically accepted syntax, when a list value is unquoted
+					// and is treated as map, but then converted to a scalar by the parser silently, e.g.:
+					//
+					// script:
+					//   - echo "TODO: fix   this"
+					//
+					// ...which is gets processed similar to:
+					//
+					// script:
+					//   - "echo \"TODO: fix this\""
+					//
+					// Note that the spaces surrounding the ':' character get lost as a result of this conversion.
+					for _, subChild := range child.Children {
+						scalarValue, ok := subChild.Value.(*ScalarValue)
+						if !ok {
+							return nil, subChild.ParserError("unsupported script syntax")
+						}
+
+						result = append(result, fmt.Sprintf("%s: %s", subChild.Name, scalarValue.Value))
+					}
 				}
-				psValue, err := psValueNode.GetStringValue()
-				if err != nil {
-					return nil, err
-				}
-				encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
-				valueBytes, err := encoder.Bytes([]byte(psValue))
-				if err != nil {
-					return nil, child.ParserError("failed to encode Powershell script: %v", err)
-				}
-				encodedValue := base64.StdEncoding.EncodeToString(valueBytes)
-				result = append(result, fmt.Sprintf("powershell.exe -NoLogo -EncodedCommand %s", encodedValue))
 			}
 		}
 
