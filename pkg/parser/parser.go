@@ -185,8 +185,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	resolveDependenciesShallow(tasks)
 
 	if len(tasks) == 0 {
-		return nil, fmt.Errorf("%w: configuration was parsed without errors, but no tasks were found",
-			parsererror.ErrBasic)
+		return &Result{}, nil
 	}
 
 	if err := validateDependenciesDeep(tasks); err != nil {

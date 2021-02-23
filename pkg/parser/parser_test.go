@@ -36,10 +36,6 @@ var validCases = []string{
 	"yaml-12-booleans-only",
 }
 
-var invalidCases = []string{
-	"invalid-empty.yml",
-}
-
 func absolutize(file string) string {
 	return filepath.Join("testdata", file)
 }
@@ -147,17 +143,6 @@ func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.
 		fmt.Print(diffString)
 
 		t.Fail()
-	}
-}
-
-func TestInvalidConfigs(t *testing.T) {
-	for _, invalidCase := range invalidCases {
-		file := invalidCase
-		t.Run(file, func(t *testing.T) {
-			p := parser.New()
-			_, err := p.ParseFromFile(context.Background(), absolutize(file))
-			assert.Error(t, err)
-		})
 	}
 }
 
