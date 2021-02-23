@@ -31,7 +31,7 @@ func AttachBaseTaskFields(
 	}
 
 	parser.CollectibleField("environment", schema.Map(""), func(node *node.Node) error {
-		taskEnv, err := node.GetEnvironment()
+		taskEnv, err := node.GetMapOrListOfMaps()
 		if err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ func AttachBaseTaskFields(
 	})
 
 	parser.CollectibleField("env", schema.Map(""), func(node *node.Node) error {
-		taskEnv, err := node.GetEnvironment()
+		taskEnv, err := node.GetMapOrListOfMaps()
 		if err != nil {
 			return err
 		}

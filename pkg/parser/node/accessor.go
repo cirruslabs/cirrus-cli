@@ -189,10 +189,12 @@ func (node *Node) GetScript() ([]string, error) {
 	}
 }
 
-func (node *Node) GetEnvironment() (map[string]string, error) {
+func (node *Node) GetMapOrListOfMaps() (map[string]string, error) {
 	switch node.Value.(type) {
+	case *MapValue:
+		return node.GetStringMapping()
 	case *ListValue:
-		accumulatedEnv := make(map[string]string)
+		result := make(map[string]string)
 
 		for _, child := range node.Children {
 			childEnv, err := child.GetStringMapping()
@@ -200,12 +202,10 @@ func (node *Node) GetEnvironment() (map[string]string, error) {
 				return nil, err
 			}
 
-			accumulatedEnv = environment.Merge(accumulatedEnv, childEnv)
+			result = environment.Merge(result, childEnv)
 		}
 
-		return accumulatedEnv, nil
-	case *MapValue:
-		return node.GetStringMapping()
+		return result, nil
 	default:
 		return nil, node.ParserError("expected a map or a list of maps")
 	}

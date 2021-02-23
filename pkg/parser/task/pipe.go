@@ -52,7 +52,7 @@ func NewDockerPipe(
 	}
 
 	pipe.CollectibleField("environment", schema.Map(""), func(node *node.Node) error {
-		pipeEnv, err := node.GetEnvironment()
+		pipeEnv, err := node.GetMapOrListOfMaps()
 		if err != nil {
 			return err
 		}
@@ -61,7 +61,7 @@ func NewDockerPipe(
 	})
 
 	pipe.CollectibleField("env", schema.Map(""), func(node *node.Node) error {
-		pipeEnv, err := node.GetEnvironment()
+		pipeEnv, err := node.GetMapOrListOfMaps()
 		if err != nil {
 			return err
 		}

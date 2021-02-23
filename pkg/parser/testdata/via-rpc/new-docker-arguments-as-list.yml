@@ -1,0 +1,7 @@
+task:
+  container:
+    dockerfile: Dockerfile
+    docker_arguments:
+      - A:
+      - C: D
+      - A: B
