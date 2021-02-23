@@ -1,0 +1,15 @@
+container:
+  image: debian:latest
+
+build_task:
+  matrix: &colors
+    - env:
+        COLOR: BLACK
+    - env:
+        COLOR: WHITE
+
+first_task: &first_task
+  matrix: *colors
+
+second_task:
+  <<: *first_task
