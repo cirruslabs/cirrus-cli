@@ -16,7 +16,15 @@ func selfFS() fs.FileSystem {
 	return github.New("cirruslabs", "cirrus-cli", "master", "")
 }
 
+func possiblySkip(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_INTERNAL_NO_GITHUB_API_TESTS"); ok {
+		t.SkipNow()
+	}
+}
+
 func TestStatFile(t *testing.T) {
+	possiblySkip(t)
+
 	stat, err := selfFS().Stat(context.Background(), "go.mod")
 	if err != nil {
 		t.Fatal(err)
@@ -26,6 +34,8 @@ func TestStatFile(t *testing.T) {
 }
 
 func TestStatDirectory(t *testing.T) {
+	possiblySkip(t)
+
 	stat, err := selfFS().Stat(context.Background(), ".")
 	if err != nil {
 		t.Fatal(err)
@@ -35,6 +45,8 @@ func TestStatDirectory(t *testing.T) {
 }
 
 func TestGetFile(t *testing.T) {
+	possiblySkip(t)
+
 	fileBytes, err := selfFS().Get(context.Background(), "go.mod")
 	if err != nil {
 		t.Fatal(err)
@@ -44,6 +56,8 @@ func TestGetFile(t *testing.T) {
 }
 
 func TestGetDirectory(t *testing.T) {
+	possiblySkip(t)
+
 	_, err := selfFS().Get(context.Background(), ".")
 
 	require.Error(t, err)
@@ -51,6 +65,8 @@ func TestGetDirectory(t *testing.T) {
 }
 
 func TestGetNonExistentFile(t *testing.T) {
+	possiblySkip(t)
+
 	_, err := selfFS().Get(context.Background(), "the-file-that-should-not-exist.txt")
 
 	require.Error(t, err)
@@ -58,6 +74,8 @@ func TestGetNonExistentFile(t *testing.T) {
 }
 
 func TestReadDirFile(t *testing.T) {
+	possiblySkip(t)
+
 	_, err := selfFS().ReadDir(context.Background(), "go.mod")
 
 	require.Error(t, err)
@@ -65,6 +83,8 @@ func TestReadDirFile(t *testing.T) {
 }
 
 func TestReadDirDirectory(t *testing.T) {
+	possiblySkip(t)
+
 	entries, err := selfFS().ReadDir(context.Background(), ".")
 	if err != nil {
 		t.Fatal(err)
@@ -74,6 +94,8 @@ func TestReadDirDirectory(t *testing.T) {
 }
 
 func TestReadDirNonExistentDirectory(t *testing.T) {
+	possiblySkip(t)
+
 	_, err := selfFS().ReadDir(context.Background(), "the-directory-that-should-not-exist")
 
 	require.Error(t, err)
