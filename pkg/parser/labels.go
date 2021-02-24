@@ -28,6 +28,10 @@ func (p *Parser) labels(
 
 	// Environment-specific labels
 	for key, value := range task.Environment {
+		if strings.HasPrefix(value, "ENCRYPTED[") && strings.HasSuffix(value, "]") {
+			continue
+		}
+
 		labels = append(labels, fmt.Sprintf("%s:%s", key, value))
 	}
 

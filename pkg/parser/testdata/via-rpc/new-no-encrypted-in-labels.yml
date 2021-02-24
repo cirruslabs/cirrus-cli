@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+task:
+  matrix:
+    - script: printenv
+      environment:
+        VARIABLE: ENCRYPTED[123]
+    - script: date
