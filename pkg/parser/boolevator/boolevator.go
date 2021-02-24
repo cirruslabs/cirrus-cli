@@ -33,26 +33,12 @@ func New(opts ...Option) *Boolevator {
 }
 
 func parseString(ctx context.Context, parser *gval.Parser) (gval.Evaluable, error) {
-	// Work around text/scanner stopping at newline when scanning strings
-	unescaped := strings.ReplaceAll(parser.TokenText(), "\\n", "\n")
-
-	unquoted := strings.Trim(unescaped, "'\"")
+	unquoted := strings.Trim(parser.TokenText(), "'\"")
 
 	return parser.Const(unquoted), nil
 }
 
 func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, error) {
-	// Work around cases when the expression is terminated with \n, e.g.:
-	//
-	// only_if: >
-	//   $CIRRUS_PR != '' ||
-	//   $CIRRUS_BRANCH == 'master' ||
-	//   $CIRRUS_BRANCH =~ 'release/.*'
-	expr = strings.TrimSpace(expr)
-
-	// Work around text/scanner stopping at newline when scanning strings
-	expr = strings.ReplaceAll(expr, "\n", "\\n")
-
 	// Ensure that we keep the env as is
 	localEnv := make(map[string]string)
 	for key, value := range env {
