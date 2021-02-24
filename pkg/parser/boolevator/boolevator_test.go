@@ -63,7 +63,13 @@ func TestRegEx(t *testing.T) {
 }
 
 func TestRegExMultiline(t *testing.T) {
-	assert.True(t, evalHelper(t, "'foo\nbar\baz' =~ '.*bar.*'", nil))
+	changelog := `[tests] added tests
+[documentation] documented API
+[fixes] fixed bugs
+`
+
+	assert.True(t, evalHelper(t, "$CHANGELOG =~ '.*\\[documentation\\].*'",
+		map[string]string{"CHANGELOG": changelog}))
 }
 
 func TestPrRegEx(t *testing.T) {

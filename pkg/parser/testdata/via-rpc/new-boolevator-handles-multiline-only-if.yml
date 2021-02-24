@@ -7,5 +7,9 @@ dummy_task:
 actual_task:
   only_if: >
     $CIRRUS_PR != '' ||
-    $CIRRUS_BRANCH == 'master' ||
-    $CIRRUS_BRANCH =~ 'release/.*'
+    ( $CIRRUS_REPO_NAME == 'cirrus-cli' &&
+      (
+      $CIRRUS_BRANCH == 'master' ||
+      $CIRRUS_BRANCH =~ 'release/.*'
+      )
+    )
