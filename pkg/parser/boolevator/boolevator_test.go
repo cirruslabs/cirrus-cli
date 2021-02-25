@@ -82,6 +82,11 @@ func TestTagRegEx(t *testing.T) {
 	assert.True(t, evalHelper(t, "'v2.0' =~ 'v\\d+\\.\\d+.*'", nil))
 }
 
+func TestRegExNoFailFast(t *testing.T) {
+	assert.False(t, evalHelper(t, "'not a regexp :)' =~ '.*actual regexp.*'", nil))
+	assert.True(t, evalHelper(t, "'not a regexp :)' !=~ '.*actual regexp.*'", nil))
+}
+
 func TestIn(t *testing.T) {
 	assert.True(t, evalHelper(t, "'pull' in 'pull/123'", nil))
 	assert.False(t, evalHelper(t, "'pull' in 'pr/123'", nil))
