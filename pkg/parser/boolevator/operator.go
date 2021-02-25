@@ -83,15 +83,10 @@ func opRegexEquals(a, b interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	equalsOneWay, err := regexp.MatchString(PrepareRegexp(a.(string)), b.(string))
-	if err != nil {
-		return false, err
-	}
-
-	equalsOtherWay, err := regexp.MatchString(PrepareRegexp(b.(string)), a.(string))
-	if err != nil {
-		return false, err
-	}
+	// We don't check for the errors here because we don't know
+	// which operand (left or right) is the actual regular expression
+	equalsOneWay, _ := regexp.MatchString(PrepareRegexp(a.(string)), b.(string))
+	equalsOtherWay, _ := regexp.MatchString(PrepareRegexp(b.(string)), a.(string))
 
 	return strconv.FormatBool(equalsOneWay || equalsOtherWay), nil
 }
