@@ -1,0 +1,5 @@
+macos_instance:
+  image: big-sur-base
+
+task:
+  script: true
