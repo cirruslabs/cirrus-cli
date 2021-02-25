@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
+	"github.com/cirruslabs/cirrus-cli/internal/evaluator"
 	eenvironment "github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/executorservice"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/spf13/cobra"
+	"io"
 	"strings"
 )
 
@@ -24,6 +27,27 @@ var environment []string
 var experimentalOldParser bool
 
 var yaml bool
+
+func additionalInstancesOption(stderr io.Writer) parser.Option {
+	// Try to retrieve additional instances from the Cirrus Cloud
+	additionalInstances, err := executorservice.New().SupportedInstances()
+	if err != nil {
+		_, _ = fmt.Fprintln(stderr, "failed to retrieve additional instances supported by the Cirrus Cloud,"+
+			"their validation will not be performed")
+
+		return parser.WithMissingInstancesAllowed()
+	}
+
+	transformedInstances, err := evaluator.TransformAdditionalInstances(additionalInstances)
+	if err != nil {
+		_, _ = fmt.Fprintln(stderr, "failed to parse additional instances from the Cirrus Cloud,"+
+			"their validation will not be performed")
+
+		return parser.WithMissingInstancesAllowed()
+	}
+
+	return parser.WithAdditionalInstances(transformedInstances)
+}
 
 func validate(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
@@ -67,7 +91,7 @@ func validate(cmd *cobra.Command, args []string) error {
 
 	// nolint:nestif // this will be a no-issue once we switch to Go parser
 	if !experimentalOldParser {
-		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), parser.WithMissingInstancesAllowed())
+		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), additionalInstancesOption(cmd.ErrOrStderr()))
 		result, err := p.Parse(cmd.Context(), configuration)
 		if err != nil {
 			if re, ok := err.(*parsererror.Rich); ok {

@@ -103,7 +103,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		yamlConfigs = append(yamlConfigs, generatedYamlConfig)
 	}
 
-	additionalInstances, err := transformAdditionalInstances(request.AdditionalInstancesInfo)
+	additionalInstances, err := TransformAdditionalInstances(request.AdditionalInstancesInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (r *ConfigurationEvaluatorServiceServer) JSONSchema(
 	ctx context.Context,
 	request *api.JSONSchemaRequest,
 ) (*api.JSONSchemaResponse, error) {
-	additionalInstances, err := transformAdditionalInstances(request.AdditionalInstancesInfo)
+	additionalInstances, err := TransformAdditionalInstances(request.AdditionalInstancesInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 	return response, nil
 }
 
-func transformAdditionalInstances(
+func TransformAdditionalInstances(
 	additionalInstancesInfo *api.AdditionalInstancesInfo,
 ) (map[string]protoreflect.MessageDescriptor, error) {
 	additionalInstances := make(map[string]protoreflect.MessageDescriptor)
