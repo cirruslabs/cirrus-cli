@@ -295,6 +295,25 @@ task:
 	require.Len(t, response.Tasks, 1)
 }
 
+func TestRichErrors(t *testing.T) {
+	yamlConfig := `container:
+  image:
+    should_be: a_string
+
+task:
+  script: true
+`
+
+	response, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{YamlConfig: yamlConfig})
+	require.NoError(t, err)
+	require.NotNil(t, response.Error)
+
+	assert.EqualValues(t, response.Error.Message, "not a scalar value")
+	assert.NotEmpty(t, response.Error.ProcessedConfig)
+	assert.EqualValues(t, response.Error.Line, 3)
+	assert.EqualValues(t, response.Error.Column, 5)
+}
+
 func TestHook(t *testing.T) {
 	config := `def on_build_failure(ctx):
   print("I'm alive!")

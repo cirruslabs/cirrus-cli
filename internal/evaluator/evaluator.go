@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -119,6 +120,17 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 
 	result, err := p.Parse(ctx, strings.Join(yamlConfigs, "\n"))
 	if err != nil {
+		if re, ok := err.(*parsererror.Rich); ok {
+			return &api.EvaluateConfigResponse{
+				Error: &api.RichError{
+					Message:         re.Message(),
+					ProcessedConfig: re.Config(),
+					Line:            uint64(re.Line()),
+					Column:          uint64(re.Column()),
+				},
+			}, nil
+		}
+
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
