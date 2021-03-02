@@ -1,0 +1,13 @@
+pipe:
+  matrix:
+    - env:
+        VAR1: A
+    - env:
+        VAR2: B
+    - env:
+        VAR2: C
+  steps:
+    - image: build-image
+      build_script: script.sh
+    - image: test-image
+      test_script: test.sh

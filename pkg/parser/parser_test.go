@@ -416,7 +416,7 @@ func TestRichErrors(t *testing.T) {
 		{"testdata/rich-errors-accessor.yml", parsererror.NewRich(6, 5,
 			"expected a scalar value or a list with scalar values")},
 		{"testdata/rich-errors-matrix.yml", parsererror.NewRich(4, 7,
-			"matrix can be defined only under a task or docker_builder")},
+			"matrix can be defined only under a task, docker_builder or pipe")},
 	}
 
 	for _, testCase := range testCases {
