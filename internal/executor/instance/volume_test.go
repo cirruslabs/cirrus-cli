@@ -20,12 +20,15 @@ func TestWorkingVolumeSmoke(t *testing.T) {
 
 	backend := testutil.ContainerBackendFromEnv(t)
 
-	desiredVolumeName := fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String())
-	volume, err := instance.CreateWorkingVolume(
+	identifier := uuid.New().String()
+	agentVolumeName := fmt.Sprintf("cirrus-agent-volume-%s", identifier)
+	workingVolumeName := fmt.Sprintf("cirrus-working-volume-%s", identifier)
+	agentVolume, workingVolume, err := instance.CreateWorkingVolume(
 		context.Background(),
 		backend,
 		options.ContainerOptions{},
-		desiredVolumeName,
+		agentVolumeName,
+		workingVolumeName,
 		dir,
 		false,
 		platform.DefaultAgentVersion,
@@ -35,7 +38,10 @@ func TestWorkingVolumeSmoke(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := volume.Close(backend); err != nil {
+	if err := agentVolume.Close(backend); err != nil {
+		t.Fatal(err)
+	}
+	if err := workingVolume.Close(backend); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -45,12 +51,16 @@ func TestCleanupOnFailure(t *testing.T) {
 	// Create a container backend client
 	backend := testutil.ContainerBackendFromEnv(t)
 
-	desiredVolumeName := fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String())
-	_, err := instance.CreateWorkingVolume(
+	identifier := uuid.New().String()
+	agentVolumeName := fmt.Sprintf("cirrus-agent-volume-%s", identifier)
+	workingVolumeName := fmt.Sprintf("cirrus-working-volume-%s", identifier)
+
+	_, _, err := instance.CreateWorkingVolume(
 		context.Background(),
 		testutil.ContainerBackendFromEnv(t),
 		options.ContainerOptions{},
-		desiredVolumeName,
+		agentVolumeName,
+		workingVolumeName,
 		"/non-existent",
 		false,
 		platform.DefaultAgentVersion,
@@ -58,7 +68,11 @@ func TestCleanupOnFailure(t *testing.T) {
 	)
 	require.Error(t, err)
 
-	err = backend.VolumeInspect(context.Background(), desiredVolumeName)
+	err = backend.VolumeInspect(context.Background(), agentVolumeName)
+	require.Error(t, err)
+	require.True(t, errors.Is(containerbackend.ErrNotFound, err))
+
+	err = backend.VolumeInspect(context.Background(), workingVolumeName)
 	require.Error(t, err)
 	require.True(t, errors.Is(containerbackend.ErrNotFound, err))
 }

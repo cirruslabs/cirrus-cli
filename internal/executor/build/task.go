@@ -38,7 +38,8 @@ type Task struct {
 
 func NewFromProto(protoTask *api.Task, logger logger.Lightweight) (*Task, error) {
 	// Create an instance that this task will run on
-	inst, err := instance.NewFromProto(protoTask.Instance, protoTask.Commands, logger)
+	inst, err := instance.NewFromProto(protoTask.Instance, protoTask.Commands, protoTask.Environment["CIRRUS_WORKING_DIR"],
+		logger)
 	if err != nil {
 		return nil, fmt.Errorf("%w %q: %v", ErrFailedToCreateTask, protoTask.Name, err)
 	}

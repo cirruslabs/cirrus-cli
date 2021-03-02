@@ -7,7 +7,6 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
-	"path"
 )
 
 var ErrPipeCreationFailed = errors.New("failed to create pipe instance")
@@ -18,9 +17,10 @@ type PipeStage struct {
 }
 
 type PipeInstance struct {
-	Stages []PipeStage
-	CPU    float32
-	Memory uint32
+	Stages           []PipeStage
+	CPU              float32
+	Memory           uint32
+	CustomWorkingDir string
 }
 
 // PipeStagesFromCommands uses image hints in commands to build the stages.
@@ -55,19 +55,26 @@ func PipeStagesFromCommands(commands []*api.Command) ([]PipeStage, error) {
 func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
 	platform := platform.NewUnix()
 
-	workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config, platform)
+	agentVolume, workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config, platform)
 	if err != nil {
 		return err
 	}
 	defer func() {
 		if config.ContainerOptions.NoCleanup {
+			config.Logger.Infof("not cleaning up agent volume %s, don't forget to remove it with \"docker volume rm %s\"",
+				agentVolume.Name(), agentVolume.Name())
 			config.Logger.Infof("not cleaning up working volume %s, don't forget to remove it with \"docker volume rm %s\"",
 				workingVolume.Name(), workingVolume.Name())
 
 			return
 		}
 
-		cleanupErr := workingVolume.Close(config.ContainerBackend)
+		cleanupErr := agentVolume.Close(config.ContainerBackend)
+		if err == nil {
+			err = cleanupErr
+		}
+
+		cleanupErr = workingVolume.Close(config.ContainerBackend)
 		if err == nil {
 			err = cleanupErr
 		}
@@ -81,7 +88,9 @@ func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (e
 			CommandFrom:       stage.CommandFrom,
 			CommandTo:         stage.CommandTo,
 			Platform:          platform,
+			AgentVolumeName:   agentVolume.Name(),
 			WorkingVolumeName: workingVolume.Name(),
+			WorkingDirectory:  pi.WorkingDirectory(config.ProjectDir, config.DirtyMode),
 		}
 
 		if err := RunContainerizedAgent(ctx, config, params); err != nil {
@@ -93,5 +102,9 @@ func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (e
 }
 
 func (pi *PipeInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {
-	return path.Join(platform.NewUnix().WorkingVolumeMountpoint(), platform.WorkingVolumeWorkingDir)
+	if pi.CustomWorkingDir != "" {
+		return pi.CustomWorkingDir
+	}
+
+	return platform.NewUnix().GenericWorkingDir()
 }
