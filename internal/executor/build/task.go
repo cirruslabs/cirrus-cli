@@ -38,7 +38,13 @@ type Task struct {
 }
 
 func NewFromProto(protoTask *api.Task, logger logger.Lightweight) (*Task, error) {
-	customWorkingDir := expander.ExpandEnvironmentVariables("$CIRRUS_WORKING_DIR", protoTask.Environment)
+	const cirrusWorkingDirVariable = "${CIRRUS_WORKING_DIR}"
+
+	customWorkingDir := expander.ExpandEnvironmentVariables(cirrusWorkingDirVariable, protoTask.Environment)
+	if customWorkingDir == cirrusWorkingDirVariable {
+		// No expansion was done
+		customWorkingDir = ""
+	}
 
 	// Create an instance that this task will run on
 	inst, err := instance.NewFromProto(protoTask.Instance, protoTask.Commands, customWorkingDir, logger)
