@@ -1,8 +1,11 @@
+env:
+  BASE_DIR: /some
+
 task:
   container:
     image: alpine:latest
   env:
-    CIRRUS_WORKING_DIR: /some/non/default/directory
+    CIRRUS_WORKING_DIR: $BASE_DIR/non/default/directory
   test_script:
     - pwd
     - test "$PWD" = "$CIRRUS_WORKING_DIR"
