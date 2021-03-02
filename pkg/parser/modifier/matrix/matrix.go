@@ -18,7 +18,9 @@ func singlePass(inputTree *node.Node) error {
 
 	// Ensure this matrix node is attached to either a task or a docker_builder
 	taskNode := matrixNode.FindParent(func(nodeName string) bool {
-		return strings.HasSuffix(nodeName, "task") || strings.HasSuffix(nodeName, "docker_builder") || strings.HasSuffix(nodeName, "pipe")
+		return strings.HasSuffix(nodeName, "task") ||
+			strings.HasSuffix(nodeName, "docker_builder") ||
+			strings.HasSuffix(nodeName, "pipe")
 	})
 	if taskNode == nil {
 		return matrixNode.ParserError("matrix can be defined only under a task, docker_builder or pipe")
