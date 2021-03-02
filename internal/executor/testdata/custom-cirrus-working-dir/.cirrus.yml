@@ -7,3 +7,4 @@ task:
     - pwd
     - test "$PWD" = "$CIRRUS_WORKING_DIR"
     - test "$PWD" = "/some/non/default/directory"
+    - grep -q "CIRRUS_WORKING_DIR: /some/non/default/directory" .cirrus.yml
