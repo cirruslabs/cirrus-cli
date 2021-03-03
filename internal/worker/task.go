@@ -39,14 +39,16 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			return
 		}
 
-		if err := inst.Run(taskCtx, &runconfig.RunConfig{
+		config := runconfig.RunConfig{
 			ProjectDir:        "",
 			ContainerEndpoint: worker.rpcEndpoint,
 			DirectEndpoint:    worker.rpcEndpoint,
 			ServerSecret:      agentAwareTask.ServerSecret,
 			ClientSecret:      agentAwareTask.ClientSecret,
 			TaskID:            agentAwareTask.TaskId,
-		}); err != nil {
+		}
+		config.SetAgentVersion(agentAwareTask.AgentVersion)
+		if err := inst.Run(taskCtx, &config); err != nil {
 			worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
 
 			_, err := worker.rpcClient.TaskFailed(taskCtx, &api.TaskFailedRequest{
