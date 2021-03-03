@@ -187,7 +187,7 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 }
 
 func (parallels *Parallels) WorkingDirectory(projectDir string, dirtyMode bool) string {
-	return platform.NewUnix().WorkingVolumeMountpoint() + platform.WorkingVolumeWorkingDir
+	return platform.NewUnix().GenericWorkingDir()
 }
 
 func TimeSyncCommand(t time.Time) string {

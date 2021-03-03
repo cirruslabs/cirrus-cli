@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/expander"
 	"strconv"
 	"strings"
 	"sync"
@@ -37,8 +38,16 @@ type Task struct {
 }
 
 func NewFromProto(protoTask *api.Task, logger logger.Lightweight) (*Task, error) {
+	const cirrusWorkingDirVariable = "${CIRRUS_WORKING_DIR}"
+
+	customWorkingDir := expander.ExpandEnvironmentVariables(cirrusWorkingDirVariable, protoTask.Environment)
+	if customWorkingDir == cirrusWorkingDirVariable {
+		// No expansion was done
+		customWorkingDir = ""
+	}
+
 	// Create an instance that this task will run on
-	inst, err := instance.NewFromProto(protoTask.Instance, protoTask.Commands, logger)
+	inst, err := instance.NewFromProto(protoTask.Instance, protoTask.Commands, customWorkingDir, logger)
 	if err != nil {
 		return nil, fmt.Errorf("%w %q: %v", ErrFailedToCreateTask, protoTask.Name, err)
 	}

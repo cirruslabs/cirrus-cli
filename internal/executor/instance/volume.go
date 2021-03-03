@@ -26,19 +26,26 @@ func CreateWorkingVolumeFromConfig(
 	ctx context.Context,
 	config *runconfig.RunConfig,
 	platform platform.Platform,
-) (*Volume, error) {
+) (*Volume, *Volume, error) {
 	initLogger := config.Logger.Scoped("Preparing execution environment...")
 	initLogger.Infof("Preparing volume to work with...")
-	desiredVolumeName := fmt.Sprintf("cirrus-working-volume-%s", uuid.New().String())
-	v, err := CreateWorkingVolume(ctx, config.ContainerBackend, config.ContainerOptions, desiredVolumeName,
-		config.ProjectDir, config.DirtyMode, config.GetAgentVersion(), platform)
+
+	identifier := uuid.New().String()
+	agentVolumeName := fmt.Sprintf("cirrus-agent-volume-%s", identifier)
+	workingVolumeName := fmt.Sprintf("cirrus-working-volume-%s", identifier)
+
+	agentVolume, workingVolume, err := CreateWorkingVolume(ctx, config.ContainerBackend, config.ContainerOptions,
+		agentVolumeName, workingVolumeName, config.ProjectDir, config.DirtyMode, config.GetAgentVersion(), platform)
 	if err != nil {
 		initLogger.Warnf("Failed to create a volume from working directory: %v", err)
 		initLogger.Finish(false)
-		return nil, err
+
+		return nil, nil, err
 	}
+
 	initLogger.Finish(true)
-	return v, err
+
+	return agentVolume, workingVolume, err
 }
 
 // CreateWorkingVolume returns name of the working volume created according to the specification in arguments.
@@ -46,47 +53,61 @@ func CreateWorkingVolume(
 	ctx context.Context,
 	backend containerbackend.ContainerBackend,
 	containerOptions options.ContainerOptions,
-	name string,
+	agentVolumeName string,
+	workingVolumeName string,
 	projectDir string,
 	dontPopulate bool,
 	agentVersion string,
 	platform platform.Platform,
-) (vol *Volume, err error) {
-	agentImage := platform.AgentImage(agentVersion)
+) (agentVolume *Volume, vol *Volume, err error) {
+	agentImage := platform.ContainerAgentImage(agentVersion)
 
 	if err := pullHelper(ctx, agentImage, backend, containerOptions, nil); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
+		return nil, nil, fmt.Errorf("%w: when pulling agent image: %v", ErrVolumeCreationFailed, err)
 	}
 
-	if err := backend.VolumeCreate(ctx, name); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
+	if err := backend.VolumeCreate(ctx, agentVolumeName); err != nil {
+		return nil, nil, fmt.Errorf("%w: when creating agent volume: %v", ErrVolumeCreationFailed, err)
+	}
+	if err := backend.VolumeCreate(ctx, workingVolumeName); err != nil {
+		return nil, nil, fmt.Errorf("%w: when creating working volume: %v", ErrVolumeCreationFailed, err)
 	}
 	defer func() {
 		if err != nil {
-			_ = backend.VolumeDelete(ctx, name)
+			_ = backend.VolumeDelete(ctx, agentVolumeName)
+			_ = backend.VolumeDelete(ctx, workingVolumeName)
 		}
 	}()
+
+	copyCommand := platform.ContainerCopyCommand(!dontPopulate)
 
 	// Create and start a helper container that will copy the project directory (if needed) and the agent
 	// into the working volume
 	input := &containerbackend.ContainerCreateInput{
 		Image:   agentImage,
-		Command: platform.CopyCommand(!dontPopulate),
+		Command: copyCommand.Command,
 		Mounts: []containerbackend.ContainerMount{
 			{
 				Type:   containerbackend.MountTypeVolume,
-				Source: name,
-				Target: platform.WorkingVolumeMountpoint(),
+				Source: agentVolumeName,
+				Target: copyCommand.CopiesAgentToDir,
 			},
 		},
 	}
 
+	// When using non-dirty mode we need to do a full copy of the project directory
 	if !dontPopulate {
 		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
 			Type:     containerbackend.MountTypeBind,
 			Source:   projectDir,
-			Target:   platform.ProjectDirMountpoint(),
+			Target:   copyCommand.CopiesProjectFromDir,
 			ReadOnly: true,
+		})
+
+		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
+			Type:   containerbackend.MountTypeVolume,
+			Source: workingVolumeName,
+			Target: copyCommand.CopiesProjectToDir,
 		})
 
 		if runtime.GOOS == "linux" {
@@ -99,7 +120,7 @@ func CreateWorkingVolume(
 	containerName := fmt.Sprintf("cirrus-helper-container-%s", uuid.New().String())
 	cont, err := backend.ContainerCreate(ctx, input, containerName)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
+		return nil, nil, fmt.Errorf("%w: when creating helper container: %v", ErrVolumeCreationFailed, err)
 	}
 	defer func() {
 		removeErr := backend.ContainerDelete(ctx, cont.ID)
@@ -110,7 +131,7 @@ func CreateWorkingVolume(
 
 	err = backend.ContainerStart(ctx, cont.ID)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
+		return nil, nil, fmt.Errorf("%w: when starting helper container: %v", ErrVolumeCreationFailed, err)
 	}
 
 	// Wait for the container to finish copying
@@ -118,16 +139,14 @@ func CreateWorkingVolume(
 	select {
 	case res := <-waitChan:
 		if res.StatusCode != 0 {
-			return nil, fmt.Errorf("%w: container exited with %v error and exit code %d",
+			return nil, nil, fmt.Errorf("%w: helper container exited with %v error and exit code %d",
 				ErrVolumeCreationFailed, res.Error, res.StatusCode)
 		}
 	case err := <-errChan:
-		return nil, fmt.Errorf("%w: %v", ErrVolumeCreationFailed, err)
+		return nil, nil, fmt.Errorf("%w: while waiting for helper container: %v", ErrVolumeCreationFailed, err)
 	}
 
-	return &Volume{
-		name: name,
-	}, nil
+	return &Volume{agentVolumeName}, &Volume{workingVolumeName}, nil
 }
 
 func (volume *Volume) Name() string {

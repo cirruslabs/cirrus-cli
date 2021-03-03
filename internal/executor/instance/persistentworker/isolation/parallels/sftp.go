@@ -19,7 +19,7 @@ func uploadAgent(ctx context.Context, cli *ssh.Client, agentOS, agentVersion str
 	defer sftpCli.Close()
 
 	// Ensure working directory exists
-	if err := sftpCli.MkdirAll(platform.NewUnix().WorkingVolumeMountpoint()); err != nil {
+	if err := sftpCli.MkdirAll(platform.NewUnix().CirrusDir()); err != nil {
 		return "", err
 	}
 
@@ -34,7 +34,7 @@ func uploadAgent(ctx context.Context, cli *ssh.Client, agentOS, agentVersion str
 	}
 
 	// Create agent's binary remotely
-	remoteAgentPath := path.Join(platform.NewUnix().WorkingVolumeMountpoint(), "cirrus-ci-agent")
+	remoteAgentPath := path.Join(platform.NewUnix().CirrusDir(), "cirrus-ci-agent")
 	remoteAgentFile, err := sftpCli.Create(remoteAgentPath)
 	if err != nil {
 		return "", err

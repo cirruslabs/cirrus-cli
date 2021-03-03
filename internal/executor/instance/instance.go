@@ -36,7 +36,12 @@ const (
 	nano = 1_000_000_000
 )
 
-func NewFromProto(anyInstance *any.Any, commands []*api.Command, logger logger.Lightweight) (abstract.Instance, error) {
+func NewFromProto(
+	anyInstance *any.Any,
+	commands []*api.Command,
+	customWorkingDir string,
+	logger logger.Lightweight,
+) (abstract.Instance, error) {
 	if anyInstance == nil {
 		return nil, fmt.Errorf("%w: got nil instance which means it's probably not supported by the CLI",
 			ErrFailedToCreateInstance)
@@ -68,6 +73,7 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command, logger logger.L
 			Memory:               instance.Memory,
 			AdditionalContainers: instance.AdditionalContainers,
 			Platform:             containerPlatform,
+			CustomWorkingDir:     customWorkingDir,
 		}, nil
 	case *api.PipeInstance:
 		stages, err := PipeStagesFromCommands(commands)
@@ -76,9 +82,10 @@ func NewFromProto(anyInstance *any.Any, commands []*api.Command, logger logger.L
 		}
 
 		return &PipeInstance{
-			CPU:    instance.Cpu,
-			Memory: instance.Memory,
-			Stages: stages,
+			CPU:              instance.Cpu,
+			Memory:           instance.Memory,
+			Stages:           stages,
+			CustomWorkingDir: customWorkingDir,
 		}, nil
 	case *api.PrebuiltImageInstance:
 		// PrebuiltImageInstance is currently missing the domain part to craft the full image name
@@ -120,7 +127,9 @@ type Params struct {
 	AdditionalContainers   []*api.AdditionalContainer
 	CommandFrom, CommandTo string
 	Platform               platform.Platform
+	AgentVolumeName        string
 	WorkingVolumeName      string
+	WorkingDirectory       string
 }
 
 func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, params *Params) error {
@@ -150,7 +159,7 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 	input := containerbackend.ContainerCreateInput{
 		Image: params.Image,
 		Entrypoint: []string{
-			params.Platform.AgentBinaryPath(),
+			params.Platform.ContainerAgentPath(),
 			"-api-endpoint",
 			config.ContainerEndpoint,
 			"-server-token",
@@ -168,8 +177,8 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 		Mounts: []containerbackend.ContainerMount{
 			{
 				Type:   containerbackend.MountTypeVolume,
-				Source: params.WorkingVolumeName,
-				Target: params.Platform.WorkingVolumeMountpoint(),
+				Source: params.AgentVolumeName,
+				Target: params.Platform.ContainerAgentVolumeDir(),
 			},
 		},
 		Resources: containerbackend.ContainerResources{
@@ -208,12 +217,19 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 		})
 	}
 
-	// In dirty mode we mount the project directory in read-write mode
 	if config.DirtyMode {
+		// In dirty mode we mount the project directory from host
 		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
 			Type:   containerbackend.MountTypeBind,
 			Source: config.ProjectDir,
-			Target: path.Join(params.Platform.WorkingVolumeMountpoint(), platform.WorkingVolumeWorkingDir),
+			Target: params.WorkingDirectory,
+		})
+	} else {
+		// Otherwise we mount the project directory's copy contained in a working volume
+		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
+			Type:   containerbackend.MountTypeVolume,
+			Source: params.WorkingVolumeName,
+			Target: params.WorkingDirectory,
 		})
 	}
 

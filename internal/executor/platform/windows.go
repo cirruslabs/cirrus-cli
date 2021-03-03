@@ -26,34 +26,45 @@ func NewWindows(osVersion string) Platform {
 	}
 }
 
-func (platform *WindowsPlatform) ProjectDirMountpoint() string {
-	return "C:\\project-dir"
+func (platform *WindowsPlatform) ContainerAgentPath() string {
+	return filepath.Join(platform.ContainerAgentVolumeDir(), workingVolumeAgentBinary)
 }
 
-func (platform *WindowsPlatform) WorkingVolumeMountpoint() string {
-	return "C:\\Windows\\Temp"
+func (platform *WindowsPlatform) ContainerAgentVolumeDir() string {
+	return platform.CirrusDir()
 }
 
-func (platform *WindowsPlatform) AgentImage(version string) string {
+func (platform *WindowsPlatform) CirrusDir() string {
+	return "C:\\Windows\\Temp\\cirrus-ci"
+}
+
+func (platform *WindowsPlatform) ContainerAgentImage(version string) string {
 	return platform.image
 }
 
-func (platform *WindowsPlatform) CopyCommand(populate bool) []string {
+func (platform *WindowsPlatform) ContainerCopyCommand(populate bool) *CopyCommand {
+	copyCommand := &CopyCommand{
+		CopiesAgentToDir:     "C:\\agent-volume",
+		CopiesProjectFromDir: "C:\\project-host",
+		CopiesProjectToDir:   "C:\\project-volume",
+	}
+
 	windowsAgentURL := fmt.Sprintf("https://github.com/cirruslabs/cirrus-ci-agent/releases/"+
 		"download/v%s/agent-windows-amd64.exe", DefaultAgentVersion)
 
 	copyCmd := fmt.Sprintf("(New-Object System.Net.WebClient).DownloadFile(\"%s\", \"%s\")",
-		windowsAgentURL, platform.AgentBinaryPath())
+		windowsAgentURL, filepath.Join(copyCommand.CopiesAgentToDir, workingVolumeAgentBinary))
 
 	if populate {
 		copyCmd += fmt.Sprintf("; echo D | xcopy /Y /E /H %s %s",
-			platform.ProjectDirMountpoint(),
-			filepath.Join(platform.WorkingVolumeMountpoint(), WorkingVolumeWorkingDir))
+			copyCommand.CopiesProjectFromDir, copyCommand.CopiesProjectToDir)
 	}
 
-	return []string{"powershell", copyCmd}
+	copyCommand.Command = []string{"powershell", copyCmd}
+
+	return copyCommand
 }
 
-func (platform *WindowsPlatform) AgentBinaryPath() string {
-	return filepath.Join(platform.WorkingVolumeMountpoint(), WorkingVolumeAgentBinary)
+func (platform *WindowsPlatform) GenericWorkingDir() string {
+	return filepath.Join(platform.CirrusDir(), workingVolumeWorkingDir)
 }
