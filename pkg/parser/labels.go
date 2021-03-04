@@ -92,7 +92,20 @@ func instanceLabels(
 	case *api.PipeInstance:
 		labels = append(labels, "pipe")
 	}
-	return labels, nil
+
+	// Filter out labels with empty values
+	var nonEmptyLabels []string
+	for _, label := range labels {
+		fmt.Println(label)
+
+		if strings.HasSuffix(label, ":") {
+			continue
+		}
+
+		nonEmptyLabels = append(nonEmptyLabels, label)
+	}
+
+	return nonEmptyLabels, nil
 }
 
 func extractProtoInstanceLabels(
