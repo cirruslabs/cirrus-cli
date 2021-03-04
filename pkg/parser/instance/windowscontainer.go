@@ -20,7 +20,8 @@ type WindowsContainer struct {
 func NewWindowsCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *WindowsContainer {
 	container := &WindowsContainer{
 		proto: &api.ContainerInstance{
-			Platform: api.Platform_WINDOWS,
+			Platform:  api.Platform_WINDOWS,
+			OsVersion: "2019",
 		},
 	}
 

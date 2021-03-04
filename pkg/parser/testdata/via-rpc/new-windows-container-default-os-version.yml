@@ -1,0 +1,5 @@
+windows_container:
+  image: cirrusci/windowsservercore:2019
+
+task:
+  script: true
