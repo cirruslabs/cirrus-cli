@@ -1,0 +1,10 @@
+task:
+  container:
+    dockerfile: ci/Dockerfile
+    matrix:
+      docker_arguments:
+        - VERSION: value that is not missing
+      docker_arguments:
+        - VERSION:
+
+  script: true
