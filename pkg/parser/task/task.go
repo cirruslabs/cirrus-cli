@@ -51,7 +51,7 @@ func NewTask(
 	AttachBaseTaskInstructions(&task.DefaultParser, &task.proto, env, boolevator)
 
 	if _, ok := additionalInstances["container"]; !ok {
-		task.CollectibleField("container",
+		task.InstanceCollectibleField("container",
 			instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
 			func(node *node.Node) error {
 				inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
@@ -76,7 +76,7 @@ func NewTask(
 			})
 	}
 	if _, ok := additionalInstances["windows_container"]; !ok {
-		task.CollectibleField("windows_container",
+		task.InstanceCollectibleField("windows_container",
 			instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
 			func(node *node.Node) error {
 				inst := instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
@@ -101,7 +101,7 @@ func NewTask(
 			})
 	}
 	if _, ok := additionalInstances["persistent_worker"]; !ok {
-		task.CollectibleField("persistent_worker",
+		task.InstanceCollectibleField("persistent_worker",
 			instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env)).Schema(),
 			func(node *node.Node) error {
 				inst := instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env))
@@ -140,7 +140,7 @@ func NewTask(
 		scopedDescriptor := descriptor
 
 		instanceSchema := instance.NewProtoParser(scopedDescriptor, nil, nil).Schema()
-		task.CollectibleField(scopedInstanceName, instanceSchema, func(node *node.Node) error {
+		task.InstanceCollectibleField(scopedInstanceName, instanceSchema, func(node *node.Node) error {
 			parser := instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), boolevator)
 			parserInstance, err := parser.Parse(node)
 			if err != nil {
