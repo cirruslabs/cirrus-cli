@@ -118,7 +118,9 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		parser.WithAdditionalTaskProperties(request.AdditionalTaskProperties),
 	)
 
-	result, err := p.Parse(ctx, strings.Join(yamlConfigs, "\n"))
+	processedConfig := strings.Join(yamlConfigs, "\n")
+
+	result, err := p.Parse(ctx, processedConfig)
 	if err != nil {
 		if re, ok := err.(*parsererror.Rich); ok {
 			return &api.EvaluateConfigResponse{
@@ -137,6 +139,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 	return &api.EvaluateConfigResponse{
 		Tasks:                     result.Tasks,
 		TasksCountBeforeFiltering: result.TasksCountBeforeFiltering,
+		ProcessedConfig:           processedConfig,
 	}, nil
 }
 
