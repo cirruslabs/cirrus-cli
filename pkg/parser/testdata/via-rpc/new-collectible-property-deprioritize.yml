@@ -1,0 +1,6 @@
+container:
+  image: debian:latest
+
+task:
+  container:
+    image: ubuntu:latest

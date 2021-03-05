@@ -85,6 +85,28 @@ func TestAdditionalInstanceStability(t *testing.T) {
 	assertExpectedTasks(t, absolutize("additional-instance-stability.json"), result)
 }
 
+func TestCollectiblePropertyOverwrittenByTheUser(t *testing.T) {
+	yamlConfig := `windows_container:
+  image: mcr.microsoft.com/windows/servercore:ltsc2019
+
+task:
+  name: "${CIRRUS_OS}"
+  container:
+    image: debian:latest
+`
+
+	for i := 0; i < 100; i++ {
+		result, err := parser.New().Parse(context.Background(), yamlConfig)
+
+		require.Nil(t, err)
+		require.NotEmpty(t, result.Tasks)
+
+		if result.Tasks[0].Name != "linux" {
+			t.Fatal("CIRRUS_OS should expand to \"linux\"")
+		}
+	}
+}
+
 func TestAdditionalTaskProperties(t *testing.T) {
 	protoName := "custom_bool"
 	protoType := descriptor.FieldDescriptorProto_Type(8)

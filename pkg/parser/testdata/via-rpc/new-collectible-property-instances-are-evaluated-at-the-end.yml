@@ -1,0 +1,6 @@
+task:
+  container:
+    image: debian:latest
+    cpu: $CPU
+  env:
+    CPU: 5.0

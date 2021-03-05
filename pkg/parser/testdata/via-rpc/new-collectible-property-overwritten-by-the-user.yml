@@ -1,0 +1,10 @@
+container:
+  image: debian:latest
+
+task:
+  script : true
+
+task:
+  name: "${CIRRUS_OS}"
+  windows_container:
+    image: catalina-xcode
