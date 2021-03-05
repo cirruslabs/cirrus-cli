@@ -1,0 +1,11 @@
+container:
+  image: julia:latest
+
+task:
+  env:
+    JULIA_VERSION: nightly
+  allow_failures: $JULIA_VERSION == 'nightly'
+  build_script:
+    - cirrusjl build
+  test_script:
+    - cirrusjl test
