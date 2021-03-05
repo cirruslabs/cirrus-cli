@@ -41,9 +41,9 @@ func (parser *DefaultParser) Parse(node *node.Node) error {
 
 	for _, child := range node.Children {
 		// double check collectible fields
-		for i := range parser.collectibleFields {
-			if parser.collectibleFields[i].Name == child.Name {
-				if err := evaluateCollectible(node, parser.collectibleFields[i]); err != nil {
+		for _, collectibleField := range parser.collectibleFields {
+			if collectibleField.Name == child.Name {
+				if err := evaluateCollectible(node, collectibleField); err != nil {
 					return err
 				}
 				break
@@ -52,9 +52,9 @@ func (parser *DefaultParser) Parse(node *node.Node) error {
 	}
 
 	for _, child := range node.Children {
-		for i := range parser.fields {
-			if parser.fields[i].name.Matches(child.Name) {
-				if err := parser.fields[i].onFound(child); err != nil {
+		for _, field := range parser.fields {
+			if field.name.Matches(child.Name) {
+				if err := field.onFound(child); err != nil {
 					return err
 				}
 				break
