@@ -36,7 +36,6 @@ func AttachEnvironmentFields(
 		task.Environment = environment.Merge(task.Environment, taskEnv)
 		return nil
 	})
-
 }
 
 // nolint:gocognit // it's a parser helper, there is a lot of boilerplate
