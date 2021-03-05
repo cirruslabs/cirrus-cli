@@ -36,11 +36,11 @@ func NewDockerBuilder(
 	additionalTaskProperties []*descriptor.FieldDescriptorProto,
 ) *DockerBuilder {
 	dbuilder := &DockerBuilder{}
+	dbuilder.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 
+	AttachEnvironmentFields(&dbuilder.DefaultParser, &dbuilder.proto)
 	AttachBaseTaskFields(&dbuilder.DefaultParser, &dbuilder.proto, env, boolevator, additionalTaskProperties)
 	AttachBaseTaskInstructions(&dbuilder.DefaultParser, &dbuilder.proto, env, boolevator)
-
-	dbuilder.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 
 	dbuilder.OptionalField(nameable.NewSimpleNameable("alias"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(dbuilder.proto.Environment, env))

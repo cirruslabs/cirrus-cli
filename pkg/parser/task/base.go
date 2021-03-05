@@ -15,21 +15,10 @@ import (
 	"strings"
 )
 
-// nolint:gocognit // it's a parser helper, there is a lot of boilerplate
-func AttachBaseTaskFields(
+func AttachEnvironmentFields(
 	parser *parseable.DefaultParser,
 	task *api.Task,
-	env map[string]string,
-	boolevator *boolevator.Boolevator,
-	additionalTaskProperties []*descriptor.FieldDescriptorProto,
 ) {
-	task.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
-
-	autoCancellation := env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"]
-	if autoCancellation {
-		task.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(autoCancellation)
-	}
-
 	parser.CollectibleField("environment", schema.Map(""), func(node *node.Node) error {
 		taskEnv, err := node.GetMapOrListOfMaps()
 		if err != nil {
@@ -47,6 +36,23 @@ func AttachBaseTaskFields(
 		task.Environment = environment.Merge(task.Environment, taskEnv)
 		return nil
 	})
+
+}
+
+// nolint:gocognit // it's a parser helper, there is a lot of boilerplate
+func AttachBaseTaskFields(
+	parser *parseable.DefaultParser,
+	task *api.Task,
+	env map[string]string,
+	boolevator *boolevator.Boolevator,
+	additionalTaskProperties []*descriptor.FieldDescriptorProto,
+) {
+	task.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
+
+	autoCancellation := env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"]
+	if autoCancellation {
+		task.Metadata.Properties["auto_cancellation"] = strconv.FormatBool(autoCancellation)
+	}
 
 	parser.OptionalField(nameable.NewSimpleNameable("name"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(task.Environment, env))

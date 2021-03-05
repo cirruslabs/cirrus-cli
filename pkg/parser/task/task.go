@@ -47,11 +47,10 @@ func NewTask(
 	// Don't force required fields in schema
 	task.SetCollectible(true)
 
-	AttachBaseTaskFields(&task.DefaultParser, &task.proto, env, boolevator, additionalTaskProperties)
-	AttachBaseTaskInstructions(&task.DefaultParser, &task.proto, env, boolevator)
+	AttachEnvironmentFields(&task.DefaultParser, &task.proto)
 
 	if _, ok := additionalInstances["container"]; !ok {
-		task.InstanceCollectibleField("container",
+		task.CollectibleField("container",
 			instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
 			func(node *node.Node) error {
 				inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
@@ -76,7 +75,7 @@ func NewTask(
 			})
 	}
 	if _, ok := additionalInstances["windows_container"]; !ok {
-		task.InstanceCollectibleField("windows_container",
+		task.CollectibleField("windows_container",
 			instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
 			func(node *node.Node) error {
 				inst := instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
@@ -101,7 +100,7 @@ func NewTask(
 			})
 	}
 	if _, ok := additionalInstances["persistent_worker"]; !ok {
-		task.InstanceCollectibleField("persistent_worker",
+		task.CollectibleField("persistent_worker",
 			instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env)).Schema(),
 			func(node *node.Node) error {
 				inst := instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env))
@@ -140,7 +139,7 @@ func NewTask(
 		scopedDescriptor := descriptor
 
 		instanceSchema := instance.NewProtoParser(scopedDescriptor, nil, nil).Schema()
-		task.InstanceCollectibleField(scopedInstanceName, instanceSchema, func(node *node.Node) error {
+		task.CollectibleField(scopedInstanceName, instanceSchema, func(node *node.Node) error {
 			parser := instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), boolevator)
 			parserInstance, err := parser.Parse(node)
 			if err != nil {
@@ -162,6 +161,9 @@ func NewTask(
 			return nil
 		})
 	}
+
+	AttachBaseTaskFields(&task.DefaultParser, &task.proto, env, boolevator, additionalTaskProperties)
+	AttachBaseTaskInstructions(&task.DefaultParser, &task.proto, env, boolevator)
 
 	task.OptionalField(nameable.NewSimpleNameable("alias"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))

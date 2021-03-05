@@ -44,6 +44,7 @@ func NewDockerPipe(
 	// Don't force required fields in schema
 	pipe.SetCollectible(true)
 
+	AttachEnvironmentFields(&pipe.DefaultParser, &pipe.proto)
 	AttachBaseTaskFields(&pipe.DefaultParser, &pipe.proto, env, boolevator, additionalTaskProperties)
 
 	autoCancellation := env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"]
