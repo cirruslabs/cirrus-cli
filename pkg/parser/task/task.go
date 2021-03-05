@@ -47,6 +47,8 @@ func NewTask(
 	// Don't force required fields in schema
 	task.SetCollectible(true)
 
+	// Make sure environment is parsed first and then all the possible instance
+	// because an instance can set CIRRUS_OS which can be used in some field (for example, "name: Tests ($CIRRUS_OS)").
 	AttachEnvironmentFields(&task.DefaultParser, &task.proto)
 
 	if _, ok := additionalInstances["container"]; !ok {
@@ -162,6 +164,7 @@ func NewTask(
 		})
 	}
 
+	// Only after environment and instances should we add all the rest fields.
 	AttachBaseTaskFields(&task.DefaultParser, &task.proto, env, boolevator, additionalTaskProperties)
 	AttachBaseTaskInstructions(&task.DefaultParser, &task.proto, env, boolevator)
 
