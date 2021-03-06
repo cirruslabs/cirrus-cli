@@ -95,15 +95,13 @@ task:
     image: debian:latest
 `
 
-	for i := 0; i < 100; i++ {
-		result, err := parser.New().Parse(context.Background(), yamlConfig)
+	result, err := parser.New().Parse(context.Background(), yamlConfig)
 
-		require.Nil(t, err)
-		require.NotEmpty(t, result.Tasks)
+	require.Nil(t, err)
+	require.NotEmpty(t, result.Tasks)
 
-		if result.Tasks[0].Name != "linux" {
-			t.Fatal("CIRRUS_OS should expand to \"linux\"")
-		}
+	if result.Tasks[0].Name != "linux" {
+		t.Fatal("CIRRUS_OS should expand to \"linux\"")
 	}
 }
 
