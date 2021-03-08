@@ -1,2 +1,5 @@
 env:
   SOME_VARIABLE: "some value"
+
+affected_files:
+  - ci/build.sh

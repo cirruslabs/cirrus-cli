@@ -66,6 +66,19 @@ To mock the contents of this dict, create the following `.cirrus.testconfig.yml`
 ```yaml
 env:
   CIRRUS_TAG: "v0.1.0"
+
+affected_files:
+  - ci/build.sh
 ```
 
-This will ensure that when the test runs, `env.get("CIRRUS_TAG")` will return `v0.1.0`.
+Similarly, to mock the [`changes_include()`](https://github.com/cirruslabs/cirrus-cli/blob/master/STARLARK.md#changes_include) function behavior, specify the files the were affected:
+
+```yaml
+affected_files:
+  - ci/build.sh
+```
+
+These two additions combined will ensure that when the test runs:
+
+* `env.get("CIRRUS_TAG")` will return `v0.1.0`
+* `changes_include("**.sh")` will return `True`

@@ -94,6 +94,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		lrk := larker.New(
 			larker.WithFileSystem(fs),
 			larker.WithEnvironment(request.Environment),
+			larker.WithAffectedFiles(request.AffectedFiles),
 		)
 
 		generatedYamlConfig, err := lrk.Main(ctx, request.StarlarkConfig)

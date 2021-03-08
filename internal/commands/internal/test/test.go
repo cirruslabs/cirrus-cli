@@ -66,7 +66,10 @@ func test(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		larkerOpts = append(larkerOpts, larker.WithEnvironment(testConfig.Environment))
+		larkerOpts = append(larkerOpts,
+			larker.WithEnvironment(testConfig.Environment),
+			larker.WithAffectedFiles(testConfig.AffectedFiles),
+		)
 
 		lrk := larker.New(larkerOpts...)
 
