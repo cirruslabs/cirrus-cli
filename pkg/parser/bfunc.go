@@ -18,17 +18,16 @@ func (p *Parser) bfuncChangesInclude() boolevator.Function {
 		}
 
 		for _, argument := range arguments {
+			pattern, ok := argument.(string)
+			if !ok {
+				return ErrBfuncArgumentIsNotString
+			}
+
+			re, err := glob.ToRegexPattern(pattern, false)
+			if err != nil {
+				return err
+			}
 			for _, affectedFile := range p.affectedFiles {
-				pattern, ok := argument.(string)
-				if !ok {
-					return ErrBfuncArgumentIsNotString
-				}
-
-				re, err := glob.ToRegexPattern(pattern, false)
-				if err != nil {
-					return err
-				}
-
 				if re.MatchString(affectedFile) {
 					return "true"
 				}
