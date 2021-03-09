@@ -176,7 +176,7 @@ def main(ctx):
 
 ### `changes_include`
 
-`ctx.changes_include()` is a Starlark's alternative to the [changesInclude()](https://cirrus-ci.org/guide/writing-tasks/#supported-functions) function commonly found in the YAML configuration files.
+`changes_include()` is a Starlark's alternative to the [changesInclude()](https://cirrus-ci.org/guide/writing-tasks/#supported-functions) function commonly found in the YAML configuration files.
 
 It takes at least one [`string`](https://github.com/bazelbuild/starlark/blob/master/spec.md#strings) with a pattern and returns a [`bool`](https://github.com/bazelbuild/starlark/blob/master/spec.md#booleans) that represents whether any of the specified patterns matched any of the affected files in the running context.
 
