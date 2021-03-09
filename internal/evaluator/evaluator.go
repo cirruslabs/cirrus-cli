@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
@@ -13,6 +14,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -26,8 +28,25 @@ type ConfigurationEvaluatorServiceServer struct {
 	api.UnimplementedCirrusConfigurationEvaluatorServiceServer
 }
 
+func addIdent(
+	ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (resp interface{}, err error) {
+	headers := map[string]string{
+		"X-Cirrus-Evaluator-Ident": fmt.Sprintf("Cirrus CLI/%s", version.FullVersion),
+	}
+
+	if err := grpc.SetHeader(ctx, metadata.New(headers)); err != nil {
+		return nil, err
+	}
+
+	return handler(ctx, req)
+}
+
 func Serve(ctx context.Context, lis net.Listener) error {
-	server := grpc.NewServer()
+	server := grpc.NewServer(grpc.UnaryInterceptor(addIdent))
 
 	api.RegisterCirrusConfigurationEvaluatorServiceServer(server, &ConfigurationEvaluatorServiceServer{})
 
