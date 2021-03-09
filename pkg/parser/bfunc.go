@@ -27,6 +27,7 @@ func (p *Parser) bfuncChangesInclude() boolevator.Function {
 			if err != nil {
 				return err
 			}
+
 			for _, affectedFile := range p.affectedFiles {
 				if re.MatchString(affectedFile) {
 					return "true"
