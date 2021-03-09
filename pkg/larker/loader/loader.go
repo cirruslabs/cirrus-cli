@@ -32,18 +32,20 @@ type CacheEntry struct {
 }
 
 type Loader struct {
-	ctx   context.Context
-	cache map[string]*CacheEntry
-	fs    fs.FileSystem
-	env   map[string]string
+	ctx           context.Context
+	cache         map[string]*CacheEntry
+	fs            fs.FileSystem
+	env           map[string]string
+	affectedFiles []string
 }
 
-func NewLoader(ctx context.Context, fs fs.FileSystem, env map[string]string) *Loader {
+func NewLoader(ctx context.Context, fs fs.FileSystem, env map[string]string, affectedFiles []string) *Loader {
 	return &Loader{
-		ctx:   ctx,
-		cache: make(map[string]*CacheEntry),
-		fs:    fs,
-		env:   env,
+		ctx:           ctx,
+		cache:         make(map[string]*CacheEntry),
+		fs:            fs,
+		env:           env,
+		affectedFiles: affectedFiles,
 	}
 }
 
@@ -118,6 +120,8 @@ func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
 		}
 	}
 	result["env"] = starlarkEnv
+
+	result["changes_include"] = generateChangesIncludeBuiltin(loader.affectedFiles)
 
 	result["fs"] = &starlarkstruct.Module{
 		Name:    "fs",

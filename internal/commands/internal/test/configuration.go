@@ -8,7 +8,8 @@ import (
 )
 
 type Configuration struct {
-	Environment map[string]string `yaml:"env"`
+	Environment   map[string]string `yaml:"env"`
+	AffectedFiles []string          `yaml:"affected_files"`
 }
 
 func LoadConfiguration(path string) (*Configuration, error) {

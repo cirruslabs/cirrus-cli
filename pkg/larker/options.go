@@ -17,3 +17,9 @@ func WithEnvironment(env map[string]string) Option {
 		e.env = env
 	}
 }
+
+func WithAffectedFiles(affectedFiles []string) Option {
+	return func(e *Larker) {
+		e.affectedFiles = affectedFiles
+	}
+}

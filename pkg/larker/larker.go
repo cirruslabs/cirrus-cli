@@ -24,8 +24,9 @@ var (
 )
 
 type Larker struct {
-	fs  fs.FileSystem
-	env map[string]string
+	fs            fs.FileSystem
+	env           map[string]string
+	affectedFiles []string
 }
 
 type HookResult struct {
@@ -57,7 +58,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 	discard := func(thread *starlark.Thread, msg string) {}
 
 	thread := &starlark.Thread{
-		Load:  loader.NewLoader(ctx, larker.fs, larker.env).LoadFunc(),
+		Load:  loader.NewLoader(ctx, larker.fs, larker.env, larker.affectedFiles).LoadFunc(),
 		Print: discard,
 	}
 
@@ -139,7 +140,7 @@ func (larker *Larker) Hook(
 	outputLogsBuffer := &bytes.Buffer{}
 
 	thread := &starlark.Thread{
-		Load: loader.NewLoader(ctx, larker.fs, larker.env).LoadFunc(),
+		Load: loader.NewLoader(ctx, larker.fs, larker.env, []string{}).LoadFunc(),
 		Print: func(thread *starlark.Thread, msg string) {
 			_, _ = fmt.Fprintln(outputLogsBuffer, msg)
 		},

@@ -202,6 +202,30 @@ func TestBuiltinEnv(t *testing.T) {
 	}
 }
 
+// TestBuiltinChangesInclude ensures that we expose the changes_include()
+// through cirrus module and it works properly.
+func TestBuiltinChangesInclude(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-changes-include")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	affectedFiles := []string{
+		"ci/build.sh",
+		"CHANGELOG.md",
+	}
+
+	// Run the source code
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)), larker.WithAffectedFiles(affectedFiles))
+	_, err = lrk.Main(context.Background(), string(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // TestBuiltinStarlib ensures that Starlib's modules that we expose through cirrus.* are working properly.
 func TestBuiltinStarlib(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-starlib")
