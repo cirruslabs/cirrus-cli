@@ -1,7 +1,5 @@
 FROM goreleaser/goreleaser:latest as builder
 
-ENV GORELEASER_CURRENT_TAG=master
-
 WORKDIR /build
 ADD . /build
 
