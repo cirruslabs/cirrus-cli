@@ -1,7 +1,7 @@
 steps:
-- name: gcr.io/cloud-builders/git
-  args: [ fetch, --unshallow ]
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME', '-t', 'gcr.io/cirrus-ci-community/cirrus-cli:latest', '.']
+  - name: gcr.io/cloud-builders/git
+    args: [ 'fetch', '--unshallow' ]
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'build', '-t', 'gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME', '-t', 'gcr.io/cirrus-ci-community/cirrus-cli:latest', '.' ]
 timeout: 2400s
-images: ['gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME', 'gcr.io/cirrus-ci-community/cirrus-cli:latest']
+images: [ 'gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME', 'gcr.io/cirrus-ci-community/cirrus-cli:latest' ]
