@@ -28,14 +28,14 @@ type ConfigurationEvaluatorServiceServer struct {
 	api.UnimplementedCirrusConfigurationEvaluatorServiceServer
 }
 
-func addIdent(
+func addVersion(
 	ctx context.Context,
 	req interface{},
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
 ) (resp interface{}, err error) {
 	headers := map[string]string{
-		"X-Cirrus-Evaluator-Ident": fmt.Sprintf("Cirrus CLI/%s", version.FullVersion),
+		"X-Cirrus-Evaluator-Version": version.FullVersion,
 	}
 
 	if err := grpc.SetHeader(ctx, metadata.New(headers)); err != nil {
@@ -46,7 +46,7 @@ func addIdent(
 }
 
 func Serve(ctx context.Context, lis net.Listener) error {
-	server := grpc.NewServer(grpc.UnaryInterceptor(addIdent))
+	server := grpc.NewServer(grpc.UnaryInterceptor(addVersion))
 
 	api.RegisterCirrusConfigurationEvaluatorServiceServer(server, &ConfigurationEvaluatorServiceServer{})
 
