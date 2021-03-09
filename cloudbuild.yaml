@@ -1,5 +1,5 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME', '-t', 'gcr.io/cirrus-ci-community/cirrus-cli:latest', '.']
+  args: ['build', '--build-arg', 'git_tag=$TAG_NAME', '-t', 'gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME', '-t', 'gcr.io/cirrus-ci-community/cirrus-cli:latest', '.']
 timeout: 2400s
 images: ['gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME', 'gcr.io/cirrus-ci-community/cirrus-cli:latest']

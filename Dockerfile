@@ -1,5 +1,9 @@
 FROM goreleaser/goreleaser:latest as builder
 
+ARG git_tag=latest
+
+ENV GORELEASER_CURRENT_TAG=$git_tag
+
 WORKDIR /build
 ADD . /build
 
