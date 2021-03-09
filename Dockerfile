@@ -1,11 +1,11 @@
 FROM goreleaser/goreleaser:latest as builder
 
-ENV GORELEASER_CURRENT_TAG=latest
+ENV GORELEASER_CURRENT_TAG=master
 
 WORKDIR /build
 ADD . /build
 
-RUN goreleaser build --snapshot
+RUN goreleaser build
 
 FROM alpine:latest
 LABEL org.opencontainers.image.source=https://github.com/cirruslabs/cirrus-cli/
