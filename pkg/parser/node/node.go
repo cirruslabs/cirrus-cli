@@ -114,6 +114,8 @@ func (node *Node) MergeListOfMapsToSingleMap() {
 
 func (node *Node) MergeFrom(other *Node) {
 	node.Name = other.Name
+	node.Line = other.Line
+	node.Column = other.Column
 
 	// Special treatment for environment variables since they can also be represented as a list of maps
 	if node.Name == "env" || node.Name == "environment" {
