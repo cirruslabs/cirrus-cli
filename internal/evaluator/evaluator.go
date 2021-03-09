@@ -121,7 +121,9 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 
-		yamlConfigs = append(yamlConfigs, generatedYamlConfig)
+		if generatedYamlConfig != "" {
+			yamlConfigs = append(yamlConfigs, generatedYamlConfig)
+		}
 	}
 
 	additionalInstances, err := TransformAdditionalInstances(request.AdditionalInstancesInfo)
