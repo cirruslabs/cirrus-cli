@@ -78,7 +78,7 @@ func test(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 
-		generatedConfigString, err := lrk.Main(cmd.Context(), string(sourceBytes))
+		result, err := lrk.Main(cmd.Context(), string(sourceBytes))
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
@@ -91,7 +91,7 @@ func test(cmd *cobra.Command, args []string) error {
 		}
 
 		var generatedConfig yaml.Node
-		err = yaml.Unmarshal([]byte(generatedConfigString), &generatedConfig)
+		err = yaml.Unmarshal([]byte(result.YAMLConfig), &generatedConfig)
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}

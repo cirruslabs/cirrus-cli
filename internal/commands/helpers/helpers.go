@@ -79,7 +79,13 @@ func EvaluateStarlarkConfig(ctx context.Context, path string, env map[string]str
 	}
 
 	lrk := larker.New(larker.WithFileSystem(local.New(".")), larker.WithEnvironment(env))
-	return lrk.Main(ctx, string(starlarkSource))
+
+	result, err := lrk.Main(ctx, string(starlarkSource))
+	if err != nil {
+		return "", err
+	}
+
+	return result.YAMLConfig, nil
 }
 
 func ReadCombinedConfig(ctx context.Context, env map[string]string) (string, error) {
