@@ -363,3 +363,16 @@ func TestHook(t *testing.T) {
 
 	assert.Equal(t, expectedStructpb, res.Result, "hook should return a list of build and task IDs")
 }
+
+func TestStarlarkOutputLogs(t *testing.T) {
+	starlarkConfig := `def main(ctx):
+    print("Foo")
+    print("Bar")
+
+    return []
+`
+
+	response, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{StarlarkConfig: starlarkConfig})
+	require.NoError(t, err)
+	require.Equal(t, "Foo\nBar\n", string(response.OutputLogs))
+}
