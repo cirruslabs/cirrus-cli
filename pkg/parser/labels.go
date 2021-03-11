@@ -26,6 +26,9 @@ func (p *Parser) labels(
 		return labels, err
 	}
 
+	// Filter out instance labels with empty values
+	labels = removeEmptyLabels(labels)
+
 	// Environment-specific labels
 	for key, value := range task.Environment {
 		if strings.HasPrefix(value, "ENCRYPTED[") && strings.HasSuffix(value, "]") {
@@ -36,6 +39,20 @@ func (p *Parser) labels(
 	}
 
 	return labels, nil
+}
+
+func removeEmptyLabels(labels []string) []string {
+	var result []string
+
+	for _, label := range labels {
+		if strings.HasSuffix(label, ":") {
+			continue
+		}
+
+		result = append(result, label)
+	}
+
+	return result
 }
 
 func instanceLabels(
@@ -93,19 +110,7 @@ func instanceLabels(
 		labels = append(labels, "pipe")
 	}
 
-	// Filter out labels with empty values
-	var nonEmptyLabels []string
-	for _, label := range labels {
-		fmt.Println(label)
-
-		if strings.HasSuffix(label, ":") {
-			continue
-		}
-
-		nonEmptyLabels = append(nonEmptyLabels, label)
-	}
-
-	return nonEmptyLabels, nil
+	return labels, nil
 }
 
 func extractProtoInstanceLabels(
