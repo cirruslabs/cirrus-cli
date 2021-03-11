@@ -36,6 +36,11 @@ type HookResult struct {
 	Result        interface{}
 }
 
+type MainResult struct {
+	OutputLogs []byte
+	YAMLConfig string
+}
+
 func New(opts ...Option) *Larker {
 	lrk := &Larker{
 		fs:  dummy.New(),
@@ -54,12 +59,15 @@ func New(opts ...Option) *Larker {
 	return lrk
 }
 
-func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
-	discard := func(thread *starlark.Thread, msg string) {}
+func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, error) {
+	outputLogsBuffer := &bytes.Buffer{}
+	capture := func(thread *starlark.Thread, msg string) {
+		_, _ = fmt.Fprintln(outputLogsBuffer, msg)
+	}
 
 	thread := &starlark.Thread{
 		Load:  loader.NewLoader(ctx, larker.fs, larker.env, larker.affectedFiles).LoadFunc(),
-		Print: discard,
+		Print: capture,
 	}
 
 	resCh := make(chan starlark.Value)
@@ -103,28 +111,31 @@ func (larker *Larker) Main(ctx context.Context, source string) (string, error) {
 	select {
 	case mainResult = <-resCh:
 	case err := <-errCh:
-		return "", err
+		return nil, err
 	case <-ctx.Done():
 		thread.Cancel(ctx.Err().Error())
-		return "", ctx.Err()
+		return nil, ctx.Err()
 	}
 
 	// main() should return a list of tasks
 	starlarkList, ok := mainResult.(*starlark.List)
 	if !ok {
-		return "", fmt.Errorf("%w: result is not a list", ErrMainUnexpectedResult)
+		return nil, fmt.Errorf("%w: result is not a list", ErrMainUnexpectedResult)
 	}
 
 	tasksNode := convertTasks(starlarkList)
 	if tasksNode == nil {
-		return "", nil
+		return &MainResult{OutputLogs: outputLogsBuffer.Bytes()}, nil
 	}
 	formattedYaml, err := yamlhelper.PrettyPrint(tasksNode)
 	if err != nil {
-		return "", fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
+		return nil, fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
 	}
 
-	return formattedYaml, nil
+	return &MainResult{
+		OutputLogs: outputLogsBuffer.Bytes(),
+		YAMLConfig: formattedYaml,
+	}, nil
 }
 
 func (larker *Larker) Hook(
@@ -138,12 +149,13 @@ func (larker *Larker) Hook(
 	}
 
 	outputLogsBuffer := &bytes.Buffer{}
+	capture := func(thread *starlark.Thread, msg string) {
+		_, _ = fmt.Fprintln(outputLogsBuffer, msg)
+	}
 
 	thread := &starlark.Thread{
-		Load: loader.NewLoader(ctx, larker.fs, larker.env, []string{}).LoadFunc(),
-		Print: func(thread *starlark.Thread, msg string) {
-			_, _ = fmt.Fprintln(outputLogsBuffer, msg)
-		},
+		Load:  loader.NewLoader(ctx, larker.fs, larker.env, []string{}).LoadFunc(),
+		Print: capture,
 	}
 
 	resCh := make(chan *HookResult)

@@ -99,6 +99,8 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 	ctx context.Context,
 	request *api.EvaluateConfigRequest,
 ) (*api.EvaluateConfigResponse, error) {
+	result := &api.EvaluateConfigResponse{}
+
 	var yamlConfigs []string
 
 	// Register YAML configuration (if any)
@@ -116,13 +118,15 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 			larker.WithAffectedFiles(request.AffectedFiles),
 		)
 
-		generatedYamlConfig, err := lrk.Main(ctx, request.StarlarkConfig)
+		lrkResult, err := lrk.Main(ctx, request.StarlarkConfig)
 		if err != nil {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 
-		if generatedYamlConfig != "" {
-			yamlConfigs = append(yamlConfigs, generatedYamlConfig)
+		result.OutputLogs = lrkResult.OutputLogs
+
+		if lrkResult.YAMLConfig != "" {
+			yamlConfigs = append(yamlConfigs, lrkResult.YAMLConfig)
 		}
 	}
 
@@ -140,9 +144,9 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		parser.WithAdditionalTaskProperties(request.AdditionalTaskProperties),
 	)
 
-	processedConfig := strings.Join(yamlConfigs, "\n")
+	result.ProcessedConfig = strings.Join(yamlConfigs, "\n")
 
-	result, err := p.Parse(ctx, processedConfig)
+	parseResult, err := p.Parse(ctx, result.ProcessedConfig)
 	if err != nil {
 		if re, ok := err.(*parsererror.Rich); ok {
 			return &api.EvaluateConfigResponse{
@@ -158,11 +162,10 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	return &api.EvaluateConfigResponse{
-		Tasks:                     result.Tasks,
-		TasksCountBeforeFiltering: result.TasksCountBeforeFiltering,
-		ProcessedConfig:           processedConfig,
-	}, nil
+	result.Tasks = parseResult.Tasks
+	result.TasksCountBeforeFiltering = parseResult.TasksCountBeforeFiltering
+
+	return result, nil
 }
 
 func (r *ConfigurationEvaluatorServiceServer) JSONSchema(

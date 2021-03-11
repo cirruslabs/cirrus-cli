@@ -43,7 +43,7 @@ func validateExpected(t *testing.T, testDir string) {
 
 	// Run the source code to produce a YAML configuration
 	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
-	configuration, err := lrk.Main(context.Background(), string(source))
+	result, err := lrk.Main(context.Background(), string(source))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func validateExpected(t *testing.T, testDir string) {
 		t.Fatal(err)
 	}
 
-	assert.YAMLEq(t, string(expectedConfiguration), configuration)
+	assert.YAMLEq(t, string(expectedConfiguration), result.YAMLConfig)
 }
 
 // TestLoadFileSystemLocal ensures that modules can be loaded from the local file system.
@@ -137,7 +137,7 @@ func TestLoadGitHelpers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.YAMLEq(t, string(expected), result)
+	assert.YAMLEq(t, string(expected), result.YAMLConfig)
 }
 
 // TestLoadTypoStarVsStart ensures that we return a user-friendly hint when loading of the module
