@@ -37,17 +37,18 @@ func parseString(_ context.Context, parser *gval.Parser) (gval.Evaluable, error)
 	return parser.Const(unquoted), nil
 }
 
-func trimAllQuotes(s string) string {
-	if len(s) < 2 {
-		return s
+func trimAllQuotes(text string) string {
+	//nolint:gomnd
+	if len(text) < 2 {
+		return text
 	}
-	firstCharacter := s[0]
-	lastCharacter := s[len(s)-1]
+	firstCharacter := text[0]
+	lastCharacter := text[len(text)-1]
 	if firstCharacter == lastCharacter && (firstCharacter == '"' || firstCharacter == '\'') {
 		// return recursively to handle double quoted strings
-		return trimAllQuotes(s[1 : len(s)-1])
+		return trimAllQuotes(text[1 : len(text)-1])
 	}
-	return s
+	return text
 }
 
 func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, error) {
