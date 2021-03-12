@@ -73,8 +73,9 @@ func TestRegExMultiline(t *testing.T) {
 }
 
 func TestQuotes(t *testing.T) {
-	assert.True(t, evalHelper(t, "$CIRRUS_CHANGE_MESSAGE == \"test 'foo'\"", map[string]string{"CIRRUS_CHANGE_MESSAGE": "test 'foo'"}))
-	assert.True(t, evalHelper(t, "$CIRRUS_CHANGE_MESSAGE =~ \".*test 'foo'.*\"", map[string]string{"CIRRUS_CHANGE_MESSAGE": "test 'foo'"}))
+	env := map[string]string{"CIRRUS_CHANGE_MESSAGE": "test 'foo'"}
+	assert.True(t, evalHelper(t, "$CIRRUS_CHANGE_MESSAGE == \"test 'foo'\"", env))
+	assert.True(t, evalHelper(t, "$CIRRUS_CHANGE_MESSAGE =~ \".*test 'foo'.*\"", env))
 }
 
 func TestPrRegEx(t *testing.T) {
