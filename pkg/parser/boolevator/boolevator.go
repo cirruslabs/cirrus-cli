@@ -32,13 +32,22 @@ func New(opts ...Option) *Boolevator {
 }
 
 func parseString(_ context.Context, parser *gval.Parser) (gval.Evaluable, error) {
-	unquoted, err := strconv.Unquote(parser.TokenText())
-
-	if err != nil {
-		return nil, err
-	}
+	unquoted := trimAllQuotes(parser.TokenText())
 
 	return parser.Const(unquoted), nil
+}
+
+func trimAllQuotes(s string) string {
+	if len(s) < 2 {
+		return s
+	}
+	firstCharacter := s[0]
+	lastCharacter := s[len(s)-1]
+	if firstCharacter == lastCharacter && (firstCharacter == '"' || firstCharacter == '\'') {
+		// return recursively to handle double quoted strings
+		return trimAllQuotes(s[1 : len(s)-1])
+	}
+	return s
 }
 
 func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, error) {
