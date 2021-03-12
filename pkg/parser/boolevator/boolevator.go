@@ -7,7 +7,6 @@ import (
 	"github.com/PaesslerAG/gval"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/expander"
 	"strconv"
-	"strings"
 	"text/scanner"
 )
 
@@ -32,8 +31,12 @@ func New(opts ...Option) *Boolevator {
 	return boolevator
 }
 
-func parseString(ctx context.Context, parser *gval.Parser) (gval.Evaluable, error) {
-	unquoted := strings.Trim(parser.TokenText(), "'\"")
+func parseString(_ context.Context, parser *gval.Parser) (gval.Evaluable, error) {
+	unquoted, err := strconv.Unquote(parser.TokenText())
+
+	if err != nil {
+		return nil, err
+	}
 
 	return parser.Const(unquoted), nil
 }
