@@ -1,20 +1,24 @@
 package taskfilter
 
 import (
+	"errors"
+	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"strings"
 )
 
-type TaskFilter func([]*api.Task) []*api.Task
+var ErrNoMatch = errors.New("task filter yielded no matches")
+
+type TaskFilter func([]*api.Task) ([]*api.Task, error)
 
 func MatchAnyTask() TaskFilter {
-	return func(tasks []*api.Task) []*api.Task {
-		return tasks
+	return func(tasks []*api.Task) ([]*api.Task, error) {
+		return tasks, nil
 	}
 }
 
 func MatchExactTask(desiredTaskName string) TaskFilter {
-	return func(tasks []*api.Task) []*api.Task {
+	return func(tasks []*api.Task) ([]*api.Task, error) {
 		var filteredTasks []*api.Task
 
 		for _, task := range tasks {
@@ -44,7 +48,12 @@ func MatchExactTask(desiredTaskName string) TaskFilter {
 			filteredTasks = append(filteredTasks, task)
 		}
 
-		return filteredTasks
+		if len(filteredTasks) == 0 {
+			return nil, fmt.Errorf("%w: none of the %d task(s) were matched using a %q filter",
+				ErrNoMatch, len(tasks), desiredTaskName)
+		}
+
+		return filteredTasks, nil
 	}
 }
 
