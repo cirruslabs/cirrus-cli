@@ -68,7 +68,10 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 	}
 
 	// Filter tasks (e.g. if a user wants to run only a specific task without dependencies)
-	tasks = e.taskFilter(tasks)
+	tasks, err := e.taskFilter(tasks)
+	if err != nil {
+		return nil, err
+	}
 
 	// Enrich task environments
 	for _, task := range tasks {
