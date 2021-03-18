@@ -37,8 +37,6 @@ func (parser *DefaultParser) Parse(node *node.Node) error {
 		}
 	}
 
-	// Check required fields
-
 	for _, child := range node.Children {
 		// double check collectible fields
 		for _, collectibleField := range parser.collectibleFields {
@@ -51,14 +49,27 @@ func (parser *DefaultParser) Parse(node *node.Node) error {
 		}
 	}
 
+	seenFields := map[string]struct{}{}
+
 	for _, child := range node.Children {
 		for _, field := range parser.fields {
 			if field.name.Matches(child.Name) {
+				seenFields[field.name.MapKey()] = struct{}{}
+
 				if err := field.onFound(child); err != nil {
 					return err
 				}
+
 				break
 			}
+		}
+	}
+
+	for _, field := range parser.fields {
+		_, seen := seenFields[field.name.MapKey()]
+
+		if field.required && !seen {
+			return node.ParserError("required field %q was not set", field.name.String())
 		}
 	}
 

@@ -19,3 +19,7 @@ func (sn *SimpleNameable) Name() string {
 func (sn *SimpleNameable) String() string {
 	return sn.name
 }
+
+func (sn *SimpleNameable) MapKey() string {
+	return "SimpleNameable(" + sn.name + ")"
+}
