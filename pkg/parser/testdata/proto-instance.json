@@ -19,7 +19,8 @@
           },
           "image": "mysql:latest",
           "memory": 1024,
-          "name": "mysql"
+          "name": "mysql",
+          "containerPort": 3306
         }
       ],
       "cpu": 2.5,
@@ -57,7 +58,8 @@
           },
           "image": "mysql:latest",
           "memory": 1024,
-          "name": "mysql"
+          "name": "mysql",
+          "containerPort": 3306
         }
       ],
       "cpu": 2.5,

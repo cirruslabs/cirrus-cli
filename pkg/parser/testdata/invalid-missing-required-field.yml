@@ -1,0 +1,6 @@
+container:
+  image: debian:latest
+
+# Pipe is missing "steps" required field
+pipe:
+  script: true

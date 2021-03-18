@@ -25,6 +25,10 @@ func (rn *RegexNameable) String() string {
 	return rn.re.String()
 }
 
+func (rn *RegexNameable) MapKey() string {
+	return "RegexNameable(" + rn.re.String() + ")"
+}
+
 func (rn *RegexNameable) FirstGroupOrDefault(s string, defaultValue string) string {
 	submatch := rn.re.FindStringSubmatch(s)
 	if submatch == nil {

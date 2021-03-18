@@ -171,6 +171,7 @@ aliases: &container_body
       image: mysql:latest
       cpu: 1
       memory: 1024
+      port: 3306
       environment:
         MYSQL_ROOT_PASSWORD: ""
 

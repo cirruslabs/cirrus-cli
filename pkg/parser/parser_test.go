@@ -54,6 +54,27 @@ func TestValidConfigs(t *testing.T) {
 	}
 }
 
+func TestInvalidConfigs(t *testing.T) {
+	var invalidCases = []struct {
+		Name  string
+		Error string
+	}{
+		{"invalid-missing-required-field", "parsing error: 6:3: required field \"steps\" was not set"},
+	}
+
+	for _, invalidCase := range invalidCases {
+		invalidCase := invalidCase
+
+		t.Run(invalidCase.Name, func(t *testing.T) {
+			p := parser.New()
+			_, err := p.ParseFromFile(context.Background(), absolutize(invalidCase.Name+".yml"))
+
+			require.Error(t, err)
+			assert.Equal(t, invalidCase.Error, err.Error())
+		})
+	}
+}
+
 func TestAdditionalInstances(t *testing.T) {
 	containerInstanceReflect := (&api.ContainerInstance{}).ProtoReflect()
 	p := parser.New(parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
