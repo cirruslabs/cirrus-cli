@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
+	"github.com/cirruslabs/echelon"
 	"github.com/go-test/deep"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -96,25 +97,41 @@ func test(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 
-		diff := deep.Equal(expectedConfig, generatedConfig)
-		currentTestSucceeded := len(diff) == 0
+		differentConfig := logDifferenceIfAny(logger, expectedConfig, generatedConfig)
 
-		if !currentTestSucceeded {
-			for _, line := range diff {
-				logger.Warnf("%s", line)
-			}
+		logsBytes, err := ioutil.ReadFile(filepath.Join(testDir, ".cirrus.expected.log"))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("%w: %v", ErrTest, err)
+		}
+		differentLogs := logDifferenceIfAny(
+			logger,
+			strings.Split(string(logsBytes), "\n"),
+			strings.Split(string(result.OutputLogs), "\n"),
+		)
+
+		if differentConfig || differentLogs {
 			someTestsFailed = true
 		}
 
-		logger.Finish(currentTestSucceeded)
+		logger.Finish(!differentConfig && !differentLogs)
 	}
 
-	logger.Finish(someTestsFailed)
+	logger.Finish(!someTestsFailed)
 	if someTestsFailed {
 		return fmt.Errorf("%w: some tests failed", ErrTest)
 	}
 
 	return nil
+}
+
+func logDifferenceIfAny(logger *echelon.Logger, a, b interface{}) bool {
+	diff := deep.Equal(a, b)
+
+	for _, line := range diff {
+		logger.Warnf("%s", line)
+	}
+
+	return len(diff) > 0
 }
 
 func NewTestCmd() *cobra.Command {

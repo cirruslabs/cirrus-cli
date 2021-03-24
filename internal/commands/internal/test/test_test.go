@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -31,4 +32,24 @@ func TestSimple(t *testing.T) {
 
 	adaptedPath := filepath.FromSlash("dir/subdir")
 	assert.Contains(t, buf.String(), fmt.Sprintf("'%s' succeeded", adaptedPath))
+}
+
+func TestDryRunAll(t *testing.T) {
+	fileInfos, err := ioutil.ReadDir("testdata")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, fileInfo := range fileInfos {
+		fileInfo := fileInfo
+		t.Run(fileInfo.Name(), func(t *testing.T) {
+			testutil.TempChdirPopulatedWith(t, filepath.Join("testdata", fileInfo.Name()))
+
+			command := commands.NewRootCmd()
+			command.SetArgs([]string{"internal", "test", "-o simple"})
+			err := command.Execute()
+
+			require.Nil(t, err)
+		})
+	}
 }

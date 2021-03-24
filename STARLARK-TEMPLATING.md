@@ -49,6 +49,8 @@ If your template generates tasks, you can test it's expected output by creating 
 
 You'll also need to place there a `.cirrus.star` file which loads your template functions you want to test.
 
+It's also possible to verify logs produced in the process of executing your template by creating `.cirrus.expected.log` file with the expected logs.
+
 Once everything is set-up, run the following CLI command from your project's root:
 
 ```
