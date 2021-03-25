@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-// Makes sure all the test cases can be executed successfully
+// Makes sure all the test cases can be executed successfully.
 func TestAll(t *testing.T) {
 	fileInfos, err := ioutil.ReadDir("testdata")
 	if err != nil {
@@ -37,7 +37,7 @@ func TestSimple(t *testing.T) {
 	assert.Contains(t, output, fmt.Sprintf("'%s' succeeded", adaptedPath))
 }
 
-// Verify tests succeed and return console output
+// Verify tests succeed and return console output.
 func runTestCommandAndGetOutput(t *testing.T, sourceDir string) string {
 	testutil.TempChdirPopulatedWith(t, sourceDir)
 
