@@ -5,7 +5,6 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
@@ -15,7 +14,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
-	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/spf13/cobra"
 	"os"
 	"strings"
@@ -40,9 +38,6 @@ var dockerfileImagePush bool
 
 // Flags useful for debugging.
 var debugNoCleanup bool
-
-// Experimental features flags.
-var experimentalOldParser bool
 
 func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
@@ -69,27 +64,14 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse
-	var tasks []*api.Task
-
-	// nolint:nestif // this will be a no-issue once we switch to Go parser
-	if !experimentalOldParser {
-		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), parser.WithMissingInstancesAllowed())
-		result, err := p.Parse(cmd.Context(), combinedYAML)
-		if err != nil {
-			if re, ok := err.(*parsererror.Rich); ok {
-				fmt.Print(re.ContextLines())
-			}
-
-			return err
+	p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), parser.WithMissingInstancesAllowed())
+	result, err := p.Parse(cmd.Context(), combinedYAML)
+	if err != nil {
+		if re, ok := err.(*parsererror.Rich); ok {
+			fmt.Print(re.ContextLines())
 		}
-		tasks = result.Tasks
-	} else {
-		p := rpcparser.Parser{Environment: userSpecifiedEnvironment}
-		result, err := p.Parse(combinedYAML)
-		if err != nil {
-			return err
-		}
-		tasks = result.Tasks
+
+		return err
 	}
 
 	var executorOpts []executor.Option
@@ -129,7 +111,7 @@ func run(cmd *cobra.Command, args []string) error {
 	executorOpts = append(executorOpts, executor.WithContainerBackend(backend))
 
 	// Run
-	e, err := executor.New(projectDir, tasks, executorOpts...)
+	e, err := executor.New(projectDir, result.Tasks, executorOpts...)
 	if err != nil {
 		return err
 	}
@@ -171,10 +153,6 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&debugNoCleanup, "debug-no-cleanup", false,
 		"don't remove containers and volumes after execution")
 	_ = cmd.PersistentFlags().MarkHidden("debug-no-cleanup")
-
-	// Experimental features flags
-	cmd.PersistentFlags().BoolVar(&experimentalOldParser, "legacy-remote-parser", false,
-		"use old configuration parser that sends parse requests to the Cirrus Cloud")
 
 	return cmd
 }

@@ -3,15 +3,12 @@ package validate
 import (
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/evaluator"
 	eenvironment "github.com/cirruslabs/cirrus-cli/internal/executor/environment"
-	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/executorservice"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
-	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/spf13/cobra"
 	"io"
 	"strings"
@@ -22,11 +19,6 @@ var ErrValidate = errors.New("validate failed")
 // General flags.
 var validateFile string
 var environment []string
-
-// Experimental features flags.
-var experimentalOldParser bool
-
-var yaml bool
 
 func additionalInstancesOption(stderr io.Writer) parser.Option {
 	// Try to retrieve additional instances from the Cirrus Cloud
@@ -87,31 +79,14 @@ func validate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse
-	var tasks []*api.Task
-
-	// nolint:nestif // this will be a no-issue once we switch to Go parser
-	if !experimentalOldParser {
-		p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), additionalInstancesOption(cmd.ErrOrStderr()))
-		result, err := p.Parse(cmd.Context(), configuration)
-		if err != nil {
-			if re, ok := err.(*parsererror.Rich); ok {
-				fmt.Print(re.ContextLines())
-			}
-
-			return err
+	p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), additionalInstancesOption(cmd.ErrOrStderr()))
+	_, err = p.Parse(cmd.Context(), configuration)
+	if err != nil {
+		if re, ok := err.(*parsererror.Rich); ok {
+			fmt.Print(re.ContextLines())
 		}
-		tasks = result.Tasks
-	} else {
-		p := rpcparser.Parser{Environment: userSpecifiedEnvironment}
-		result, err := p.Parse(configuration)
-		if err != nil {
-			return err
-		}
-		tasks = result.Tasks
-	}
 
-	if yaml {
-		fmt.Println(string(testutil.TasksToJSON(nil, tasks)))
+		return err
 	}
 
 	return nil
@@ -129,17 +104,6 @@ func NewValidateCmd() *cobra.Command {
 		"set (-e A=B) or pass-through (-e A) an environment variable to the Starlark interpreter")
 	cmd.PersistentFlags().StringVarP(&validateFile, "file", "f", "",
 		"use file as the configuration file (the path should end with either .yml or ..star)")
-
-	// Experimental features flags
-	cmd.PersistentFlags().BoolVar(&experimentalOldParser, "legacy-remote-parser", false,
-		"use old configuration parser that sends parse requests to the Cirrus Cloud")
-
-	// A hidden flag to dump YAML representation of tasks and aid in generating test
-	// cases for smooth rpcparser → parser transition
-	cmd.PersistentFlags().BoolVar(&yaml, "json", false, "emit a JSON list with tasks contained in the configuration file")
-	if err := cmd.PersistentFlags().MarkHidden("json"); err != nil {
-		panic(err)
-	}
 
 	return cmd
 }
