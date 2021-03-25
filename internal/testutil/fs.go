@@ -4,6 +4,7 @@ import (
 	"github.com/otiai10/copy"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"runtime"
 	"testing"
 )
@@ -31,7 +32,7 @@ func TempDir(t *testing.T) string {
 		tempDirRoot = "/tmp"
 	}
 
-	dir, err := ioutil.TempDir(tempDirRoot, t.Name())
+	dir, err := ioutil.TempDir(tempDirRoot, filepath.Base(t.Name()))
 	if err != nil {
 		t.Fatal(err)
 	}
