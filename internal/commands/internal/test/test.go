@@ -9,9 +9,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/echelon"
-	"github.com/go-test/deep"
+	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -85,29 +84,13 @@ func test(cmd *cobra.Command, args []string) error {
 		}
 
 		// Compare generated configuration with the expected configuration
-		var expectedConfig yaml.Node
-		err = yaml.Unmarshal(expectedConfigBytes, &expectedConfig)
-		if err != nil {
-			return fmt.Errorf("%w: %v", ErrTest, err)
-		}
-
-		var generatedConfig yaml.Node
-		err = yaml.Unmarshal([]byte(result.YAMLConfig), &generatedConfig)
-		if err != nil {
-			return fmt.Errorf("%w: %v", ErrTest, err)
-		}
-
-		differentConfig := logDifferenceIfAny(logger, expectedConfig, generatedConfig)
+		differentConfig := logDifferenceIfAny(logger, "YAML", string(expectedConfigBytes), result.YAMLConfig)
 
 		logsBytes, err := ioutil.ReadFile(filepath.Join(testDir, ".cirrus.expected.log"))
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
-		differentLogs := logDifferenceIfAny(
-			logger,
-			strings.Split(string(logsBytes), "\n"),
-			strings.Split(string(result.OutputLogs), "\n"),
-		)
+		differentLogs := logDifferenceIfAny(logger, "logs", string(logsBytes), string(result.OutputLogs))
 
 		if differentConfig || differentLogs {
 			someTestsFailed = true
@@ -124,14 +107,22 @@ func test(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func logDifferenceIfAny(logger *echelon.Logger, a, b interface{}) bool {
-	diff := deep.Equal(a, b)
-
-	for _, line := range diff {
-		logger.Warnf("%s", line)
+func logDifferenceIfAny(logger *echelon.Logger, where string, a, b string) bool {
+	if a == b {
+		return false
 	}
 
-	return len(diff) > 0
+	dmp := diffmatchpatch.New()
+	diffs := dmp.DiffMain(a, b, false)
+
+	if len(diffs) == 0 {
+		return false
+	}
+
+	logger.Warnf("Detected difference in %s:", where)
+	logger.Warnf(dmp.DiffPrettyText(diffs))
+
+	return true
 }
 
 func NewTestCmd() *cobra.Command {
