@@ -54,6 +54,7 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.
 		config.ClientSecret,
 		"-task-id",
 		strconv.FormatInt(config.TaskID, 10),
+		"-clean-working-dir", // to make sure no garbage is left
 	)
 
 	// Determine the working directory for the agent
