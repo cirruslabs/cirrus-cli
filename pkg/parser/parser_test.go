@@ -9,7 +9,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/memory"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
-	"github.com/cirruslabs/cirrus-cli/pkg/rpcparser"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/stretchr/testify/require"
 	"github.com/yudai/gojsondiff"
@@ -187,7 +186,7 @@ func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.
 	}
 }
 
-// TestViaRPC ensures that the parser produces results identical to rpcparser.
+// TestViaRPC ensures that the parser produces results identical to the now removed RPC parser.
 func TestViaRPC(t *testing.T) {
 	cloudDir := absolutize("via-rpc")
 
@@ -224,11 +223,6 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 	// Obtain expected result by loading JSON fixture
 	fixtureBytes, err := ioutil.ReadFile(fixturePath)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			viaRPCCreateJSONFixture(t, yamlBytes, fixturePath, envPath, fcPath)
-			t.Fatalf("created new fixture: %s, don't forget to commit it", fixturePath)
-		}
-
 		t.Fatal(err)
 	}
 
@@ -284,23 +278,6 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 		fmt.Print(diffString)
 
 		t.Fail()
-	}
-}
-
-func viaRPCCreateJSONFixture(t *testing.T, yamlBytes []byte, fixturePath string, envPath string, fcPath string) {
-	// Aid in migration by automatically creating new JSON fixture using the RPC parser
-	rpcParser := rpcparser.Parser{
-		Environment:   viaRPCLoadMap(t, envPath),
-		FilesContents: viaRPCLoadMap(t, fcPath),
-	}
-	rpcResult, err := rpcParser.Parse(string(yamlBytes))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	fixtureBytes := testutil.TasksToJSON(t, rpcResult.Tasks)
-	if err := ioutil.WriteFile(fixturePath, fixtureBytes, 0600); err != nil {
-		t.Fatal(err)
 	}
 }
 
