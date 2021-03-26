@@ -47,7 +47,9 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			ClientSecret:      agentAwareTask.ClientSecret,
 			TaskID:            agentAwareTask.TaskId,
 		}
-		config.SetAgentVersionWithoutDowngrade(agentAwareTask.AgentVersion)
+		if err := config.SetAgentVersionWithoutDowngrade(agentAwareTask.AgentVersion); err != nil {
+			worker.logger.Warnf("failed to set agent's version for task %d: %v", agentAwareTask.TaskId, err)
+		}
 		if err := inst.Run(taskCtx, &config); err != nil {
 			worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
 

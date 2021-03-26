@@ -33,13 +33,22 @@ func (rc *RunConfig) SetAgentVersion(agentVersion string) {
 	rc.agentVersion = agentVersion
 }
 
-func (rc *RunConfig) SetAgentVersionWithoutDowngrade(agentVersion string) {
-	requestedVersion, _ := version.NewVersion(agentVersion)
-	defaultVersion, _ := version.NewVersion(platform.DefaultAgentVersion)
+func (rc *RunConfig) SetAgentVersionWithoutDowngrade(agentVersion string) error {
+	if agentVersion == "" {
+		return nil
+	}
+
+	requestedVersion, err := version.NewVersion(agentVersion)
+	if err != nil {
+		return err
+	}
+	defaultVersion := version.Must(version.NewVersion(platform.DefaultAgentVersion))
 
 	if requestedVersion.LessThan(defaultVersion) {
 		rc.agentVersion = defaultVersion.String()
 	} else {
 		rc.agentVersion = requestedVersion.String()
 	}
+
+	return nil
 }
