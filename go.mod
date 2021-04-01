@@ -8,7 +8,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/certifi/gocertifi v0.0.0-20200922220541-2c3bb06c6054
-	github.com/cirruslabs/cirrus-ci-agent v1.33.0
+	github.com/cirruslabs/cirrus-ci-agent v1.37.0
 	github.com/cirruslabs/echelon v1.4.1
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.1.0
@@ -22,7 +22,6 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-git/go-billy/v5 v5.0.0
 	github.com/go-git/go-git/v5 v5.2.0
-	github.com/go-test/deep v1.0.7
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/google/go-github/v32 v32.1.0
@@ -48,7 +47,7 @@ require (
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/sftp v1.12.0
 	github.com/qri-io/starlib v0.4.2
-	github.com/sergi/go-diff v1.1.0 // indirect
+	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect

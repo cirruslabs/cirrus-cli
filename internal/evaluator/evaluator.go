@@ -205,8 +205,10 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 	ctx context.Context,
 	request *api.EvaluateFunctionRequest,
 ) (*api.EvaluateFunctionResponse, error) {
+	lrk := larker.New(larker.WithEnvironment(request.Environment))
+
 	// Run Starlark hook
-	result, err := larker.New().Hook(ctx, request.StarlarkConfig, request.FunctionName, request.Arguments.AsSlice())
+	result, err := lrk.Hook(ctx, request.StarlarkConfig, request.FunctionName, request.Arguments.AsSlice())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
