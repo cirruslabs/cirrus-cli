@@ -316,8 +316,10 @@ task:
 }
 
 func TestHook(t *testing.T) {
-	config := `def on_build_failure(ctx):
-  print("I'm alive!")
+	config := `load("cirrus", "env")
+
+def on_build_failure(ctx):
+  print(env.get("SOME_VARIABLE"))
   return [ctx.build.id, ctx.task.id]
 `
 
@@ -339,6 +341,7 @@ func TestHook(t *testing.T) {
 		StarlarkConfig: config,
 		FunctionName:   "on_build_failure",
 		Arguments:      arguments,
+		Environment:    map[string]string{"SOME_VARIABLE": "some value"},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -355,7 +358,7 @@ func TestHook(t *testing.T) {
 
 	assert.Empty(t, res.ErrorMessage, "hook should evaluate successfully")
 
-	assert.Equal(t, string(res.OutputLogs), "I'm alive!\n", "hook should generate some debugging output")
+	assert.Equal(t, string(res.OutputLogs), "some value\n", "hook should generate some debugging output")
 
 	assert.Greater(t, res.DurationNanos, int64(0),
 		"execution time doesn't seem to be counted properly")
