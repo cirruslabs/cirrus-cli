@@ -114,6 +114,11 @@ func (worker *Worker) info() *api.WorkerInfo {
 
 // https://github.com/cirruslabs/cirrus-cli/issues/357
 func (worker *Worker) oldWorkingDirectoryCleanup() {
+	// Fix tests failing due to /tmp/cirrus-ci-build removal
+	if _, runningInCi := os.LookupEnv("CIRRUS_CI"); runningInCi {
+		return
+	}
+
 	tmpDir := os.TempDir()
 
 	// Clean-up static directory[1]
