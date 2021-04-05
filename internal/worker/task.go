@@ -22,15 +22,14 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 		worker.logger.Errorf("failed to create an instance for the task %d: %v", agentAwareTask.TaskId, err)
 		return
 	}
-	defer func() {
-		if err := inst.Close(); err != nil {
-			worker.logger.Errorf("failed to close persistent worker instance for task %d: %v",
-				agentAwareTask.TaskId, err)
-		}
-	}()
 
 	go func() {
 		defer func() {
+			if err := inst.Close(); err != nil {
+				worker.logger.Errorf("failed to close persistent worker instance for task %d: %v",
+					agentAwareTask.TaskId, err)
+			}
+
 			worker.taskCompletions <- agentAwareTask.TaskId
 		}()
 
