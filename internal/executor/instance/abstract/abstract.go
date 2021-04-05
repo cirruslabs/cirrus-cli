@@ -8,4 +8,5 @@ import (
 type Instance interface {
 	Run(context.Context, *runconfig.RunConfig) error
 	WorkingDirectory(projectDir string, dirtyMode bool) string
+	Close() error
 }

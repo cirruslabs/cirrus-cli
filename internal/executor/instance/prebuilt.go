@@ -153,3 +153,7 @@ Outer:
 func (prebuilt *PrebuiltInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {
 	return ""
 }
+
+func (prebuilt *PrebuiltInstance) Close() error {
+	return nil
+}

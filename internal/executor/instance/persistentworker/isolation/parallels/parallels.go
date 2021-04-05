@@ -190,6 +190,10 @@ func (parallels *Parallels) WorkingDirectory(projectDir string, dirtyMode bool) 
 	return platform.NewUnix().GenericWorkingDir()
 }
 
+func (parallels *Parallels) Close() error {
+	return nil
+}
+
 func TimeSyncCommand(t time.Time) string {
 	return fmt.Sprintf("sudo date -u %s\n", t.Format("010215042006"))
 }
