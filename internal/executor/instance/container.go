@@ -63,3 +63,7 @@ func (inst *ContainerInstance) WorkingDirectory(projectDir string, dirtyMode boo
 
 	return inst.Platform.GenericWorkingDir()
 }
+
+func (inst *ContainerInstance) Close() error {
+	return nil
+}

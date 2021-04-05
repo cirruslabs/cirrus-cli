@@ -25,7 +25,7 @@ type PersistentWorkerInstance struct {
 
 func New() (*PersistentWorkerInstance, error) {
 	// Create a working directory that will be used if no dirty mode is requested in Run()
-	tempDir, err := ioutil.TempDir("", "")
+	tempDir, err := ioutil.TempDir("", "cirrus-build-")
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,8 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.
 		config.ClientSecret,
 		"-task-id",
 		strconv.FormatInt(config.TaskID, 10),
-		"-clean-working-dir", // to make sure no garbage is left
+		"-pre-created-working-dir",
+		pwi.tempDir,
 	)
 
 	// Determine the working directory for the agent
@@ -82,4 +83,8 @@ func (pwi *PersistentWorkerInstance) WorkingDirectory(projectDir string, dirtyMo
 	}
 
 	return pwi.tempDir
+}
+
+func (pwi *PersistentWorkerInstance) Close() error {
+	return pwi.cleanup()
 }

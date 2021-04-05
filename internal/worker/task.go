@@ -25,6 +25,11 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 
 	go func() {
 		defer func() {
+			if err := inst.Close(); err != nil {
+				worker.logger.Errorf("failed to close persistent worker instance for task %d: %v",
+					agentAwareTask.TaskId, err)
+			}
+
 			worker.taskCompletions <- agentAwareTask.TaskId
 		}()
 
