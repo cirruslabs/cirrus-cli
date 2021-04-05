@@ -25,7 +25,7 @@ type PersistentWorkerInstance struct {
 
 func New() (*PersistentWorkerInstance, error) {
 	// Create a working directory that will be used if no dirty mode is requested in Run()
-	tempDir, err := ioutil.TempDir("", "")
+	tempDir, err := ioutil.TempDir("", "cirrus-build-")
 	if err != nil {
 		return nil, err
 	}
