@@ -6,7 +6,10 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"google.golang.org/grpc"
+	"time"
 )
+
+const perCallTimeout = 15 * time.Second
 
 func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollResponse_AgentAwareTask) {
 	if _, ok := worker.tasks[agentAwareTask.TaskId]; ok {
@@ -58,7 +61,9 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 		if err := inst.Run(taskCtx, &config); err != nil {
 			worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
 
-			_, err := worker.rpcClient.TaskFailed(taskCtx, &api.TaskFailedRequest{
+			boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
+			defer cancel()
+			_, err := worker.rpcClient.TaskFailed(boundedCtx, &api.TaskFailedRequest{
 				TaskIdentification: taskIdentification,
 				Message:            err.Error(),
 			}, grpc.PerRPCCredentials(worker))
@@ -68,7 +73,9 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			}
 		}
 
-		_, err = worker.rpcClient.TaskStopped(taskCtx, taskIdentification, grpc.PerRPCCredentials(worker))
+		boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
+		defer cancel()
+		_, err = worker.rpcClient.TaskStopped(boundedCtx, taskIdentification, grpc.PerRPCCredentials(worker))
 		if err != nil {
 			worker.logger.Errorf("failed to notify the server about the stopped task %d: %v",
 				agentAwareTask.TaskId, err)
