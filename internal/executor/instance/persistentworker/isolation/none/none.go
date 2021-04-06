@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 )
@@ -23,9 +24,19 @@ type PersistentWorkerInstance struct {
 	cleanup func() error
 }
 
+func staticTempDirWithDynamicFallback() (string, error) {
+	// Prefer static directory for non-Cirrus CI caches efficiency (e.g. ccache)
+	staticTempDir := filepath.Join(os.TempDir(), "cirrus-build")
+	if err := os.Mkdir(staticTempDir, 0700); err == nil {
+		return staticTempDir, nil
+	}
+
+	return ioutil.TempDir("", "cirrus-build-")
+}
+
 func New() (*PersistentWorkerInstance, error) {
 	// Create a working directory that will be used if no dirty mode is requested in Run()
-	tempDir, err := ioutil.TempDir("", "cirrus-build-")
+	tempDir, err := staticTempDirWithDynamicFallback()
 	if err != nil {
 		return nil, err
 	}
