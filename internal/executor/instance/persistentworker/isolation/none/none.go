@@ -26,12 +26,12 @@ type PersistentWorkerInstance struct {
 
 func staticTempDirWithDynamicFallback() (string, error) {
 	// Prefer static directory for non-Cirrus CI caches efficiency (e.g. ccache)
-	staticTempDir := filepath.Join(os.TempDir(), "cirrus-cli-build")
+	staticTempDir := filepath.Join(os.TempDir(), "cirrus-build")
 	if err := os.Mkdir(staticTempDir, 0700); err == nil {
 		return staticTempDir, nil
 	}
 
-	return ioutil.TempDir("", "cirrus-cli-build-")
+	return ioutil.TempDir("", "cirrus-build-")
 }
 
 func New() (*PersistentWorkerInstance, error) {
