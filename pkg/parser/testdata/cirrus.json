@@ -2487,11 +2487,27 @@
                         }
                       ],
                       "description": "Container readiness probe command."
+                    },
+                    "ports": {
+                      "description": "Ports exposed by the container.",
+                      "items": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "description": "Port exposed by the container."
+                        }
+                      ],
+                      "type": "array"
                     }
                   },
                   "required": [
-                    "image",
-                    "port"
+                    "image"
                   ],
                   "type": "object"
                 }
@@ -2678,11 +2694,27 @@
                         }
                       ],
                       "description": "Container readiness probe command."
+                    },
+                    "ports": {
+                      "description": "Ports exposed by the container.",
+                      "items": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "description": "Port exposed by the container."
+                        }
+                      ],
+                      "type": "array"
                     }
                   },
                   "required": [
-                    "image",
-                    "port"
+                    "image"
                   ],
                   "type": "object"
                 }
@@ -2871,11 +2903,27 @@
                         }
                       ],
                       "description": "Container readiness probe command."
+                    },
+                    "ports": {
+                      "description": "Ports exposed by the container.",
+                      "items": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "description": "Port exposed by the container."
+                        }
+                      ],
+                      "type": "array"
                     }
                   },
                   "required": [
-                    "image",
-                    "port"
+                    "image"
                   ],
                   "type": "object"
                 }
@@ -3164,11 +3212,27 @@
                         }
                       ],
                       "description": "Container readiness probe command."
+                    },
+                    "ports": {
+                      "description": "Ports exposed by the container.",
+                      "items": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "description": "Port exposed by the container."
+                        }
+                      ],
+                      "type": "array"
                     }
                   },
                   "required": [
-                    "image",
-                    "port"
+                    "image"
                   ],
                   "type": "object"
                 }
@@ -3858,11 +3922,27 @@
                     }
                   ],
                   "description": "Container readiness probe command."
+                },
+                "ports": {
+                  "description": "Ports exposed by the container.",
+                  "items": [
+                    {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "description": "Port exposed by the container."
+                    }
+                  ],
+                  "type": "array"
                 }
               },
               "required": [
-                "image",
-                "port"
+                "image"
               ],
               "type": "object"
             }
