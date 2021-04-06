@@ -25,6 +25,35 @@ type AdditionalContainer struct {
 	parseable.DefaultParser
 }
 
+func parsePort(port string) (*api.PortMapping, error) {
+	// Support port mapping where a host port[1] is specified in addition to container port
+	// [1]: https://cirrus-ci.org/guide/writing-tasks/#additional-containers
+	const maxSplits = 2
+
+	portParts := strings.SplitN(port, ":", maxSplits)
+
+	if len(portParts) == maxSplits {
+		hostPort, err := strconv.ParseUint(portParts[0], 10, 32)
+		if err != nil {
+			return nil, err
+		}
+
+		containerPort, err := strconv.ParseUint(portParts[1], 10, 32)
+		if err != nil {
+			return nil, err
+		}
+
+		return &api.PortMapping{ContainerPort: uint32(containerPort), HostPort: uint32(hostPort)}, nil
+	}
+
+	containerPort, err := strconv.ParseUint(portParts[0], 10, 32)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.PortMapping{ContainerPort: uint32(containerPort)}, nil
+}
+
 // nolint:gocognit
 func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *AdditionalContainer {
 	ac := &AdditionalContainer{
@@ -83,36 +112,35 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		return nil
 	})
 
-	ac.RequiredField(nameable.NewSimpleNameable("port"), schema.Port(), func(node *node.Node) error {
+	ac.OptionalField(nameable.NewSimpleNameable("port"), schema.Port(), func(node *node.Node) error {
 		port, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
 
-		// Support port mapping where a host port[1] is specified in addition to container port
-		// [1]: https://cirrus-ci.org/guide/writing-tasks/#additional-containers
-		const maxSplits = 2
+		portMapping, err := parsePort(port)
+		if err != nil {
+			return node.ParserError("failed to parse port: %v", err)
+		}
 
-		portParts := strings.SplitN(port, ":", maxSplits)
+		ac.proto.Ports = append(ac.proto.Ports, portMapping)
 
-		if len(portParts) == maxSplits {
-			hostPort, err := strconv.ParseUint(portParts[0], 10, 32)
-			if err != nil {
-				return err
-			}
-			ac.proto.HostPort = uint32(hostPort)
+		return nil
+	})
 
-			containerPort, err := strconv.ParseUint(portParts[1], 10, 32)
+	ac.OptionalField(nameable.NewSimpleNameable("ports"), schema.Ports(), func(node *node.Node) error {
+		ports, err := node.GetSliceOfExpandedStrings(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		for _, port := range ports {
+			portMapping, err := parsePort(port)
 			if err != nil {
-				return err
+				return node.ParserError("failed to parse port: %v", err)
 			}
-			ac.proto.ContainerPort = uint32(containerPort)
-		} else {
-			containerPort, err := strconv.ParseUint(portParts[0], 10, 32)
-			if err != nil {
-				return err
-			}
-			ac.proto.ContainerPort = uint32(containerPort)
+
+			ac.proto.Ports = append(ac.proto.Ports, portMapping)
 		}
 
 		return nil
@@ -185,6 +213,14 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 func (ac *AdditionalContainer) Parse(node *node.Node) (*api.AdditionalContainer, error) {
 	if err := ac.DefaultParser.Parse(node); err != nil {
 		return nil, err
+	}
+
+	// Once "port" field is deprecated we can mark "ports" field as required and remove this logic
+	if len(ac.proto.Ports) == 0 {
+		return nil, node.ParserError("should specify either \"port\" or \"ports\"")
+	}
+	if node.HasChild("port") && node.HasChild("ports") {
+		return nil, node.ParserError("please only use \"ports\" field")
 	}
 
 	// Resource defaults

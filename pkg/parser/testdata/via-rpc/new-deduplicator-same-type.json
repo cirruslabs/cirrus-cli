@@ -21,11 +21,15 @@
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "additionalContainers": [
         {
-          "containerPort": 80,
           "cpu": 0.5,
           "image": "nginx:latest",
           "memory": 20480,
-          "name": "nginx"
+          "name": "nginx",
+          "ports": [
+            {
+              "containerPort": 80
+            }
+          ]
         }
       ],
       "cpu": 2,

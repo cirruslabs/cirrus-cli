@@ -125,6 +125,14 @@ func Port() *schema.Schema {
 	}
 }
 
+func Ports() *schema.Schema {
+	result := ArrayOf(Port())
+
+	result.Description = "Ports exposed by the container."
+
+	return result
+}
+
 func ArrayOf(arrayItemSchema *schema.Schema) *schema.Schema {
 	return &schema.Schema{
 		Type: schema.PrimitiveTypes{schema.ArrayType},
