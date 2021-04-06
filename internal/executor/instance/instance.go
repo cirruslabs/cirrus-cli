@@ -132,6 +132,7 @@ type Params struct {
 	WorkingDirectory       string
 }
 
+// nolint:gocognit
 func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, params *Params) error {
 	logger := config.Logger
 	backend := config.ContainerBackend
@@ -237,7 +238,9 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 	if len(params.AdditionalContainers) > 0 {
 		var ports []string
 		for _, additionalContainer := range params.AdditionalContainers {
-			ports = append(ports, strconv.FormatUint(uint64(additionalContainer.ContainerPort), 10))
+			for _, portMapping := range additionalContainer.Ports {
+				ports = append(ports, strconv.FormatUint(uint64(portMapping.ContainerPort), 10))
+			}
 		}
 		commaDelimitedPorts := strings.Join(ports, ",")
 		input.Env["CIRRUS_PORTS_WAIT_FOR"] = commaDelimitedPorts
@@ -383,9 +386,12 @@ func runAdditionalContainer(
 	// would require fiddling with Netfilter, which results in unwanted complexity.
 	//
 	// So here we simply do our best effort and warn the user about potential problems.
-	if additionalContainer.HostPort != 0 {
-		logger.Warnf("port mappings are unsupported by the Cirrus CLI, please tell the application "+
-			"running in the additional container '%s' to use a different port", additionalContainer.Name)
+	for _, portMapping := range additionalContainer.Ports {
+		if portMapping.HostPort != 0 {
+			logger.Warnf("port mappings are unsupported by the Cirrus CLI, please tell the application "+
+				"running in the additional container '%s' to use a different port", additionalContainer.Name)
+			break
+		}
 	}
 
 	logger.Debugf("starting additional container %s", cont.ID)
