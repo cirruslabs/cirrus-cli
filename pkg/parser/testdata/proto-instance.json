@@ -24,7 +24,8 @@
             {
               "containerPort": 3306
             }
-          ]
+          ],
+          "containerPort": 3306
         }
       ],
       "cpu": 2.5,
@@ -67,7 +68,8 @@
             {
               "containerPort": 3306
             }
-          ]
+          ],
+          "containerPort": 3306
         }
       ],
       "cpu": 2.5,

@@ -38,7 +38,8 @@
             {
               "containerPort": 6379
             }
-          ]
+          ],
+          "containerPort": 6379
         },
         {
           "cpu": 0.5,
@@ -50,7 +51,9 @@
               "containerPort": 6379,
               "hostPort": 7777
             }
-          ]
+          ],
+          "containerPort": 6379,
+          "hostPort": 7777
         },
         {
           "cpu": 0.5,
@@ -62,7 +65,8 @@
             {
               "containerPort": 2375
             }
-          ]
+          ],
+          "containerPort": 2375
         }
       ],
       "cpu": 2,

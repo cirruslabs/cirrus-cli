@@ -29,7 +29,8 @@
             {
               "containerPort": 80
             }
-          ]
+          ],
+          "containerPort": 80
         }
       ],
       "cpu": 2,

@@ -123,6 +123,10 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 			return node.ParserError("failed to parse port: %v", err)
 		}
 
+		// Support old port fields until they're deprecated
+		ac.proto.ContainerPort = portMapping.ContainerPort
+		ac.proto.HostPort = portMapping.HostPort
+
 		ac.proto.Ports = append(ac.proto.Ports, portMapping)
 
 		return nil
