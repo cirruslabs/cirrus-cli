@@ -19,6 +19,8 @@ func TestExecutorParallels(t *testing.T) {
 	testutil.TempChdir(t)
 
 	for _, platform := range []string{"darwin", "linux"} {
+		platform := platform
+
 		t.Run(platform, func(t *testing.T) {
 			commonPrefix := fmt.Sprintf("CIRRUS_INTERNAL_PARALLELS_%s_", strings.ToUpper(platform))
 
