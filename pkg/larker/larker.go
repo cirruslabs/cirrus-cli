@@ -17,6 +17,7 @@ import (
 var (
 	ErrLoadFailed           = errors.New("load failed")
 	ErrExecFailed           = errors.New("exec failed")
+	ErrNotFound             = errors.New("entrypoint not found")
 	ErrMainFailed           = errors.New("failed to call main")
 	ErrHookFailed           = errors.New("failed to call hook")
 	ErrMainUnexpectedResult = errors.New("main returned unexpected result")
@@ -84,7 +85,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 		// Retrieve main()
 		main, ok := globals["main"]
 		if !ok {
-			errCh <- fmt.Errorf("%w: main() not found", ErrMainFailed)
+			errCh <- fmt.Errorf("%w: main()", ErrNotFound)
 			return
 		}
 
@@ -172,7 +173,7 @@ func (larker *Larker) Hook(
 		// Retrieve hook
 		hook, ok := globals[name]
 		if !ok {
-			errCh <- fmt.Errorf("%w: %s() not found", ErrHookFailed, name)
+			errCh <- fmt.Errorf("%w: %s()", ErrNotFound, name)
 			return
 		}
 

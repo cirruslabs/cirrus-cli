@@ -3,6 +3,7 @@ package evaluator
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
@@ -119,14 +120,14 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		)
 
 		lrkResult, err := lrk.Main(ctx, request.StarlarkConfig)
-		if err != nil {
+		if err == nil {
+			result.OutputLogs = lrkResult.OutputLogs
+
+			if lrkResult.YAMLConfig != "" {
+				yamlConfigs = append(yamlConfigs, lrkResult.YAMLConfig)
+			}
+		} else if !errors.Is(err, larker.ErrNotFound) {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
-		}
-
-		result.OutputLogs = lrkResult.OutputLogs
-
-		if lrkResult.YAMLConfig != "" {
-			yamlConfigs = append(yamlConfigs, lrkResult.YAMLConfig)
 		}
 	}
 
@@ -210,6 +211,10 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 	// Run Starlark hook
 	result, err := lrk.Hook(ctx, request.StarlarkConfig, request.FunctionName, request.Arguments.AsSlice())
 	if err != nil {
+		if errors.Is(err, larker.ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		}
+
 		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
