@@ -2,9 +2,14 @@ container:
   image: latest
 
 foo_task:
-  only_if: false
+  depends_on:
+    - bar
+    - baz
   script: echo foo
 
 bar_task:
-  depends_on: foo
+  only_if: false
   script: echo bar
+
+baz_task:
+  script: echo baz

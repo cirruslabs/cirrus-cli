@@ -312,7 +312,7 @@ func (p *Parser) resolveDependenciesShallow(tasks []task.ParseableTaskLike) erro
 		for _, dependsOnName := range task.DependsOnNames() {
 			// Dependency may be missing due to only_if
 			if _, ok := p.disabledTaskNamesAndAliases[dependsOnName]; ok {
-				break
+				continue
 			}
 
 			var dependencyWasFound bool

@@ -9,7 +9,7 @@
         "name": "main",
         "scriptInstruction": {
           "scripts": [
-            "echo bar"
+            "echo foo"
           ]
         }
       }
@@ -23,7 +23,6 @@
       "image": "latest",
       "memory": 4096
     },
-    "localGroupId": "1",
     "metadata": {
       "properties": {
         "allow_failures": "false",
@@ -33,6 +32,45 @@
         "trigger_type": "AUTOMATIC"
       }
     },
-    "name": "bar"
+    "name": "foo",
+    "requiredGroups": [
+      "2"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "echo baz"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "latest",
+      "memory": 4096
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "1",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "baz"
   }
 ]
