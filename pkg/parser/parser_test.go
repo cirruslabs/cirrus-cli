@@ -33,6 +33,7 @@ var validCases = []string{
 	"instance-persistent_worker",
 	"collectible-order",
 	"yaml-12-booleans-only",
+	"dependency-on-disabled-only-if-task",
 }
 
 func absolutize(file string) string {
@@ -305,6 +306,7 @@ func TestViaRPCInvalid(t *testing.T) {
 	}{
 		{"validation-badDependencies.yml", "error in dependencies between tasks: b, c, d"},
 		{"validation-duplicateCommands.yml", "task 'main' cache and script instructions have identical name"},
+		{"validation-missingDependency.yml", "there's no task 'fooo', but task 'bar' depends on it"},
 	}
 
 	for _, testCase := range invalidCases {
