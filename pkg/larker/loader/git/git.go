@@ -86,9 +86,17 @@ func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
 	boundedStorage := filesystem.NewStorage(bounded.NewFilesystem(storageBytes, storageFiles), boundedCache)
 	boundedFilesystem := bounded.NewFilesystem(filesystemBytes, filesystemFiles)
 
+	var referenceName plumbing.ReferenceName
+
+	// Fetch the specified branch instead of the default one
+	if !plumbing.IsHash(locator.Revision) {
+		referenceName = plumbing.ReferenceName("refs/heads/" + locator.Revision)
+	}
+
 	// Clone the repository
 	repo, err := git.CloneContext(ctx, boundedStorage, boundedFilesystem, &git.CloneOptions{
-		URL: locator.URL,
+		URL:           locator.URL,
+		ReferenceName: referenceName,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
