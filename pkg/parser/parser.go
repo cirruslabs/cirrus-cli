@@ -50,7 +50,8 @@ type Parser struct {
 	additionalTaskProperties []*descriptor.FieldDescriptorProto
 	missingInstancesAllowed  bool
 
-	tasksCountBeforeFiltering int64
+	tasksCountBeforeFiltering   int64
+	disabledTaskNamesAndAliases map[string]struct{}
 }
 
 type Result struct {
@@ -63,8 +64,9 @@ type Result struct {
 
 func New(opts ...Option) *Parser {
 	parser := &Parser{
-		environment: make(map[string]string),
-		fs:          dummy.New(),
+		environment:                 make(map[string]string),
+		fs:                          dummy.New(),
+		disabledTaskNamesAndAliases: make(map[string]struct{}),
 	}
 
 	// Apply options
@@ -145,6 +147,8 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			}
 
 			if !enabled {
+				p.disabledTaskNamesAndAliases[taskLike.Name()] = struct{}{}
+				p.disabledTaskNamesAndAliases[taskLike.Alias()] = struct{}{}
 				continue
 			}
 
@@ -182,7 +186,9 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 		return nil, err
 	}
 
-	resolveDependenciesShallow(tasks)
+	if err := p.resolveDependenciesShallow(tasks); err != nil {
+		return nil, err
+	}
 
 	if len(tasks) == 0 {
 		return &Result{}, nil
@@ -300,19 +306,34 @@ func (p *Parser) Schema() *schema.Schema {
 	return schema
 }
 
-func resolveDependenciesShallow(tasks []task.ParseableTaskLike) {
+func (p *Parser) resolveDependenciesShallow(tasks []task.ParseableTaskLike) error {
 	for _, task := range tasks {
 		var dependsOnIDs []int64
 		for _, dependsOnName := range task.DependsOnNames() {
+			// Dependency may be missing due to only_if
+			if _, ok := p.disabledTaskNamesAndAliases[dependsOnName]; ok {
+				continue
+			}
+
+			var dependencyWasFound bool
+
 			for _, subTask := range tasks {
 				if subTask.Name() == dependsOnName || subTask.Alias() == dependsOnName {
 					dependsOnIDs = append(dependsOnIDs, subTask.ID())
+					dependencyWasFound = true
 				}
+			}
+
+			if !dependencyWasFound {
+				return fmt.Errorf("%w: there's no task '%s', but task '%s' depends on it",
+					parsererror.ErrBasic, dependsOnName, task.Name())
 			}
 		}
 		sort.Slice(dependsOnIDs, func(i, j int) bool { return dependsOnIDs[i] < dependsOnIDs[j] })
 		task.SetDependsOnIDs(dependsOnIDs)
 	}
+
+	return nil
 }
 
 func (p *Parser) createServiceTask(
