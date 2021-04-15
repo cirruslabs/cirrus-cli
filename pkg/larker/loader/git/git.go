@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git/bounded"
 	"github.com/docker/go-units"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/storage/filesystem"
@@ -86,17 +87,9 @@ func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
 	boundedStorage := filesystem.NewStorage(bounded.NewFilesystem(storageBytes, storageFiles), boundedCache)
 	boundedFilesystem := bounded.NewFilesystem(filesystemBytes, filesystemFiles)
 
-	var referenceName plumbing.ReferenceName
-
-	// Fetch the specified branch instead of the default one
-	if !plumbing.IsHash(locator.Revision) {
-		referenceName = plumbing.ReferenceName("refs/heads/" + locator.Revision)
-	}
-
 	// Clone the repository
 	repo, err := git.CloneContext(ctx, boundedStorage, boundedFilesystem, &git.CloneOptions{
-		URL:           locator.URL,
-		ReferenceName: referenceName,
+		URL: locator.URL,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
@@ -105,6 +98,13 @@ func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
 	// Checkout the working tree to the specified revision
 	worktree, err := repo.Worktree()
 	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
+	}
+
+	// Without this ResolveRevision() would only work for default branch (e.g. master)
+	if err := repo.Fetch(&git.FetchOptions{
+		RefSpecs: []config.RefSpec{"refs/*:refs/*"},
+	}); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
