@@ -1,6 +1,7 @@
 package git_test
 
 import (
+	"context"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -47,6 +48,51 @@ func TestParse(t *testing.T) {
 		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			assert.Equal(t, testCase.ExpectedGitLocator, git.Parse(testCase.Module))
+		})
+	}
+}
+
+func TestRetrieve(t *testing.T) {
+	testCases := []struct {
+		Name    string
+		Locator *git.Locator
+	}{
+		{
+			"default branch",
+			&git.Locator{
+				URL:      "https://github.com/cirrus-templates/helpers",
+				Path:     "lib.star",
+				Revision: "master",
+			},
+		},
+		{"non-default branch",
+			&git.Locator{URL: "https://github.com/cirrus-templates/helpers",
+				Path:     "lib.star",
+				Revision: "branch-for-cli-testing",
+			},
+		},
+		{"tag",
+			&git.Locator{URL: "https://github.com/cirrus-templates/helpers",
+				Path:     "lib.star",
+				Revision: "v0.1.0",
+			},
+		},
+		{"hash",
+			&git.Locator{URL: "https://github.com/cirrus-templates/helpers",
+				Path:     "lib.star",
+				Revision: "89fb5418c2e5c430baeab7b1bdc5f7be189cc848",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.Name, func(t *testing.T) {
+			result, err := git.Retrieve(context.Background(), testCase.Locator)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Contains(t, string(result), "def task(")
 		})
 	}
 }

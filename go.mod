@@ -11,7 +11,7 @@ require (
 	github.com/cirruslabs/cirrus-ci-agent v1.39.0
 	github.com/cirruslabs/echelon v1.4.1
 	github.com/cirruslabs/go-java-glob v0.1.0
-	github.com/cirruslabs/podmanapi v0.1.0
+	github.com/cirruslabs/podmanapi v0.2.0
 	github.com/containerd/containerd v1.4.3 // indirect
 	github.com/containers/image/v5 v5.9.0
 	github.com/containers/storage v1.24.4 // indirect
