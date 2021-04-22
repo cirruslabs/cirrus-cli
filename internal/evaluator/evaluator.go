@@ -150,20 +150,23 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 	parseResult, err := p.Parse(ctx, result.ProcessedConfig)
 	if err != nil {
 		if re, ok := err.(*parsererror.Rich); ok {
-			return &api.EvaluateConfigResponse{
-				Error: &api.RichError{
-					Message:         re.Message(),
-					ProcessedConfig: re.Config(),
-					Line:            uint64(re.Line()),
-					Column:          uint64(re.Column()),
+			result.Issues = []*api.Issue{
+				{
+					Level:   api.Issue_ERROR,
+					Message: re.Message(),
+					Line:    uint64(re.Line()),
+					Column:  uint64(re.Column()),
 				},
-			}, nil
+			}
+
+			return result, nil
 		}
 
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	result.Tasks = parseResult.Tasks
+	result.Issues = parseResult.Issues
 	result.TasksCountBeforeFiltering = parseResult.TasksCountBeforeFiltering
 
 	return result, nil

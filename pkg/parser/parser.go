@@ -52,10 +52,13 @@ type Parser struct {
 
 	tasksCountBeforeFiltering   int64
 	disabledTaskNamesAndAliases map[string]struct{}
+
+	issues []*api.Issue
 }
 
 type Result struct {
-	Tasks []*api.Task
+	Tasks  []*api.Task
+	Issues []*api.Issue
 
 	// A helper field that lets some external post-processor
 	// to inject new tasks correctly (e.g. Dockerfile build tasks)
@@ -93,10 +96,24 @@ func New(opts ...Option) *Parser {
 	return parser
 }
 
+func (p *Parser) registerIssuef(level api.Issue_Level, line int, column int, format string, args ...interface{}) {
+	p.issues = append(p.issues, &api.Issue{
+		Level:   level,
+		Message: fmt.Sprintf(format, args...),
+		Line:    uint64(line),
+		Column:  uint64(column),
+	})
+}
+
 func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 	var tasks []task.ParseableTaskLike
 
 	for _, treeItem := range tree.Children {
+		if strings.HasPrefix(treeItem.Name, "task_") {
+			p.registerIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
+				"you've probably meant %s_task", strings.TrimPrefix(treeItem.Name, "task_"))
+		}
+
 		for key, value := range p.parsers {
 			var taskLike task.ParseableTaskLike
 			switch value.(type) {
@@ -191,7 +208,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	}
 
 	if len(tasks) == 0 {
-		return &Result{}, nil
+		return &Result{Issues: p.issues}, nil
 	}
 
 	if err := validateDependenciesDeep(tasks); err != nil {
@@ -237,6 +254,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	return &Result{
 		Tasks:                     protoTasks,
 		TasksCountBeforeFiltering: p.tasksCountBeforeFiltering,
+		Issues:                    p.issues,
 	}, nil
 }
 

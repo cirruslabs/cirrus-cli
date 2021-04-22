@@ -1,0 +1,5 @@
+container:
+  image: debian:latest
+
+task_foo:
+  script: uname -a

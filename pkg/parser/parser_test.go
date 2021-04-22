@@ -75,6 +75,29 @@ func TestInvalidConfigs(t *testing.T) {
 	}
 }
 
+func TestProblematicConfigs(t *testing.T) {
+	var problematicCases = []struct {
+		Name           string
+		ExpectedIssues []*api.Issue
+	}{
+		{"problematic-potentially-missed-task", []*api.Issue{
+			{Level: api.Issue_WARNING, Message: "you've probably meant foo_task", Line: 5, Column: 3},
+		}},
+	}
+
+	for _, problematicCase := range problematicCases {
+		problematicCase := problematicCase
+
+		t.Run(problematicCase.Name, func(t *testing.T) {
+			p := parser.New()
+			result, err := p.ParseFromFile(context.Background(), absolutize(problematicCase.Name+".yml"))
+
+			require.NoError(t, err)
+			assert.EqualValues(t, problematicCase.ExpectedIssues, result.Issues)
+		})
+	}
+}
+
 func TestAdditionalInstances(t *testing.T) {
 	containerInstanceReflect := (&api.ContainerInstance{}).ProtoReflect()
 	p := parser.New(parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
