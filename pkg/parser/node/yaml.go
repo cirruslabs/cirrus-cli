@@ -74,16 +74,16 @@ func NewFromText(text string) (*Node, error) {
 			" as it top-level element, but found %s", yamlKindToString(yamlNode.Kind))
 	}
 
-	return convert(nil, "root", yamlNode.Content[0])
+	return convert(nil, "root", yamlNode.Content[0], yamlNode.Line, yamlNode.Column)
 }
 
 // nolint:gocognit // splitting this into multiple functions would probably make this even less comprehensible
-func convert(parent *Node, name string, yamlNode *yaml.Node) (*Node, error) {
+func convert(parent *Node, name string, yamlNode *yaml.Node, line, column int) (*Node, error) {
 	result := &Node{
 		Name:   name,
 		Parent: parent,
-		Line:   yamlNode.Line,
-		Column: yamlNode.Column,
+		Line:   line,
+		Column: column,
 	}
 
 	switch yamlNode.Kind {
@@ -98,7 +98,7 @@ func convert(parent *Node, name string, yamlNode *yaml.Node) (*Node, error) {
 				continue
 			}
 
-			listSubtree, err := convert(result, "", item)
+			listSubtree, err := convert(result, "", item, item.Line, item.Column)
 			if err != nil {
 				return nil, err
 			}
@@ -115,7 +115,10 @@ func convert(parent *Node, name string, yamlNode *yaml.Node) (*Node, error) {
 		for i := 0; i < len(yamlNode.Content); i += 2 {
 			// Handle "<<" keys
 			if yamlNode.Content[i].Tag == "!!merge" {
-				aliasValue, err := convert(result, "", yamlNode.Content[i+1])
+				// YAML aliases generally don't need line and column helper values
+				// since they are merged into some other data structure afterwards
+				// and this helps to find bugs easier in the future
+				aliasValue, err := convert(result, "", yamlNode.Content[i+1], 0, 0)
 				if err != nil {
 					return nil, err
 				}
@@ -130,7 +133,8 @@ func convert(parent *Node, name string, yamlNode *yaml.Node) (*Node, error) {
 				return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "map key is not a string")
 			}
 
-			mapSubtree, err := convert(result, yamlNode.Content[i].Value, yamlNode.Content[i+1])
+			mapSubtree, err := convert(result, yamlNode.Content[i].Value, yamlNode.Content[i+1],
+				yamlNode.Content[i].Line, yamlNode.Content[i].Column)
 			if err != nil {
 				return nil, err
 			}
@@ -140,7 +144,10 @@ func convert(parent *Node, name string, yamlNode *yaml.Node) (*Node, error) {
 	case yaml.ScalarNode:
 		result.Value = &ScalarValue{Value: yamlNode.Value}
 	case yaml.AliasNode:
-		resolvedAlias, err := convert(parent, name, yamlNode.Alias)
+		// YAML aliases generally don't need line and column helper values
+		// since they are merged into some other data structure afterwards
+		// and this helps to find bugs easier in the future
+		resolvedAlias, err := convert(parent, name, yamlNode.Alias, 0, 0)
 		if err != nil {
 			return nil, err
 		}
