@@ -307,12 +307,14 @@ task:
 
 	response, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{YamlConfig: yamlConfig})
 	require.NoError(t, err)
-	require.NotNil(t, response.Error)
+	require.NotNil(t, response.Issues)
 
-	assert.EqualValues(t, response.Error.Message, "not a scalar value")
-	assert.NotEmpty(t, response.Error.ProcessedConfig)
-	assert.EqualValues(t, response.Error.Line, 3)
-	assert.EqualValues(t, response.Error.Column, 5)
+	firstIssue := response.Issues[0]
+	assert.NotEmpty(t, response.ProcessedConfig)
+	assert.EqualValues(t, api.Issue_ERROR, firstIssue.Level)
+	assert.EqualValues(t, firstIssue.Message, "not a scalar value")
+	assert.EqualValues(t, firstIssue.Line, 3)
+	assert.EqualValues(t, firstIssue.Column, 5)
 }
 
 func TestHook(t *testing.T) {
