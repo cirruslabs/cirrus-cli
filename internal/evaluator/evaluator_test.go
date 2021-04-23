@@ -313,8 +313,8 @@ task:
 	assert.NotEmpty(t, response.ProcessedConfig)
 	assert.EqualValues(t, api.Issue_ERROR, firstIssue.Level)
 	assert.EqualValues(t, firstIssue.Message, "not a scalar value")
-	assert.EqualValues(t, firstIssue.Line, 3)
-	assert.EqualValues(t, firstIssue.Column, 5)
+	assert.EqualValues(t, firstIssue.Line, 2)
+	assert.EqualValues(t, firstIssue.Column, 3)
 }
 
 func TestHook(t *testing.T) {

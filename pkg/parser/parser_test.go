@@ -59,7 +59,7 @@ func TestInvalidConfigs(t *testing.T) {
 		Name  string
 		Error string
 	}{
-		{"invalid-missing-required-field", "parsing error: 6:3: required field \"steps\" was not set"},
+		{"invalid-missing-required-field", "parsing error: 5:1: required field \"steps\" was not set"},
 	}
 
 	for _, invalidCase := range invalidCases {
@@ -81,7 +81,7 @@ func TestProblematicConfigs(t *testing.T) {
 		ExpectedIssues []*api.Issue
 	}{
 		{"problematic-potentially-missed-task", []*api.Issue{
-			{Level: api.Issue_WARNING, Message: "you've probably meant foo_task", Line: 5, Column: 3},
+			{Level: api.Issue_WARNING, Message: "you've probably meant foo_task", Line: 4, Column: 1},
 		}},
 	}
 
@@ -454,11 +454,11 @@ func TestRichErrors(t *testing.T) {
 		File  string
 		Error *parsererror.Rich
 	}{
-		{"testdata/rich-errors-pipe.yml", parsererror.NewRich(2, 10,
+		{"testdata/rich-errors-pipe.yml", parsererror.NewRich(2, 3,
 			"steps should be a list")},
-		{"testdata/rich-errors-accessor.yml", parsererror.NewRich(6, 5,
+		{"testdata/rich-errors-accessor.yml", parsererror.NewRich(5, 3,
 			"expected a scalar value or a list with scalar values")},
-		{"testdata/rich-errors-matrix.yml", parsererror.NewRich(4, 7,
+		{"testdata/rich-errors-matrix.yml", parsererror.NewRich(3, 5,
 			"matrix can be defined only under a task, docker_builder or pipe")},
 	}
 
