@@ -80,9 +80,9 @@ func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
 	case uint64:
 		return starlark.MakeUint64(v), nil
 	case float32:
-		return starlark.Float(v), nil
+		return tryIntegerOrFloat(float64(v))
 	case float64:
-		return starlark.Float(v), nil
+		return tryIntegerOrFloat(v)
 	case string:
 		return starlark.String(v), nil
 	case []interface{}:
@@ -118,4 +118,12 @@ func interfaceAsStarlarkValue(value interface{}) (starlark.Value, error) {
 	default:
 		return nil, fmt.Errorf("%w: unsupported type %T", ErrStarlarkConversion, value)
 	}
+}
+
+func tryIntegerOrFloat(floatValue float64) (starlark.Value, error) {
+	if integerValue := int64(floatValue); floatValue == float64(integerValue) {
+		return starlark.MakeInt64(integerValue), nil
+	}
+
+	return starlark.Float(floatValue), nil
 }
