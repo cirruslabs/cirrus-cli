@@ -47,7 +47,7 @@ require (
 	github.com/otiai10/copy v1.4.2
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/sftp v1.12.0
-	github.com/qri-io/starlib v0.4.2
+	github.com/qri-io/starlib v0.5.0
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/afero v1.5.1 // indirect
@@ -62,7 +62,7 @@ require (
 	github.com/yudai/gojsondiff v1.0.0
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
-	go.starlark.net v0.0.0-20201210151846-e81fc95f7bd5
+	go.starlark.net v0.0.0-20210406145628-7a1108eaa012
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
