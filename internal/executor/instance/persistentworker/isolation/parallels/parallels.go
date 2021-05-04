@@ -180,6 +180,11 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	}
 	err = sess.Wait()
 	if err != nil {
+		// Work around x/crypto/ssh not being context.Context-friendly (e.g. https://github.com/golang/go/issues/20288)
+		if err := monitorCtx.Err(); err != nil {
+			return err
+		}
+
 		return fmt.Errorf("%w: failed to run agent on VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 

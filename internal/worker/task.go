@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"errors"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
@@ -55,10 +56,14 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 			ClientSecret:      agentAwareTask.ClientSecret,
 			TaskID:            agentAwareTask.TaskId,
 		}
+
 		if err := config.SetAgentVersionWithoutDowngrade(agentAwareTask.AgentVersion); err != nil {
 			worker.logger.Warnf("failed to set agent's version for task %d: %v", agentAwareTask.TaskId, err)
 		}
-		if err := inst.Run(taskCtx, &config); err != nil {
+
+		err := inst.Run(taskCtx, &config)
+
+		if err != nil && !errors.Is(err, context.Canceled) {
 			worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
 
 			boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
