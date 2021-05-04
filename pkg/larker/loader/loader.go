@@ -8,13 +8,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git"
 	"github.com/qri-io/starlib/encoding/base64"
-	"github.com/qri-io/starlib/encoding/json"
 	"github.com/qri-io/starlib/encoding/yaml"
 	"github.com/qri-io/starlib/hash"
 	"github.com/qri-io/starlib/http"
 	"github.com/qri-io/starlib/re"
 	"github.com/qri-io/starlib/zipfile"
 	"go.starlark.net/starlark"
+	"go.starlark.net/starlarkjson"
 	"go.starlark.net/starlarkstruct"
 	"os"
 	"path/filepath"
@@ -146,11 +146,15 @@ func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
 	}
 	result["base64"] = base64Module["base64"]
 
-	jsonModule, err := json.LoadModule()
-	if err != nil {
-		return nil, err
+	// Work around https://github.com/qri-io/starlib/pull/70
+	fixedJSONModule := &starlarkstruct.Module{
+		Name: "json",
+		Members: starlark.StringDict{
+			"loads": starlarkjson.Module.Members["decode"],
+			"dumps": starlarkjson.Module.Members["encode"],
+		},
 	}
-	result["json"] = jsonModule["json"]
+	result["json"] = fixedJSONModule
 
 	yamlModule, err := yaml.LoadModule()
 	if err != nil {
