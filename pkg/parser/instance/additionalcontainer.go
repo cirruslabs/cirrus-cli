@@ -4,6 +4,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -164,7 +165,7 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		if err != nil {
 			return err
 		}
-		memoryParsed, err := ParseMegaBytes(memory)
+		memoryParsed, err := resources.ParseMegaBytes(memory)
 		if err != nil {
 			return node.ParserError("%s", err.Error())
 		}

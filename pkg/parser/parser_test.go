@@ -34,6 +34,7 @@ var validCases = []string{
 	"collectible-order",
 	"yaml-12-booleans-only",
 	"dependency-on-disabled-only-if-task",
+	"persistent-worker-isolation-container",
 }
 
 func absolutize(file string) string {
@@ -169,11 +170,16 @@ func TestAdditionalTaskProperties(t *testing.T) {
 func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.Result) {
 	actual := testutil.TasksToJSON(t, result.Tasks)
 
-	// uncomment to update test data
-	// ioutil.WriteFile(actualFixturePath, actual, 0600)
-
 	expected, err := ioutil.ReadFile(actualFixturePath)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			if err := ioutil.WriteFile(actualFixturePath, actual, 0600); err != nil {
+				t.Fatal(err)
+			}
+
+			t.Fatalf("created a new fixture %s, don't forget to commit it!\n", actualFixturePath)
+		}
+
 		t.Fatal(err)
 	}
 

@@ -2,6 +2,7 @@ package instance
 
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -186,7 +187,7 @@ func NewProtoParser(
 				}
 				var parsedValue int64
 				if strings.EqualFold(fieldName, "memory") {
-					parsedValue, err = ParseMegaBytes(value)
+					parsedValue, err = resources.ParseMegaBytes(value)
 				} else {
 					parsedValue, err = strconv.ParseInt(value, 10, 64)
 				}
@@ -206,7 +207,7 @@ func NewProtoParser(
 				}
 				var parsedValue int64
 				if strings.EqualFold(fieldName, "memory") {
-					parsedValue, err = ParseMegaBytes(value)
+					parsedValue, err = resources.ParseMegaBytes(value)
 				} else {
 					parsedValue, err = strconv.ParseInt(value, 10, 64)
 				}
@@ -227,7 +228,7 @@ func NewProtoParser(
 				}
 				parsedValue, err := strconv.ParseInt(value, 10, 32)
 				if strings.EqualFold(fieldName, "memory") {
-					parsedValue, err = ParseMegaBytes(value)
+					parsedValue, err = resources.ParseMegaBytes(value)
 				}
 				if err != nil {
 					return node.ParserError("%s", err.Error())
@@ -245,7 +246,7 @@ func NewProtoParser(
 				}
 				parsedValue, err := strconv.ParseInt(value, 10, 32)
 				if strings.EqualFold(fieldName, "memory") {
-					parsedValue, err = ParseMegaBytes(value)
+					parsedValue, err = resources.ParseMegaBytes(value)
 				}
 				if err != nil {
 					return node.ParserError("%s", err.Error())
