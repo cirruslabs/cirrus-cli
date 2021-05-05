@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
@@ -59,13 +60,6 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 		renderer := renderers.NewSimpleRenderer(ioutil.Discard, nil)
 		e.logger = echelon.NewLogger(echelon.InfoLevel, renderer)
 	}
-	if e.containerBackend == nil {
-		backend, err := containerbackend.NewDocker()
-		if err != nil {
-			return nil, err
-		}
-		e.containerBackend = backend
-	}
 
 	// Filter tasks (e.g. if a user wants to run only a specific task without dependencies)
 	tasks, err := e.taskFilter(tasks)
@@ -106,7 +100,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 			if err != nil {
 				return nil, err
 			}
-		case *instance.ContainerInstance:
+		case *container.Instance:
 			instanceWithImage.Image, err = e.transformDockerfileImageIfNeeded(instanceWithImage.Image, false)
 			if err != nil {
 				return nil, err
@@ -173,10 +167,11 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 		ServerSecret:      e.rpc.ServerSecret(),
 		ClientSecret:      e.rpc.ClientSecret(),
 		TaskID:            task.ID,
-		Logger:            taskLogger,
 		DirtyMode:         e.dirtyMode,
 		ContainerOptions:  e.containerOptions,
 	}
+
+	instanceRunOpts.SetLogger(taskLogger)
 
 	// Respect custom agent version
 	if agentVersionFromEnv, ok := task.Environment["CIRRUS_AGENT_VERSION"]; ok {

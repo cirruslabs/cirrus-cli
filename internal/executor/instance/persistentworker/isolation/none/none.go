@@ -5,12 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/agent"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/pwdir"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/otiai10/copy"
-	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strconv"
 )
@@ -24,19 +23,9 @@ type PersistentWorkerInstance struct {
 	cleanup func() error
 }
 
-func staticTempDirWithDynamicFallback() (string, error) {
-	// Prefer static directory for non-Cirrus CI caches efficiency (e.g. ccache)
-	staticTempDir := filepath.Join(os.TempDir(), "cirrus-build")
-	if err := os.Mkdir(staticTempDir, 0700); err == nil {
-		return staticTempDir, nil
-	}
-
-	return ioutil.TempDir("", "cirrus-build-")
-}
-
 func New() (*PersistentWorkerInstance, error) {
 	// Create a working directory that will be used if no dirty mode is requested in Run()
-	tempDir, err := staticTempDirWithDynamicFallback()
+	tempDir, err := pwdir.StaticTempDirWithDynamicFallback()
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/pullhelper"
 	"github.com/cirruslabs/echelon"
 	"github.com/hashicorp/go-version"
 )
@@ -15,10 +16,22 @@ type RunConfig struct {
 	DirectEndpoint             string
 	ServerSecret, ClientSecret string
 	TaskID                     int64
-	Logger                     *echelon.Logger
+	logger                     *echelon.Logger
 	DirtyMode                  bool
 	ContainerOptions           options.ContainerOptions
 	agentVersion               string
+}
+
+func (rc *RunConfig) Logger() *echelon.Logger {
+	if rc.logger == nil {
+		rc.logger = echelon.NewLogger(echelon.ErrorLevel, &pullhelper.RendererStub{})
+	}
+
+	return rc.logger
+}
+
+func (rc *RunConfig) SetLogger(logger *echelon.Logger) {
+	rc.logger = logger
 }
 
 func (rc *RunConfig) GetAgentVersion() string {

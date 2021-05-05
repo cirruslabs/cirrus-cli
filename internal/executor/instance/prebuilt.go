@@ -84,7 +84,7 @@ func CreateTempArchive(dir string) (string, error) {
 }
 
 func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *runconfig.RunConfig) error {
-	logger := config.Logger
+	logger := config.Logger()
 	backend := config.ContainerBackend
 
 	// Check if the image we're about to build is available locally

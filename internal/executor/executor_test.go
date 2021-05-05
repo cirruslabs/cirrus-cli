@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
@@ -342,12 +343,12 @@ func filesContentsSingleVariation(t *testing.T, dir, dockerfileContents string) 
 		if err != nil {
 			continue
 		}
-		container, ok := inst.(*instance.ContainerInstance)
+		containerInstance, ok := inst.(*container.Instance)
 		if !ok {
 			continue
 		}
 
-		return container.Image
+		return containerInstance.Image
 	}
 
 	t.Fatal("wasn't able to find the container instance in the parsing result")
