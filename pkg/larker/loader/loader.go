@@ -135,7 +135,10 @@ func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
 	if err != nil {
 		http.Client = &gohttp.Client{
 			Transport: &gohttp.Transport{
-				TLSClientConfig: &tls.Config{RootCAs: certPool},
+				TLSClientConfig: &tls.Config{
+					RootCAs:    certPool,
+					MinVersion: tls.VersionTLS12,
+				},
 			},
 		}
 	}
