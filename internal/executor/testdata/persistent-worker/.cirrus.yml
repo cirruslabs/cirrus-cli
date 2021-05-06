@@ -1,7 +1,4 @@
-persistent_worker:
-  isolation:
-    container:
-      image: debian:latest
+persistent_worker: {}
 
 unix_task:
   show_script: ls -lah

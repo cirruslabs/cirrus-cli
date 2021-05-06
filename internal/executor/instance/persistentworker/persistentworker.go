@@ -30,7 +30,7 @@ func New(isolation *api.Isolation, logger logger.Lightweight) (abstract.Instance
 		return parallels.New(iso.Parallels.Image, iso.Parallels.User, iso.Parallels.Password,
 			strings.ToLower(iso.Parallels.Platform.String()), parallels.WithLogger(logger))
 	case *api.Isolation_Container_:
-		return container.New(iso.Container.Image, iso.Container.Cpu, iso.Container.Memory)
+		return container.New(iso.Container.Image, iso.Container.Cpu, iso.Container.Memory, iso.Container.Volumes)
 	default:
 		return nil, fmt.Errorf("%w: unsupported isolation type %T", ErrInvalidIsolation, iso)
 	}

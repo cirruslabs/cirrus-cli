@@ -130,6 +130,15 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 		})
 	}
 
+	for _, volume := range params.Volumes {
+		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
+			Type:     containerbackend.MountTypeBind,
+			Source:   volume.Source,
+			Target:   volume.Target,
+			ReadOnly: volume.ReadOnly,
+		})
+	}
+
 	// In case the additional containers are used, tell the agent to wait for them
 	if len(params.AdditionalContainers) > 0 {
 		var ports []string

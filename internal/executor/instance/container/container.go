@@ -16,6 +16,7 @@ type Instance struct {
 	AdditionalContainers []*api.AdditionalContainer
 	Platform             platform.Platform
 	CustomWorkingDir     string
+	Volumes              []*api.Volume
 }
 
 type Params struct {
@@ -28,6 +29,7 @@ type Params struct {
 	AgentVolumeName        string
 	WorkingVolumeName      string
 	WorkingDirectory       string
+	Volumes                []*api.Volume
 }
 
 func (inst *Instance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
@@ -76,6 +78,7 @@ func (inst *Instance) Run(ctx context.Context, config *runconfig.RunConfig) (err
 		AgentVolumeName:      agentVolume.Name(),
 		WorkingVolumeName:    workingVolume.Name(),
 		WorkingDirectory:     inst.WorkingDirectory(config.ProjectDir, config.DirtyMode),
+		Volumes:              inst.Volumes,
 	}
 
 	return RunContainerizedAgent(ctx, config, params)

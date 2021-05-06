@@ -2,6 +2,7 @@ package container
 
 import (
 	"context"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/pwdir"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
@@ -15,7 +16,7 @@ type Container struct {
 	cleanup  func() error
 }
 
-func New(image string, cpu float32, memory uint32) (*Container, error) {
+func New(image string, cpu float32, memory uint32, volumes []*api.Volume) (*Container, error) {
 	// Create a working directory that will be used if none was supplied when instantiating from the worker
 	tempDir, err := pwdir.StaticTempDirWithDynamicFallback()
 	if err != nil {
@@ -27,6 +28,7 @@ func New(image string, cpu float32, memory uint32) (*Container, error) {
 			Image:    image,
 			CPU:      cpu,
 			Memory:   memory,
+			Volumes:  volumes,
 			Platform: platform.Auto(),
 		},
 		tempDir: tempDir,

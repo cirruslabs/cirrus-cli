@@ -372,6 +372,47 @@ func TestPersistentWorker(t *testing.T) {
 	assert.Contains(t, buf.String(), "'check' script succeeded")
 }
 
+func TestPersistentWorkerContainerIsolationVolumes(t *testing.T) {
+	// Prepare the directory that we're going to mount inside of the container
+	dirToBeMounted := testutil.TempDir(t)
+	if err := ioutil.WriteFile(filepath.Join(dirToBeMounted, "some-file-name.txt"), []byte{}, 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Prepare the configuration that ensures that the mounted directory contains the file we've created above
+	config := fmt.Sprintf(`persistent_worker:
+  isolation:
+    container:
+      image: debian:latest
+      volumes:
+        - %s:/dir-to-be-mounted
+
+unix_task:
+  show_script: ls -lah /dir-to-be-mounted
+  check_script:
+    - test -e /dir-to-be-mounted/some-file-name.txt
+`, dirToBeMounted)
+
+	dirToBeExecutedFrom := testutil.TempDir(t)
+
+	if err := ioutil.WriteFile(filepath.Join(dirToBeExecutedFrom, ".cirrus.yml"), []byte(config), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	// Create a logger and attach it to writer
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	err := testutil.ExecuteWithOptionsNew(t, dirToBeExecutedFrom, executor.WithLogger(logger))
+	assert.NoError(t, err)
+	assert.Contains(t, buf.String(), "'show' script succeeded")
+	assert.Contains(t, buf.String(), "'check' script succeeded")
+}
+
 // TestCirrusWorkingDir ensures that CIRRUS_WORKING_DIR environment variable is respected.
 func TestCirrusWorkingDir(t *testing.T) {
 	// Create a logger and attach it to writer
