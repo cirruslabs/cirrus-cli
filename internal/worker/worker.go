@@ -36,6 +36,8 @@ type Worker struct {
 	rpcInsecure bool
 	rpcClient   api.CirrusWorkersServiceClient
 
+	agentRPCEndpoint string
+
 	name                string
 	userSpecifiedLabels map[string]string
 	pollIntervalSeconds uint32
@@ -51,7 +53,8 @@ type Worker struct {
 
 func New(opts ...Option) (*Worker, error) {
 	worker := &Worker{
-		rpcEndpoint: DefaultRPCEndpoint,
+		rpcEndpoint:      DefaultRPCEndpoint,
+		agentRPCEndpoint: DefaultRPCEndpoint,
 
 		userSpecifiedLabels: make(map[string]string),
 		pollIntervalSeconds: defaultPollIntervalSeconds,

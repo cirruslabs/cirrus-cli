@@ -33,3 +33,9 @@ func WithRPCEndpoint(rpcEndpoint string) Option {
 		e.rpcEndpoint = rpcEndpoint
 	}
 }
+
+func WithAgentRPCEndpoint(rpcEndpoint string) Option {
+	return func(e *Worker) {
+		e.agentRPCEndpoint = rpcEndpoint
+	}
+}

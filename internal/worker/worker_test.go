@@ -3,6 +3,7 @@ package worker_test
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/stretchr/testify/assert"
@@ -55,40 +56,8 @@ func unaryInterceptor(
 	return handler(ctx, req)
 }
 
-func TestWorker(t *testing.T) {
-	ip := "0.0.0.0"
-	var isolation *api.Isolation
-
-	// Support Parallels isolation testing configured via environment variables
-	image, imageOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_VM")
-	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_USER")
-	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_PASSWORD")
-	if imageOk && userOk && passwordOk {
-		t.Logf("Using Parallels VM %s for testing...", image)
-		sharedNetworkHostIP, err := parallels.SharedNetworkHostIP(context.Background())
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		ip = sharedNetworkHostIP
-		isolation = &api.Isolation{
-			Type: &api.Isolation_Parallels_{
-				Parallels: &api.Isolation_Parallels{
-					Image:    image,
-					User:     user,
-					Password: password,
-					Platform: api.Platform_DARWIN,
-				},
-			},
-		}
-	}
-
+func workerTestHelper(t *testing.T, lis net.Listener, isolation *api.Isolation, opts ...worker.Option) {
 	// Start the RPC server
-	lis, err := net.Listen("tcp", ip+":0")
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	server := grpc.NewServer(grpc.UnaryInterceptor(unaryInterceptor))
 
 	workersRPC := &WorkersRPC{Isolation: isolation}
@@ -103,10 +72,17 @@ func TestWorker(t *testing.T) {
 	}()
 
 	// Start the worker
-	worker, err := worker.New(
-		worker.WithRegistrationToken(registrationToken),
-		worker.WithRPCEndpoint("http://"+lis.Addr().String()),
-	)
+	opts = append(opts, worker.WithRegistrationToken(registrationToken))
+
+	rpcEndpoint := lis.Addr().String()
+	if lis.Addr().Network() == "unix" {
+		rpcEndpoint = "unix:" + rpcEndpoint
+	} else {
+		rpcEndpoint = "http://" + rpcEndpoint
+	}
+	opts = append(opts, worker.WithRPCEndpoint(rpcEndpoint))
+
+	worker, err := worker.New(opts...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,4 +99,69 @@ func TestWorker(t *testing.T) {
 	assert.True(t, workersRPC.TaskWasStopped)
 
 	assert.Equal(t, []string{"clone", "check"}, tasksRPC.SucceededCommands)
+}
+
+func TestWorkerIsolationNone(t *testing.T) {
+	// nolint:gosec // this is a test, so it's fine to bind on 0.0.0.0
+	lis, err := net.Listen("tcp", "0.0.0.0:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	workerTestHelper(t, lis, nil)
+}
+
+func TestWorkerIsolationParallels(t *testing.T) {
+	// Support Parallels isolation testing configured via environment variables
+	image, imageOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_PASSWORD")
+	if !imageOk || !userOk || !passwordOk {
+		t.Skip("no Parallels credentials configured")
+	}
+
+	t.Logf("Using Parallels VM %s for testing...", image)
+	sharedNetworkHostIP, err := parallels.SharedNetworkHostIP(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	lis, err := net.Listen("tcp", sharedNetworkHostIP+":0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	isolation := &api.Isolation{
+		Type: &api.Isolation_Parallels_{
+			Parallels: &api.Isolation_Parallels{
+				Image:    image,
+				User:     user,
+				Password: password,
+				Platform: api.Platform_DARWIN,
+			},
+		},
+	}
+
+	workerTestHelper(t, lis, isolation)
+}
+
+func TestWorkerIsolationContainer(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
+	lis, err := heuristic.NewListener(context.Background(), "0.0.0.0:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	isolation := &api.Isolation{
+		Type: &api.Isolation_Container_{
+			Container: &api.Isolation_Container{
+				Image: "debian:latest",
+			},
+		},
+	}
+
+	workerTestHelper(t, lis, isolation, worker.WithAgentRPCEndpoint(lis.ContainerEndpoint()))
 }
