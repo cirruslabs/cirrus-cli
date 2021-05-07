@@ -12,6 +12,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/pullhelper"
 	"github.com/cirruslabs/echelon"
 	"math"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -25,6 +26,7 @@ const (
 )
 
 var (
+	ErrVolumeFailed = errors.New("failed to mount additional volume")
 	ErrAdditionalContainerFailed = errors.New("additional container failed")
 )
 
@@ -131,6 +133,11 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 	}
 
 	for _, volume := range params.Volumes {
+		err := os.MkdirAll(volume.Source, 0700)
+		if err != nil && !errors.Is(err, os.ErrExist) {
+			return fmt.Errorf("%w: failed to create non-existent source directory: %v", ErrVolumeFailed, err)
+		}
+
 		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
 			Type:     containerbackend.MountTypeBind,
 			Source:   volume.Source,
