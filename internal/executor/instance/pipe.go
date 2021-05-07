@@ -5,7 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 )
 
@@ -54,16 +57,26 @@ func PipeStagesFromCommands(commands []*api.Command) ([]PipeStage, error) {
 
 func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
 	platform := platform.NewUnix()
+	logger := config.Logger()
 
-	agentVolume, workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config, platform)
+	if config.ContainerBackend == nil {
+		backend, err := containerbackend.New(containerbackend.BackendAuto)
+		if err != nil {
+			return err
+		}
+
+		config.ContainerBackend = backend
+	}
+
+	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, platform)
 	if err != nil {
 		return err
 	}
 	defer func() {
 		if config.ContainerOptions.NoCleanup {
-			config.Logger.Infof("not cleaning up agent volume %s, don't forget to remove it with \"docker volume rm %s\"",
+			logger.Infof("not cleaning up agent volume %s, don't forget to remove it with \"docker volume rm %s\"",
 				agentVolume.Name(), agentVolume.Name())
-			config.Logger.Infof("not cleaning up working volume %s, don't forget to remove it with \"docker volume rm %s\"",
+			logger.Infof("not cleaning up working volume %s, don't forget to remove it with \"docker volume rm %s\"",
 				workingVolume.Name(), workingVolume.Name())
 
 			return
@@ -81,7 +94,7 @@ func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (e
 	}()
 
 	for _, stage := range pi.Stages {
-		params := &Params{
+		params := &container.Params{
 			Image:             stage.Image,
 			CPU:               pi.CPU,
 			Memory:            pi.Memory,
@@ -93,7 +106,7 @@ func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (e
 			WorkingDirectory:  pi.WorkingDirectory(config.ProjectDir, config.DirtyMode),
 		}
 
-		if err := RunContainerizedAgent(ctx, config, params); err != nil {
+		if err := container.RunContainerizedAgent(ctx, config, params); err != nil {
 			return err
 		}
 	}

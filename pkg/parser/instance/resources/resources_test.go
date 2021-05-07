@@ -1,13 +1,13 @@
-package instance_test
+package resources_test
 
 import (
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func parseMegaBytesHelper(t *testing.T, s string) int64 {
-	result, err := instance.ParseMegaBytes(s)
+	result, err := resources.ParseMegaBytes(s)
 	if err != nil {
 		t.Fatal(err)
 	}

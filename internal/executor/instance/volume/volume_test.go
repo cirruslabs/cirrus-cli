@@ -1,11 +1,11 @@
-package instance_test
+package volume_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
@@ -23,7 +23,7 @@ func TestWorkingVolumeSmoke(t *testing.T) {
 	identifier := uuid.New().String()
 	agentVolumeName := fmt.Sprintf("cirrus-agent-volume-%s", identifier)
 	workingVolumeName := fmt.Sprintf("cirrus-working-volume-%s", identifier)
-	agentVolume, workingVolume, err := instance.CreateWorkingVolume(
+	agentVolume, workingVolume, err := volume.CreateWorkingVolume(
 		context.Background(),
 		backend,
 		options.ContainerOptions{},
@@ -55,7 +55,7 @@ func TestCleanupOnFailure(t *testing.T) {
 	agentVolumeName := fmt.Sprintf("cirrus-agent-volume-%s", identifier)
 	workingVolumeName := fmt.Sprintf("cirrus-working-volume-%s", identifier)
 
-	_, _, err := instance.CreateWorkingVolume(
+	_, _, err := volume.CreateWorkingVolume(
 		context.Background(),
 		testutil.ContainerBackendFromEnv(t),
 		options.ContainerOptions{},

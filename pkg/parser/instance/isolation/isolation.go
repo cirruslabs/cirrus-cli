@@ -30,6 +30,19 @@ func NewIsolation(mergedEnv map[string]string) *Isolation {
 		return nil
 	})
 
+	containerSchema := NewContainer(mergedEnv).Schema()
+	isolation.OptionalField(nameable.NewSimpleNameable("container"), containerSchema, func(node *node.Node) error {
+		container := NewContainer(mergedEnv)
+
+		if err := container.Parse(node); err != nil {
+			return err
+		}
+
+		isolation.proto.Type = container.Proto()
+
+		return nil
+	})
+
 	return isolation
 }
 

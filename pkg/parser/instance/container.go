@@ -3,6 +3,7 @@ package instance
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -76,7 +77,7 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 		if err != nil {
 			return err
 		}
-		memoryParsed, err := ParseMegaBytes(memory)
+		memoryParsed, err := resources.ParseMegaBytes(memory)
 		if err != nil {
 			return node.ParserError("%s", err.Error())
 		}

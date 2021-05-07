@@ -133,6 +133,20 @@ func Ports() *schema.Schema {
 	return result
 }
 
+func Volumes() *schema.Schema {
+	return &schema.Schema{
+		Description: "A list of volumes mounted inside of the container.",
+		Type:        schema.PrimitiveTypes{schema.ArrayType},
+		Items: &schema.ItemSpec{
+			TupleMode: true,
+			Schemas: schema.SchemaList{
+				String("A volume in the format of source:target[:ro]."),
+			},
+		},
+		AdditionalItems: &schema.AdditionalItems{Schema: nil},
+	}
+}
+
 func ArrayOf(arrayItemSchema *schema.Schema) *schema.Schema {
 	return &schema.Schema{
 		Type: schema.PrimitiveTypes{schema.ArrayType},

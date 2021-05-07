@@ -1,4 +1,4 @@
-package instance
+package volume
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/pullhelper"
 	"github.com/google/uuid"
 	"runtime"
 )
@@ -27,7 +28,7 @@ func CreateWorkingVolumeFromConfig(
 	config *runconfig.RunConfig,
 	platform platform.Platform,
 ) (*Volume, *Volume, error) {
-	initLogger := config.Logger.Scoped("Preparing execution environment...")
+	initLogger := config.Logger().Scoped("Preparing execution environment...")
 	initLogger.Infof("Preparing volume to work with...")
 
 	identifier := uuid.New().String()
@@ -62,7 +63,7 @@ func CreateWorkingVolume(
 ) (agentVolume *Volume, vol *Volume, err error) {
 	agentImage := platform.ContainerAgentImage(agentVersion)
 
-	if err := pullHelper(ctx, agentImage, backend, containerOptions, nil); err != nil {
+	if err := pullhelper.PullHelper(ctx, agentImage, backend, containerOptions, nil); err != nil {
 		return nil, nil, fmt.Errorf("%w: when pulling agent image: %v", ErrVolumeCreationFailed, err)
 	}
 

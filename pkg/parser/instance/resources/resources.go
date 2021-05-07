@@ -1,4 +1,4 @@
-package instance
+package resources
 
 import (
 	"errors"

@@ -17,10 +17,6 @@ import (
 	"google.golang.org/grpc/status"
 	"io"
 	"io/ioutil"
-	"net"
-	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 
@@ -30,13 +26,11 @@ import (
 
 var ErrRPCFailed = errors.New("RPC server failed")
 
-const networkUnix = "unix"
-
 type RPC struct {
 	// must be embedded to have forward compatible implementations
 	api.UnimplementedCirrusCIServiceServer
 
-	listener                   net.Listener
+	listener                   *heuristic.Listener
 	server                     *grpc.Server
 	serverWaitGroup            sync.WaitGroup
 	serverSecret, clientSecret string
@@ -81,35 +75,7 @@ func (r *RPC) ClientSecret() string {
 
 // Start creates the listener and starts RPC server in a separate goroutine.
 func (r *RPC) Start(ctx context.Context, address string) error {
-	network := "tcp"
-	var socketDir string
-
-	// Work around host.docker.internal missing on Linux
-	//
-	// See the following tickets:
-	// * https://github.com/docker/for-linux/issues/264
-	// * https://github.com/moby/moby/pull/40007
-	if runtime.GOOS == "linux" {
-		if cloudBuildIP := heuristic.GetCloudBuildIP(ctx); cloudBuildIP != "" {
-			network = "tcp"
-			address = fmt.Sprintf("%s:0", cloudBuildIP)
-		} else {
-			socketDir = fmt.Sprintf("/tmp/cli-%s", uuid.New().String())
-		}
-	} else if runtime.GOOS == "windows" && heuristic.IsRunningWindowsContainers(ctx) {
-		socketDir = fmt.Sprintf("C:\\Windows\\Temp\\cli-%s", uuid.New().String())
-	}
-
-	if socketDir != "" {
-		if err := os.Mkdir(socketDir, 0700); err != nil {
-			return err
-		}
-
-		network = networkUnix
-		address = filepath.Join(socketDir, "cli.sock")
-	}
-
-	listener, err := net.Listen(network, address)
+	listener, err := heuristic.NewListener(ctx, address)
 	if err != nil {
 		return fmt.Errorf("%w: failed to start RPC service on %s: %v", ErrRPCFailed, address, err)
 	}
@@ -134,36 +100,17 @@ func (r *RPC) Start(ctx context.Context, address string) error {
 // ContainerEndpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag
 // when running inside of a container.
 func (r *RPC) ContainerEndpoint() string {
-	if r.listener.Addr().Network() == networkUnix {
-		return "unix:" + r.listener.Addr().String()
-	}
-
-	// There's no host.docker.internal on Linux
-	if runtime.GOOS == "linux" {
-		return fmt.Sprintf("http://%s", r.listener.Addr().String())
-	}
-
-	port := r.listener.Addr().(*net.TCPAddr).Port
-
-	return fmt.Sprintf("http://host.docker.internal:%d", port)
+	return r.listener.ContainerEndpoint()
 }
 
 // DirectEndpoint returns RPC server address suitable for use in agent's "-api-endpoint" flag
 // when running on the host.
 func (r *RPC) DirectEndpoint() string {
-	if r.listener.Addr().Network() == networkUnix {
-		return "unix://" + r.listener.Addr().String()
-	}
-
-	return "http://" + r.listener.Addr().String()
+	return r.listener.DirectEndpoint()
 }
 
 // Stop gracefully stops the RPC server.
 func (r *RPC) Stop() {
-	if r.listener.Addr().Network() == networkUnix {
-		_ = os.Remove(r.listener.Addr().String())
-	}
-
 	r.server.GracefulStop()
 	r.serverWaitGroup.Wait()
 }

@@ -1,0 +1,12 @@
+persistent_worker:
+  isolation:
+    container:
+      image: debian:latest
+      cpu: 0.5
+      memory: 512
+      volumes:
+        - /root/.ccache:/root/.ccache
+        - /etc:/host/etc:ro
+
+task:
+  script: uname -a

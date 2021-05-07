@@ -10,12 +10,14 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -342,12 +344,12 @@ func filesContentsSingleVariation(t *testing.T, dir, dockerfileContents string) 
 		if err != nil {
 			continue
 		}
-		container, ok := inst.(*instance.ContainerInstance)
+		containerInstance, ok := inst.(*container.Instance)
 		if !ok {
 			continue
 		}
 
-		return container.Image
+		return containerInstance.Image
 	}
 
 	t.Fatal("wasn't able to find the container instance in the parsing result")
@@ -369,6 +371,50 @@ func TestPersistentWorker(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, buf.String(), "'show' script succeeded")
 	assert.Contains(t, buf.String(), "'check' script succeeded")
+}
+
+func TestPersistentWorkerContainerIsolationVolumes(t *testing.T) {
+	// Make up a name for the directory that we're going to mount inside of the container
+	// (it will be created automatically by the executor)
+	dirToBeMounted := filepath.Join(os.TempDir(), "cirrus-cli-volume-dir-"+uuid.New().String())
+
+	// Prepare the configuration that creates a new file in that mounted directory
+	config := fmt.Sprintf(`persistent_worker:
+  isolation:
+    container:
+      image: debian:latest
+      volumes:
+        - %s:/dir-to-be-mounted
+
+unix_task:
+  show_script: ls -lah /dir-to-be-mounted
+  check_script:
+    - touch /dir-to-be-mounted/some-file-name.txt
+`, dirToBeMounted)
+
+	dirToBeExecutedFrom := testutil.TempDir(t)
+
+	if err := ioutil.WriteFile(filepath.Join(dirToBeExecutedFrom, ".cirrus.yml"), []byte(config), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	// Create a logger and attach it to writer
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	err := testutil.ExecuteWithOptionsNew(t, dirToBeExecutedFrom, executor.WithLogger(logger))
+	assert.NoError(t, err)
+	assert.Contains(t, buf.String(), "'show' script succeeded")
+	assert.Contains(t, buf.String(), "'check' script succeeded")
+
+	_, err = os.Stat(filepath.Join(dirToBeMounted, "some-file-name.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 // TestCirrusWorkingDir ensures that CIRRUS_WORKING_DIR environment variable is respected.

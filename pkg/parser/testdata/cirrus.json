@@ -3663,6 +3663,38 @@
                     }
                   },
                   "type": "object"
+                },
+                "container": {
+                  "description": "Container engine isolation.",
+                  "properties": {
+                    "cpu": {
+                      "description": "CPU units for the container to use.",
+                      "type": "number"
+                    },
+                    "image": {
+                      "description": "Container image to use.",
+                      "type": "string"
+                    },
+                    "memory": {
+                      "description": "Memory in megabytes for the container to use.",
+                      "pattern": "\\d+(G|Mb)?",
+                      "type": "string"
+                    },
+                    "volumes": {
+                      "description": "A list of volumes mounted inside of the container.",
+                      "items": [
+                        {
+                          "description": "A volume in the format of source:target[:ro].",
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "image"
+                  ]
                 }
               },
               "type": "object"
@@ -4753,6 +4785,38 @@
                 }
               },
               "type": "object"
+            },
+            "container": {
+              "description": "Container engine isolation.",
+              "properties": {
+                "cpu": {
+                  "description": "CPU units for the container to use.",
+                  "type": "number"
+                },
+                "image": {
+                  "description": "Container image to use.",
+                  "type": "string"
+                },
+                "memory": {
+                  "description": "Memory in megabytes for the container to use.",
+                  "pattern": "\\d+(G|Mb)?",
+                  "type": "string"
+                },
+                "volumes": {
+                  "description": "A list of volumes mounted inside of the container.",
+                  "items": [
+                    {
+                      "description": "A volume in the format of source:target[:ro].",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                }
+              },
+              "type": "object",
+              "required": [
+                "image"
+              ]
             }
           },
           "type": "object"

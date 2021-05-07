@@ -1,4 +1,4 @@
-package instance
+package pullhelper
 
 import "github.com/cirruslabs/echelon"
 

@@ -1,31 +1,58 @@
-package instance
+package container
 
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 )
 
-type ContainerInstance struct {
+type Instance struct {
 	Image                string
 	CPU                  float32
 	Memory               uint32
 	AdditionalContainers []*api.AdditionalContainer
 	Platform             platform.Platform
 	CustomWorkingDir     string
+	Volumes              []*api.Volume
 }
 
-func (inst *ContainerInstance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
-	agentVolume, workingVolume, err := CreateWorkingVolumeFromConfig(ctx, config, inst.Platform)
+type Params struct {
+	Image                  string
+	CPU                    float32
+	Memory                 uint32
+	AdditionalContainers   []*api.AdditionalContainer
+	CommandFrom, CommandTo string
+	Platform               platform.Platform
+	AgentVolumeName        string
+	WorkingVolumeName      string
+	WorkingDirectory       string
+	Volumes                []*api.Volume
+}
+
+func (inst *Instance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
+	logger := config.Logger()
+
+	if config.ContainerBackend == nil {
+		backend, err := containerbackend.New(containerbackend.BackendAuto)
+		if err != nil {
+			return err
+		}
+
+		config.ContainerBackend = backend
+	}
+
+	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, inst.Platform)
 	if err != nil {
 		return err
 	}
 	defer func() {
 		if config.ContainerOptions.NoCleanup {
-			config.Logger.Infof("not cleaning up agent volume %s, don't forget to remove it with \"docker volume rm %s\"",
+			logger.Infof("not cleaning up agent volume %s, don't forget to remove it with \"docker volume rm %s\"",
 				agentVolume.Name(), agentVolume.Name())
-			config.Logger.Infof("not cleaning up working volume %s, don't forget to remove it with \"docker volume rm %s\"",
+			logger.Infof("not cleaning up working volume %s, don't forget to remove it with \"docker volume rm %s\"",
 				workingVolume.Name(), workingVolume.Name())
 
 			return
@@ -51,12 +78,13 @@ func (inst *ContainerInstance) Run(ctx context.Context, config *runconfig.RunCon
 		AgentVolumeName:      agentVolume.Name(),
 		WorkingVolumeName:    workingVolume.Name(),
 		WorkingDirectory:     inst.WorkingDirectory(config.ProjectDir, config.DirtyMode),
+		Volumes:              inst.Volumes,
 	}
 
 	return RunContainerizedAgent(ctx, config, params)
 }
 
-func (inst *ContainerInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {
+func (inst *Instance) WorkingDirectory(projectDir string, dirtyMode bool) string {
 	if inst.CustomWorkingDir != "" {
 		return inst.CustomWorkingDir
 	}
@@ -64,6 +92,6 @@ func (inst *ContainerInstance) WorkingDirectory(projectDir string, dirtyMode boo
 	return inst.Platform.GenericWorkingDir()
 }
 
-func (inst *ContainerInstance) Close() error {
+func (inst *Instance) Close() error {
 	return nil
 }
