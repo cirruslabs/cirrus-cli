@@ -376,7 +376,7 @@ func TestPersistentWorker(t *testing.T) {
 func TestPersistentWorkerContainerIsolationVolumes(t *testing.T) {
 	// Make up a name for the directory that we're going to mount inside of the container
 	// (it will be created automatically by the executor)
-	dirToBeMounted := filepath.Join(os.TempDir(), "cirrus-cli-volume-dir-" + uuid.New().String())
+	dirToBeMounted := filepath.Join(os.TempDir(), "cirrus-cli-volume-dir-"+uuid.New().String())
 
 	// Prepare the configuration that creates a new file in that mounted directory
 	config := fmt.Sprintf(`persistent_worker:

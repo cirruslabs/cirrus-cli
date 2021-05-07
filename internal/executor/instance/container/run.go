@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	ErrVolumeFailed = errors.New("failed to mount additional volume")
+	ErrVolumeFailed              = errors.New("failed to mount additional volume")
 	ErrAdditionalContainerFailed = errors.New("additional container failed")
 )
 
