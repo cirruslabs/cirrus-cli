@@ -375,11 +375,8 @@ func TestPersistentWorker(t *testing.T) {
 func TestPersistentWorkerContainerIsolationVolumes(t *testing.T) {
 	// Prepare the directory that we're going to mount inside of the container
 	dirToBeMounted := testutil.TempDir(t)
-	if err := ioutil.WriteFile(filepath.Join(dirToBeMounted, "some-file-name.txt"), []byte{}, 0600); err != nil {
-		t.Fatal(err)
-	}
 
-	// Prepare the configuration that ensures that the mounted directory contains the file we've created above
+	// Prepare the configuration that creates a new file in that mounted directory
 	config := fmt.Sprintf(`persistent_worker:
   isolation:
     container:
@@ -390,7 +387,7 @@ func TestPersistentWorkerContainerIsolationVolumes(t *testing.T) {
 unix_task:
   show_script: ls -lah /dir-to-be-mounted
   check_script:
-    - test -e /dir-to-be-mounted/some-file-name.txt
+    - touch /dir-to-be-mounted/some-file-name.txt
 `, dirToBeMounted)
 
 	dirToBeExecutedFrom := testutil.TempDir(t)
@@ -411,6 +408,11 @@ unix_task:
 	assert.NoError(t, err)
 	assert.Contains(t, buf.String(), "'show' script succeeded")
 	assert.Contains(t, buf.String(), "'check' script succeeded")
+
+	_, err = os.Stat(filepath.Join(dirToBeMounted, "some-file-name.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 // TestCirrusWorkingDir ensures that CIRRUS_WORKING_DIR environment variable is respected.
