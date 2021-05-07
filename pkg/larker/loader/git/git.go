@@ -45,7 +45,7 @@ var regexVariants = []*regexp.Regexp{
 func Parse(module string) *Locator {
 	result := &Locator{
 		Path:     "lib.star",
-		Revision: "master",
+		Revision: "main",
 	}
 
 	for _, regex := range regexVariants {

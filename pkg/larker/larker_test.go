@@ -154,7 +154,7 @@ func TestLoadTypoStarVsStart(t *testing.T) {
 
 	// Hint when loading from Git
 	_, err = lrk.Main(context.Background(),
-		"load(\"github.com/cirrus-templates/helpers/dir/lib.start@master\", \"symbol\")\n")
+		"load(\"github.com/cirrus-templates/helpers/dir/lib.start\", \"symbol\")\n")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "instead of the .start?")
 
