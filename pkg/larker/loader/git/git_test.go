@@ -17,12 +17,12 @@ func TestParse(t *testing.T) {
 		{"defaults to lib.star", "github.com/some-org/some-repo", &git.Locator{
 			URL:      "https://github.com/some-org/some-repo.git",
 			Path:     "lib.star",
-			Revision: "master",
+			Revision: "main",
 		}},
 		{"parses path", "github.com/some-org/some-repo/dir/some.star", &git.Locator{
 			URL:      "https://github.com/some-org/some-repo.git",
 			Path:     "dir/some.star",
-			Revision: "master",
+			Revision: "main",
 		}},
 		{"parses revision", "github.com/some-org/some-repo@da39a3ee5e6b4b0d3255bfef95601890afd80709", &git.Locator{
 			URL:      "https://github.com/some-org/some-repo.git",
@@ -38,7 +38,7 @@ func TestParse(t *testing.T) {
 		{"parses .git hint", "gitlab.com/some-org/some-repo.git/some.star", &git.Locator{
 			URL:      "https://gitlab.com/some-org/some-repo.git",
 			Path:     "some.star",
-			Revision: "master",
+			Revision: "main",
 		}},
 		// Other Git hosting services (without the ".git" hint)
 		{"fails without .git hint", "gitlab.com/some-org/some-repo", nil},
@@ -62,7 +62,7 @@ func TestRetrieve(t *testing.T) {
 			&git.Locator{
 				URL:      "https://github.com/cirrus-templates/helpers",
 				Path:     "lib.star",
-				Revision: "master",
+				Revision: "main",
 			},
 		},
 		{"non-default branch",
