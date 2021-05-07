@@ -36,7 +36,7 @@ func New(dir string, namespace string) (*Cache, error) {
 
 	// Create a base directory, ignoring ErrExist since it may already be created
 	// by a previous or parallel invocation of the CLI
-	if err := os.MkdirAll(namespaceDir, 0700); err != nil {
+	if err := os.MkdirAll(namespaceDir, os.ModePerm); err != nil {
 		if !os.IsExist(err) {
 			return nil, fmt.Errorf("%w: %v", ErrFailedToInitialize, err)
 		}

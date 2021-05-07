@@ -133,9 +133,9 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 	}
 
 	for _, volume := range params.Volumes {
-		err := os.MkdirAll(volume.Source, 0700)
+		err := os.MkdirAll(volume.GetSource(), os.ModePerm)
 		if err != nil && !errors.Is(err, os.ErrExist) {
-			return fmt.Errorf("%w: failed to create non-existent source directory: %v", ErrVolumeFailed, err)
+			return fmt.Errorf("%w: failed to create non-existent source directory %s: %v", ErrVolumeFailed, volume.GetSource(), err)
 		}
 
 		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{

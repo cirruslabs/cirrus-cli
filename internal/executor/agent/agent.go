@@ -26,7 +26,7 @@ func RetrieveBinary(
 
 	agentCacheDir := filepath.Join(cacheDir, "cirrus", "agent")
 
-	if err := os.MkdirAll(agentCacheDir, 0700); err != nil {
+	if err := os.MkdirAll(agentCacheDir, os.ModePerm); err != nil {
 		return "", err
 	}
 
