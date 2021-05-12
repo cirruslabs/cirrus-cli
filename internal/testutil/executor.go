@@ -56,8 +56,13 @@ func ExecuteWithOptions(t *testing.T, dir string, opts ...executor.Option) error
 
 // ExecuteWithOptionsNew is the same thing as ExecuteWithOptions, but uses the new in-house parser.
 func ExecuteWithOptionsNew(t *testing.T, dir string, opts ...executor.Option) error {
+	return ExecuteWithOptionsNewContext(context.Background(), t, dir, opts...)
+}
+
+// ExecuteWithOptionsNewContext is the same thing as ExecuteWithOptionsNew, but allows the caller to set a context.
+func ExecuteWithOptionsNewContext(ctx context.Context, t *testing.T, dir string, opts ...executor.Option) error {
 	p := parser.New()
-	result, err := p.ParseFromFile(context.Background(), filepath.Join(dir, ".cirrus.yml"))
+	result, err := p.ParseFromFile(ctx, filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,5 +76,5 @@ func ExecuteWithOptionsNew(t *testing.T, dir string, opts ...executor.Option) er
 		t.Fatal(err)
 	}
 
-	return e.Run(context.Background())
+	return e.Run(ctx)
 }

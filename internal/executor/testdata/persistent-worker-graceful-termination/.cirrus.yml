@@ -1,0 +1,4 @@
+persistent_worker: {}
+
+unix_task:
+  script: sleep 86400
