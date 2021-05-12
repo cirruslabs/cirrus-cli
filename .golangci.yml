@@ -47,7 +47,6 @@ linters:
   - noctx
   - nolintlint
   - predeclared
-  - revive
   - rowserrcheck
   - scopelint
   - sqlclosecheck
@@ -114,6 +113,10 @@ linters:
     # [1]: https://github.com/charithe/durationcheck/issues/7
     # [2]: https://golang.org/pkg/time/ (see "To convert an integer number of units to a Duration, multiply:")
     - durationcheck
+
+    # No way to disable the "exported" check for the whole project[1]
+    # [1]: https://github.com/mgechev/revive/issues/244#issuecomment-560512162
+    - revive
 
 issues:
   # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.

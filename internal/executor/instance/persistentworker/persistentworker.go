@@ -16,12 +16,12 @@ var ErrInvalidIsolation = errors.New("invalid isolation parameters")
 
 func New(isolation *api.Isolation, logger logger.Lightweight) (abstract.Instance, error) {
 	if isolation == nil {
-		return none.New()
+		return none.New(none.WithLogger(logger))
 	}
 
 	switch iso := isolation.Type.(type) {
 	case *api.Isolation_None_:
-		return none.New()
+		return none.New(none.WithLogger(logger))
 	case *api.Isolation_Parallels_:
 		if iso.Parallels.Platform != api.Platform_DARWIN && iso.Parallels.Platform != api.Platform_LINUX {
 			return nil, fmt.Errorf("%w: only Darwin and Linux are currently supported", ErrInvalidIsolation)

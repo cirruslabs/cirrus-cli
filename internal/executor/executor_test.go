@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/agent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
@@ -24,7 +26,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
+	"time"
 )
 
 // TestExecutorEmpty ensures that Executor works fine with an empty task list.
@@ -415,6 +419,31 @@ unix_task:
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestPersistentWorkerNoneIsolationGracefulTermination(t *testing.T) {
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	// Create a logger and attach it to writer
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	// Pre-retrieve the agent's binary since we're getting time sensitive below
+	_, err := agent.RetrieveBinary(context.Background(), platform.DefaultAgentVersion, runtime.GOOS, runtime.GOARCH)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	dir := testutil.TempDirPopulatedWith(t, "testdata/persistent-worker-graceful-termination")
+	_ = testutil.ExecuteWithOptionsNewContext(ctx, t, dir, executor.WithLogger(logger))
+	assert.Contains(t, buf.String(), "gracefully terminating agent with PID")
+	assert.NotContains(t, buf.String(), "killing agent with PID")
+	assert.Regexp(t, "agent with PID [0-9]+ exited normally", buf.String())
 }
 
 // TestCirrusWorkingDir ensures that CIRRUS_WORKING_DIR environment variable is respected.

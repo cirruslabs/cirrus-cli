@@ -7,11 +7,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/agent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/pwdir"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
+	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/otiai10/copy"
 	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
+	"time"
 )
 
 var (
@@ -19,23 +21,36 @@ var (
 )
 
 type PersistentWorkerInstance struct {
+	logger  logger.Lightweight
 	tempDir string
 	cleanup func() error
 }
 
-func New() (*PersistentWorkerInstance, error) {
+func New(opts ...Option) (*PersistentWorkerInstance, error) {
 	// Create a working directory that will be used if no dirty mode is requested in Run()
 	tempDir, err := pwdir.StaticTempDirWithDynamicFallback()
 	if err != nil {
 		return nil, err
 	}
 
-	return &PersistentWorkerInstance{
+	pwi := &PersistentWorkerInstance{
 		tempDir: tempDir,
 		cleanup: func() error {
 			return os.RemoveAll(tempDir)
 		},
-	}, nil
+	}
+
+	// Apply options
+	for _, opt := range opts {
+		opt(pwi)
+	}
+
+	// Apply default options (to cover those that weren't specified)
+	if pwi.logger == nil {
+		pwi.logger = &logger.LightweightStub{}
+	}
+
+	return pwi, nil
 }
 
 func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
@@ -45,7 +60,7 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.
 		return err
 	}
 
-	cmd := exec.CommandContext(ctx, agentPath,
+	cmd := exec.Command(agentPath,
 		"-api-endpoint",
 		config.DirectEndpoint,
 		"-server-token",
@@ -74,7 +89,45 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.
 	}
 
 	// Run the agent
-	return cmd.Run()
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	// Create a completely separate context <>
+	runCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			pwi.logger.Debugf("gracefully terminating agent with PID %d", cmd.Process.Pid)
+			_ = cmd.Process.Signal(os.Interrupt)
+		case <-runCtx.Done():
+			// agent exited
+			return
+		}
+
+		const gracefulLimit = 3 * time.Second
+		killPoint := time.After(gracefulLimit)
+
+		select {
+		case <-killPoint:
+			pwi.logger.Debugf("killing agent with PID %d because it didn't exit after %v", cmd.Process.Pid,
+				gracefulLimit)
+			_ = cmd.Process.Kill()
+		case <-runCtx.Done():
+			// agent exited
+			return
+		}
+	}()
+
+	if err := cmd.Wait(); err != nil {
+		return err
+	}
+
+	pwi.logger.Debugf("agent with PID %d exited normally", cmd.Process.Pid)
+
+	return nil
 }
 
 func (pwi *PersistentWorkerInstance) WorkingDirectory(projectDir string, dirtyMode bool) string {
