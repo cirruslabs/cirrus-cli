@@ -24,6 +24,9 @@ import (
 	"strings"
 )
 
+const pathYAML = ".cirrus.yml"
+const pathStarlark = ".cirrus.star"
+
 type ConfigurationEvaluatorServiceServer struct {
 	// must be embedded to have forward compatible implementations
 	api.UnimplementedCirrusConfigurationEvaluatorServiceServer
@@ -131,6 +134,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 			result.Issues = append(result.Issues, &api.Issue{
 				Level:   api.Issue_ERROR,
 				Message: ee.Error(),
+				Path:    pathStarlark,
 			})
 			result.OutputLogs = ee.Logs()
 		} else if !errors.Is(err, larker.ErrNotFound) {
@@ -160,6 +164,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 			result.Issues = append(result.Issues, &api.Issue{
 				Level:   api.Issue_ERROR,
 				Message: re.Message(),
+				Path:    pathYAML,
 				Line:    uint64(re.Line()),
 				Column:  uint64(re.Column()),
 			})

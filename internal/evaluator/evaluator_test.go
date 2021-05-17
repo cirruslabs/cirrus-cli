@@ -396,6 +396,12 @@ func TestBacktraceMain(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(response.OutputLogs), "main\nsentinel\n")
 	require.Contains(t, string(response.OutputLogs), "Traceback (most recent call last)")
+
+	for _, issue := range response.Issues {
+		if issue.Path != ".cirrus.star" {
+			t.Error("there should be only Starlark-specific issues in this test")
+		}
+	}
 }
 
 func TestBacktraceHook(t *testing.T) {
