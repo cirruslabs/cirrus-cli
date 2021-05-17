@@ -82,7 +82,7 @@ func TestProblematicConfigs(t *testing.T) {
 		ExpectedIssues []*api.Issue
 	}{
 		{"problematic-potentially-missed-task", []*api.Issue{
-			{Level: api.Issue_WARNING, Message: "you've probably meant foo_task", Line: 4, Column: 1},
+			{Level: api.Issue_WARNING, Message: "you've probably meant foo_task", Path: ".cirrus.yml", Line: 4, Column: 1},
 		}},
 	}
 

@@ -16,7 +16,6 @@ import (
 
 var (
 	ErrLoadFailed           = errors.New("load failed")
-	ErrExecFailed           = errors.New("exec failed")
 	ErrNotFound             = errors.New("entrypoint not found")
 	ErrMainFailed           = errors.New("failed to call main")
 	ErrHookFailed           = errors.New("failed to call hook")
@@ -100,7 +99,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 
 		mainResult, err := starlark.Call(thread, main, starlark.Tuple{mainCtx}, nil)
 		if err != nil {
-			errCh <- fmt.Errorf("%w: %v", ErrExecFailed, err)
+			errCh <- &ErrExecFailed{err: err}
 			return
 		}
 
@@ -112,7 +111,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 	select {
 	case mainResult = <-resCh:
 	case err := <-errCh:
-		return nil, err
+		return nil, &ExtendedError{err: err, logs: logsWithErrorAttached(outputLogsBuffer.Bytes(), err)}
 	case <-ctx.Done():
 		thread.Cancel(ctx.Err().Error())
 		return nil, ctx.Err()
@@ -207,7 +206,7 @@ func (larker *Larker) Hook(
 
 		hookResult, err := starlark.Call(thread, hook, args, nil)
 		if err != nil {
-			errCh <- fmt.Errorf("%w: %v", ErrExecFailed, err)
+			errCh <- &ErrExecFailed{err: err}
 			return
 		}
 
@@ -232,9 +231,29 @@ func (larker *Larker) Hook(
 	case hookResult := <-resCh:
 		return hookResult, nil
 	case err := <-errCh:
-		return &HookResult{ErrorMessage: err.Error()}, err
+		return &HookResult{
+			ErrorMessage: err.Error(),
+			OutputLogs:   logsWithErrorAttached(outputLogsBuffer.Bytes(), err),
+		}, nil
 	case <-ctx.Done():
 		thread.Cancel(ctx.Err().Error())
 		return nil, ctx.Err()
 	}
+}
+
+func logsWithErrorAttached(logs []byte, err error) []byte {
+	fmt.Printf("%T\n", err)
+
+	ee, ok := errors.Unwrap(err).(*starlark.EvalError)
+	if !ok {
+		return logs
+	}
+
+	if len(logs) != 0 && !bytes.HasSuffix(logs, []byte("\n")) {
+		logs = append(logs, byte('\n'))
+	}
+
+	logs = append(logs, []byte(ee.Backtrace())...)
+
+	return logs
 }

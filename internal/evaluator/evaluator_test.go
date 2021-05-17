@@ -382,3 +382,57 @@ func TestStarlarkOutputLogs(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "Foo\nBar\n", string(response.OutputLogs))
 }
+
+func TestBacktraceMain(t *testing.T) {
+	starlarkConfig := `def main(ctx):
+    print("main")
+    print("sentinel")
+
+    a = []
+    return a[0]
+`
+
+	response, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{StarlarkConfig: starlarkConfig})
+	require.NoError(t, err)
+	require.Contains(t, string(response.OutputLogs), "main\nsentinel\n")
+	require.Contains(t, string(response.OutputLogs), "Traceback (most recent call last)")
+
+	for _, issue := range response.Issues {
+		if issue.Path != ".cirrus.star" {
+			t.Error("there should be only Starlark-specific issues in this test")
+		}
+	}
+}
+
+func TestBacktraceHook(t *testing.T) {
+	starlarkConfig := `def on_build_failure(ctx):
+  print("hook")
+  print("sentinel")
+
+  a = []
+  print(a[0])
+`
+
+	arguments, err := structpb.NewList([]interface{}{
+		map[string]interface{}{
+			"build": map[string]interface{}{
+				"id": 42,
+			},
+			"task": map[string]interface{}{
+				"id": 43,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response, err := evaluateFunctionHelper(t, &api.EvaluateFunctionRequest{
+		StarlarkConfig: starlarkConfig,
+		FunctionName:   "on_build_failure",
+		Arguments:      arguments,
+	})
+	require.NoError(t, err)
+	require.Contains(t, string(response.OutputLogs), "hook\nsentinel\n")
+	require.Contains(t, string(response.OutputLogs), "Traceback (most recent call last):\n  .cirrus.star:6:10")
+}

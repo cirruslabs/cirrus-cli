@@ -29,6 +29,8 @@ import (
 	"strings"
 )
 
+const pathYAML = ".cirrus.yml"
+
 type Parser struct {
 	// Environment to take into account when expanding variables.
 	environment map[string]string
@@ -100,6 +102,7 @@ func (p *Parser) registerIssuef(level api.Issue_Level, line int, column int, for
 	p.issues = append(p.issues, &api.Issue{
 		Level:   level,
 		Message: fmt.Sprintf(format, args...),
+		Path:    pathYAML,
 		Line:    uint64(line),
 		Column:  uint64(column),
 	})
