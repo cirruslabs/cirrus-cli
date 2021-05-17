@@ -112,6 +112,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 	fs := fsFromEnvironment(request.Environment)
 
 	// Run Starlark script and register generated YAML configuration (if any)
+	// nolint:nestif // doesn't seem too complicated
 	if request.StarlarkConfig != "" {
 		lrk := larker.New(
 			larker.WithFileSystem(fs),
@@ -126,6 +127,12 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 			if lrkResult.YAMLConfig != "" {
 				yamlConfigs = append(yamlConfigs, lrkResult.YAMLConfig)
 			}
+		} else if ee, ok := err.(*larker.ExtendedError); ok {
+			result.Issues = append(result.Issues, &api.Issue{
+				Level:   api.Issue_ERROR,
+				Message: ee.Error(),
+			})
+			result.OutputLogs = ee.Logs()
 		} else if !errors.Is(err, larker.ErrNotFound) {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
@@ -150,14 +157,12 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 	parseResult, err := p.Parse(ctx, result.ProcessedConfig)
 	if err != nil {
 		if re, ok := err.(*parsererror.Rich); ok {
-			result.Issues = []*api.Issue{
-				{
-					Level:   api.Issue_ERROR,
-					Message: re.Message(),
-					Line:    uint64(re.Line()),
-					Column:  uint64(re.Column()),
-				},
-			}
+			result.Issues = append(result.Issues, &api.Issue{
+				Level:   api.Issue_ERROR,
+				Message: re.Message(),
+				Line:    uint64(re.Line()),
+				Column:  uint64(re.Column()),
+			})
 
 			return result, nil
 		}
@@ -166,7 +171,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 	}
 
 	result.Tasks = parseResult.Tasks
-	result.Issues = parseResult.Issues
+	result.Issues = append(result.Issues, parseResult.Issues...)
 	result.TasksCountBeforeFiltering = parseResult.TasksCountBeforeFiltering
 
 	return result, nil
@@ -216,6 +221,13 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 	if err != nil {
 		if errors.Is(err, larker.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, err.Error())
+		}
+
+		if ee, ok := err.(*larker.ExtendedError); ok {
+			return &api.EvaluateFunctionResponse{
+				ErrorMessage: ee.Error(),
+				OutputLogs:   ee.Logs(),
+			}, nil
 		}
 
 		return nil, status.Errorf(codes.Internal, err.Error())
