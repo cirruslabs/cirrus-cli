@@ -23,3 +23,9 @@ func WithAffectedFiles(affectedFiles []string) Option {
 		e.affectedFiles = affectedFiles
 	}
 }
+
+func WithTestMode() Option {
+	return func(e *Larker) {
+		e.isTest = true
+	}
+}
