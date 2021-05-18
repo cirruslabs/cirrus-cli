@@ -158,7 +158,7 @@ def main(ctx):
 
 ### `is_test`
 
-While not technically a builtin, `is_test` is a [`bool`](https://github.com/bazelbuild/starlark/blob/master/spec.md#booleans) that allows Starlark code to determine whether it's running in`cirrus internal test`.
+While not technically a builtin, `is_test` is a [`bool`](https://github.com/bazelbuild/starlark/blob/master/spec.md#booleans) that allows Starlark code to determine whether it's running in `cirrus internal test`.
 
 This can be useful for limiting the test complexity, e.g. by not making a real HTTP request and mocking/skipping it instead.
 
