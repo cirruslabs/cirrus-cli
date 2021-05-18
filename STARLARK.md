@@ -156,6 +156,12 @@ def main(ctx):
     return tasks
 ```
 
+### `is_test`
+
+While not technically a builtin, `is_test` is a [`bool`](https://github.com/bazelbuild/starlark/blob/master/spec.md#booleans) that allows Starlark code to determine whether it's running in`cirrus internal test`.
+
+This can be useful for limiting the test complexity, e.g. by not making a real HTTP request and mocking/skipping it instead.
+
 ### `env`
 
 While not technically a builtin, `env` is dict that contains environment variables passed via `cirrus run --environment`.

@@ -266,3 +266,25 @@ func TestBuiltinStarlib(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestTestMode(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/test-mode")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the source code with testing mode disabled
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
+	result, err := lrk.Main(context.Background(), string(source))
+	require.NoError(t, err)
+	assert.Contains(t, string(result.OutputLogs), "testing mode disabled")
+
+	// Run the source code with testing mode enabled
+	lrk = larker.New(larker.WithFileSystem(local.New(dir)), larker.WithTestMode())
+	result, err = lrk.Main(context.Background(), string(source))
+	require.NoError(t, err)
+	assert.Contains(t, string(result.OutputLogs), "testing mode enabled")
+}

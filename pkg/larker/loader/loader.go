@@ -40,15 +40,23 @@ type Loader struct {
 	fs            fs.FileSystem
 	env           map[string]string
 	affectedFiles []string
+	isTest        bool
 }
 
-func NewLoader(ctx context.Context, fs fs.FileSystem, env map[string]string, affectedFiles []string) *Loader {
+func NewLoader(
+	ctx context.Context,
+	fs fs.FileSystem,
+	env map[string]string,
+	affectedFiles []string,
+	isTest bool,
+) *Loader {
 	return &Loader{
 		ctx:           ctx,
 		cache:         make(map[string]*CacheEntry),
 		fs:            fs,
 		env:           env,
 		affectedFiles: affectedFiles,
+		isTest:        isTest,
 	}
 }
 
@@ -123,6 +131,8 @@ func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
 		}
 	}
 	result["env"] = starlarkEnv
+
+	result["is_test"] = starlark.Bool(loader.isTest)
 
 	result["changes_include"] = generateChangesIncludeBuiltin(loader.affectedFiles)
 
