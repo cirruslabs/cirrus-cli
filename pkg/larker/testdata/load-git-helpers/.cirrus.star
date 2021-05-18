@@ -1,4 +1,4 @@
-load("github.com/cirrus-templates/helpers@a5e5d1649c05c40bab6c82f084b69a8d82977d96", "task", "container", "script", "always", "artifacts")
+load("github.com/cirrus-modules/helpers@a5e5d1649c05c40bab6c82f084b69a8d82977d96", "task", "container", "script", "always", "artifacts")
 
 def main(ctx):
     return [

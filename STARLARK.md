@@ -48,10 +48,10 @@ task:
 
 You might ask why not simply use the YAML format here? With Starlark, you can generate parts of the configuration dynamically based on some external conditions: by [making an HTTP request](#http) to check the previous build status or by [parsing files inside the repository](#fs) to pick up some common settings (for example, parse `package.json` to see if it contains `lint` script and generate a linting task).
  
-And even more importantly: with the [module loading](#module-loading) you can re-use other people's code to avoid wasting time on things written from scratch. For example, there are official [task helpers](https://github.com/cirrus-templates/helpers) available that reduce the boilerplate when generating tasks:
+And even more importantly: with the [module loading](#module-loading) you can re-use other people's code to avoid wasting time on things written from scratch. For example, there are official [task helpers](https://github.com/cirrus-modules/helpers) available that reduce the boilerplate when generating tasks:
 
 ```python
-load("github.com/cirrus-templates/helpers", "task", "container", "script")
+load("github.com/cirrus-modules/helpers", "task", "container", "script")
 
 def main(ctx):
     return [
@@ -98,13 +98,13 @@ load(".ci/notify-slack.star", "notify_slack")
 To load a specific branch of the template from GitHub:
 
 ```python
-load("github.com/cirrus-templates/golang@master", "task", "container")
+load("github.com/cirrus-modules/golang@master", "task", "container")
 ```
 
 In the example above, the name of the `.star` file was not provided, because `lib.star` is assumed by default. This is equivalent to:
 
 ```python
-load("github.com/cirrus-templates/golang/lib.star@master", "task", "container")
+load("github.com/cirrus-modules/golang/lib.star@master", "task", "container")
 ```
 
 You can also specify an exact commit hash instead of the `master` branch name to prevent accidental changes.
