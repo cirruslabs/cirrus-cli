@@ -56,7 +56,7 @@ func test(cmd *cobra.Command, args []string) error {
 		}
 
 		// Create Starlark executor and run .cirrus.star to generate the configuration
-		var larkerOpts []larker.Option
+		larkerOpts := []larker.Option{larker.WithTestMode()}
 
 		fs := local.New(".")
 		fs.Chdir(testDir)
