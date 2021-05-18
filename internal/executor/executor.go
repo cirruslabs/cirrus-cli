@@ -126,10 +126,12 @@ func (e *Executor) Run(ctx context.Context) error {
 		// Pick next undone task to run
 		task := e.build.GetNextTask()
 		if task == nil {
+			e.logger.Finish(true)
 			return nil
 		}
 
 		if err := e.runSingleTask(ctx, task); err != nil {
+			e.logger.Finish(false)
 			return err
 		}
 	}
@@ -212,12 +214,6 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 		taskLogger.Finish(false)
 		return fmt.Errorf("%w: instance terminated before the task %s had a chance to run", ErrBuildFailed, task.String())
 	default:
-		taskLogger.Finish(false)
-		return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
-	}
-
-	// Bail-out if the task has failed
-	if task.Status() != taskstatus.Succeeded {
 		taskLogger.Finish(false)
 		return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
 	}
