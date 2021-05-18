@@ -112,7 +112,7 @@ func TestCycle(t *testing.T) {
 	assert.True(t, errors.Is(err, larker.ErrLoadFailed))
 }
 
-// TestLoadGitHelpers ensures that we can use https://github.com/cirrus-templates/helpers
+// TestLoadGitHelpers ensures that we can use https://github.com/cirrus-modules/helpers
 // as demonstrated in it's README.md.
 //
 // Note that we lock the revision in the .cirrus.star's load statement to prevent failures in the future.
@@ -154,7 +154,7 @@ func TestLoadTypoStarVsStart(t *testing.T) {
 
 	// Hint when loading from Git
 	_, err = lrk.Main(context.Background(),
-		"load(\"github.com/cirrus-templates/helpers/dir/lib.start\", \"symbol\")\n")
+		"load(\"github.com/cirrus-modules/helpers/dir/lib.start\", \"symbol\")\n")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "instead of the .start?")
 

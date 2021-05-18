@@ -6,7 +6,7 @@ If not, then we highly recommend that you do so — it's just a stripped-down Py
 
 ## Quick start
 
-The most straightforward way to start is to [use our example template](https://github.com/cirrus-templates/example).
+The most straightforward way to start is to [use our example template](https://github.com/cirrus-modules/example).
 
 Assuming that you've instantiated the template into `github.com/user/dynamic-template`, you can now `load()` it from anywhere like this:
 
@@ -20,10 +20,10 @@ And don't forget to add a `cirrus-template` topic to make your template discover
 
 ## Examples
 
-There are couple of template examples available under [`cirrus-templates`](https://github.com/cirrus-templates) organization:
+There are couple of template examples available under [`cirrus-modules`](https://github.com/cirrus-modules) organization:
 
-* [`helpers`](https://github.com/cirrus-templates/helpers) - a set of helper functions to build Cirrus tasks from Starlark.
-* [`golang`](https://github.com/cirrus-templates/golang) - template to auto-configure tasks for a Go repository.
+* [`helpers`](https://github.com/cirrus-modules/helpers) - a set of helper functions to build Cirrus tasks from Starlark.
+* [`golang`](https://github.com/cirrus-modules/golang) - template to auto-configure tasks for a Go repository.
 
 ## Differences with Starlark configurations
 
@@ -34,13 +34,13 @@ The treatment of Starlark templates is mostly similar to `.cirrus.star`, but the
 The most significant difference is that templates can be loaded without specifying the name of a `.star`-file:
 
 ```python
-load("github.com/cirrus-templates/golang", "detect_tasks")
+load("github.com/cirrus-modules/golang", "detect_tasks")
 ```
 
 When no `.star` file to load is specified, the convention is to load `lib.star` by default. So, behind the scenes this will be expanded into:
 
 ```python
-load("github.com/cirrus-templates/golang/lib.star", "detect_tasks")
+load("github.com/cirrus-modules/golang/lib.star", "detect_tasks")
 ```
 
 ## Testing
