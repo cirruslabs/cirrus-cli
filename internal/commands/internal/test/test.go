@@ -19,6 +19,7 @@ import (
 
 var ErrTest = errors.New("test failed")
 
+var update bool
 var output string
 
 func test(cmd *cobra.Command, args []string) error {
@@ -49,12 +50,6 @@ func test(cmd *cobra.Command, args []string) error {
 	for _, testDir := range testDirs {
 		logger := logger.Scoped(testDir)
 
-		// Load expected configuration
-		expectedConfigBytes, err := ioutil.ReadFile(filepath.Join(testDir, ".cirrus.expected.yml"))
-		if err != nil {
-			return fmt.Errorf("%w: %v", ErrTest, err)
-		}
-
 		// Create Starlark executor and run .cirrus.star to generate the configuration
 		larkerOpts := []larker.Option{larker.WithTestMode()}
 
@@ -83,15 +78,38 @@ func test(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 
-		// Compare generated configuration with the expected configuration
+		// Compare generated configuration against an expected one
+		expectedConfigFilename := filepath.Join(testDir, ".cirrus.expected.yml")
+		expectedConfigBytes, err := ioutil.ReadFile(expectedConfigFilename)
+		if err != nil {
+			return fmt.Errorf("%w: %v", ErrTest, err)
+		}
+
 		differentConfig := logDifferenceIfAny(logger, "YAML", string(expectedConfigBytes), result.YAMLConfig)
 
-		logsBytes, err := ioutil.ReadFile(filepath.Join(testDir, ".cirrus.expected.log"))
+		if update && differentConfig {
+			if err := ioutil.WriteFile(expectedConfigFilename, []byte(result.YAMLConfig), 0600); err != nil {
+				return fmt.Errorf("%w: %v", ErrTest, err)
+			}
+			differentConfig = false
+		}
+
+		// Compare generated log against an expected one
+		logsFilename := filepath.Join(testDir, ".cirrus.expected.log")
+		logsBytes, err := ioutil.ReadFile(logsFilename)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 		differentLogs := logDifferenceIfAny(logger, "logs", string(logsBytes), string(result.OutputLogs))
 
+		if update && differentLogs {
+			if err := ioutil.WriteFile(logsFilename, result.OutputLogs, 0600); err != nil {
+				return fmt.Errorf("%w: %v", ErrTest, err)
+			}
+			differentLogs = false
+		}
+
+		// Should we consider the test as failed?
 		if differentConfig || differentLogs {
 			someTestsFailed = true
 		}
@@ -131,6 +149,9 @@ func NewTestCmd() *cobra.Command {
 		Short: "Discover and run Starlark tests",
 		RunE:  test,
 	}
+
+	cmd.PersistentFlags().BoolVar(&update, "update", false,
+		"update tests with differing .cirrus.expected.yml or .cirrus.expected.log, instead of failing them")
 
 	cmd.PersistentFlags().StringVarP(&output, "output", "o", logs.DefaultFormat(), fmt.Sprintf("output format of logs, "+
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))
