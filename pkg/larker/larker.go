@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/cachinglayer"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
 	"github.com/cirruslabs/cirrus-cli/pkg/yamlhelper"
@@ -56,6 +57,13 @@ func New(opts ...Option) *Larker {
 	for _, opt := range opts {
 		opt(lrk)
 	}
+
+	// Wrap the final file system in a caching layer
+	wrappedFS, err := cachinglayer.Wrap(lrk.fs)
+	if err != nil {
+		panic(err)
+	}
+	lrk.fs = wrappedFS
 
 	return lrk
 }
