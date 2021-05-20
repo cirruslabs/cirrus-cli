@@ -96,8 +96,9 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 			return
 		}
 
-		// Prepare a context to pass to main() as it's first argument if needed
 		var args starlark.Tuple
+
+		// Prepare a context to pass to main() as it's first argument if needed
 		if mainFunc.NumParams() != 0 {
 			args = append(args, &Context{})
 		}
