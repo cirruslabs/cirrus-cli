@@ -81,6 +81,10 @@ func EvaluateStarlarkConfig(ctx context.Context, path string, env map[string]str
 	lrk := larker.New(larker.WithFileSystem(local.New(".")), larker.WithEnvironment(env))
 
 	result, err := lrk.Main(ctx, string(starlarkSource))
+	if errors.Is(err, larker.ErrNotFound) {
+		// It's fine to have only hooks and no main()
+		return "", nil
+	}
 	if err != nil {
 		return "", err
 	}
