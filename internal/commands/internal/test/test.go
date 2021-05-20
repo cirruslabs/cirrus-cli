@@ -19,7 +19,48 @@ import (
 
 var ErrTest = errors.New("test failed")
 
+var update bool
 var output string
+
+// compareConfig compares generated configuration against an expected one.
+func compareConfig(logger *echelon.Logger, testDir string, yamlConfig string) (bool, error) {
+	expectedConfigFilename := filepath.Join(testDir, ".cirrus.expected.yml")
+	expectedConfigBytes, err := ioutil.ReadFile(expectedConfigFilename)
+	if err != nil {
+		return true, fmt.Errorf("%w: %v", ErrTest, err)
+	}
+
+	differentConfig := logDifferenceIfAny(logger, "YAML", string(expectedConfigBytes), yamlConfig)
+
+	if update && differentConfig {
+		if err := ioutil.WriteFile(expectedConfigFilename, []byte(yamlConfig), 0600); err != nil {
+			return true, fmt.Errorf("%w: %v", ErrTest, err)
+		}
+		differentConfig = false
+	}
+
+	return differentConfig, nil
+}
+
+// compareLogs compares generated log against an expected one.
+func compareLogs(logger *echelon.Logger, testDir string, actualLogs []byte) (bool, error) {
+	logsFilename := filepath.Join(testDir, ".cirrus.expected.log")
+	logsBytes, err := ioutil.ReadFile(logsFilename)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return true, fmt.Errorf("%w: %v", ErrTest, err)
+	}
+
+	differentLogs := logDifferenceIfAny(logger, "logs", string(logsBytes), string(actualLogs))
+
+	if update && differentLogs {
+		if err := ioutil.WriteFile(logsFilename, actualLogs, 0600); err != nil {
+			return true, fmt.Errorf("%w: %v", ErrTest, err)
+		}
+		differentLogs = false
+	}
+
+	return differentLogs, nil
+}
 
 func test(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
@@ -49,12 +90,6 @@ func test(cmd *cobra.Command, args []string) error {
 	for _, testDir := range testDirs {
 		logger := logger.Scoped(testDir)
 
-		// Load expected configuration
-		expectedConfigBytes, err := ioutil.ReadFile(filepath.Join(testDir, ".cirrus.expected.yml"))
-		if err != nil {
-			return fmt.Errorf("%w: %v", ErrTest, err)
-		}
-
 		// Create Starlark executor and run .cirrus.star to generate the configuration
 		larkerOpts := []larker.Option{larker.WithTestMode()}
 
@@ -83,15 +118,16 @@ func test(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 
-		// Compare generated configuration with the expected configuration
-		differentConfig := logDifferenceIfAny(logger, "YAML", string(expectedConfigBytes), result.YAMLConfig)
-
-		logsBytes, err := ioutil.ReadFile(filepath.Join(testDir, ".cirrus.expected.log"))
-		if err != nil && !errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("%w: %v", ErrTest, err)
+		differentConfig, err := compareConfig(logger, testDir, result.YAMLConfig)
+		if err != nil {
+			return err
 		}
-		differentLogs := logDifferenceIfAny(logger, "logs", string(logsBytes), string(result.OutputLogs))
+		differentLogs, err := compareLogs(logger, testDir, result.OutputLogs)
+		if err != nil {
+			return err
+		}
 
+		// Should we consider the test as failed?
 		if differentConfig || differentLogs {
 			someTestsFailed = true
 		}
@@ -131,6 +167,9 @@ func NewTestCmd() *cobra.Command {
 		Short: "Discover and run Starlark tests",
 		RunE:  test,
 	}
+
+	cmd.PersistentFlags().BoolVar(&update, "update", false,
+		"update tests with differing .cirrus.expected.yml or .cirrus.expected.log, instead of failing them")
 
 	cmd.PersistentFlags().StringVarP(&output, "output", "o", logs.DefaultFormat(), fmt.Sprintf("output format of logs, "+
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))
