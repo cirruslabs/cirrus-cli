@@ -32,8 +32,24 @@ func TestNoTasks(t *testing.T) {
 	validateExpected(t, "testdata/no-tasks")
 }
 
-func TestNoCtx(t *testing.T) {
+func TestNoCtxMain(t *testing.T) {
 	validateExpected(t, "testdata/no-ctx")
+}
+
+func TestNoCtxHook(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/no-ctx")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the source code
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
+	result, err := lrk.Hook(context.Background(), string(source), "on_build_created", []interface{}{})
+	require.NoError(t, err)
+	assert.Contains(t, string(result.OutputLogs), "it works fine without ctx argument!")
 }
 
 func validateExpected(t *testing.T, testDir string) {

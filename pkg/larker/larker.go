@@ -183,22 +183,25 @@ func (larker *Larker) Hook(
 		}
 
 		// Ensure that hook is a function
-		if _, ok := hook.(*starlark.Function); !ok {
+		hookFunc, ok := hook.(*starlark.Function)
+		if !ok {
 			errCh <- fmt.Errorf("%w: %s is not a function", ErrHookFailed, name)
 			return
 		}
 
 		var args starlark.Tuple
 
-		for i, argument := range arguments {
-			argumentStarlark, err := interfaceAsStarlarkValue(argument)
-			if err != nil {
-				errCh <- fmt.Errorf("%w: %s()'s %d argument should be JSON-compatible: %v",
-					ErrHookFailed, name, i+1, err)
-				return
-			}
+		if hookFunc.NumParams() != 0 {
+			for i, argument := range arguments {
+				argumentStarlark, err := interfaceAsStarlarkValue(argument)
+				if err != nil {
+					errCh <- fmt.Errorf("%w: %s()'s %d argument should be JSON-compatible: %v",
+						ErrHookFailed, name, i+1, err)
+					return
+				}
 
-			args = append(args, argumentStarlark)
+				args = append(args, argumentStarlark)
+			}
 		}
 
 		// Run hook and measure time spent
