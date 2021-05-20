@@ -22,6 +22,46 @@ var ErrTest = errors.New("test failed")
 var update bool
 var output string
 
+// compareConfig compares generated configuration against an expected one.
+func compareConfig(logger *echelon.Logger, testDir string, yamlConfig string) (bool, error) {
+	expectedConfigFilename := filepath.Join(testDir, ".cirrus.expected.yml")
+	expectedConfigBytes, err := ioutil.ReadFile(expectedConfigFilename)
+	if err != nil {
+		return true, fmt.Errorf("%w: %v", ErrTest, err)
+	}
+
+	differentConfig := logDifferenceIfAny(logger, "YAML", string(expectedConfigBytes), yamlConfig)
+
+	if update && differentConfig {
+		if err := ioutil.WriteFile(expectedConfigFilename, []byte(yamlConfig), 0600); err != nil {
+			return true, fmt.Errorf("%w: %v", ErrTest, err)
+		}
+		differentConfig = false
+	}
+
+	return differentConfig, nil
+}
+
+// compareLogs compares generated log against an expected one.
+func compareLogs(logger *echelon.Logger, testDir string, actualLogs []byte) (bool, error) {
+	logsFilename := filepath.Join(testDir, ".cirrus.expected.log")
+	logsBytes, err := ioutil.ReadFile(logsFilename)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return true, fmt.Errorf("%w: %v", ErrTest, err)
+	}
+
+	differentLogs := logDifferenceIfAny(logger, "logs", string(logsBytes), string(actualLogs))
+
+	if update && differentLogs {
+		if err := ioutil.WriteFile(logsFilename, actualLogs, 0600); err != nil {
+			return true, fmt.Errorf("%w: %v", ErrTest, err)
+		}
+		differentLogs = false
+	}
+
+	return differentLogs, nil
+}
+
 func test(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
@@ -78,35 +118,13 @@ func test(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 
-		// Compare generated configuration against an expected one
-		expectedConfigFilename := filepath.Join(testDir, ".cirrus.expected.yml")
-		expectedConfigBytes, err := ioutil.ReadFile(expectedConfigFilename)
+		differentConfig, err := compareConfig(logger, testDir, result.YAMLConfig)
 		if err != nil {
-			return fmt.Errorf("%w: %v", ErrTest, err)
+			return err
 		}
-
-		differentConfig := logDifferenceIfAny(logger, "YAML", string(expectedConfigBytes), result.YAMLConfig)
-
-		if update && differentConfig {
-			if err := ioutil.WriteFile(expectedConfigFilename, []byte(result.YAMLConfig), 0600); err != nil {
-				return fmt.Errorf("%w: %v", ErrTest, err)
-			}
-			differentConfig = false
-		}
-
-		// Compare generated log against an expected one
-		logsFilename := filepath.Join(testDir, ".cirrus.expected.log")
-		logsBytes, err := ioutil.ReadFile(logsFilename)
-		if err != nil && !errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("%w: %v", ErrTest, err)
-		}
-		differentLogs := logDifferenceIfAny(logger, "logs", string(logsBytes), string(result.OutputLogs))
-
-		if update && differentLogs {
-			if err := ioutil.WriteFile(logsFilename, result.OutputLogs, 0600); err != nil {
-				return fmt.Errorf("%w: %v", ErrTest, err)
-			}
-			differentLogs = false
+		differentLogs, err := compareLogs(logger, testDir, result.OutputLogs)
+		if err != nil {
+			return err
 		}
 
 		// Should we consider the test as failed?
