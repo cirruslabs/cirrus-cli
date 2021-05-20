@@ -114,7 +114,7 @@ func test(cmd *cobra.Command, args []string) error {
 		}
 
 		result, err := lrk.Main(cmd.Context(), string(sourceBytes))
-		if err != nil {
+		if err != nil && !errors.Is(err, larker.ErrNotFound) {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 

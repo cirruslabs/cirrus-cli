@@ -125,7 +125,14 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 	select {
 	case mainResult = <-resCh:
 	case err := <-errCh:
-		return nil, &ExtendedError{err: err, logs: logsWithErrorAttached(outputLogsBuffer.Bytes(), err)}
+		if errors.Is(err, ErrNotFound) {
+			return &MainResult{
+				OutputLogs: nil,
+				YAMLConfig: "",
+			}, err
+		} else {
+			return nil, &ExtendedError{err: err, logs: logsWithErrorAttached(outputLogsBuffer.Bytes(), err)}
+		}
 	case <-ctx.Done():
 		thread.Cancel(ctx.Err().Error())
 		return nil, ctx.Err()

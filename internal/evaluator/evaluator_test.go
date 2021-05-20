@@ -383,6 +383,16 @@ func TestStarlarkOutputLogs(t *testing.T) {
 	require.Equal(t, "Foo\nBar\n", string(response.OutputLogs))
 }
 
+func TestStarlarkNoMain(t *testing.T) {
+	starlarkConfig := `def foo():
+    return []
+`
+
+	response, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{StarlarkConfig: starlarkConfig})
+	require.NoError(t, err)
+	require.Empty(t, response.ProcessedConfig)
+}
+
 func TestBacktraceMain(t *testing.T) {
 	starlarkConfig := `def main(ctx):
     print("main")

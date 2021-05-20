@@ -130,6 +130,8 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 			if lrkResult.YAMLConfig != "" {
 				yamlConfigs = append(yamlConfigs, lrkResult.YAMLConfig)
 			}
+		} else if errors.Is(err, larker.ErrNotFound) {
+			// ignore
 		} else if ee, ok := err.(*larker.ExtendedError); ok {
 			result.Issues = append(result.Issues, &api.Issue{
 				Level:   api.Issue_ERROR,
@@ -137,7 +139,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 				Path:    pathStarlark,
 			})
 			result.OutputLogs = ee.Logs()
-		} else if !errors.Is(err, larker.ErrNotFound) {
+		} else {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 	}

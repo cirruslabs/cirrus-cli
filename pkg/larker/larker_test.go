@@ -36,6 +36,10 @@ func TestNoCtxMain(t *testing.T) {
 	validateExpected(t, "testdata/no-ctx")
 }
 
+func TestNoMain(t *testing.T) {
+	validateExpected(t, "testdata/no-main")
+}
+
 func TestNoCtxHook(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/no-ctx")
 
@@ -64,7 +68,7 @@ func validateExpected(t *testing.T, testDir string) {
 	// Run the source code to produce a YAML configuration
 	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
 	result, err := lrk.Main(context.Background(), string(source))
-	if err != nil {
+	if err != nil && !errors.Is(err, larker.ErrNotFound) {
 		t.Fatal(err)
 	}
 
