@@ -32,6 +32,10 @@ func TestNoTasks(t *testing.T) {
 	validateExpected(t, "testdata/no-tasks")
 }
 
+func TestNoCtx(t *testing.T) {
+	validateExpected(t, "testdata/no-ctx")
+}
+
 func validateExpected(t *testing.T, testDir string) {
 	dir := testutil.TempDirPopulatedWith(t, testDir)
 
