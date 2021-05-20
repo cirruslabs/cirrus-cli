@@ -24,6 +24,10 @@ func TestAll(t *testing.T) {
 	for _, fileInfo := range fileInfos {
 		fileInfo := fileInfo
 		t.Run(fileInfo.Name(), func(t *testing.T) {
+			if fileInfo.Name() == "update" {
+				return
+			}
+
 			runTestCommandAndGetOutput(t, filepath.Join("testdata", fileInfo.Name()), []string{})
 		})
 	}
