@@ -90,15 +90,20 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 		}
 
 		// Ensure that main() is a function
-		if _, ok := main.(*starlark.Function); !ok {
+		mainFunc, ok := main.(*starlark.Function)
+		if !ok {
 			errCh <- fmt.Errorf("%w: main is not a function", ErrMainFailed)
 			return
 		}
 
-		// Prepare a context to pass to main() as it's first argument
-		mainCtx := &Context{}
+		var args starlark.Tuple
 
-		mainResult, err := starlark.Call(thread, main, starlark.Tuple{mainCtx}, nil)
+		// Prepare a context to pass to main() as it's first argument if needed
+		if mainFunc.NumParams() != 0 {
+			args = append(args, &Context{})
+		}
+
+		mainResult, err := starlark.Call(thread, main, args, nil)
 		if err != nil {
 			errCh <- &ErrExecFailed{err: err}
 			return
