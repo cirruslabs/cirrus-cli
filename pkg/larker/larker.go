@@ -130,9 +130,8 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 				OutputLogs: nil,
 				YAMLConfig: "",
 			}, err
-		} else {
-			return nil, &ExtendedError{err: err, logs: logsWithErrorAttached(outputLogsBuffer.Bytes(), err)}
 		}
+		return nil, &ExtendedError{err: err, logs: logsWithErrorAttached(outputLogsBuffer.Bytes(), err)}
 	case <-ctx.Done():
 		thread.Cancel(ctx.Err().Error())
 		return nil, ctx.Err()
