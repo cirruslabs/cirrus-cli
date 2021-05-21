@@ -210,7 +210,7 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 	assert.Contains(t, buf.String(), "'from_starlark' script succeeded")
 }
 
-// TestRunYAMLAndStarlarkHooks ensures that CLI allows Starlark file withou main
+// TestRunYAMLAndStarlarkHooks ensures that CLI allows Starlark file without main.
 func TestRunYAMLAndStarlarkHooks(t *testing.T) {
 	testutil.TempChdirPopulatedWith(t, "testdata/run-yaml-and-starlark-hooks")
 
