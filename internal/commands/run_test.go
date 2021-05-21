@@ -210,6 +210,17 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 	assert.Contains(t, buf.String(), "'from_starlark' script succeeded")
 }
 
+// TestRunYAMLAndStarlarkHooks ensures that CLI allows Starlark file withou main
+func TestRunYAMLAndStarlarkHooks(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-yaml-and-starlark-hooks")
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple"})
+	err := command.Execute()
+
+	require.Nil(t, err)
+}
+
 // TestRunContainerPull ensures that container images are pulled by default.
 func TestRunContainerPull(t *testing.T) {
 	backend, err := containerbackend.New(containerbackend.BackendAuto)

@@ -1,5 +1,7 @@
 package larker
 
+import "errors"
+
 type ExtendedError struct {
 	err  error
 	logs []byte
@@ -15,4 +17,8 @@ func (ee *ExtendedError) Unwrap() error {
 
 func (ee *ExtendedError) Logs() []byte {
 	return ee.logs
+}
+
+func (ee *ExtendedError) Is(err error) bool {
+	return errors.Is(ee.err, err)
 }

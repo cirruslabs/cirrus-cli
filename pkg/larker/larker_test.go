@@ -36,10 +36,6 @@ func TestNoCtxMain(t *testing.T) {
 	validateExpected(t, "testdata/no-ctx")
 }
 
-func TestNoMain(t *testing.T) {
-	validateExpected(t, "testdata/no-main")
-}
-
 func TestNoCtxHook(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/no-ctx")
 

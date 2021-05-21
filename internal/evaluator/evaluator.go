@@ -123,15 +123,13 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 			larker.WithAffectedFiles(request.AffectedFiles),
 		)
 
-		lrkResult, err := lrk.Main(ctx, request.StarlarkConfig)
+		lrkResult, err := lrk.MainOptional(ctx, request.StarlarkConfig)
 		if err == nil {
 			result.OutputLogs = lrkResult.OutputLogs
 
 			if lrkResult.YAMLConfig != "" {
 				yamlConfigs = append(yamlConfigs, lrkResult.YAMLConfig)
 			}
-		} else if errors.Is(err, larker.ErrNotFound) {
-			// ignore
 		} else if ee, ok := err.(*larker.ExtendedError); ok {
 			result.Issues = append(result.Issues, &api.Issue{
 				Level:   api.Issue_ERROR,
