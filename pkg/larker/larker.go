@@ -68,6 +68,17 @@ func New(opts ...Option) *Larker {
 	return lrk
 }
 
+func (larker *Larker) MainOptional(ctx context.Context, source string) (*MainResult, error) {
+	result, err := larker.Main(ctx, source)
+	if errors.Is(err, ErrNotFound) {
+		return &MainResult{
+			OutputLogs: nil,
+			YAMLConfig: "",
+		}, nil
+	}
+	return result, err
+}
+
 func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, error) {
 	outputLogsBuffer := &bytes.Buffer{}
 	capture := func(thread *starlark.Thread, msg string) {

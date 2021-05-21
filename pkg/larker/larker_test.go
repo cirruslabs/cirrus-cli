@@ -64,7 +64,7 @@ func validateExpected(t *testing.T, testDir string) {
 	// Run the source code to produce a YAML configuration
 	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
 	result, err := lrk.Main(context.Background(), string(source))
-	if err != nil {
+	if err != nil && !errors.Is(err, larker.ErrNotFound) {
 		t.Fatal(err)
 	}
 

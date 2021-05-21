@@ -113,7 +113,7 @@ func test(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 
-		result, err := lrk.Main(cmd.Context(), string(sourceBytes))
+		result, err := lrk.MainOptional(cmd.Context(), string(sourceBytes))
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}

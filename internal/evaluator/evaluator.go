@@ -123,7 +123,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 			larker.WithAffectedFiles(request.AffectedFiles),
 		)
 
-		lrkResult, err := lrk.Main(ctx, request.StarlarkConfig)
+		lrkResult, err := lrk.MainOptional(ctx, request.StarlarkConfig)
 		if err == nil {
 			result.OutputLogs = lrkResult.OutputLogs
 
@@ -137,7 +137,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 				Path:    pathStarlark,
 			})
 			result.OutputLogs = ee.Logs()
-		} else if !errors.Is(err, larker.ErrNotFound) {
+		} else {
 			return nil, status.Error(codes.InvalidArgument, err.Error())
 		}
 	}

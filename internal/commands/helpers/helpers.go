@@ -80,7 +80,7 @@ func EvaluateStarlarkConfig(ctx context.Context, path string, env map[string]str
 
 	lrk := larker.New(larker.WithFileSystem(local.New(".")), larker.WithEnvironment(env))
 
-	result, err := lrk.Main(ctx, string(starlarkSource))
+	result, err := lrk.MainOptional(ctx, string(starlarkSource))
 	if err != nil {
 		return "", err
 	}
