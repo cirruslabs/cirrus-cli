@@ -47,7 +47,7 @@ require (
 	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/otiai10/copy v1.4.2
 	github.com/pelletier/go-toml v1.8.1 // indirect
-	github.com/pkg/sftp v1.12.0
+	github.com/pkg/sftp v1.13.0
 	github.com/qri-io/starlib v0.5.0
 	github.com/sergi/go-diff v1.1.0
 	github.com/sirupsen/logrus v1.7.0
@@ -67,7 +67,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
-	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014
+	golang.org/x/sys v0.0.0-20210119212857-b64e53b001e4
 	golang.org/x/text v0.3.4
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d // indirect
