@@ -3,7 +3,6 @@ module github.com/cirruslabs/cirrus-cli
 go 1.14
 
 require (
-	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/PaesslerAG/gval v1.1.0
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go v3.0.0+incompatible
@@ -12,9 +11,7 @@ require (
 	github.com/cirruslabs/echelon v1.4.1
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.2.0
-	github.com/containerd/containerd v1.4.3 // indirect
-	github.com/containers/image/v5 v5.9.0
-	github.com/containers/storage v1.24.4 // indirect
+	github.com/containers/image/v5 v5.12.0
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/docker/cli v20.10.1+incompatible
 	github.com/docker/docker v20.10.1+incompatible
@@ -24,7 +21,6 @@ require (
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/go-test/deep v1.0.1
 	github.com/golang/protobuf v1.4.3
-	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.1.3
 	github.com/gorilla/mux v1.8.0 // indirect
@@ -50,14 +46,13 @@ require (
 	github.com/pkg/sftp v1.12.0
 	github.com/qri-io/starlib v0.5.0
 	github.com/sergi/go-diff v1.1.0
-	github.com/sirupsen/logrus v1.7.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
-	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 	github.com/xanzy/ssh-agent v0.3.0 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/yudai/gojsondiff v1.0.0
@@ -65,9 +60,8 @@ require (
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20210406145628-7a1108eaa012
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
-	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
-	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014
+	golang.org/x/sys v0.0.0-20210324051608-47abb6519492
 	golang.org/x/text v0.3.4
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d // indirect
@@ -75,7 +69,5 @@ require (
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
-	gotest.tools/v3 v3.0.3 // indirect
 )
