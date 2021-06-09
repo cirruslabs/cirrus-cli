@@ -3,5 +3,7 @@ updates:
   - package-ecosystem: gomod
     directory: "/"
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
+      interval: monthly
+    allow:
+      - dependency-type: "direct"
+    open-pull-requests-limit: 2
