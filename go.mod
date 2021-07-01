@@ -20,7 +20,7 @@ require (
 	github.com/docker/docker v20.10.1+incompatible
 	github.com/docker/go-units v0.4.0
 	github.com/dustin/go-humanize v1.0.0
-	github.com/go-git/go-billy/v5 v5.0.0
+	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/go-test/deep v1.0.1
 	github.com/golang/protobuf v1.4.3
@@ -68,7 +68,7 @@ require (
 	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
 	golang.org/x/sys v0.0.0-20201231184435-2d18734c6014
-	golang.org/x/text v0.3.4
+	golang.org/x/text v0.3.6
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d // indirect
 	google.golang.org/grpc v1.34.0
