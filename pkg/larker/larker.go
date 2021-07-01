@@ -12,6 +12,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/yamlhelper"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
+	"gopkg.in/yaml.v3"
 	"time"
 )
 
@@ -142,16 +143,24 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 		return nil, ctx.Err()
 	}
 
-	// main() should return a list of tasks
-	starlarkList, ok := mainResult.(*starlark.List)
-	if !ok {
-		return nil, fmt.Errorf("%w: result is not a list", ErrMainUnexpectedResult)
+	var tasksNode *yaml.Node
+
+	// main() should return a list of tasks or a dict resembling a Cirrus YAML configuration
+	switch typedMainResult := mainResult.(type) {
+	case *starlark.List:
+		tasksNode = convertTasks(typedMainResult)
+		if tasksNode == nil {
+			return &MainResult{OutputLogs: outputLogsBuffer.Bytes()}, nil
+		}
+	case *starlark.Dict:
+		tasksNode = convertDict(typedMainResult)
+		if tasksNode == nil {
+			return &MainResult{OutputLogs: outputLogsBuffer.Bytes()}, nil
+		}
+	default:
+		return nil, fmt.Errorf("%w: result is not a list or a dict", ErrMainUnexpectedResult)
 	}
 
-	tasksNode := convertTasks(starlarkList)
-	if tasksNode == nil {
-		return &MainResult{OutputLogs: outputLogsBuffer.Bytes()}, nil
-	}
 	formattedYaml, err := yamlhelper.PrettyPrint(tasksNode)
 	if err != nil {
 		return nil, fmt.Errorf("%w: cannot marshal into YAML: %v", ErrMainUnexpectedResult, err)
