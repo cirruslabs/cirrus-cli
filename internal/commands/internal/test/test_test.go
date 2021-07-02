@@ -24,7 +24,7 @@ func TestAll(t *testing.T) {
 	for _, fileInfo := range fileInfos {
 		fileInfo := fileInfo
 		t.Run(fileInfo.Name(), func(t *testing.T) {
-			if fileInfo.Name() == "update" {
+			if fileInfo.Name() == "update" || fileInfo.Name() == "report" {
 				return
 			}
 
