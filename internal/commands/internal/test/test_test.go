@@ -28,21 +28,37 @@ func TestAll(t *testing.T) {
 				return
 			}
 
-			runTestCommandAndGetOutput(t, filepath.Join("testdata", fileInfo.Name()), []string{})
+			runTestCommandAndGetOutput(t, filepath.Join("testdata", fileInfo.Name()), []string{}, false)
 		})
 	}
 }
 
 // TestSimple ensures that a simple test is discovered and ran successfully.
 func TestSimple(t *testing.T) {
-	output := runTestCommandAndGetOutput(t, "testdata/simple", []string{})
+	output := runTestCommandAndGetOutput(t, "testdata/simple", []string{}, false)
 
 	adaptedPath := filepath.FromSlash("dir/subdir")
 	assert.Contains(t, output, fmt.Sprintf("'%s' succeeded", adaptedPath))
 }
 
+func TestReport(t *testing.T) {
+	_ = runTestCommandAndGetOutput(t, "testdata/report", []string{"--report", "report-actual.json"}, true)
+
+	expectedReportBytes, err := ioutil.ReadFile("report-expected.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	actualReportBytes, err := ioutil.ReadFile("report-actual.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, string(expectedReportBytes), string(actualReportBytes))
+}
+
 func TestUpdate(t *testing.T) {
-	_ = runTestCommandAndGetOutput(t, "testdata/update", []string{"--update"})
+	_ = runTestCommandAndGetOutput(t, "testdata/update", []string{"--update"}, false)
 
 	dir, err := os.Getwd()
 	if err != nil {
@@ -72,7 +88,7 @@ contents
 }
 
 // Verify tests succeed and return console output.
-func runTestCommandAndGetOutput(t *testing.T, sourceDir string, additionalArgs []string) string {
+func runTestCommandAndGetOutput(t *testing.T, sourceDir string, additionalArgs []string, expectError bool) string {
 	testutil.TempChdirPopulatedWith(t, sourceDir)
 
 	// Create os.Stderr writer that duplicates it's output to buf
@@ -88,9 +104,11 @@ func runTestCommandAndGetOutput(t *testing.T, sourceDir string, additionalArgs [
 	command.SetOut(writer)
 	command.SetErr(writer)
 
-	err := command.Execute()
-
-	require.Nil(t, err)
+	if err := command.Execute(); expectError {
+		require.Error(t, err)
+	} else {
+		require.NoError(t, err)
+	}
 
 	return buf.String()
 }

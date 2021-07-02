@@ -1,0 +1,3 @@
+task:
+  container:
+    image: ubuntu:latest
