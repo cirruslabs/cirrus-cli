@@ -255,7 +255,7 @@ func NewTestCmd() *cobra.Command {
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))
 
 	cmd.PersistentFlags().StringVar(&reportFilename, "report", "",
-		"additionally write a report in Cirrus Annotation Format to this file")
+		"additionally write a report in Cirrus Annotation Format (https://github.com/cirruslabs/cirrus-ci-annotations) to this file")
 
 	return cmd
 }
