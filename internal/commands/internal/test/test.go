@@ -3,6 +3,7 @@
 package test
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
@@ -21,45 +22,116 @@ var ErrTest = errors.New("test failed")
 
 var update bool
 var output string
+var reportFilename string
+
+type Comparison struct {
+	FoundDifference bool
+	Message         string
+	RawDetails      string
+	Path            string
+}
+
+type CirrusAnnotation struct {
+	Level      string `json:"string"`
+	Message    string `json:"message"`
+	RawDetails string `json:"raw_details"`
+	Path       string `json:"path"`
+	StartLine  int64  `json:"start_line"`
+	EndLine    int64  `json:"end_line"`
+}
+
+func (comparison *Comparison) AsCirrusAnnotation() *CirrusAnnotation {
+	if !comparison.FoundDifference {
+		return nil
+	}
+
+	return &CirrusAnnotation{
+		Level:      "failure",
+		Message:    comparison.Message,
+		RawDetails: comparison.RawDetails,
+		Path:       comparison.Path,
+	}
+}
 
 // compareConfig compares generated configuration against an expected one.
-func compareConfig(logger *echelon.Logger, testDir string, yamlConfig string) (bool, error) {
+func compareConfig(logger *echelon.Logger, testDir string, yamlConfig string) (*Comparison, error) {
 	expectedConfigFilename := filepath.Join(testDir, ".cirrus.expected.yml")
 	expectedConfigBytes, err := ioutil.ReadFile(expectedConfigFilename)
 	if err != nil {
-		return true, fmt.Errorf("%w: %v", ErrTest, err)
+		return nil, fmt.Errorf("%w: %v", ErrTest, err)
 	}
 
-	differentConfig := logDifferenceIfAny(logger, "YAML", string(expectedConfigBytes), yamlConfig)
+	comparison := logDifferenceIfAny(logger, "YAML", string(expectedConfigBytes), yamlConfig)
+	comparison.Path = expectedConfigFilename
 
-	if update && differentConfig {
+	if update && comparison.FoundDifference {
 		if err := ioutil.WriteFile(expectedConfigFilename, []byte(yamlConfig), 0600); err != nil {
-			return true, fmt.Errorf("%w: %v", ErrTest, err)
+			return nil, fmt.Errorf("%w: %v", ErrTest, err)
 		}
-		differentConfig = false
+		comparison.FoundDifference = false
 	}
 
-	return differentConfig, nil
+	return comparison, nil
 }
 
 // compareLogs compares generated log against an expected one.
-func compareLogs(logger *echelon.Logger, testDir string, actualLogs []byte) (bool, error) {
+func compareLogs(logger *echelon.Logger, testDir string, actualLogs []byte) (*Comparison, error) {
 	logsFilename := filepath.Join(testDir, ".cirrus.expected.log")
 	logsBytes, err := ioutil.ReadFile(logsFilename)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return true, fmt.Errorf("%w: %v", ErrTest, err)
+		return nil, fmt.Errorf("%w: %v", ErrTest, err)
 	}
 
-	differentLogs := logDifferenceIfAny(logger, "logs", string(logsBytes), string(actualLogs))
+	comparison := logDifferenceIfAny(logger, "logs", string(logsBytes), string(actualLogs))
+	comparison.Path = logsFilename
 
-	if update && differentLogs {
+	if update && comparison.FoundDifference {
 		if err := ioutil.WriteFile(logsFilename, actualLogs, 0600); err != nil {
-			return true, fmt.Errorf("%w: %v", ErrTest, err)
+			return nil, fmt.Errorf("%w: %v", ErrTest, err)
 		}
-		differentLogs = false
+		comparison.FoundDifference = false
 	}
 
-	return differentLogs, nil
+	return comparison, nil
+}
+
+func writeReport(yamlComparison, logsComparison *Comparison) error {
+	if reportFilename == "" {
+		return nil
+	}
+
+	var annotations []*CirrusAnnotation
+
+	if annotation := yamlComparison.AsCirrusAnnotation(); annotation != nil {
+		annotations = append(annotations, annotation)
+	}
+	if annotation := logsComparison.AsCirrusAnnotation(); annotation != nil {
+		annotations = append(annotations, annotation)
+	}
+
+	if len(annotations) == 0 {
+		return nil
+	}
+
+	reportFile, err := os.Create(reportFilename)
+	if err != nil {
+		return err
+	}
+
+	for _, annotation := range annotations {
+		jsonBytes, err := json.Marshal(annotation)
+		if err != nil {
+			_ = reportFile.Close()
+			_ = os.Remove(reportFilename)
+			return err
+		}
+
+		if _, err := fmt.Fprintln(reportFile, string(jsonBytes)); err != nil {
+			return err
+		}
+	}
+
+	return reportFile.Close()
 }
 
 func test(cmd *cobra.Command, args []string) error {
@@ -118,21 +190,25 @@ func test(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}
 
-		differentConfig, err := compareConfig(logger, testDir, result.YAMLConfig)
+		yamlComparison, err := compareConfig(logger, testDir, result.YAMLConfig)
 		if err != nil {
 			return err
 		}
-		differentLogs, err := compareLogs(logger, testDir, result.OutputLogs)
+		logsComparison, err := compareLogs(logger, testDir, result.OutputLogs)
 		if err != nil {
+			return err
+		}
+
+		if err := writeReport(yamlComparison, logsComparison); err != nil {
 			return err
 		}
 
 		// Should we consider the test as failed?
-		if differentConfig || differentLogs {
+		if yamlComparison.FoundDifference || logsComparison.FoundDifference {
 			someTestsFailed = true
 		}
 
-		logger.Finish(!differentConfig && !differentLogs)
+		logger.Finish(!yamlComparison.FoundDifference && !logsComparison.FoundDifference)
 	}
 
 	logger.Finish(!someTestsFailed)
@@ -143,22 +219,26 @@ func test(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func logDifferenceIfAny(logger *echelon.Logger, where string, a, b string) bool {
+func logDifferenceIfAny(logger *echelon.Logger, where string, a, b string) *Comparison {
 	if a == b {
-		return false
+		return &Comparison{FoundDifference: false}
 	}
 
 	dmp := diffmatchpatch.New()
 	diffs := dmp.DiffMain(a, b, false)
 
 	if len(diffs) == 0 {
-		return false
+		return &Comparison{FoundDifference: false}
 	}
 
 	logger.Warnf("Detected difference in %s:", where)
 	logger.Warnf(dmp.DiffPrettyText(diffs))
 
-	return true
+	return &Comparison{
+		FoundDifference: true,
+		Message:         fmt.Sprintf("Actual result differs for %s", where),
+		RawDetails:      b,
+	}
 }
 
 func NewTestCmd() *cobra.Command {
@@ -173,6 +253,10 @@ func NewTestCmd() *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(&output, "output", "o", logs.DefaultFormat(), fmt.Sprintf("output format of logs, "+
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))
+
+	cmd.PersistentFlags().StringVar(&reportFilename, "report", "",
+		"additionally write a report in Cirrus Annotation Format (https://github.com/cirruslabs/cirrus-ci-annotations) "+
+			"to this file")
 
 	return cmd
 }

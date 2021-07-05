@@ -1,0 +1,2 @@
+{"string":"failure","message":"Actual result differs for YAML","raw_details":"task:\n  container:\n    image: debian:latest\n","path":".cirrus.expected.yml","start_line":0,"end_line":0}
+{"string":"failure","message":"Actual result differs for logs","raw_details":"actual log line\n","path":".cirrus.expected.log","start_line":0,"end_line":0}
