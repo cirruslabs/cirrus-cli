@@ -122,19 +122,24 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 }
 
 func (e *Executor) Run(ctx context.Context) error {
+	var firstErr error
+
 	for {
 		// Pick next undone task to run
 		task := e.build.GetNextTask()
 		if task == nil {
-			e.logger.Finish(true)
-			return nil
+			break
 		}
 
 		if err := e.runSingleTask(ctx, task); err != nil {
-			e.logger.Finish(false)
-			return err
+			if firstErr == nil {
+				firstErr = err
+			}
 		}
 	}
+
+	e.logger.Finish(firstErr == nil)
+	return firstErr
 }
 
 func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
