@@ -36,6 +36,11 @@ func TestNoCtxMain(t *testing.T) {
 	validateExpected(t, "testdata/no-ctx")
 }
 
+// TestMainReturnsDict ensures that we support <>.
+func TestMainReturnsDict(t *testing.T) {
+	validateExpected(t, "testdata/main-returns-dict")
+}
+
 func TestNoCtxHook(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/no-ctx")
 
