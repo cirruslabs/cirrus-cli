@@ -131,10 +131,6 @@ func (e *Executor) Run(ctx context.Context) error {
 		}
 
 		if err := e.runSingleTask(ctx, task); err != nil {
-			if errors.Is(err, instance.ErrUnsupportedInstance) {
-				continue
-			}
-
 			e.logger.Finish(false)
 			return err
 		}
