@@ -131,6 +131,10 @@ func (e *Executor) Run(ctx context.Context) error {
 		}
 
 		if err := e.runSingleTask(ctx, task); err != nil {
+			if errors.Is(err, instance.ErrUnsupportedInstance) {
+				continue
+			}
+
 			e.logger.Finish(false)
 			return err
 		}
@@ -184,21 +188,18 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 	ctx, cancel := context.WithTimeout(ctx, task.Timeout)
 
 	// Run task
-	var timedOut bool
 	if err := task.Instance.Run(ctx, &instanceRunOpts); err != nil {
-		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-			timedOut = true
-		} else {
+		switch {
+		case errors.Is(ctx.Err(), context.DeadlineExceeded):
+			task.SetStatus(taskstatus.TimedOut)
+		case errors.Is(err, instance.ErrUnsupportedInstance):
+			task.SetStatus(taskstatus.Skipped)
+		default:
 			cancel()
 			return err
 		}
 	}
 	cancel()
-
-	// Handle timeout
-	if timedOut {
-		task.SetStatus(taskstatus.TimedOut)
-	}
 
 	// Handle prebuilt instance which doesn't require any tasks to be run to be considered successful
 	_, isPrebuilt := task.Instance.(*instance.PrebuiltInstance)
@@ -213,6 +214,9 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 	case taskstatus.New:
 		taskLogger.Finish(false)
 		return fmt.Errorf("%w: instance terminated before the task %s had a chance to run", ErrBuildFailed, task.String())
+	case taskstatus.Skipped:
+		taskLogger.FinishWithType(echelon.FinishTypeSkipped)
+		return nil
 	default:
 		taskLogger.Finish(false)
 		return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())

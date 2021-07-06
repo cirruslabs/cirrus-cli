@@ -516,3 +516,41 @@ func TestContainerLogs(t *testing.T) {
 			" Background commands to clean up after: [0-9]+", buf.String())
 	}
 }
+
+// TestUnsupportedInstancesAreSkipped ensures that we skip unsupported instances instead of failing the build.
+func TestUnsupportedInstancesAreSkipped(t *testing.T) {
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	// Create a logger and attach it to writer
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	tasks := []*api.Task{
+		{
+			Name: "canary",
+			Commands: []*api.Command{
+				{
+					Name: "main",
+					Instruction: &api.Command_ScriptInstruction{
+						ScriptInstruction: &api.ScriptInstruction{
+							Scripts: []string{"true"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	e, err := executor.New(testutil.TempDir(t), tasks, executor.WithLogger(logger))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := e.Run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Contains(t, buf.String(), "'canary' task skipped")
+}

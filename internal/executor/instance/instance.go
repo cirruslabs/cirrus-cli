@@ -28,8 +28,10 @@ func NewFromProto(
 	logger logger.Lightweight,
 ) (abstract.Instance, error) {
 	if anyInstance == nil {
-		return nil, fmt.Errorf("%w: got nil instance which means it's probably not supported by the CLI",
-			ErrFailedToCreateInstance)
+		return &UnsupportedInstance{
+			err: fmt.Errorf("%w: got nil instance which means it's probably not supported by the CLI",
+				ErrUnsupportedInstance),
+		}, nil
 	}
 
 	var dynamicInstance ptypes.DynamicAny
@@ -101,6 +103,8 @@ func NewFromProto(
 			},
 		}, logger)
 	default:
-		return nil, fmt.Errorf("%w: %T", ErrUnsupportedInstance, instance)
+		return &UnsupportedInstance{
+			err: fmt.Errorf("%w: %T", ErrUnsupportedInstance, instance),
+		}, nil
 	}
 }
