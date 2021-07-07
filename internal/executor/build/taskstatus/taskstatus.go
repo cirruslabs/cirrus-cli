@@ -9,6 +9,7 @@ const (
 	Succeeded
 	Failed
 	TimedOut
+	Skipped
 )
 
 func (status Status) String() string {
@@ -21,6 +22,8 @@ func (status Status) String() string {
 		return "failed"
 	case TimedOut:
 		return "timed out"
+	case Skipped:
+		return "skipped"
 	default:
 		return fmt.Sprintf("entered unhandled status %d", int(status))
 	}
