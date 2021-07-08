@@ -17,10 +17,11 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/lestrrat-go/jsschema"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/known/anypb"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -370,7 +371,7 @@ func (p *Parser) createServiceTask(
 		Arguments:  taskContainer.DockerArguments,
 	}
 
-	anyInstance, err := ptypes.MarshalAny(prebuiltInstance)
+	anyInstance, err := anypb.New(prebuiltInstance)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", parsererror.ErrInternal, err)
 	}
@@ -460,8 +461,7 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 			continue
 		}
 
-		var dynamicInstance ptypes.DynamicAny
-		err := ptypes.UnmarshalAny(protoTask.Instance, &dynamicInstance)
+		dynamicInstance, err := anypb.UnmarshalNew(protoTask.Instance, proto.UnmarshalOptions{})
 
 		if errors.Is(err, protoregistry.NotFound) {
 			continue
@@ -471,7 +471,7 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 			return nil, fmt.Errorf("%w: failed to unmarshal task's instance: %v", parsererror.ErrInternal, err)
 		}
 
-		taskContainer, ok := dynamicInstance.Message.(*api.ContainerInstance)
+		taskContainer, ok := dynamicInstance.(*api.ContainerInstance)
 		if !ok {
 			continue
 		}
@@ -511,7 +511,7 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 
 		// Ensure that the task will use our to-be-created image
 		taskContainer.Image = fmt.Sprintf("gcr.io/cirrus-ci-community/%s:latest", dockerfileHash)
-		updatedInstance, err := ptypes.MarshalAny(taskContainer)
+		updatedInstance, err := anypb.New(taskContainer)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", parsererror.ErrInternal, err)
 		}

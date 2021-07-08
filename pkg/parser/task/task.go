@@ -11,7 +11,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/golang/protobuf/ptypes"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -67,7 +66,7 @@ func NewTask(
 					map[string]string{"CIRRUS_OS": strings.ToLower(containerInstance.Platform.String())},
 				)
 
-				anyInstance, err := ptypes.MarshalAny(containerInstance)
+				anyInstance, err := anypb.New(containerInstance)
 				if err != nil {
 					return err
 				}
@@ -92,7 +91,7 @@ func NewTask(
 					map[string]string{"CIRRUS_OS": strings.ToLower(containerInstance.Platform.String())},
 				)
 
-				anyInstance, err := ptypes.MarshalAny(containerInstance)
+				anyInstance, err := anypb.New(containerInstance)
 				if err != nil {
 					return err
 				}
@@ -125,7 +124,7 @@ func NewTask(
 					delete(task.proto.Environment, "CIRRUS_OS")
 				}
 
-				anyInstance, err := ptypes.MarshalAny(persistentWorkerInstance)
+				anyInstance, err := anypb.New(persistentWorkerInstance)
 				if err != nil {
 					return err
 				}

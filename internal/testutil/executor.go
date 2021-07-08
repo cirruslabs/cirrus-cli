@@ -8,16 +8,16 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
 func GetBasicContainerInstance(t *testing.T, image string) *any.Any {
-	anyInstance, err := ptypes.MarshalAny(&api.ContainerInstance{
+	anyInstance, err := anypb.New(&api.ContainerInstance{
 		Image: image,
 	})
 	if err != nil {

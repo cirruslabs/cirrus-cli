@@ -4,13 +4,13 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/anypb"
 	"testing"
 )
 
 func TestDockerfileImageTemplate(t *testing.T) {
-	anyInstance, err := ptypes.MarshalAny(&api.PrebuiltImageInstance{
+	anyInstance, err := anypb.New(&api.PrebuiltImageInstance{
 		Repository: "cirrus-ci-community/d41d8cd98f00b204e9800998ecf8427e",
 		Reference:  "latest",
 	})

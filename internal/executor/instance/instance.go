@@ -9,8 +9,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"path"
 	"runtime"
 	"strings"
@@ -34,13 +35,13 @@ func NewFromProto(
 		}, nil
 	}
 
-	var dynamicInstance ptypes.DynamicAny
-	if err := ptypes.UnmarshalAny(anyInstance, &dynamicInstance); err != nil {
+	dynamicInstance, err := anypb.UnmarshalNew(anyInstance, proto.UnmarshalOptions{})
+	if err != nil {
 		return nil, fmt.Errorf("%w: failed to unmarshal task's instance: %v",
 			ErrFailedToCreateInstance, err)
 	}
 
-	switch instance := dynamicInstance.Message.(type) {
+	switch instance := dynamicInstance.(type) {
 	case *api.ContainerInstance:
 		var containerPlatform platform.Platform
 

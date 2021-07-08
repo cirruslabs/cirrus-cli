@@ -9,8 +9,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/golang/protobuf/ptypes"
 	jsschema "github.com/lestrrat-go/jsschema"
+	"google.golang.org/protobuf/types/known/anypb"
 	"strconv"
 )
 
@@ -170,7 +170,7 @@ func (pipe *DockerPipe) Parse(node *node.Node) error {
 		}
 	}
 
-	anyInstance, err := ptypes.MarshalAny(instance)
+	anyInstance, err := anypb.New(instance)
 	if err != nil {
 		return err
 	}

@@ -10,8 +10,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/golang/protobuf/ptypes"
 	jsschema "github.com/lestrrat-go/jsschema"
+	"google.golang.org/protobuf/types/known/anypb"
 	"strconv"
 	"strings"
 )
@@ -119,7 +119,7 @@ func (dbuilder *DockerBuilder) Parse(node *node.Node) error {
 		OsVersion: dbuilder.osVersion,
 	}
 
-	anyInstance, err := ptypes.MarshalAny(instance)
+	anyInstance, err := anypb.New(instance)
 	if err != nil {
 		return err
 	}
