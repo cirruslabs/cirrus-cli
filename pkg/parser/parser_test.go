@@ -35,6 +35,7 @@ var validCases = []string{
 	"yaml-12-booleans-only",
 	"dependency-on-disabled-only-if-task",
 	"persistent-worker-isolation-container",
+	"cache-multiple-folders",
 }
 
 func absolutize(file string) string {

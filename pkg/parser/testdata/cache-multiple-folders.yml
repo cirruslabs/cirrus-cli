@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+task:
+  cache:
+    folders:
+      - first/
+      - second/
+      - third/
