@@ -10,7 +10,9 @@
           "fingerprintScripts": [
             "cat Cargo.lock"
           ],
-          "folder": "$CARGO_HOME/registry"
+          "folders": [
+            "$CARGO_HOME/registry"
+          ]
         },
         "name": "cargo"
       },
@@ -79,7 +81,9 @@
           "fingerprintScripts": [
             "cat Cargo.lock"
           ],
-          "folder": "$CARGO_HOME/registry"
+          "folders": [
+            "$CARGO_HOME/registry"
+          ]
         },
         "name": "cargo"
       },

@@ -71,8 +71,20 @@
               "description": "Script that is used to calculate cache key."
             },
             "folder": {
-              "description": "Path of a folder to cache.",
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": [
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                }
+              ],
+              "description": "Path of a folder or a list of folders to cache."
             },
             "name": {
               "type": "string"
@@ -214,8 +226,20 @@
                   "description": "Script that is used to calculate cache key."
                 },
                 "folder": {
-                  "description": "Path of a folder to cache.",
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "Path of a folder or a list of folders to cache."
                 },
                 "name": {
                   "type": "string"
@@ -400,8 +424,20 @@
                   "description": "Script that is used to calculate cache key."
                 },
                 "folder": {
-                  "description": "Path of a folder to cache.",
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "Path of a folder or a list of folders to cache."
                 },
                 "name": {
                   "type": "string"
@@ -537,8 +573,20 @@
                   "description": "Script that is used to calculate cache key."
                 },
                 "folder": {
-                  "description": "Path of a folder to cache.",
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "Path of a folder or a list of folders to cache."
                 },
                 "name": {
                   "type": "string"
@@ -841,8 +889,20 @@
                       "description": "Script that is used to calculate cache key."
                     },
                     "folder": {
-                      "description": "Path of a folder to cache.",
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "items": [
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "type": "array"
+                        }
+                      ],
+                      "description": "Path of a folder or a list of folders to cache."
                     },
                     "name": {
                       "type": "string"
@@ -977,8 +1037,20 @@
                           "description": "Script that is used to calculate cache key."
                         },
                         "folder": {
-                          "description": "Path of a folder to cache.",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "Path of a folder or a list of folders to cache."
                         },
                         "name": {
                           "type": "string"
@@ -1118,8 +1190,20 @@
                           "description": "Script that is used to calculate cache key."
                         },
                         "folder": {
-                          "description": "Path of a folder to cache.",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "Path of a folder or a list of folders to cache."
                         },
                         "name": {
                           "type": "string"
@@ -1255,8 +1339,20 @@
                           "description": "Script that is used to calculate cache key."
                         },
                         "folder": {
-                          "description": "Path of a folder to cache.",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "Path of a folder or a list of folders to cache."
                         },
                         "name": {
                           "type": "string"
@@ -1542,8 +1638,20 @@
                       "description": "Script that is used to calculate cache key."
                     },
                     "folder": {
-                      "description": "Path of a folder to cache.",
-                      "type": "string"
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "items": [
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "type": "array"
+                        }
+                      ],
+                      "description": "Path of a folder or a list of folders to cache."
                     },
                     "name": {
                       "type": "string"
@@ -1678,8 +1786,20 @@
                           "description": "Script that is used to calculate cache key."
                         },
                         "folder": {
-                          "description": "Path of a folder to cache.",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "Path of a folder or a list of folders to cache."
                         },
                         "name": {
                           "type": "string"
@@ -1819,8 +1939,20 @@
                           "description": "Script that is used to calculate cache key."
                         },
                         "folder": {
-                          "description": "Path of a folder to cache.",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "Path of a folder or a list of folders to cache."
                         },
                         "name": {
                           "type": "string"
@@ -1956,8 +2088,20 @@
                           "description": "Script that is used to calculate cache key."
                         },
                         "folder": {
-                          "description": "Path of a folder to cache.",
-                          "type": "string"
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "Path of a folder or a list of folders to cache."
                         },
                         "name": {
                           "type": "string"
@@ -2120,8 +2264,20 @@
               "description": "Script that is used to calculate cache key."
             },
             "folder": {
-              "description": "Path of a folder to cache.",
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": [
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                }
+              ],
+              "description": "Path of a folder or a list of folders to cache."
             },
             "name": {
               "type": "string"
@@ -2263,8 +2419,20 @@
                   "description": "Script that is used to calculate cache key."
                 },
                 "folder": {
-                  "description": "Path of a folder to cache.",
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "Path of a folder or a list of folders to cache."
                 },
                 "name": {
                   "type": "string"
@@ -3411,8 +3579,20 @@
                   "description": "Script that is used to calculate cache key."
                 },
                 "folder": {
-                  "description": "Path of a folder to cache.",
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "Path of a folder or a list of folders to cache."
                 },
                 "name": {
                   "type": "string"
@@ -3548,8 +3728,20 @@
                   "description": "Script that is used to calculate cache key."
                 },
                 "folder": {
-                  "description": "Path of a folder to cache.",
-                  "type": "string"
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "Path of a folder or a list of folders to cache."
                 },
                 "name": {
                   "type": "string"

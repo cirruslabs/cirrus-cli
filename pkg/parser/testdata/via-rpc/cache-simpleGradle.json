@@ -15,14 +15,18 @@
       },
       {
         "cacheInstruction": {
-          "folder": ".gradle",
+          "folders": [
+            ".gradle"
+          ],
           "reuploadOnChanges": true
         },
         "name": "gradle_local"
       },
       {
         "cacheInstruction": {
-          "folder": "$HOME/.gradle",
+          "folders": [
+            "$HOME/.gradle"
+          ],
           "reuploadOnChanges": true
         },
         "name": "gradle_global"

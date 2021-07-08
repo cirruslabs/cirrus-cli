@@ -15,7 +15,9 @@
       },
       {
         "cacheInstruction": {
-          "folder": "node_modules",
+          "folders": [
+            "node_modules"
+          ],
           "reuploadOnChanges": true
         },
         "executionBehaviour": "ALWAYS",

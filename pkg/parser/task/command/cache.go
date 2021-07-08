@@ -38,21 +38,23 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 		return nil
 	})
 
-	folderSchema := schema.String("Path of a folder to cache.")
+	folderSchema := schema.StringOrListOfStrings("Path of a folder or a list of folders to cache.")
 	cache.RequiredField(nameable.NewSimpleNameable("folder"), folderSchema, func(node *node.Node) error {
-		folder, err := node.GetExpandedStringValue(mergedEnv)
+		folders, err := node.GetSliceOfExpandedStrings(mergedEnv)
 		if err != nil {
 			return err
 		}
 
-		// https://github.com/cirruslabs/cirrus-ci-agent/issues/47
-		const homePrefix = "~/"
-		folder = strings.TrimSpace(folder)
-		if strings.HasPrefix(folder, homePrefix) {
-			folder = "$HOME/" + strings.TrimPrefix(folder, homePrefix)
-		}
+		for _, folder := range folders {
+			// https://github.com/cirruslabs/cirrus-ci-agent/issues/47
+			const homePrefix = "~/"
+			folder = strings.TrimSpace(folder)
+			if strings.HasPrefix(folder, homePrefix) {
+				folder = "$HOME/" + strings.TrimPrefix(folder, homePrefix)
+			}
 
-		cache.instruction.Folder = folder
+			cache.instruction.Folders = append(cache.instruction.Folders, folder)
+		}
 
 		return nil
 	})

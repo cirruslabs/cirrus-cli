@@ -10,7 +10,9 @@
           "fingerprintScripts": [
             "echo \"docs_${CIRRUS_CHANGE_IN_REPO}_${CIRRUS_BUILD_ID}\""
           ],
-          "folder": "dev/docs",
+          "folders": [
+            "dev/docs"
+          ],
           "reuploadOnChanges": true
         },
         "name": "docs"
