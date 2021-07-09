@@ -44,7 +44,7 @@ require (
 	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/otiai10/copy v1.4.2
 	github.com/pelletier/go-toml v1.8.1 // indirect
-	github.com/pkg/sftp v1.12.0
+	github.com/pkg/sftp v1.13.1
 	github.com/qri-io/starlib v0.5.0
 	github.com/sergi/go-diff v1.2.0
 	github.com/sirupsen/logrus v1.8.1
