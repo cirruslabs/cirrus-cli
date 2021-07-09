@@ -1,0 +1,63 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "folders": [
+            "node_modules/"
+          ],
+          "reuploadOnChanges": true
+        },
+        "executionBehaviour": "ALWAYS",
+        "name": "node_modules"
+      },
+      {
+        "name": "first",
+        "scriptInstruction": {
+          "scripts": [
+            "echo \"first script\""
+          ]
+        }
+      },
+      {
+        "executionBehaviour": "ALWAYS",
+        "name": "second",
+        "scriptInstruction": {
+          "scripts": [
+            "echo \"second script\""
+          ]
+        }
+      },
+      {
+        "executionBehaviour": "ALWAYS",
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  }
+]

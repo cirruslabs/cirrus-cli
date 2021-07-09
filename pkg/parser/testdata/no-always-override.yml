@@ -1,0 +1,16 @@
+# Ensure that two "always:" declarations stack up nicely,
+# letting the user to upload the succeeded cache even if
+# the other commands have failed.
+
+container:
+  image: debian:latest
+
+task:
+  always:
+    node_modules_cache:
+      folder: node_modules/
+  first_script:
+    - echo "first script"
+  always:
+    second_script:
+      - echo "second script"
