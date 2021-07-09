@@ -6,41 +6,20 @@
         "name": "clone"
       },
       {
-        "name": "main",
-        "scriptInstruction": {
-          "scripts": [
-            "./gradlew check"
-          ]
-        }
-      },
-      {
         "cacheInstruction": {
           "folders": [
-            ".gradle"
+            "first/",
+            "second/",
+            "third/"
           ],
           "reuploadOnChanges": true
         },
-        "name": "gradle_local"
+        "name": "main"
       },
       {
-        "cacheInstruction": {
-          "folders": [
-            "$HOME/.gradle"
-          ],
-          "reuploadOnChanges": true
-        },
-        "name": "gradle_global"
-      },
-      {
-        "name": "Upload 'gradle_local' cache",
+        "name": "Upload 'main' cache",
         "uploadCacheInstruction": {
-          "cacheName": "gradle_local"
-        }
-      },
-      {
-        "name": "Upload 'gradle_global' cache",
-        "uploadCacheInstruction": {
-          "cacheName": "gradle_global"
+          "cacheName": "main"
         }
       }
     ],

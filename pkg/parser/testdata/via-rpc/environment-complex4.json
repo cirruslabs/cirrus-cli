@@ -10,7 +10,9 @@
           "fingerprintScripts": [
             "echo $OS; grep -r --include=pubspec.yaml 'PUBSPEC CHECKSUM' \"$CIRRUS_WORKING_DIR\""
           ],
-          "folder": "$HOME/.pub-cache"
+          "folders": [
+            "$HOME/.pub-cache"
+          ]
         },
         "name": "pub"
       },
@@ -19,7 +21,9 @@
           "fingerprintScripts": [
             "echo $OS; cat bin/internal/*.version"
           ],
-          "folder": "bin/cache/pkg"
+          "folders": [
+            "bin/cache/pkg"
+          ]
         },
         "name": "flutter_pkg"
       },
@@ -28,7 +32,9 @@
           "fingerprintScripts": [
             "echo $OS; cat bin/internal/*.version"
           ],
-          "folder": "bin/cache/artifacts"
+          "folders": [
+            "bin/cache/artifacts"
+          ]
         },
         "name": "artifacts"
       },

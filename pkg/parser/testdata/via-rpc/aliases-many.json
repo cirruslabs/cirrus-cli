@@ -11,7 +11,9 @@
             "elixir --version",
             "cat mix.lock"
           ],
-          "folder": "deps",
+          "folders": [
+            "deps"
+          ],
           "populateScripts": [
             "mix deps.get"
           ]
@@ -24,7 +26,9 @@
             "elixir --version",
             "cat mix.lock"
           ],
-          "folder": "_build",
+          "folders": [
+            "_build"
+          ],
           "populateScripts": [
             "mix deps.compile --long-compilation-threshold 999"
           ]

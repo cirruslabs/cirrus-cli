@@ -17,6 +17,8 @@ type CacheCommand struct {
 	instruction *api.CacheInstruction
 
 	reuploadOnChangesExplicitlySet bool
+	folder                         string
+	folders                        []string
 
 	parseable.DefaultParser
 }
@@ -39,20 +41,25 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 	})
 
 	folderSchema := schema.String("Path of a folder to cache.")
-	cache.RequiredField(nameable.NewSimpleNameable("folder"), folderSchema, func(node *node.Node) error {
+	cache.OptionalField(nameable.NewSimpleNameable("folder"), folderSchema, func(node *node.Node) error {
 		folder, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
 
-		// https://github.com/cirruslabs/cirrus-ci-agent/issues/47
-		const homePrefix = "~/"
-		folder = strings.TrimSpace(folder)
-		if strings.HasPrefix(folder, homePrefix) {
-			folder = "$HOME/" + strings.TrimPrefix(folder, homePrefix)
+		cache.folder = folder
+
+		return nil
+	})
+
+	foldersSchema := schema.StringOrListOfStrings("A list of folders to cache.")
+	cache.OptionalField(nameable.NewSimpleNameable("folders"), foldersSchema, func(node *node.Node) error {
+		folders, err := node.GetSliceOfExpandedStrings(mergedEnv)
+		if err != nil {
+			return err
 		}
 
-		cache.instruction.Folder = folder
+		cache.folders = folders
 
 		return nil
 	})
@@ -111,6 +118,22 @@ func (cache *CacheCommand) Parse(node *node.Node) error {
 		cache.proto.Name = cacheNameable.FirstGroupOrDefault(node.Name, "main")
 	}
 
+	if cache.folder == "" && len(cache.folders) == 0 {
+		return node.ParserError("please specify the folders to cache, with either folder: or folders:")
+	} else if cache.folder != "" && len(cache.folders) != 0 {
+		return node.ParserError("please specify either folder: or folders: but not both, to avoid ambiguity")
+	}
+
+	var folders []string
+
+	if cache.folder != "" {
+		folders = []string{cache.folder}
+	} else {
+		folders = cache.folders
+	}
+
+	cache.instruction.Folders = fixFolders(folders)
+
 	return nil
 }
 
@@ -127,6 +150,19 @@ func (cache *CacheCommand) Schema() *jsschema.Schema {
 
 	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
 	modifiedSchema.Description = "Folder Cache Definition."
+
+	modifiedSchema.OneOf = jsschema.SchemaList{
+		&jsschema.Schema{
+			Required:             []string{"folder"},
+			AdditionalItems:      &jsschema.AdditionalItems{Schema: nil},
+			AdditionalProperties: &jsschema.AdditionalProperties{Schema: nil},
+		},
+		&jsschema.Schema{
+			Required:             []string{"folders"},
+			AdditionalItems:      &jsschema.AdditionalItems{Schema: nil},
+			AdditionalProperties: &jsschema.AdditionalProperties{Schema: nil},
+		},
+	}
 
 	return modifiedSchema
 }
@@ -149,6 +185,21 @@ func GenUploadCacheCmds(commands []*api.Command) (result []*api.Command) {
 		}
 
 		result = append(result, uploadCommand)
+	}
+
+	return
+}
+
+func fixFolders(folders []string) (result []string) {
+	for _, folder := range folders {
+		// https://github.com/cirruslabs/cirrus-ci-agent/issues/47
+		const homePrefix = "~/"
+		folder = strings.TrimSpace(folder)
+		if strings.HasPrefix(folder, homePrefix) {
+			folder = "$HOME/" + strings.TrimPrefix(folder, homePrefix)
+		}
+
+		result = append(result, folder)
 	}
 
 	return

@@ -74,6 +74,22 @@
               "description": "Path of a folder to cache.",
               "type": "string"
             },
+            "folders": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": [
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                }
+              ],
+              "description": "A list of folders to cache."
+            },
             "name": {
               "type": "string"
             },
@@ -98,8 +114,13 @@
               "type": "string"
             }
           },
-          "required": [
-            "folder"
+          "oneOf": [
+            {
+              "required": ["folder"]
+            },
+            {
+              "required": ["folders"]
+            }
           ],
           "type": "object"
         },
@@ -217,6 +238,22 @@
                   "description": "Path of a folder to cache.",
                   "type": "string"
                 },
+                "folders": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "A list of folders to cache."
+                },
                 "name": {
                   "type": "string"
                 },
@@ -241,8 +278,13 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "folder"
+              "oneOf": [
+                {
+                  "required": ["folder"]
+                },
+                {
+                  "required": ["folders"]
+                }
               ],
               "type": "object"
             },
@@ -403,6 +445,22 @@
                   "description": "Path of a folder to cache.",
                   "type": "string"
                 },
+                "folders": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "A list of folders to cache."
+                },
                 "name": {
                   "type": "string"
                 },
@@ -427,8 +485,13 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "folder"
+              "oneOf": [
+                {
+                  "required": ["folder"]
+                },
+                {
+                  "required": ["folders"]
+                }
               ],
               "type": "object"
             },
@@ -540,6 +603,22 @@
                   "description": "Path of a folder to cache.",
                   "type": "string"
                 },
+                "folders": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "A list of folders to cache."
+                },
                 "name": {
                   "type": "string"
                 },
@@ -564,8 +643,13 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "folder"
+              "oneOf": [
+                {
+                  "required": ["folder"]
+                },
+                {
+                  "required": ["folders"]
+                }
               ],
               "type": "object"
             },
@@ -844,6 +928,22 @@
                       "description": "Path of a folder to cache.",
                       "type": "string"
                     },
+                    "folders": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "items": [
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "type": "array"
+                        }
+                      ],
+                      "description": "A list of folders to cache."
+                    },
                     "name": {
                       "type": "string"
                     },
@@ -868,8 +968,13 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "folder"
+                  "oneOf": [
+                    {
+                      "required": ["folder"]
+                    },
+                    {
+                      "required": ["folders"]
+                    }
                   ],
                   "type": "object"
                 },
@@ -980,6 +1085,22 @@
                           "description": "Path of a folder to cache.",
                           "type": "string"
                         },
+                        "folders": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "A list of folders to cache."
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -1004,8 +1125,13 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "folder"
+                      "oneOf": [
+                        {
+                          "required": ["folder"]
+                        },
+                        {
+                          "required": ["folders"]
+                        }
                       ],
                       "type": "object"
                     },
@@ -1121,6 +1247,22 @@
                           "description": "Path of a folder to cache.",
                           "type": "string"
                         },
+                        "folders": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "A list of folders to cache."
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -1145,8 +1287,13 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "folder"
+                      "oneOf": [
+                        {
+                          "required": ["folder"]
+                        },
+                        {
+                          "required": ["folders"]
+                        }
                       ],
                       "type": "object"
                     },
@@ -1258,6 +1405,22 @@
                           "description": "Path of a folder to cache.",
                           "type": "string"
                         },
+                        "folders": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "A list of folders to cache."
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -1282,8 +1445,13 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "folder"
+                      "oneOf": [
+                        {
+                          "required": ["folder"]
+                        },
+                        {
+                          "required": ["folders"]
+                        }
                       ],
                       "type": "object"
                     },
@@ -1545,6 +1713,22 @@
                       "description": "Path of a folder to cache.",
                       "type": "string"
                     },
+                    "folders": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "items": [
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "type": "array"
+                        }
+                      ],
+                      "description": "A list of folders to cache."
+                    },
                     "name": {
                       "type": "string"
                     },
@@ -1569,8 +1753,13 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "folder"
+                  "oneOf": [
+                    {
+                      "required": ["folder"]
+                    },
+                    {
+                      "required": ["folders"]
+                    }
                   ],
                   "type": "object"
                 },
@@ -1681,6 +1870,22 @@
                           "description": "Path of a folder to cache.",
                           "type": "string"
                         },
+                        "folders": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "A list of folders to cache."
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -1705,8 +1910,13 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "folder"
+                      "oneOf": [
+                        {
+                          "required": ["folder"]
+                        },
+                        {
+                          "required": ["folders"]
+                        }
                       ],
                       "type": "object"
                     },
@@ -1822,6 +2032,22 @@
                           "description": "Path of a folder to cache.",
                           "type": "string"
                         },
+                        "folders": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "A list of folders to cache."
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -1846,8 +2072,13 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "folder"
+                      "oneOf": [
+                        {
+                          "required": ["folder"]
+                        },
+                        {
+                          "required": ["folders"]
+                        }
                       ],
                       "type": "object"
                     },
@@ -1959,6 +2190,22 @@
                           "description": "Path of a folder to cache.",
                           "type": "string"
                         },
+                        "folders": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "A list of folders to cache."
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -1983,8 +2230,13 @@
                           "type": "string"
                         }
                       },
-                      "required": [
-                        "folder"
+                      "oneOf": [
+                        {
+                          "required": ["folder"]
+                        },
+                        {
+                          "required": ["folders"]
+                        }
                       ],
                       "type": "object"
                     },
@@ -2123,6 +2375,22 @@
               "description": "Path of a folder to cache.",
               "type": "string"
             },
+            "folders": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": [
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                }
+              ],
+              "description": "A list of folders to cache."
+            },
             "name": {
               "type": "string"
             },
@@ -2147,8 +2415,13 @@
               "type": "string"
             }
           },
-          "required": [
-            "folder"
+          "oneOf": [
+            {
+              "required": ["folder"]
+            },
+            {
+              "required": ["folders"]
+            }
           ],
           "type": "object"
         },
@@ -2266,6 +2539,22 @@
                   "description": "Path of a folder to cache.",
                   "type": "string"
                 },
+                "folders": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "A list of folders to cache."
+                },
                 "name": {
                   "type": "string"
                 },
@@ -2290,8 +2579,13 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "folder"
+              "oneOf": [
+                {
+                  "required": ["folder"]
+                },
+                {
+                  "required": ["folders"]
+                }
               ],
               "type": "object"
             },
@@ -3414,6 +3708,22 @@
                   "description": "Path of a folder to cache.",
                   "type": "string"
                 },
+                "folders": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "A list of folders to cache."
+                },
                 "name": {
                   "type": "string"
                 },
@@ -3438,8 +3748,13 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "folder"
+              "oneOf": [
+                {
+                  "required": ["folder"]
+                },
+                {
+                  "required": ["folders"]
+                }
               ],
               "type": "object"
             },
@@ -3551,6 +3866,22 @@
                   "description": "Path of a folder to cache.",
                   "type": "string"
                 },
+                "folders": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "A list of folders to cache."
+                },
                 "name": {
                   "type": "string"
                 },
@@ -3575,8 +3906,13 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "folder"
+              "oneOf": [
+                {
+                  "required": ["folder"]
+                },
+                {
+                  "required": ["folders"]
+                }
               ],
               "type": "object"
             },

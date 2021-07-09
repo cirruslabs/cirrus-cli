@@ -10,7 +10,9 @@
           "fingerprintScripts": [
             "cat yarn.lock"
           ],
-          "folder": ".gradle",
+          "folders": [
+            ".gradle"
+          ],
           "populateScripts": [
             "yarn install"
           ]

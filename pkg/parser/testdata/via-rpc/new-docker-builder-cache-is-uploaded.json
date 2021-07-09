@@ -7,7 +7,9 @@
       },
       {
         "cacheInstruction": {
-          "folder": "$HOME/.gradle/caches",
+          "folders": [
+            "$HOME/.gradle/caches"
+          ],
           "reuploadOnChanges": true
         },
         "name": "gradle"
