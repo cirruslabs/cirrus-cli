@@ -11,9 +11,7 @@ require (
 	github.com/cirruslabs/echelon v1.5.0
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.2.0
-	github.com/containerd/containerd v1.4.3 // indirect
-	github.com/containers/image/v5 v5.9.0
-	github.com/containers/storage v1.24.4 // indirect
+	github.com/containers/image/v5 v5.13.2
 	github.com/cyphar/filepath-securejoin v0.2.2
 	github.com/docker/cli v20.10.1+incompatible
 	github.com/docker/docker v20.10.1+incompatible
@@ -41,9 +39,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.0 // indirect
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
-	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/otiai10/copy v1.4.2
-	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/sftp v1.12.0
 	github.com/qri-io/starlib v0.5.0
 	github.com/sergi/go-diff v1.2.0
@@ -54,7 +50,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.7.0
-	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/yudai/gojsondiff v1.0.0
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
@@ -70,5 +65,4 @@ require (
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
-	gotest.tools/v3 v3.0.3 // indirect
 )
