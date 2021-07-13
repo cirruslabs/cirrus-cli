@@ -66,7 +66,7 @@ func TestIssues(t *testing.T) {
 			[]*api.Issue{
 				{
 					Level:   api.Issue_WARNING,
-					Message: "giving a task multiple names can be ambiguous",
+					Message: "giving a task multiple names (\"first_name_for_a\" and \"Second name for a task\") can be ambiguous",
 					Path:    ".cirrus.yml",
 					Line:    4,
 					Column:  1,
