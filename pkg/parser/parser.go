@@ -109,6 +109,7 @@ func (p *Parser) registerIssuef(level api.Issue_Level, line int, column int, for
 	})
 }
 
+// nolint:gocognit // it's a parser, there's a lot of logic going on
 func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 	var tasks []task.ParseableTaskLike
 
@@ -147,6 +148,20 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			}
 
 			taskLike.SetID(p.NextTaskID())
+
+			// Emit a warning if the user tries to give multiple names to a single task
+			var hasQuickTaskName bool
+
+			if rn, ok := key.(*nameable.RegexNameable); ok {
+				if rn.FirstGroupOrDefault(treeItem.Name, "") != "" {
+					hasQuickTaskName = true
+				}
+			}
+
+			if taskLike.Name() != "" && hasQuickTaskName {
+				p.registerIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
+					"giving a task multiple names can be ambiguous")
+			}
 
 			// Set task's name if not set in the definition
 			if taskLike.Name() == "" {

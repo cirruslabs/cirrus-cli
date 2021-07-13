@@ -1,0 +1,5 @@
+container:
+  image: debian:latest
+
+first_name_for_a_task:
+  name: Second name for a task
