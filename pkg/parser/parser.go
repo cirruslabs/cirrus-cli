@@ -158,7 +158,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 
 			if taskLike.Name() != "" && quickTaskName != "" {
 				p.registerIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
-					"giving a task multiple names (%q and %q) can be ambiguous",
+					"task's name %q will be overridden by %q",
 					quickTaskName, taskLike.Name())
 			}
 
