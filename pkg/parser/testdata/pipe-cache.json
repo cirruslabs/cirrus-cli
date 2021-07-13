@@ -1,0 +1,76 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone",
+        "properties": {
+          "image": "debian:latest"
+        }
+      },
+      {
+        "cacheInstruction": {
+          "folders": [
+            "node_modules"
+          ],
+          "reuploadOnChanges": true
+        },
+        "name": "main"
+      },
+      {
+        "name": "install",
+        "properties": {
+          "image": "squidfunk/mkdocs-material:latest"
+        },
+        "scriptInstruction": {
+          "scripts": [
+            "pip install --upgrade pymdown-extensions"
+          ]
+        }
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "mkdocs build"
+          ]
+        }
+      },
+      {
+        "name": "validate",
+        "properties": {
+          "image": "liche:latest"
+        },
+        "scriptInstruction": {
+          "scripts": [
+            "liche --document-root=site --recursive site/"
+          ]
+        }
+      },
+      {
+        "name": "Upload 'main' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "main"
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PipeInstance",
+      "cpu": 4,
+      "memory": 12288
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "Build and Validate Links"
+  }
+]

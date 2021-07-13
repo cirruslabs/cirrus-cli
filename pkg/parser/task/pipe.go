@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -176,6 +177,10 @@ func (pipe *DockerPipe) Parse(node *node.Node) error {
 	}
 
 	pipe.proto.Instance = anyInstance
+
+	// Since the parsing is almost done and no other commands are expected,
+	// we can safely append cache upload commands, if applicable
+	pipe.proto.Commands = append(pipe.proto.Commands, command.GenUploadCacheCmds(pipe.proto.Commands)...)
 
 	return nil
 }

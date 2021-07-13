@@ -37,6 +37,7 @@ var validCases = []string{
 	"persistent-worker-isolation-container",
 	"cache-multiple-folders",
 	"no-always-override",
+	"pipe-cache",
 }
 
 func absolutize(file string) string {

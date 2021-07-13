@@ -1,0 +1,14 @@
+pipe:
+  name: "Build and Validate Links"
+  resources:
+    cpu: 4
+    memory: 12G
+  steps:
+    - image: debian:latest
+      cache:
+        folder: node_modules
+    - image: squidfunk/mkdocs-material:latest
+      install_script: pip install --upgrade pymdown-extensions
+      build_script: mkdocs build
+    - image: liche:latest
+      validate_script: liche --document-root=site --recursive site/

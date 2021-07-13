@@ -126,7 +126,7 @@ func (dbuilder *DockerBuilder) Parse(node *node.Node) error {
 
 	dbuilder.proto.Instance = anyInstance
 
-	// Since the parsing is almost done and other commands are expected,
+	// Since the parsing is almost done and no other commands are expected,
 	// we can safely append cache upload commands, if applicable
 	dbuilder.proto.Commands = append(dbuilder.proto.Commands, command.GenUploadCacheCmds(dbuilder.proto.Commands)...)
 
