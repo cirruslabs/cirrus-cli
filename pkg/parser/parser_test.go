@@ -57,6 +57,41 @@ func TestValidConfigs(t *testing.T) {
 	}
 }
 
+func TestIssues(t *testing.T) {
+	issueCases := []struct {
+		File   string
+		Issues []*api.Issue
+	}{
+		{
+			"multiple-name-ambiguity.yml",
+			[]*api.Issue{
+				{
+					Level:   api.Issue_WARNING,
+					Message: "task's name \"first_name_for_a\" will be overridden by \"Second name for a task\"",
+					Path:    ".cirrus.yml",
+					Line:    4,
+					Column:  1,
+				},
+			},
+		},
+		{
+			"no-multiple-name-ambiguity.yml",
+			nil,
+		},
+	}
+
+	for _, issueCase := range issueCases {
+		issueCase := issueCase
+
+		t.Run(issueCase.File, func(t *testing.T) {
+			p := parser.New()
+			result, err := p.ParseFromFile(context.Background(), filepath.Join("testdata", "issues", issueCase.File))
+			require.Nil(t, err)
+			assert.EqualValues(t, issueCase.Issues, result.Issues)
+		})
+	}
+}
+
 func TestInvalidConfigs(t *testing.T) {
 	var invalidCases = []struct {
 		Name  string

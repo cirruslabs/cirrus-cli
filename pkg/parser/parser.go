@@ -109,6 +109,7 @@ func (p *Parser) registerIssuef(level api.Issue_Level, line int, column int, for
 	})
 }
 
+// nolint:gocognit // it's a parser, there's a lot of logic going on
 func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 	var tasks []task.ParseableTaskLike
 
@@ -147,6 +148,19 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			}
 
 			taskLike.SetID(p.NextTaskID())
+
+			// Emit a warning if the user tries to give multiple names to a single task
+			var quickTaskName string
+
+			if rn, ok := key.(*nameable.RegexNameable); ok {
+				quickTaskName = rn.FirstGroupOrDefault(treeItem.Name, "")
+			}
+
+			if taskLike.Name() != "" && quickTaskName != "" {
+				p.registerIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
+					"task's name %q will be overridden by %q",
+					quickTaskName, taskLike.Name())
+			}
 
 			// Set task's name if not set in the definition
 			if taskLike.Name() == "" {
