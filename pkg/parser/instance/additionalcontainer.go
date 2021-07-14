@@ -184,7 +184,7 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		// tokenize the command
 		ac.proto.Command, err = shlex.Split(command)
 		if err != nil {
-			return err
+			return node.ParserError("failed to tokenize command: %v", err.Error())
 		}
 
 		return nil
