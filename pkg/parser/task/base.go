@@ -1,7 +1,6 @@
 package task
 
 import (
-	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
@@ -176,51 +175,13 @@ func AttachBaseTaskInstructions(
 	})
 
 	uploadCachesNameable := nameable.NewSimpleNameable("upload_caches")
-	uploadCachesSchema := schema.ArrayOf(schema.String("Cache name to upload."))
-	parser.OptionalField(uploadCachesNameable, uploadCachesSchema, func(node *node.Node) error {
-		cacheNames, err := node.GetSliceOfExpandedStrings(environment.Merge(task.Environment, env))
+	parser.OptionalField(uploadCachesNameable, command.UploadCachesSchema(), func(node *node.Node) error {
+		commandsToAppend, err := command.UploadCachesHelper(environment.Merge(task.Environment, env), task.Commands, node)
 		if err != nil {
 			return err
 		}
 
-		for _, cacheName := range cacheNames {
-			var isCacheNameDefined bool
-
-			for _, command := range task.Commands {
-				if command.Name == cacheName {
-					isCacheNameDefined = true
-					break
-				}
-			}
-
-			if !isCacheNameDefined {
-				return node.ParserError("no cache with name %q is defined", cacheName)
-			}
-
-			var hasCacheUploadCommand bool
-			cacheUploadCommandName := fmt.Sprintf("Upload '%s' cache", cacheName)
-
-			for _, command := range task.Commands {
-				if command.Name == cacheUploadCommandName {
-					hasCacheUploadCommand = true
-					break
-				}
-			}
-
-			if hasCacheUploadCommand {
-				return node.ParserError("the cache with name %q is already scheduled to be uploaded in one "+
-					"of the previous upload_caches instructions", cacheUploadCommandName)
-			}
-
-			task.Commands = append(task.Commands, &api.Command{
-				Name: cacheUploadCommandName,
-				Instruction: &api.Command_UploadCacheInstruction{
-					UploadCacheInstruction: &api.UploadCacheInstruction{
-						CacheName: cacheName,
-					},
-				},
-			})
-		}
+		task.Commands = append(task.Commands, commandsToAppend...)
 
 		return nil
 	})
@@ -250,10 +211,10 @@ func AttachBaseTaskInstructions(
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
 
-		behaviorSchema := NewBehavior(nil, nil).Schema()
+		behaviorSchema := NewBehavior(nil, nil, nil).Schema()
 		behaviorSchema.Description = name + " commands."
 		parser.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), behaviorSchema, func(node *node.Node) error {
-			behavior := NewBehavior(environment.Merge(task.Environment, env), boolevator)
+			behavior := NewBehavior(environment.Merge(task.Environment, env), boolevator, task.Commands)
 			if err := behavior.Parse(node); err != nil {
 				return err
 			}

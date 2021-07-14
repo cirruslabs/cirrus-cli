@@ -20,7 +20,11 @@ type PipeStep struct {
 	parseable.DefaultParser
 }
 
-func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *PipeStep {
+func NewPipeStep(
+	mergedEnv map[string]string,
+	boolevator *boolevator.Boolevator,
+	previousCommands []*api.Command,
+) *PipeStep {
 	step := &PipeStep{}
 
 	imageSchema := schema.String("Docker Image to use.")
@@ -56,6 +60,18 @@ func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 		return nil
 	})
 
+	uploadCachesNameable := nameable.NewSimpleNameable("upload_caches")
+	step.OptionalField(uploadCachesNameable, command.UploadCachesSchema(), func(node *node.Node) error {
+		commandsToAppend, err := command.UploadCachesHelper(mergedEnv, append(previousCommands, step.protoCommands...), node)
+		if err != nil {
+			return err
+		}
+
+		step.protoCommands = append(step.protoCommands, commandsToAppend...)
+
+		return nil
+	})
+
 	artifactsNameable := nameable.NewRegexNameable("^(.*)artifacts$")
 	artifactsSchema := command.NewArtifactsCommand(nil).Schema()
 	step.OptionalField(artifactsNameable, artifactsSchema, func(node *node.Node) error {
@@ -81,10 +97,10 @@ func NewPipeStep(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
 
-		behaviorSchema := NewBehavior(nil, nil).Schema()
+		behaviorSchema := NewBehavior(nil, nil, nil).Schema()
 		behaviorSchema.Description = name + " commands."
 		step.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), behaviorSchema, func(node *node.Node) error {
-			behavior := NewBehavior(mergedEnv, boolevator)
+			behavior := NewBehavior(mergedEnv, boolevator, append(previousCommands, step.protoCommands...))
 			if err := behavior.Parse(node); err != nil {
 				return err
 			}

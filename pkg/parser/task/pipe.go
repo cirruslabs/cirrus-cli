@@ -101,14 +101,14 @@ func NewDockerPipe(
 		return nil
 	})
 
-	stepsSchema := schema.ArrayOf(NewPipeStep(nil, nil).Schema())
+	stepsSchema := schema.ArrayOf(NewPipeStep(nil, nil, nil).Schema())
 	pipe.RequiredField(nameable.NewSimpleNameable("steps"), stepsSchema, func(stepsNode *node.Node) error {
 		if _, ok := stepsNode.Value.(*node.ListValue); !ok {
 			return stepsNode.ParserError("steps should be a list")
 		}
 
 		for _, child := range stepsNode.Children {
-			step := NewPipeStep(environment.Merge(pipe.proto.Environment, env), boolevator)
+			step := NewPipeStep(environment.Merge(pipe.proto.Environment, env), boolevator, pipe.proto.Commands)
 			if err := step.Parse(child); err != nil {
 				return err
 			}

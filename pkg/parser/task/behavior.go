@@ -17,7 +17,11 @@ type Behavior struct {
 	parseable.DefaultParser
 }
 
-func NewBehavior(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *Behavior {
+func NewBehavior(
+	mergedEnv map[string]string,
+	boolevator *boolevator.Boolevator,
+	previousCommands []*api.Command,
+) *Behavior {
 	b := &Behavior{}
 
 	bgNameable := nameable.NewRegexNameable("^(.*)background_script$")
@@ -52,6 +56,18 @@ func NewBehavior(mergedEnv map[string]string, boolevator *boolevator.Boolevator)
 			return err
 		}
 		b.commands = append(b.commands, cache.Proto())
+		return nil
+	})
+
+	uploadCachesNameable := nameable.NewSimpleNameable("upload_caches")
+	b.OptionalField(uploadCachesNameable, command.UploadCachesSchema(), func(node *node.Node) error {
+		commandsToAppend, err := command.UploadCachesHelper(mergedEnv, append(previousCommands, b.commands...), node)
+		if err != nil {
+			return err
+		}
+
+		b.commands = append(b.commands, commandsToAppend...)
+
 		return nil
 	})
 
