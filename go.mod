@@ -24,6 +24,7 @@ require (
 	github.com/go-test/deep v1.0.1
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-github/v32 v32.1.0
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0

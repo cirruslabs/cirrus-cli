@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
+	"github.com/google/shlex"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
 	"strings"
@@ -181,7 +182,10 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		}
 
 		// tokenize the command
-		ac.proto.Command = strings.Fields(command)
+		ac.proto.Command, err = shlex.Split(command)
+		if err != nil {
+			return err
+		}
 
 		return nil
 	})
