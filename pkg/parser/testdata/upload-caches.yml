@@ -34,3 +34,13 @@ behavior_pipe:
       always:
         upload_caches:
           - node_modules
+
+not_that_simple_task:
+  node_modules_cache:
+    folder: node_modules
+  some_other_cache:
+    folder: does-not-matter
+  upload_caches:
+    - some_other
+  upload_caches:
+    - node_modules
