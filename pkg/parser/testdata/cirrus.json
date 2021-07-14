@@ -2704,20 +2704,8 @@
                   "description": "Additional Container definition.",
                   "properties": {
                     "command": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "items": [
-                            {
-                              "type": "string"
-                            }
-                          ],
-                          "type": "array"
-                        }
-                      ],
-                      "description": "Container CMD to override."
+                      "description": "Container CMD to override.",
+                      "type": "string"
                     },
                     "cpu": {
                       "type": "number"
@@ -2911,20 +2899,8 @@
                   "description": "Additional Container definition.",
                   "properties": {
                     "command": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "items": [
-                            {
-                              "type": "string"
-                            }
-                          ],
-                          "type": "array"
-                        }
-                      ],
-                      "description": "Container CMD to override."
+                      "description": "Container CMD to override.",
+                      "type": "string"
                     },
                     "cpu": {
                       "type": "number"
@@ -3120,20 +3096,8 @@
                   "description": "Additional Container definition.",
                   "properties": {
                     "command": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "items": [
-                            {
-                              "type": "string"
-                            }
-                          ],
-                          "type": "array"
-                        }
-                      ],
-                      "description": "Container CMD to override."
+                      "description": "Container CMD to override.",
+                      "type": "string"
                     },
                     "cpu": {
                       "type": "number"
@@ -3429,20 +3393,8 @@
                   "description": "Additional Container definition.",
                   "properties": {
                     "command": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "items": [
-                            {
-                              "type": "string"
-                            }
-                          ],
-                          "type": "array"
-                        }
-                      ],
-                      "description": "Container CMD to override."
+                      "description": "Container CMD to override.",
+                      "type": "string"
                     },
                     "cpu": {
                       "type": "number"
@@ -4213,20 +4165,8 @@
               "description": "Additional Container definition.",
               "properties": {
                 "command": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "items": [
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "type": "array"
-                    }
-                  ],
-                  "description": "Container CMD to override."
+                  "description": "Container CMD to override.",
+                  "type": "string"
                 },
                 "cpu": {
                   "type": "number"
@@ -4404,20 +4344,8 @@
               "description": "Additional Container definition.",
               "properties": {
                 "command": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "items": [
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "type": "array"
-                    }
-                  ],
-                  "description": "Container CMD to override."
+                  "description": "Container CMD to override.",
+                  "type": "string"
                 },
                 "cpu": {
                   "type": "number"
@@ -4593,20 +4521,8 @@
               "description": "Additional Container definition.",
               "properties": {
                 "command": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "items": [
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "type": "array"
-                    }
-                  ],
-                  "description": "Container CMD to override."
+                  "description": "Container CMD to override.",
+                  "type": "string"
                 },
                 "cpu": {
                   "type": "number"
@@ -4886,20 +4802,8 @@
               "description": "Additional Container definition.",
               "properties": {
                 "command": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "items": [
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "type": "array"
-                    }
-                  ],
-                  "description": "Container CMD to override."
+                  "description": "Container CMD to override.",
+                  "type": "string"
                 },
                 "cpu": {
                   "type": "number"

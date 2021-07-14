@@ -173,14 +173,15 @@ func NewAdditionalContainer(mergedEnv map[string]string, boolevator *boolevator.
 		return nil
 	})
 
-	commandSchema := schema.Script("Container CMD to override.")
+	commandSchema := schema.String("Container CMD to override.")
 	ac.OptionalField(nameable.NewSimpleNameable("command"), commandSchema, func(node *node.Node) error {
-		command, err := node.GetSliceOfNonEmptyStrings()
+		command, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
 
-		ac.proto.Command = command
+		// tokenize the command
+		ac.proto.Command = strings.Fields(command)
 
 		return nil
 	})

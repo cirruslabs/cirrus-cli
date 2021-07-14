@@ -22,7 +22,8 @@
       "additionalContainers": [
         {
           "command": [
-            "echo $FOO"
+            "memcached",
+            "--version"
           ],
           "cpu": 1.3,
           "environment": {
