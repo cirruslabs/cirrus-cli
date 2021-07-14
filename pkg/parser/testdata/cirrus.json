@@ -329,6 +329,17 @@
               ]
             }
           },
+          "properties": {
+            "upload_caches": {
+              "items": [
+                {
+                  "description": "Cache name to upload.",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            }
+          },
           "type": "object"
         },
         "depends_on": {
@@ -528,6 +539,17 @@
               ]
             }
           },
+          "properties": {
+            "upload_caches": {
+              "items": [
+                {
+                  "description": "Cache name to upload.",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            }
+          },
           "type": "object"
         },
         "on_success": {
@@ -690,6 +712,17 @@
               ]
             }
           },
+          "properties": {
+            "upload_caches": {
+              "items": [
+                {
+                  "description": "Cache name to upload.",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            }
+          },
           "type": "object"
         },
         "only_if": {
@@ -718,6 +751,15 @@
         "timeout_in": {
           "description": "Task timeout in minutes",
           "type": "number"
+        },
+        "upload_caches": {
+          "items": [
+            {
+              "description": "Cache name to upload.",
+              "type": "string"
+            }
+          ],
+          "type": "array"
         },
         "use_static_ip": {
           "description": "Boolean expression that can use environment variables.",
@@ -1101,6 +1143,17 @@
                       ]
                     }
                   },
+                  "properties": {
+                    "upload_caches": {
+                      "items": [
+                        {
+                          "description": "Cache name to upload.",
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  },
                   "type": "object"
                 },
                 "image": {
@@ -1267,6 +1320,17 @@
                       ]
                     }
                   },
+                  "properties": {
+                    "upload_caches": {
+                      "items": [
+                        {
+                          "description": "Cache name to upload.",
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  },
                   "type": "object"
                 },
                 "on_success": {
@@ -1429,7 +1493,27 @@
                       ]
                     }
                   },
+                  "properties": {
+                    "upload_caches": {
+                      "items": [
+                        {
+                          "description": "Cache name to upload.",
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  },
                   "type": "object"
+                },
+                "upload_caches": {
+                  "items": [
+                    {
+                      "description": "Cache name to upload.",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
                 }
               },
               "required": [
@@ -1775,6 +1859,17 @@
               ]
             }
           },
+          "properties": {
+            "upload_caches": {
+              "items": [
+                {
+                  "description": "Cache name to upload.",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            }
+          },
           "type": "object"
         },
         "container": {
@@ -2117,6 +2212,17 @@
               ]
             }
           },
+          "properties": {
+            "upload_caches": {
+              "items": [
+                {
+                  "description": "Cache name to upload.",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            }
+          },
           "type": "object"
         },
         "on_success": {
@@ -2279,6 +2385,17 @@
               ]
             }
           },
+          "properties": {
+            "upload_caches": {
+              "items": [
+                {
+                  "description": "Cache name to upload.",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            }
+          },
           "type": "object"
         },
         "only_if": {
@@ -2366,6 +2483,15 @@
         "timeout_in": {
           "description": "Task timeout in minutes",
           "type": "number"
+        },
+        "upload_caches": {
+          "items": [
+            {
+              "description": "Cache name to upload.",
+              "type": "string"
+            }
+          ],
+          "type": "array"
         },
         "windows_container": {
           "description": "Windows Container definition for Community Cluster.",
