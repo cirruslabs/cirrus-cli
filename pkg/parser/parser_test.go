@@ -37,6 +37,8 @@ var validCases = []string{
 	"persistent-worker-isolation-container",
 	"cache-multiple-folders",
 	"no-always-override",
+	"pipe-cache",
+	"upload-caches",
 }
 
 func absolutize(file string) string {
@@ -98,6 +100,7 @@ func TestInvalidConfigs(t *testing.T) {
 		Error string
 	}{
 		{"invalid-missing-required-field", "parsing error: 5:1: required field \"steps\" was not set"},
+		{"invalid-upload-caches-nonexistent-cache", "parsing error: 7:3: no cache with name \"mode_nodules\" is defined"},
 	}
 
 	for _, invalidCase := range invalidCases {

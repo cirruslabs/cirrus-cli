@@ -1,0 +1,258 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "folders": [
+            "node_modules"
+          ],
+          "reuploadOnChanges": true
+        },
+        "name": "node_modules"
+      },
+      {
+        "cacheInstruction": {
+          "folders": [
+            "does-not-matter"
+          ],
+          "reuploadOnChanges": true
+        },
+        "name": "some_other"
+      },
+      {
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "simple"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "folders": [
+            "node_modules"
+          ],
+          "reuploadOnChanges": true
+        },
+        "name": "node_modules"
+      },
+      {
+        "executionBehaviour": "ALWAYS",
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "1",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "container:debian:latest"
+      ]
+    },
+    "name": "behavior"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone",
+        "properties": {
+          "image": "debian:latest"
+        }
+      },
+      {
+        "cacheInstruction": {
+          "folders": [
+            "node_modules"
+          ],
+          "reuploadOnChanges": true
+        },
+        "name": "node_modules"
+      },
+      {
+        "name": "Upload 'node_modules' cache",
+        "properties": {
+          "image": "debian:latest"
+        },
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PipeInstance",
+      "cpu": 2,
+      "memory": 4096
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "2",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone",
+        "properties": {
+          "image": "debian:latest"
+        }
+      },
+      {
+        "cacheInstruction": {
+          "folders": [
+            "node_modules"
+          ],
+          "reuploadOnChanges": true
+        },
+        "name": "node_modules"
+      },
+      {
+        "executionBehaviour": "ALWAYS",
+        "name": "Upload 'node_modules' cache",
+        "properties": {
+          "image": "debian:latest"
+        },
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PipeInstance",
+      "cpu": 2,
+      "memory": 4096
+    },
+    "localGroupId": "3",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "3",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      },
+      "uniqueLabels": [
+        "pipe"
+      ]
+    },
+    "name": "behavior"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "cacheInstruction": {
+          "folders": [
+            "node_modules"
+          ],
+          "reuploadOnChanges": true
+        },
+        "name": "node_modules"
+      },
+      {
+        "cacheInstruction": {
+          "folders": [
+            "does-not-matter"
+          ],
+          "reuploadOnChanges": true
+        },
+        "name": "some_other"
+      },
+      {
+        "name": "Upload 'some_other' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "some_other"
+        }
+      },
+      {
+        "name": "Upload 'node_modules' cache",
+        "uploadCacheInstruction": {
+          "cacheName": "node_modules"
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "localGroupId": "4",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "4",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "not_that_simple"
+  }
+]

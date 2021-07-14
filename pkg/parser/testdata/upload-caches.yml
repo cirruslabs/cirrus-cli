@@ -1,0 +1,46 @@
+container:
+  image: debian:latest
+
+simple_task:
+  node_modules_cache:
+    folder: node_modules
+  some_other_cache:
+    folder: does-not-matter
+  upload_caches:
+    - node_modules
+
+behavior_task:
+  node_modules_cache:
+    folder: node_modules
+  always:
+    upload_caches:
+      - node_modules
+
+pipe:
+  steps:
+    - image: debian:latest
+      node_modules_cache:
+        folder: node_modules
+    - image: debian:latest
+      upload_caches:
+        - node_modules
+
+behavior_pipe:
+  steps:
+    - image: debian:latest
+      node_modules_cache:
+        folder: node_modules
+    - image: debian:latest
+      always:
+        upload_caches:
+          - node_modules
+
+not_that_simple_task:
+  node_modules_cache:
+    folder: node_modules
+  some_other_cache:
+    folder: does-not-matter
+  upload_caches:
+    - some_other
+  upload_caches:
+    - node_modules

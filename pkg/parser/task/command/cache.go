@@ -168,6 +168,14 @@ func (cache *CacheCommand) Schema() *jsschema.Schema {
 }
 
 func GenUploadCacheCmds(commands []*api.Command) (result []*api.Command) {
+	// Don't generate any cache upload instructions if "upload_caches" instruction was used,
+	// in which case it'd insert at least one cache upload instruction.
+	for _, command := range commands {
+		if _, ok := command.Instruction.(*api.Command_UploadCacheInstruction); ok {
+			return []*api.Command{}
+		}
+	}
+
 	for _, command := range commands {
 		_, ok := command.Instruction.(*api.Command_CacheInstruction)
 		if !ok {

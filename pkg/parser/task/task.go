@@ -207,7 +207,7 @@ func (task *Task) Parse(node *node.Node) error {
 		return node.ParserError("task has no instance attached")
 	}
 
-	// Since the parsing is almost done and other commands are expected,
+	// Since the parsing is almost done and no other commands are expected,
 	// we can safely append cache upload commands, if applicable
 	task.proto.Commands = append(task.proto.Commands, command.GenUploadCacheCmds(task.proto.Commands)...)
 
