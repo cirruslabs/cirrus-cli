@@ -395,8 +395,10 @@ func TestViaRPCInvalid(t *testing.T) {
 func TestSchema(t *testing.T) {
 	p := parser.New()
 
+	const schemaPath = "testdata/cirrus.json"
+
 	// Load reference schema
-	referenceBytes, err := ioutil.ReadFile("testdata/cirrus.json")
+	referenceBytes, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -415,49 +417,10 @@ func TestSchema(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Remove cloud instances from the reference schema since they're not present in our schema
-	delete(referenceObject["patternProperties"].(map[string]interface{}), "^(.*)gke_pipe$")
-
-	ignoredProperties := []string{
-		// instances
-		"anka_instance",
-		"aws_credentials",
-		"azure_container_instance",
-		"azure_credentials",
-		"ec2_instance",
-		"eks_container",
-		"freebsd_instance",
-		"gce_container",
-		"gce_instance",
-		"gcp_credentials",
-		"gke_container",
-		"osx_instance",
-		"macos_instance",
-		// cloud task properties
-		"auto_cancellation",
-		"execution_lock",
-		"experimental",
-		"required_pr_labels",
-		"skip_notifications",
-		"stateful",
-		"trigger_type",
-		"use_compute_credits",
-	}
-
-	for _, ignoredProperty := range ignoredProperties {
-		delete(referenceObject["properties"].(map[string]interface{}), ignoredProperty)
-
-		patternedTask := referenceObject["patternProperties"].(map[string]interface{})["^(.*)task$"]
-		delete(patternedTask.(map[string]interface{})["properties"].(map[string]interface{}), ignoredProperty)
-
-		patternedDockerBuilder := referenceObject["patternProperties"].(map[string]interface{})["^(.*)docker_builder$"]
-		delete(patternedDockerBuilder.(map[string]interface{})["properties"].(map[string]interface{}), ignoredProperty)
-
-		patternedPipe := referenceObject["patternProperties"].(map[string]interface{})["^(.*)pipe$"]
-		delete(patternedPipe.(map[string]interface{})["properties"].(map[string]interface{}), ignoredProperty)
-	}
-
-	delete(referenceObject, "fileMatch")
+	// Uncomment to update schema
+	//if err := ioutil.WriteFile(schemaPath, ourBytes, 0600); err != nil {
+	//	t.Fatal(err)
+	//}
 
 	// Compare two schemas
 	differ := gojsondiff.New()
