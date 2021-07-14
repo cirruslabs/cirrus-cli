@@ -1,0 +1,10 @@
+container:
+  image: debian:latest
+
+task:
+  node_modules_cache:
+    folder: node_modules
+  some_other_cache:
+    folder: does-not-matter
+  upload_caches:
+    - node_modules

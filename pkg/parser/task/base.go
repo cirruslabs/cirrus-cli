@@ -1,6 +1,7 @@
 package task
 
 import (
+	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
@@ -171,6 +172,56 @@ func AttachBaseTaskInstructions(
 			return err
 		}
 		task.Commands = append(task.Commands, cache.Proto())
+		return nil
+	})
+
+	uploadCachesNameable := nameable.NewSimpleNameable("upload_caches")
+	uploadCachesSchema := schema.ArrayOf(schema.String("Cache name to upload."))
+	parser.OptionalField(uploadCachesNameable, uploadCachesSchema, func(node *node.Node) error {
+		cacheNames, err := node.GetSliceOfExpandedStrings(environment.Merge(task.Environment, env))
+		if err != nil {
+			return err
+		}
+
+		for _, cacheName := range cacheNames {
+			var isCacheNameDefined bool
+
+			for _, command := range task.Commands {
+				if command.Name == cacheName {
+					isCacheNameDefined = true
+					break
+				}
+			}
+
+			if !isCacheNameDefined {
+				return node.ParserError("no cache with name %q is defined", cacheName)
+			}
+
+			var hasCacheUploadCommand bool
+			cacheUploadCommandName := fmt.Sprintf("Upload '%s' cache", cacheName)
+
+			for _, command := range task.Commands {
+				if command.Name == cacheUploadCommandName {
+					hasCacheUploadCommand = true
+					break
+				}
+			}
+
+			if hasCacheUploadCommand {
+				return node.ParserError("the cache with name %q is already scheduled to be uploaded in one "+
+					"of the previous upload_caches instructions", cacheUploadCommandName)
+			}
+
+			task.Commands = append(task.Commands, &api.Command{
+				Name: cacheUploadCommandName,
+				Instruction: &api.Command_UploadCacheInstruction{
+					UploadCacheInstruction: &api.UploadCacheInstruction{
+						CacheName: cacheName,
+					},
+				},
+			})
+		}
+
 		return nil
 	})
 

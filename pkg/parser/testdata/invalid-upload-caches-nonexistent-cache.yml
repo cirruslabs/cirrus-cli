@@ -1,0 +1,8 @@
+container:
+  image: debian:latest
+
+task:
+  node_modules_cache:
+    folder: node_modules
+  upload_caches:
+    - mode_nodules
