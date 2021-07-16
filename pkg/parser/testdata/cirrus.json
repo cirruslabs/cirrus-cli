@@ -63,6 +63,10 @@
             }
           ],
           "properties": {
+            "fingerprint_key": {
+              "description": "Cache key in it's raw form.",
+              "type": "string"
+            },
             "fingerprint_script": {
               "anyOf": [
                 {
@@ -231,6 +235,10 @@
                 }
               ],
               "properties": {
+                "fingerprint_key": {
+                  "description": "Cache key in it's raw form.",
+                  "type": "string"
+                },
                 "fingerprint_script": {
                   "anyOf": [
                     {
@@ -441,6 +449,10 @@
                 }
               ],
               "properties": {
+                "fingerprint_key": {
+                  "description": "Cache key in it's raw form.",
+                  "type": "string"
+                },
                 "fingerprint_script": {
                   "anyOf": [
                     {
@@ -614,6 +626,10 @@
                 }
               ],
               "properties": {
+                "fingerprint_key": {
+                  "description": "Cache key in it's raw form.",
+                  "type": "string"
+                },
                 "fingerprint_script": {
                   "anyOf": [
                     {
@@ -884,6 +900,10 @@
                     }
                   ],
                   "properties": {
+                    "fingerprint_key": {
+                      "description": "Cache key in it's raw form.",
+                      "type": "string"
+                    },
                     "fingerprint_script": {
                       "anyOf": [
                         {
@@ -1045,6 +1065,10 @@
                         }
                       ],
                       "properties": {
+                        "fingerprint_key": {
+                          "description": "Cache key in it's raw form.",
+                          "type": "string"
+                        },
                         "fingerprint_script": {
                           "anyOf": [
                             {
@@ -1222,6 +1246,10 @@
                         }
                       ],
                       "properties": {
+                        "fingerprint_key": {
+                          "description": "Cache key in it's raw form.",
+                          "type": "string"
+                        },
                         "fingerprint_script": {
                           "anyOf": [
                             {
@@ -1395,6 +1423,10 @@
                         }
                       ],
                       "properties": {
+                        "fingerprint_key": {
+                          "description": "Cache key in it's raw form.",
+                          "type": "string"
+                        },
                         "fingerprint_script": {
                           "anyOf": [
                             {
@@ -1593,6 +1625,10 @@
             }
           ],
           "properties": {
+            "fingerprint_key": {
+              "description": "Cache key in it's raw form.",
+              "type": "string"
+            },
             "fingerprint_script": {
               "anyOf": [
                 {
@@ -1761,6 +1797,10 @@
                 }
               ],
               "properties": {
+                "fingerprint_key": {
+                  "description": "Cache key in it's raw form.",
+                  "type": "string"
+                },
                 "fingerprint_script": {
                   "anyOf": [
                     {
@@ -2114,6 +2154,10 @@
                 }
               ],
               "properties": {
+                "fingerprint_key": {
+                  "description": "Cache key in it's raw form.",
+                  "type": "string"
+                },
                 "fingerprint_script": {
                   "anyOf": [
                     {
@@ -2287,6 +2331,10 @@
                 }
               ],
               "properties": {
+                "fingerprint_key": {
+                  "description": "Cache key in it's raw form.",
+                  "type": "string"
+                },
                 "fingerprint_script": {
                   "anyOf": [
                     {

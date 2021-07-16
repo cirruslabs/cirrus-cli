@@ -1,0 +1,7 @@
+container:
+  image: debian:latest
+
+task:
+  cache:
+    folder: node_modules
+    fingerprint_key: 2021-06-17

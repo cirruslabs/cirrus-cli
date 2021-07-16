@@ -39,6 +39,7 @@ var validCases = []string{
 	"no-always-override",
 	"pipe-cache",
 	"upload-caches",
+	"cache-fingerprint-key",
 }
 
 func absolutize(file string) string {
@@ -101,6 +102,8 @@ func TestInvalidConfigs(t *testing.T) {
 	}{
 		{"invalid-missing-required-field", "parsing error: 5:1: required field \"steps\" was not set"},
 		{"invalid-upload-caches-nonexistent-cache", "parsing error: 7:3: no cache with name \"mode_nodules\" is defined"},
+		{"invalid-cache-two-fingerprints", "parsing error: 5:3: please either use fingerprint_script: or fingerprint_key, " +
+			"since otherwise there's ambiguity about which one to prefer for cache key calculation"},
 	}
 
 	for _, invalidCase := range invalidCases {
