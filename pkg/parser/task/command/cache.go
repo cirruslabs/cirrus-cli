@@ -64,14 +64,32 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 		return nil
 	})
 
-	fpSchema := schema.Script("Script that is used to calculate cache key.")
-	cache.OptionalField(nameable.NewSimpleNameable("fingerprint_script"), fpSchema, func(node *node.Node) error {
+	fpScriptSchema := schema.Script("Script that is used to calculate cache key.")
+	cache.OptionalField(nameable.NewSimpleNameable("fingerprint_script"), fpScriptSchema, func(node *node.Node) error {
 		scripts, err := node.GetScript()
 		if err != nil {
 			return err
 		}
 
 		cache.instruction.FingerprintScripts = scripts
+
+		// Disable the default "dumb" re-upload behavior unless otherwise specified by the user since
+		// we now have a better way of figuring out whether we need to upload the cache or not
+		if !cache.reuploadOnChangesExplicitlySet {
+			cache.instruction.ReuploadOnChanges = false
+		}
+
+		return nil
+	})
+
+	fpKeySchema := schema.String("Cache key in it's raw form.")
+	cache.OptionalField(nameable.NewSimpleNameable("fingerprint_key"), fpKeySchema, func(node *node.Node) error {
+		key, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		cache.instruction.FingerprintKey = key
 
 		// Disable the default "dumb" re-upload behavior unless otherwise specified by the user since
 		// we now have a better way of figuring out whether we need to upload the cache or not
@@ -118,6 +136,7 @@ func (cache *CacheCommand) Parse(node *node.Node) error {
 		cache.proto.Name = cacheNameable.FirstGroupOrDefault(node.Name, "main")
 	}
 
+	// Deal with cache folders
 	if cache.folder == "" && len(cache.folders) == 0 {
 		return node.ParserError("please specify the folders to cache, with either folder: or folders:")
 	} else if cache.folder != "" && len(cache.folders) != 0 {
@@ -133,6 +152,14 @@ func (cache *CacheCommand) Parse(node *node.Node) error {
 	}
 
 	cache.instruction.Folders = fixFolders(folders)
+
+	// fingerprint_script and fingerprint_key are mutually exclusive,
+	// ensure that we don't allow such ambiguities as early as possible
+	// (in terms of build pipeline, not this method)
+	if len(cache.instruction.FingerprintScripts) != 0 && cache.instruction.FingerprintKey != "" {
+		return node.ParserError("please either use fingerprint_script: or fingerprint_key, since otherwise " +
+			"there's ambiguity about which one to prefer for cache key calculation")
+	}
 
 	return nil
 }

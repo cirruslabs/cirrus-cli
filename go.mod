@@ -7,7 +7,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d
-	github.com/cirruslabs/cirrus-ci-agent v1.53.0
+	github.com/cirruslabs/cirrus-ci-agent v1.56.0
 	github.com/cirruslabs/echelon v1.5.0
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.2.0
@@ -24,7 +24,7 @@ require (
 	github.com/go-test/deep v1.0.1
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-github/v32 v32.1.0
-	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
