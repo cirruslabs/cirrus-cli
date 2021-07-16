@@ -158,7 +158,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 
 			if taskLike.Name() != "" && quickTaskName != "" {
 				p.registerIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
-					"consider using task: instead of %s: here since the name field inside of the task "+
+					"consider using 'task:' instead of '%s_task': here since the name field inside of the task "+
 						"already overrides it's name to be %q", treeItem.Name, taskLike.Name())
 			}
 
