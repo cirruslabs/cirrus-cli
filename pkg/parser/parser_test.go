@@ -69,7 +69,7 @@ func TestIssues(t *testing.T) {
 			[]*api.Issue{
 				{
 					Level: api.Issue_WARNING,
-					Message: "consider using task: instead of first_name_for_a_task: here since the name field " +
+					Message: "consider using 'task:' instead of 'first_name_for_a_task_task:' here since the name field " +
 						"inside of the task already overrides it's name to be \"Second name for a task\"",
 					Path:   ".cirrus.yml",
 					Line:   4,
