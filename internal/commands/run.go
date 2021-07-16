@@ -25,6 +25,7 @@ var ErrRun = errors.New("run failed")
 var dirty bool
 var output string
 var environment []string
+var affectedFiles []string
 var verbose bool
 
 // Container-related flags.
@@ -64,7 +65,11 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse
-	p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), parser.WithMissingInstancesAllowed())
+	p := parser.New(
+		parser.WithEnvironment(userSpecifiedEnvironment),
+		parser.WithMissingInstancesAllowed(),
+		parser.WithAffectedFiles(affectedFiles),
+	)
 	result, err := p.Parse(cmd.Context(), combinedYAML)
 	if err != nil {
 		if re, ok := err.(*parsererror.Rich); ok {
@@ -132,6 +137,8 @@ func newRunCmd() *cobra.Command {
 		"in read-write mode, otherwise the project directory files are copied, taking .gitignore into account")
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
+	cmd.PersistentFlags().StringSliceVar(&affectedFiles, "affected-files", []string{},
+		"comma-separated list of affected files for changesInclude function")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 	cmd.PersistentFlags().StringVarP(&output, "output", "o", logs.DefaultFormat(), fmt.Sprintf("output format of logs, "+
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))

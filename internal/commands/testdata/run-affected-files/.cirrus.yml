@@ -1,0 +1,6 @@
+container:
+  image: debian:latest
+
+task:
+  only_if: "changesInclude('1.txt', '2.md')"
+  script: cat /etc/os-release

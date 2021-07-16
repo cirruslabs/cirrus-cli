@@ -351,3 +351,20 @@ func TestRunPrebuiltImageTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestAffectedFiles(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-affected-files")
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-v", "-o simple", "--affected-files", "1.txt,2.md"})
+	command.SetOut(writer)
+	command.SetErr(writer)
+	err := command.Execute()
+
+	require.Nil(t, err)
+	assert.Contains(t, buf.String(), "Debian GNU/Linux")
+}
