@@ -68,11 +68,12 @@ func TestIssues(t *testing.T) {
 			"multiple-name-ambiguity.yml",
 			[]*api.Issue{
 				{
-					Level:   api.Issue_WARNING,
-					Message: "task's name \"first_name_for_a\" will be overridden by \"Second name for a task\"",
-					Path:    ".cirrus.yml",
-					Line:    4,
-					Column:  1,
+					Level: api.Issue_WARNING,
+					Message: "consider using task: instead of first_name_for_a_task: here since the name field " +
+						"inside of the task already overrides it's name to be \"Second name for a task\"",
+					Path:   ".cirrus.yml",
+					Line:   4,
+					Column: 1,
 				},
 			},
 		},

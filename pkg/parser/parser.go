@@ -158,8 +158,8 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 
 			if taskLike.Name() != "" && quickTaskName != "" {
 				p.registerIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
-					"task's name %q will be overridden by %q",
-					quickTaskName, taskLike.Name())
+					"consider using task: instead of %s: here since the name field inside of the task "+
+						"already overrides it's name to be %q", treeItem.Name, taskLike.Name())
 			}
 
 			// Set task's name if not set in the definition
