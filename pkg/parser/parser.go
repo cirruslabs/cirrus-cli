@@ -82,7 +82,8 @@ func New(opts ...Option) *Parser {
 
 	// Initialize boolevator
 	parser.boolevator = boolevator.New(boolevator.WithFunctions(map[string]boolevator.Function{
-		"changesInclude": parser.bfuncChangesInclude(),
+		"changesInclude":     parser.bfuncChangesInclude(),
+		"changesIncludeOnly": parser.bfuncChangesIncludeOnly(),
 	}))
 
 	// Register parsers
