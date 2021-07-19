@@ -31,7 +31,7 @@ doublestar_task:
   script: true
 
 exact_match_task:
-  only_if: "!changesIncludeOnly('**.go')"
+  only_if: "changesIncludeOnly('**.go')"
   script: true
 `
 
