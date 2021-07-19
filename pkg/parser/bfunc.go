@@ -39,7 +39,7 @@ func (p *Parser) bfuncChangesIncludeOnly() boolevator.Function {
 		if err != nil {
 			return err
 		}
-		if matchedFiles == len(p.affectedFiles) {
+		if matchedFiles > 0 && matchedFiles == len(p.affectedFiles) {
 			return "true"
 		}
 		return "false"
