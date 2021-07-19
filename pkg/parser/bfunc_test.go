@@ -29,6 +29,10 @@ inverted_task:
 doublestar_task:
   only_if: "!changesInclude('**.go')"
   script: true
+
+exact_match_task:
+  only_if: "!changesIncludeOnly('**.go')"
+  script: true
 `
 
 	p := parser.New(parser.WithAffectedFiles(affectedFiles))
