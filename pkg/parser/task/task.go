@@ -159,6 +159,14 @@ func NewTask(
 					},
 				)
 			}
+			architecture := instance.GuessArchitectureOfProtoMessage(anyInstance, scopedDescriptor)
+			if architecture != "" {
+				task.proto.Environment = environment.Merge(
+					task.proto.Environment, map[string]string{
+						"CIRRUS_ARCH": architecture,
+					},
+				)
+			}
 			return nil
 		})
 	}
