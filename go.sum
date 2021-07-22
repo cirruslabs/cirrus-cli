@@ -93,6 +93,8 @@ github.com/cilium/ebpf v0.0.0-20200507155900-a9f01edf17e3/go.mod h1:XT+cAw5wfvso
 github.com/cirruslabs/cirrus-ci-agent v1.51.0/go.mod h1:lEH1v2tn22T359W3fGjiAcYAY6jsqz75eHc4teh2nCY=
 github.com/cirruslabs/cirrus-ci-agent v1.56.0 h1:YsylR44MUUeoj4QL04jqeIyUfRz2rES88qpSOXNKmTU=
 github.com/cirruslabs/cirrus-ci-agent v1.56.0/go.mod h1:/nsbLU1U6A9yCLxhOLXI2ZjJrvcs4OAfv2kzrnLzdSE=
+github.com/cirruslabs/cirrus-ci-agent v1.57.0 h1:jM7bQ3hs/Z0uFcgslVcFzSr89lbNhRnJzo0GlIgURf8=
+github.com/cirruslabs/cirrus-ci-agent v1.57.0/go.mod h1:/nsbLU1U6A9yCLxhOLXI2ZjJrvcs4OAfv2kzrnLzdSE=
 github.com/cirruslabs/cirrus-ci-annotations v0.3.0/go.mod h1:xrmxzL58Pf4cSSQCmQEOPGQ3poeARxJdHneurUrqjZk=
 github.com/cirruslabs/echelon v1.5.0 h1:3GDTirR85ZRWN+J5hX3FipRHzbWbGSPiZMGktQ1N1dI=
 github.com/cirruslabs/echelon v1.5.0/go.mod h1:1jFBACMy3tzodXyTtNNLN9bw6UUU7Xpq9tYMRydehtY=

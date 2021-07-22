@@ -365,6 +365,20 @@ func GuessPlatformOfProtoMessage(message protoreflect.Message, descriptor protor
 	return ""
 }
 
+func GuessArchitectureOfProtoMessage(anyInstance *anypb.Any, descriptor protoreflect.MessageDescriptor) string {
+	message := dynamicpb.NewMessage(descriptor)
+	_ = proto.Unmarshal(anyInstance.GetValue(), message)
+	fields := descriptor.Fields()
+	architectureField := fields.ByJSONName("architecture")
+	if architectureField != nil && message.Has(architectureField) {
+		value := message.Get(architectureField)
+		valueDescription := architectureField.Enum().Values().Get(int(value.Enum()))
+		enumName := string(valueDescription.Name())
+		return strings.ToLower(enumName)
+	}
+	return ""
+}
+
 func (p *ProtoInstance) Schema() *jsschema.Schema {
 	modifiedSchema := p.DefaultParser.Schema()
 
