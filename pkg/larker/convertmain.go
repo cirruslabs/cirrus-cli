@@ -7,21 +7,48 @@ import (
 	"strings"
 )
 
-func convertTasks(starlarkTasks *starlark.List) *yaml.Node {
-	yamlList := convertList(starlarkTasks)
-
-	if yamlList == nil || len(yamlList.Content) == 0 {
+func convertInstructions(instructions *starlark.List) *yaml.Node {
+	if instructions == nil || instructions.Len() == 0 {
 		return nil
 	}
 
-	// Adapt a list of tasks to a YAML configuration format that expects a map on it's outer layer
+	iter := instructions.Iterate()
+	defer iter.Done()
+
+	var listValue starlark.Value
 	var serializableMainResult []*yaml.Node
-	for _, listItem := range yamlList.Content {
-		serializableMainResult = append(serializableMainResult, yamlhelper.NewStringNode("task"))
-		serializableMainResult = append(serializableMainResult, listItem)
+	var key string
+	var item *yaml.Node
+
+	for iter.Next(&listValue) {
+		switch value := listValue.(type) {
+		case starlark.Tuple:
+			// Cirrus accepts repeated keys in a YAML Mapping, but that is not
+			// allowed in Starlark. The closest we can have is a list of tuples: [(key, value)]
+			key = strings.Trim(value.Index(0).String(), "'\"")
+			item = convertValue(value.Index(1))
+		default:
+			key = "task"
+			item = convertValue(listValue)
+		}
+		serializableMainResult = append(serializableMainResult, yamlhelper.NewStringNode(key))
+		serializableMainResult = append(serializableMainResult, item)
 	}
 
 	return yamlhelper.NewMapNode(serializableMainResult)
+}
+
+func convertValue(v starlark.Value) *yaml.Node {
+	switch value := v.(type) {
+	case *starlark.List:
+		return convertList(value)
+	case *starlark.Dict:
+		return convertDict(value)
+	default:
+		var valueNode yaml.Node
+		_ = valueNode.Encode(convertPrimitive(value))
+		return &valueNode
+	}
 }
 
 func convertList(l *starlark.List) *yaml.Node {
@@ -32,16 +59,7 @@ func convertList(l *starlark.List) *yaml.Node {
 
 	var items []*yaml.Node
 	for iter.Next(&listValue) {
-		switch value := listValue.(type) {
-		case *starlark.List:
-			items = append(items, convertList(value))
-		case *starlark.Dict:
-			items = append(items, convertDict(value))
-		default:
-			var valueNode yaml.Node
-			_ = valueNode.Encode(convertPrimitive(value))
-			items = append(items, &valueNode)
-		}
+		items = append(items, convertValue(listValue))
 	}
 
 	return yamlhelper.NewSeqNode(items)

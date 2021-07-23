@@ -148,7 +148,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 	// main() should return a list of tasks or a dict resembling a Cirrus YAML configuration
 	switch typedMainResult := mainResult.(type) {
 	case *starlark.List:
-		tasksNode = convertTasks(typedMainResult)
+		tasksNode = convertInstructions(typedMainResult)
 		if tasksNode == nil {
 			return &MainResult{OutputLogs: outputLogsBuffer.Bytes()}, nil
 		}
