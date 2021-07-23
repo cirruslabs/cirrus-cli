@@ -1,6 +1,7 @@
 package commands_test
 
 import (
+	"bytes"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,8 @@ import (
 )
 
 // A simplest possible, but valid configuration.
-var validConfig = []byte("container:\n  image: debian:latest\n\ntask:\n  script: true\n")
+var validConfig = []byte("container:\n  image: debian:latest\ntask:\n  script: true\n")
+var validStarlak = []byte("def main():\n    return {'container': {'image': 'debian:latest'}, 'task': {'script': True}}")
 
 func TestValidateNoArgsNoFile(t *testing.T) {
 	testutil.TempChdir(t)
@@ -62,4 +64,22 @@ func TestValidateNoArgsHasFileWithNonStandardExtension(t *testing.T) {
 	err := command.Execute()
 
 	assert.Nil(t, err)
+}
+
+func TestValidatePrintFlag(t *testing.T) {
+	testutil.TempChdir(t)
+
+	if err := ioutil.WriteFile(".cirrus.star", validStarlak, 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	buf := bytes.NewBufferString("")
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"validate", "--print"})
+	command.SetOut(buf)
+	err := command.Execute()
+
+	assert.Nil(t, err)
+	assert.Contains(t, buf.String(), string(validConfig))
 }
