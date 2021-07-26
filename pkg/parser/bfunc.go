@@ -46,8 +46,8 @@ func (p *Parser) bfuncChangesIncludeOnly() boolevator.Function {
 	}
 }
 
-func (p *Parser) countMatchingAffectedFiles(patters []interface{}) (count int, err error) {
-	for _, pattern := range patters {
+func (p *Parser) countMatchingAffectedFiles(patterns []interface{}) (count int, err error) {
+	for _, pattern := range patterns {
 		patternExpression, ok := pattern.(string)
 		if !ok {
 			err = ErrBfuncArgumentIsNotString
