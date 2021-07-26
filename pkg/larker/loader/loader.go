@@ -135,6 +135,7 @@ func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
 	result["is_test"] = starlark.Bool(loader.isTest)
 
 	result["changes_include"] = generateChangesIncludeBuiltin(loader.affectedFiles)
+	result["changes_include_only"] = generateChangesIncludeOnlyBuiltin(loader.affectedFiles)
 
 	result["fs"] = &starlarkstruct.Module{
 		Name:    "fs",

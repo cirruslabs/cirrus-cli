@@ -251,6 +251,31 @@ func TestBuiltinChangesInclude(t *testing.T) {
 	}
 }
 
+// TestBuiltinChangesInclude ensures that we expose the changes_include_only()
+// through cirrus module and it works properly.
+func TestBuiltinChangesIncludeOnly(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-changes-include-only")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	affectedFiles := []string{
+		"go.mod",
+		"main.go",
+		"dir/file.go",
+	}
+
+	// Run the source code
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)), larker.WithAffectedFiles(affectedFiles))
+	_, err = lrk.Main(context.Background(), string(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // TestBuiltinStarlib ensures that Starlib's modules that we expose through cirrus.* are working properly.
 func TestBuiltinStarlib(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-starlib")

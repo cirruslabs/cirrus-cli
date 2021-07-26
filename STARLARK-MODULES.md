@@ -73,7 +73,7 @@ affected_files:
   - ci/build.sh
 ```
 
-Similarly, to mock the [`changes_include()`](https://cirrus-ci.org/guide/programming-tasks/#changes_include) function behavior, specify the files the were affected:
+Similarly, to mock the [`changes_include()`](https://cirrus-ci.org/guide/programming-tasks/#changes_include) or [`changes_include_only()`](https://cirrus-ci.org/guide/programming-tasks/#changes_include_only) functions behavior, specify the files that were affected:
 
 ```yaml
 affected_files:
