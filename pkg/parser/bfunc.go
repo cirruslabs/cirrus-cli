@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/go-java-glob"
-	"regexp"
 )
 
 var (
@@ -18,7 +17,12 @@ func (p *Parser) bfuncChangesInclude() boolevator.Function {
 			return ErrBfuncNoArguments
 		}
 
-		matchedFiles, err := p.countMatchingAffectedFiles(arguments)
+		rawPatterns, err := bfuncArgsToStrings(arguments)
+		if err != nil {
+			return err
+		}
+
+		matchedFiles, err := CountMatchingAffectedFiles(p.affectedFiles, rawPatterns)
 		if err != nil {
 			return err
 		}
@@ -35,7 +39,12 @@ func (p *Parser) bfuncChangesIncludeOnly() boolevator.Function {
 			return ErrBfuncNoArguments
 		}
 
-		matchedFiles, err := p.countMatchingAffectedFiles(arguments)
+		rawPatterns, err := bfuncArgsToStrings(arguments)
+		if err != nil {
+			return err
+		}
+
+		matchedFiles, err := CountMatchingAffectedFiles(p.affectedFiles, rawPatterns)
 		if err != nil {
 			return err
 		}
@@ -46,25 +55,36 @@ func (p *Parser) bfuncChangesIncludeOnly() boolevator.Function {
 	}
 }
 
-func (p *Parser) countMatchingAffectedFiles(patterns []interface{}) (count int, err error) {
-	for _, pattern := range patterns {
-		patternExpression, ok := pattern.(string)
+func bfuncArgsToStrings(arguments []interface{}) ([]string, error) {
+	var result []string
+
+	for _, pattern := range arguments {
+		rawPattern, ok := pattern.(string)
 		if !ok {
-			err = ErrBfuncArgumentIsNotString
-			return
+			return nil, ErrBfuncArgumentIsNotString
 		}
 
-		var re *regexp.Regexp
-		re, err = glob.ToRegexPattern(patternExpression, false)
+		result = append(result, rawPattern)
+	}
+
+	return result, nil
+}
+
+func CountMatchingAffectedFiles(affectedFiles []string, patterns []string) (int, error) {
+	var count int
+
+	for _, pattern := range patterns {
+		re, err := glob.ToRegexPattern(pattern, false)
 		if err != nil {
-			return
+			return 0, err
 		}
 
-		for _, affectedFile := range p.affectedFiles {
+		for _, affectedFile := range affectedFiles {
 			if re.MatchString(affectedFile) {
 				count++
 			}
 		}
 	}
-	return
+
+	return count, nil
 }
