@@ -29,8 +29,28 @@ inverted_task:
 doublestar_task:
   only_if: "!changesInclude('**.go')"
   script: true
+`
 
-exact_match_task:
+	p := parser.New(parser.WithAffectedFiles(affectedFiles))
+	result, err := p.Parse(context.Background(), config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, result.Tasks, 3)
+}
+
+func TestBfuncChangesIncludeOnly(t *testing.T) {
+	affectedFiles := []string{"main.go", "go.mod", "dir/file.go"}
+
+	config := `container:
+  image: debian:latest
+
+positive_match_task:
+  only_if: "changesIncludeOnly('**.go', '**.mod')"
+  script: true
+
+negative_match_task:
   only_if: "changesIncludeOnly('**.go')"
   script: true
 `
@@ -41,5 +61,5 @@ exact_match_task:
 		t.Fatal(err)
 	}
 
-	assert.Len(t, result.Tasks, 3)
+	assert.Len(t, result.Tasks, 1)
 }
