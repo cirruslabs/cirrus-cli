@@ -11,7 +11,13 @@ import (
 
 // A simplest possible, but valid configuration.
 var validConfig = []byte("container:\n  image: debian:latest\ntask:\n  script: true\n")
-var validStarlark = []byte("def main():\n    return {'container': {'image': 'debian:latest'}, 'task': {'script': True}}")
+var validStarlark = []byte(`
+def main():
+	return {
+		'container': {'image': 'debian:latest'},
+		'task': {'script': True}
+	}
+`)
 
 func TestValidateNoArgsNoFile(t *testing.T) {
 	testutil.TempChdir(t)
