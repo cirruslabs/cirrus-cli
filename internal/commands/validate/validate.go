@@ -110,7 +110,7 @@ func NewValidateCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&validateFile, "file", "f", "",
 		"use file as the configuration file (the path should end with either .yml or ..star)")
 	cmd.PersistentFlags().BoolVarP(&shouldPrint, "print", "p", false,
-		"print the configuration as YAML (useful for debugging Starlak files)")
+		"print the configuration as YAML (useful for debugging Starlark files)")
 
 	return cmd
 }

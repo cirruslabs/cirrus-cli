@@ -11,7 +11,7 @@ import (
 
 // A simplest possible, but valid configuration.
 var validConfig = []byte("container:\n  image: debian:latest\ntask:\n  script: true\n")
-var validStarlak = []byte("def main():\n    return {'container': {'image': 'debian:latest'}, 'task': {'script': True}}")
+var validStarlark = []byte("def main():\n    return {'container': {'image': 'debian:latest'}, 'task': {'script': True}}")
 
 func TestValidateNoArgsNoFile(t *testing.T) {
 	testutil.TempChdir(t)
@@ -69,7 +69,7 @@ func TestValidateNoArgsHasFileWithNonStandardExtension(t *testing.T) {
 func TestValidatePrintFlag(t *testing.T) {
 	testutil.TempChdir(t)
 
-	if err := ioutil.WriteFile(".cirrus.star", validStarlak, 0600); err != nil {
+	if err := ioutil.WriteFile(".cirrus.star", validStarlark, 0600); err != nil {
 		t.Fatal(err)
 	}
 
