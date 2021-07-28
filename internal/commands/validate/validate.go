@@ -79,6 +79,10 @@ func validate(cmd *cobra.Command, args []string) error {
 		return ErrValidate
 	}
 
+	if shouldPrint {
+		fmt.Fprint(cmd.OutOrStdout(), configuration)
+	}
+
 	// Parse
 	p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), additionalInstancesOption(cmd.ErrOrStderr()))
 	_, err = p.Parse(cmd.Context(), configuration)
@@ -88,10 +92,6 @@ func validate(cmd *cobra.Command, args []string) error {
 		}
 
 		return err
-	}
-
-	if shouldPrint {
-		fmt.Fprint(cmd.OutOrStdout(), configuration)
 	}
 
 	return nil
