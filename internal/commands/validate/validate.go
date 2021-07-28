@@ -19,6 +19,7 @@ var ErrValidate = errors.New("validate failed")
 // General flags.
 var validateFile string
 var environment []string
+var shouldPrint bool
 
 func additionalInstancesOption(stderr io.Writer) parser.Option {
 	// Try to retrieve additional instances from the Cirrus Cloud
@@ -78,6 +79,10 @@ func validate(cmd *cobra.Command, args []string) error {
 		return ErrValidate
 	}
 
+	if shouldPrint {
+		fmt.Fprint(cmd.OutOrStdout(), configuration)
+	}
+
 	// Parse
 	p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), additionalInstancesOption(cmd.ErrOrStderr()))
 	_, err = p.Parse(cmd.Context(), configuration)
@@ -104,6 +109,8 @@ func NewValidateCmd() *cobra.Command {
 		"set (-e A=B) or pass-through (-e A) an environment variable to the Starlark interpreter")
 	cmd.PersistentFlags().StringVarP(&validateFile, "file", "f", "",
 		"use file as the configuration file (the path should end with either .yml or ..star)")
+	cmd.PersistentFlags().BoolVarP(&shouldPrint, "print", "p", false,
+		"print the configuration as YAML (useful for debugging Starlark files)")
 
 	return cmd
 }
