@@ -4,6 +4,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"testing"
@@ -29,7 +30,13 @@ func TestGitDiff(t *testing.T) {
 	if _, err := worktree.Add("canary"); err != nil {
 		t.Fatal(err)
 	}
-	originalCommit, err := worktree.Commit("Add canary with original content", &git.CommitOptions{})
+	author := &object.Signature{
+		Name:  "John Doe",
+		Email: "john@example.com",
+	}
+	originalCommit, err := worktree.Commit("Add canary with original content", &git.CommitOptions{
+		Author: author,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +55,9 @@ func TestGitDiff(t *testing.T) {
 	if _, err := worktree.Add("canary"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := worktree.Commit("Add canary with modified content", &git.CommitOptions{}); err != nil {
+	if _, err := worktree.Commit("Add canary with modified content", &git.CommitOptions{
+		Author: author,
+	}); err != nil {
 		t.Fatal(err)
 	}
 
