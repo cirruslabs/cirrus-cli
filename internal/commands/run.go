@@ -160,10 +160,10 @@ func newRunCmd() *cobra.Command {
 			"changesIncludeOnly functions)")
 	cmd.PersistentFlags().StringVar(&affectedFilesGitRevision, "affected-files-git", "",
 		"Git revision (e.g. HEAD, v0.1.0 or commit SHA) to compare unstaged changes against and "+
-			"add changed files to the list of affected files")
+			"add changed files to the list of affected files (similarly to git diff)")
 	cmd.PersistentFlags().StringVar(&affectedFilesGitCachedRevision, "affected-files-git-cached", "",
 		"Git revision (e.g. HEAD, v0.1.0 or commit SHA) to compare staged changes against and "+
-			"add changed files to the list of affected files")
+			"add changed files to the list of affected files (similarly to git diff --cached)")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 	cmd.PersistentFlags().StringVarP(&output, "output", "o", logs.DefaultFormat(), fmt.Sprintf("output format of logs, "+
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))
