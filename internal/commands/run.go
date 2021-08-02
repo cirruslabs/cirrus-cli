@@ -26,6 +26,8 @@ var dirty bool
 var output string
 var environment []string
 var affectedFiles []string
+var affectedFilesGitRevision string
+var affectedFilesGitCachedRevision string
 var verbose bool
 
 // Container-related flags.
@@ -62,6 +64,22 @@ func run(cmd *cobra.Command, args []string) error {
 		eenvironment.Merge(baseEnvironment, userSpecifiedEnvironment))
 	if err != nil {
 		return err
+	}
+
+	if affectedFilesGitRevision != "" {
+		affectedFilesFromGit, err := helpers.GitDiff(projectDir, affectedFilesGitRevision, false)
+		if err != nil {
+			return err
+		}
+		affectedFiles = append(affectedFiles, affectedFilesFromGit...)
+	}
+
+	if affectedFilesGitCachedRevision != "" {
+		affectedFilesFromGit, err := helpers.GitDiff(projectDir, affectedFilesGitCachedRevision, true)
+		if err != nil {
+			return err
+		}
+		affectedFiles = append(affectedFiles, affectedFilesFromGit...)
 	}
 
 	// Parse
@@ -138,7 +156,14 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
 	cmd.PersistentFlags().StringSliceVar(&affectedFiles, "affected-files", []string{},
-		"comma-separated list of affected files for changesInclude function")
+		"comma-separated list of files to add to the list of affected files (used in changesInclude and "+
+			"changesIncludeOnly functions)")
+	cmd.PersistentFlags().StringVar(&affectedFilesGitRevision, "affected-files-git", "",
+		"Git revision (e.g. HEAD, v0.1.0 or commit SHA) to compare unstaged changes against and "+
+			"add changed files to the list of affected files (similarly to git diff)")
+	cmd.PersistentFlags().StringVar(&affectedFilesGitCachedRevision, "affected-files-git-cached", "",
+		"Git revision (e.g. HEAD, v0.1.0 or commit SHA) to compare staged changes against and "+
+			"add changed files to the list of affected files (similarly to git diff --cached)")
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "")
 	cmd.PersistentFlags().StringVarP(&output, "output", "o", logs.DefaultFormat(), fmt.Sprintf("output format of logs, "+
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))
