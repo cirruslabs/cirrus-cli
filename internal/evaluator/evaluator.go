@@ -9,7 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/failing"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
@@ -26,6 +26,9 @@ import (
 
 const pathYAML = ".cirrus.yml"
 const pathStarlark = ".cirrus.star"
+
+var ErrGitHubFromEnvFailed = errors.New("got cirrus.fs call, but GitHub filesystem failed " +
+	"to initialize from environment")
 
 type ConfigurationEvaluatorServiceServer struct {
 	// must be embedded to have forward compatible implementations
@@ -75,8 +78,9 @@ func Serve(ctx context.Context, lis net.Listener) error {
 }
 
 func fsFromEnvironment(env map[string]string) (fs fs.FileSystem) {
-	// Fallback to dummy filesystem implementation
-	fs = dummy.New()
+	// Fallback to failing filesystem implementation that will fail the evaluation only
+	// if cirrus.fs is used
+	fs = failing.New(ErrGitHubFromEnvFailed)
 
 	// Use GitHub filesystem if all the required variables are present
 	owner, ok := env["CIRRUS_REPO_OWNER"]
