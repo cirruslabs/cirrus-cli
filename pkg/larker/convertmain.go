@@ -25,8 +25,8 @@ func convertInstructions(instructions *starlark.List) *yaml.Node {
 		if ok && pair.Len() == 2 {
 			// Cirrus accepts repeated keys in a YAML Mapping, but that is not
 			// allowed in Starlark. The closest we can have is a list of tuples: [(key, value)]
-			keyObject := pair.Index(0).(starlark.String)
-			key = keyObject.GoString()
+			keyWrapper := pair.Index(0).(starlark.String)
+			key = keyWrapper.GoString()
 			item = convertValue(pair.Index(1))
 		} else {
 			key = "task"
