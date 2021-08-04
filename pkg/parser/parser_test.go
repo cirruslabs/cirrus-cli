@@ -509,3 +509,20 @@ func TestWithMissingInstancesAllowed(t *testing.T) {
 	assert.Len(t, result.Tasks, 1)
 	assert.Nil(t, result.Tasks[0].Instance)
 }
+
+var repeatedKeysYAML = `
+container: {image: 'debian:latest'}
+task: {name: task1, script: true}
+task: {name: task2, script: true}
+task: {name: task3, script: true}
+`
+
+func TestRepeatedKeys(t *testing.T) {
+	p := parser.New()
+	result, err := p.Parse(context.Background(), repeatedKeysYAML)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Len(t, result.Tasks, 3)
+}

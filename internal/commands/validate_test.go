@@ -90,28 +90,6 @@ func TestValidatePrintFlag(t *testing.T) {
 	assert.Contains(t, buf.String(), string(validConfig))
 }
 
-var repeatedKeysYAML = `
-container: {image: 'debian:latest'}
-task: {name: task1, script: true}
-task: {name: task2, script: true}
-task: {name: task3, script: true}
-`
-
-func TestValidateYAMLWithRepeatedKeys(t *testing.T) {
-	testutil.TempChdir(t)
-
-	config := []byte(repeatedKeysYAML)
-	if err := ioutil.WriteFile(".cirrus.yml", config, 0600); err != nil {
-		t.Fatal(err)
-	}
-
-	command := commands.NewRootCmd()
-	command.SetArgs([]string{"validate", ""})
-	err := command.Execute()
-
-	assert.Nil(t, err)
-}
-
 var repeatedKeysStarlark = `
 def task(name, script):
 		return {'name': name, 'script': script}
