@@ -21,13 +21,14 @@ func convertInstructions(instructions *starlark.List) *yaml.Node {
 	var item *yaml.Node
 
 	for iter.Next(&listValue) {
-		switch value := listValue.(type) {
-		case starlark.Tuple:
+		pair, ok := listValue.(starlark.Tuple)
+		if ok && pair.Len() == 2 {
 			// Cirrus accepts repeated keys in a YAML Mapping, but that is not
 			// allowed in Starlark. The closest we can have is a list of tuples: [(key, value)]
-			key = strings.Trim(value.Index(0).String(), "'\"")
-			item = convertValue(value.Index(1))
-		default:
+			keyObject := pair.Index(0).(starlark.String)
+			key = keyObject.GoString()
+			item = convertValue(pair.Index(1))
+		} else {
 			key = "task"
 			item = convertValue(listValue)
 		}
