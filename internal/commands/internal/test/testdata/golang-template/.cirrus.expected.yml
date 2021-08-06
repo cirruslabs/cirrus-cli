@@ -1,12 +1,12 @@
 task:
-  - name: Tests
-    container:
-      image: golang:latest
-      cpu: 2
-      memory: 4096
-    get_script:
-      - go get ./...
-    build_script:
-      - go build ./...
-    test_script:
-      - go test ./...
+  name: Tests
+  container:
+    image: golang:latest
+    cpu: 2
+    memory: 4096
+  get_script:
+    - go get ./...
+  build_script:
+    - go build ./...
+  test_script:
+    - go test ./...
