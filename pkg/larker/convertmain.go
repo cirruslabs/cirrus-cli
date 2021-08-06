@@ -17,26 +17,30 @@ func convertInstructions(instructions *starlark.List) *yaml.Node {
 
 	var listValue starlark.Value
 	var serializableMainResult []*yaml.Node
-	var key string
-	var item *yaml.Node
 
 	for iter.Next(&listValue) {
-		pair, ok := listValue.(starlark.Tuple)
-		if ok && pair.Len() == 2 {
-			// Cirrus accepts repeated keys in a YAML Mapping, but that is not
-			// allowed in Starlark. The closest we can have is a list of tuples: [(key, value)]
-			keyWrapper := pair.Index(0).(starlark.String)
-			key = keyWrapper.GoString()
-			item = convertValue(pair.Index(1))
-		} else {
-			key = "task"
-			item = convertValue(listValue)
-		}
-		serializableMainResult = append(serializableMainResult, yamlhelper.NewStringNode(key))
-		serializableMainResult = append(serializableMainResult, item)
+		k, v := listValueToKV(listValue)
+		serializableMainResult = append(serializableMainResult, yamlhelper.NewStringNode(k))
+		serializableMainResult = append(serializableMainResult, v)
 	}
 
 	return yamlhelper.NewMapNode(serializableMainResult)
+}
+
+func listValueToKV(listValue starlark.Value) (string, *yaml.Node) {
+	// YAML configuration freely accepts duplicate map keys, but that is not allowed in Starlark,
+	// so we support an alternative syntax where the map key and value are decomposed into a tuple:
+	// [(key, value)]
+	// ...which additionally allows us to express anything and not just tasks.
+	tuple, ok := listValue.(starlark.Tuple)
+	if ok && tuple.Len() == 2 {
+		key, ok := tuple.Index(0).(starlark.String)
+		if ok {
+			return key.GoString(), convertValue(tuple.Index(1))
+		}
+	}
+
+	return "task", convertValue(listValue)
 }
 
 func convertValue(v starlark.Value) *yaml.Node {
