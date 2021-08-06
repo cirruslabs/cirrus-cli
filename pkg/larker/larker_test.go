@@ -41,6 +41,40 @@ func TestMainReturnsDict(t *testing.T) {
 	validateExpected(t, "testdata/main-returns-dict")
 }
 
+// TestMainReturnsList ensures that we support list of tasks
+// lists of tasks will produce repeated keys in the resulting YAML.
+func TestMainReturnsList(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/main-returns-list")
+	// Avoid validateExpect (will try to parse YAML without accepting repeated keys)
+	resultConfig := loadStarlarkConfig(t, dir)
+	expectedConfig := loadExpectedConfig(t, dir)
+	assert.Equal(t, expectedConfig, resultConfig)
+}
+
+// For feature parity between Cirrus YAML and Starlark configs,
+// accepting repeated keys is required (not the default behaviour of YAML).
+// A solution for that is to accept a list of tuples from `main`
+// which should be equivalent to a dictionary as output of
+// `main` with the advantage that repeated keys can be used.
+func TestMainReturnsTupleList(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/main-returns-tuple-list")
+	// Avoid validateExpect (will try to parse YAML without accepting repeated keys)
+	resultConfig := loadStarlarkConfig(t, dir)
+	expectedConfig := loadExpectedConfig(t, dir)
+	assert.Equal(t, expectedConfig, resultConfig)
+}
+
+// With the introduction of lists of tuples, people can also try to mix
+// tuples and dicts, for example:
+// [('container', 'debian:latest'), task(...), task(...)
+func TestMainReturnsMixedListTuplesAndDicts(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/mixed-list")
+	// Avoid validateExpect (will try to parse YAML without accepting repeated keys)
+	resultConfig := loadStarlarkConfig(t, dir)
+	expectedConfig := loadExpectedConfig(t, dir)
+	assert.Equal(t, expectedConfig, resultConfig)
+}
+
 func TestNoCtxHook(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/no-ctx")
 
@@ -57,9 +91,7 @@ func TestNoCtxHook(t *testing.T) {
 	assert.Contains(t, string(result.OutputLogs), "it works fine without ctx argument!")
 }
 
-func validateExpected(t *testing.T, testDir string) {
-	dir := testutil.TempDirPopulatedWith(t, testDir)
-
+func loadStarlarkConfig(t *testing.T, dir string) string {
 	// Read the source code
 	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
@@ -73,12 +105,23 @@ func validateExpected(t *testing.T, testDir string) {
 		t.Fatal(err)
 	}
 
+	return result.YAMLConfig
+}
+
+func loadExpectedConfig(t *testing.T, dir string) string {
 	expectedConfiguration, err := ioutil.ReadFile(filepath.Join(dir, "expected.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.YAMLEq(t, string(expectedConfiguration), result.YAMLConfig)
+	return string(expectedConfiguration)
+}
+
+func validateExpected(t *testing.T, testDir string) {
+	dir := testutil.TempDirPopulatedWith(t, testDir)
+	resultConfig := loadStarlarkConfig(t, dir)
+	expectedConfig := loadExpectedConfig(t, dir)
+	assert.YAMLEq(t, expectedConfig, resultConfig)
 }
 
 // TestLoadFileSystemLocal ensures that modules can be loaded from the local file system.

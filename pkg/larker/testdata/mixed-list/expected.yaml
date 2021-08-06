@@ -1,0 +1,14 @@
+container:
+  image: debian:latest
+task:
+  name: task1
+  script: true
+task:
+  name: task2
+  script: true
+task:
+  name: task3
+  script: true
+task:
+  name: task4
+  script: true
