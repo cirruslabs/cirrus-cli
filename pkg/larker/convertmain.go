@@ -12,6 +12,8 @@ import (
 var (
 	ErrMalformedKeyValueTuple = errors.New("malformed key-value tuple")
 	ErrNotADictOrTuple        = errors.New("main() should return a list of either dicts or tuples")
+	ErrMixedList              = errors.New("main() should return a list of either dicts or tuples, " +
+		"found both types in a single list")
 )
 
 func convertInstructions(instructions *starlark.List) (*yaml.Node, error) {
@@ -24,20 +26,32 @@ func convertInstructions(instructions *starlark.List) (*yaml.Node, error) {
 
 	var listValue starlark.Value
 	var serializableMainResult []*yaml.Node
+	var usesTuples, usesDicts bool
 
 	for iter.Next(&listValue) {
-		k, v, err := listValueToKV(listValue)
+		k, v, isTuple, err := listValueToKV(listValue)
 		if err != nil {
 			return nil, err
 		}
+
+		if isTuple {
+			usesTuples = true
+		} else {
+			usesDicts = true
+		}
+
 		serializableMainResult = append(serializableMainResult, yamlhelper.NewStringNode(k))
 		serializableMainResult = append(serializableMainResult, v)
+	}
+
+	if usesTuples && usesDicts {
+		return nil, ErrMixedList
 	}
 
 	return yamlhelper.NewMapNode(serializableMainResult), nil
 }
 
-func listValueToKV(listValue starlark.Value) (string, *yaml.Node, error) {
+func listValueToKV(listValue starlark.Value) (string, *yaml.Node, bool, error) {
 	switch value := listValue.(type) {
 	case starlark.Tuple:
 		// YAML configuration freely accepts duplicate map keys, but that is not allowed in Starlark,
@@ -46,21 +60,21 @@ func listValueToKV(listValue starlark.Value) (string, *yaml.Node, error) {
 		// ...which additionally allows us to express anything and not just tasks.
 
 		if value.Len() != 2 {
-			return "", nil, fmt.Errorf("%w: tuple should contain exactly 2 elements",
+			return "", nil, true, fmt.Errorf("%w: tuple should contain exactly 2 elements",
 				ErrMalformedKeyValueTuple)
 		}
 
 		key, ok := value.Index(0).(starlark.String)
 		if !ok {
-			return "", nil, fmt.Errorf("%w: first tuple element should be a string",
+			return "", nil, true, fmt.Errorf("%w: first tuple element should be a string",
 				ErrMalformedKeyValueTuple)
 		}
 
-		return key.GoString(), convertValue(value.Index(1)), nil
+		return key.GoString(), convertValue(value.Index(1)), true, nil
 	case *starlark.Dict:
-		return "task", convertValue(value), nil
+		return "task", convertValue(value), false, nil
 	default:
-		return "", nil, ErrNotADictOrTuple
+		return "", nil, false, ErrNotADictOrTuple
 	}
 }
 

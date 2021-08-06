@@ -64,17 +64,6 @@ func TestMainReturnsTupleList(t *testing.T) {
 	assert.Equal(t, expectedConfig, resultConfig)
 }
 
-// With the introduction of lists of tuples, people can also try to mix
-// tuples and dicts, for example:
-// [('container', 'debian:latest'), task(...), task(...)
-func TestMainReturnsMixedListTuplesAndDicts(t *testing.T) {
-	dir := testutil.TempDirPopulatedWith(t, "testdata/mixed-list")
-	// Avoid validateExpect (will try to parse YAML without accepting repeated keys)
-	resultConfig := loadStarlarkConfig(t, dir)
-	expectedConfig := loadExpectedConfig(t, dir)
-	assert.Equal(t, expectedConfig, resultConfig)
-}
-
 func TestNoCtxHook(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/no-ctx")
 
