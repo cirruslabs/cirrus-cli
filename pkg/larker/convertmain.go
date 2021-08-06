@@ -9,7 +9,10 @@ import (
 	"strings"
 )
 
-var ErrMalformedKeyValueTuple = errors.New("malformed key-value tuple")
+var (
+	ErrMalformedKeyValueTuple = errors.New("malformed key-value tuple")
+	ErrNotADictOrTuple        = errors.New("main() should return a list of either dicts or tuples")
+)
 
 func convertInstructions(instructions *starlark.List) (*yaml.Node, error) {
 	if instructions == nil || instructions.Len() == 0 {
@@ -54,8 +57,10 @@ func listValueToKV(listValue starlark.Value) (string, *yaml.Node, error) {
 		}
 
 		return key.GoString(), convertValue(value.Index(1)), nil
-	default:
+	case *starlark.Dict:
 		return "task", convertValue(value), nil
+	default:
+		return "", nil, ErrNotADictOrTuple
 	}
 }
 
