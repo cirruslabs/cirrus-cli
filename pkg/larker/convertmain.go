@@ -1,15 +1,19 @@
 package larker
 
 import (
+	"errors"
+	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/yamlhelper"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v3"
 	"strings"
 )
 
-func convertInstructions(instructions *starlark.List) *yaml.Node {
+var ErrMalformedKeyValueTuple = errors.New("malformed key-value tuple")
+
+func convertInstructions(instructions *starlark.List) (*yaml.Node, error) {
 	if instructions == nil || instructions.Len() == 0 {
-		return nil
+		return nil, nil
 	}
 
 	iter := instructions.Iterate()
@@ -19,28 +23,40 @@ func convertInstructions(instructions *starlark.List) *yaml.Node {
 	var serializableMainResult []*yaml.Node
 
 	for iter.Next(&listValue) {
-		k, v := listValueToKV(listValue)
+		k, v, err := listValueToKV(listValue)
+		if err != nil {
+			return nil, err
+		}
 		serializableMainResult = append(serializableMainResult, yamlhelper.NewStringNode(k))
 		serializableMainResult = append(serializableMainResult, v)
 	}
 
-	return yamlhelper.NewMapNode(serializableMainResult)
+	return yamlhelper.NewMapNode(serializableMainResult), nil
 }
 
-func listValueToKV(listValue starlark.Value) (string, *yaml.Node) {
-	// YAML configuration freely accepts duplicate map keys, but that is not allowed in Starlark,
-	// so we support an alternative syntax where the map key and value are decomposed into a tuple:
-	// [(key, value)]
-	// ...which additionally allows us to express anything and not just tasks.
-	tuple, ok := listValue.(starlark.Tuple)
-	if ok && tuple.Len() == 2 {
-		key, ok := tuple.Index(0).(starlark.String)
-		if ok {
-			return key.GoString(), convertValue(tuple.Index(1))
-		}
-	}
+func listValueToKV(listValue starlark.Value) (string, *yaml.Node, error) {
+	switch value := listValue.(type) {
+	case starlark.Tuple:
+		// YAML configuration freely accepts duplicate map keys, but that is not allowed in Starlark,
+		// so we support an alternative syntax where the map key and value are decomposed into a tuple:
+		// [(key, value)]
+		// ...which additionally allows us to express anything and not just tasks.
 
-	return "task", convertValue(listValue)
+		if value.Len() != 2 {
+			return "", nil, fmt.Errorf("%w: tuple should contain exactly 2 elements",
+				ErrMalformedKeyValueTuple)
+		}
+
+		key, ok := value.Index(0).(starlark.String)
+		if !ok {
+			return "", nil, fmt.Errorf("%w: first tuple element should be a string",
+				ErrMalformedKeyValueTuple)
+		}
+
+		return key.GoString(), convertValue(value.Index(1)), nil
+	default:
+		return "task", convertValue(value), nil
+	}
 }
 
 func convertValue(v starlark.Value) *yaml.Node {
