@@ -21,8 +21,9 @@ import (
 type Task struct {
 	proto api.Task
 
-	alias     string
-	dependsOn []string
+	fallbackName string
+	alias        string
+	dependsOn    []string
 
 	onlyIfExpression string
 
@@ -228,6 +229,14 @@ func (task *Task) Name() string {
 
 func (task *Task) SetName(name string) {
 	task.proto.Name = name
+}
+
+func (task *Task) FallbackName() string {
+	return task.fallbackName
+}
+
+func (task *Task) SetFallbackName(name string) {
+	task.fallbackName = name
 }
 
 func (task *Task) Alias() string {

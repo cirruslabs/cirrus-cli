@@ -22,8 +22,9 @@ type DockerBuilder struct {
 	platform  api.Platform
 	osVersion string
 
-	alias     string
-	dependsOn []string
+	fallbackName string
+	alias        string
+	dependsOn    []string
 
 	onlyIfExpression string
 
@@ -139,6 +140,14 @@ func (dbuilder *DockerBuilder) Name() string {
 
 func (dbuilder *DockerBuilder) SetName(name string) {
 	dbuilder.proto.Name = name
+}
+
+func (dbuilder *DockerBuilder) FallbackName() string {
+	return dbuilder.fallbackName
+}
+
+func (dbuilder *DockerBuilder) SetFallbackName(name string) {
+	dbuilder.fallbackName = name
 }
 
 func (dbuilder *DockerBuilder) Alias() string {

@@ -1,0 +1,11 @@
+container:
+  image: ruby:latest
+
+rspec_code_task:
+  matrix:
+    name: Code (shard 1)
+    name: Code (shard 2)
+    name: Code (shard 3)
+
+deploy_task:
+  depends_on: rspec_code

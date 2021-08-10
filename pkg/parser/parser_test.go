@@ -60,42 +60,6 @@ func TestValidConfigs(t *testing.T) {
 	}
 }
 
-func TestIssues(t *testing.T) {
-	issueCases := []struct {
-		File   string
-		Issues []*api.Issue
-	}{
-		{
-			"multiple-name-ambiguity.yml",
-			[]*api.Issue{
-				{
-					Level: api.Issue_WARNING,
-					Message: "consider using 'task:' instead of 'first_name_for_a_task_task:' here since the name field " +
-						"inside of the task already overrides it's name to be \"Second name for a task\"",
-					Path:   ".cirrus.yml",
-					Line:   4,
-					Column: 1,
-				},
-			},
-		},
-		{
-			"no-multiple-name-ambiguity.yml",
-			nil,
-		},
-	}
-
-	for _, issueCase := range issueCases {
-		issueCase := issueCase
-
-		t.Run(issueCase.File, func(t *testing.T) {
-			p := parser.New()
-			result, err := p.ParseFromFile(context.Background(), filepath.Join("testdata", "issues", issueCase.File))
-			require.Nil(t, err)
-			assert.EqualValues(t, issueCase.Issues, result.Issues)
-		})
-	}
-}
-
 func TestInvalidConfigs(t *testing.T) {
 	var invalidCases = []struct {
 		Name  string
@@ -105,6 +69,8 @@ func TestInvalidConfigs(t *testing.T) {
 		{"invalid-upload-caches-nonexistent-cache", "parsing error: 7:3: no cache with name \"mode_nodules\" is defined"},
 		{"invalid-cache-two-fingerprints", "parsing error: 5:3: please either use fingerprint_script: or fingerprint_key, " +
 			"since otherwise there's ambiguity about which one to prefer for cache key calculation"},
+		{"invalid-multiple-name-ambiguity", "parsing error: task 'deploy' depends on task 'rspec_code', which name " +
+			"was overridden by a name: field inside of that task"},
 	}
 
 	for _, invalidCase := range invalidCases {
