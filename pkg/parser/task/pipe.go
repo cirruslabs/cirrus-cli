@@ -25,8 +25,9 @@ type DockerPipe struct {
 
 	res *PipeResources
 
-	alias     string
-	dependsOn []string
+	fallbackName string
+	alias        string
+	dependsOn    []string
 
 	onlyIfExpression string
 
@@ -191,6 +192,14 @@ func (pipe *DockerPipe) Name() string {
 
 func (pipe *DockerPipe) SetName(name string) {
 	pipe.proto.Name = name
+}
+
+func (pipe *DockerPipe) FallbackName() string {
+	return pipe.fallbackName
+}
+
+func (pipe *DockerPipe) SetFallbackName(name string) {
+	pipe.fallbackName = name
 }
 
 func (pipe *DockerPipe) Alias() string {

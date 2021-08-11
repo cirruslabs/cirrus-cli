@@ -110,7 +110,6 @@ func (p *Parser) registerIssuef(level api.Issue_Level, line int, column int, for
 	})
 }
 
-// nolint:gocognit // it's a parser, there's a lot of logic going on
 func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 	var tasks []task.ParseableTaskLike
 
@@ -150,24 +149,13 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 
 			taskLike.SetID(p.NextTaskID())
 
-			// Emit a warning if the user tries to give multiple names to a single task
-			var quickTaskName string
-
-			if rn, ok := key.(*nameable.RegexNameable); ok {
-				quickTaskName = rn.FirstGroupOrDefault(treeItem.Name, "")
-			}
-
-			if taskLike.Name() != "" && quickTaskName != "" {
-				p.registerIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
-					"consider using 'task:' instead of '%s_task:' here since the name field inside of the task "+
-						"already overrides it's name to be %q", treeItem.Name, taskLike.Name())
-			}
-
 			// Set task's name if not set in the definition
+			if rn, ok := key.(*nameable.RegexNameable); ok {
+				taskLike.SetFallbackName(rn.FirstGroupOrDefault(treeItem.Name, "main"))
+			}
+
 			if taskLike.Name() == "" {
-				if rn, ok := key.(*nameable.RegexNameable); ok {
-					taskLike.SetName(rn.FirstGroupOrDefault(treeItem.Name, "main"))
-				}
+				taskLike.SetName(taskLike.FallbackName())
 			}
 
 			// Filtering based on "only_if" expression evaluation
@@ -344,6 +332,12 @@ func (p *Parser) Schema() *schema.Schema {
 }
 
 func (p *Parser) resolveDependenciesShallow(tasks []task.ParseableTaskLike) error {
+	fallbackNames := make(map[string]struct{})
+
+	for _, task := range tasks {
+		fallbackNames[task.FallbackName()] = struct{}{}
+	}
+
 	for _, task := range tasks {
 		var dependsOnIDs []int64
 		for _, dependsOnName := range task.DependsOnNames() {
@@ -362,6 +356,11 @@ func (p *Parser) resolveDependenciesShallow(tasks []task.ParseableTaskLike) erro
 			}
 
 			if !dependencyWasFound {
+				if _, ok := fallbackNames[dependsOnName]; ok {
+					return fmt.Errorf("%w: task '%s' depends on task '%s', which name was overridden by "+
+						"a name: field inside of that task", parsererror.ErrBasic, task.Name(), dependsOnName)
+				}
+
 				return fmt.Errorf("%w: there's no task '%s', but task '%s' depends on it",
 					parsererror.ErrBasic, dependsOnName, task.Name())
 			}
