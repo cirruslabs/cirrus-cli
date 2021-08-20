@@ -2,7 +2,7 @@ docker_builder:
   name: Test (Linux with Docker)
   alias: Tests
   test_script:
-    - wget --no-verbose -O - https://golang.org/dl/go1.15.linux-amd64.tar.gz | tar -C /usr/local -xz
+    - wget --no-verbose -O - https://golang.org/dl/go1.17.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
     - go test ./...
   env:
@@ -22,7 +22,7 @@ docker_builder:
   run_podman_background_script:
     - podman system service -t 0 unix:///tmp/podman.sock
   test_script:
-    - wget --no-verbose -O - https://golang.org/dl/go1.15.linux-amd64.tar.gz | tar -C /usr/local -xz
+    - wget --no-verbose -O - https://golang.org/dl/go1.17.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
     - go test ./...
   env:
@@ -57,8 +57,9 @@ task:
     CIRRUS_INTERNAL_PARALLELS_LINUX_SSH_PASSWORD: parallels
     CIRRUS_INTERNAL_NO_GITHUB_API_TESTS: yes
   test_script:
-    - go version
-    - go test -p 1 ./...
+    # Work around https://github.com/Homebrew/homebrew-core/pull/83413 not being merged yet
+    - /usr/local/go/bin/go version
+    - /usr/local/go/bin/go test -p 1 ./...
 
 task:
   name: Release (Dry Run)

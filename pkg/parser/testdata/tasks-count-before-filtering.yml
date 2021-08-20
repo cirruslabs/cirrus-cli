@@ -3,7 +3,7 @@ container:
 
 foo_task:
   container:
-    dockerfile: Dockerfile.ci
+    image: ubuntu:latest
 
 bar_task:
   only_if: false

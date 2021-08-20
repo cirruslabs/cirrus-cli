@@ -12,6 +12,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/spf13/cobra"
@@ -87,6 +88,7 @@ func run(cmd *cobra.Command, args []string) error {
 		parser.WithEnvironment(userSpecifiedEnvironment),
 		parser.WithMissingInstancesAllowed(),
 		parser.WithAffectedFiles(affectedFiles),
+		parser.WithFileSystem(local.New(projectDir)),
 	)
 	result, err := p.Parse(cmd.Context(), combinedYAML)
 	if err != nil {

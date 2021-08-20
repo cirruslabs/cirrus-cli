@@ -31,7 +31,8 @@
         "experimental": "false",
         "indexWithinBuild": "0",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC"
+        "trigger_type": "AUTOMATIC",
+        "dockerfile_hash": "2906b436f40f094d79f1352b647c261d"
       }
     },
     "name": "task1",

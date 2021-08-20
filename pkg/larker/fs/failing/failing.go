@@ -3,6 +3,7 @@ package failing
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"path"
 )
 
 type Failing struct {
@@ -25,4 +26,8 @@ func (ffs *Failing) Get(ctx context.Context, path string) ([]byte, error) {
 
 func (ffs *Failing) ReadDir(ctx context.Context, path string) ([]string, error) {
 	return nil, ffs.err
+}
+
+func (ffs *Failing) Join(elem ...string) string {
+	return path.Join(elem...)
 }

@@ -122,6 +122,28 @@ func TestAdditionalInstances(t *testing.T) {
 	assertExpectedTasks(t, absolutize("proto-instance.json"), result)
 }
 
+func TestAdditionalInstanceDockerfileHashing(t *testing.T) {
+	fs, err := memory.New(map[string][]byte{
+		"Dockerfile":                            []byte("FROM debian:latest"),
+		"Dockerfile.with-arguments":             []byte("FROM debian:latest"),
+		"Dockerfile.with-arguments-and-sources": []byte("FROM debian:latest\nCOPY some-file /some-file"),
+		"some-file":                             []byte("some contents"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p := parser.New(parser.WithFileSystem(fs), parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
+		"proto_container": (&api.ContainerInstance{}).ProtoReflect().Descriptor(),
+	}))
+	result, err := p.ParseFromFile(context.Background(), absolutize("additional-instance-dockerfile-hashing.yml"))
+
+	require.Nil(t, err)
+	require.NotEmpty(t, result.Tasks)
+
+	assertExpectedTasks(t, absolutize("additional-instance-dockerfile-hashing.json"), result)
+}
+
 func TestAdditionalInstanceStability(t *testing.T) {
 	containerInstanceReflect := (&api.ContainerInstance{}).ProtoReflect()
 	p := parser.New(parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{

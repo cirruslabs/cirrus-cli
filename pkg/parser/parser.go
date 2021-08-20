@@ -2,7 +2,6 @@ package parser
 
 import (
 	"context"
-	"crypto/md5" // nolint:gosec // backwards compatibility
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
@@ -23,14 +22,17 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/known/anypb"
 	"io/ioutil"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 )
 
-const pathYAML = ".cirrus.yml"
+const (
+	pathYAML = ".cirrus.yml"
+
+	metadataPropertyDockerfileHash = "dockerfile_hash"
+)
 
 type Parser struct {
 	// Environment to take into account when expanding variables.
@@ -233,8 +235,13 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 		protoTasks = append(protoTasks, protoTask)
 	}
 
+	// Calculate Dockerfile hashes uses to create service tasks and in the Cirrus Cloud
+	if err := p.calculateDockerfileHashes(ctx, protoTasks); err != nil {
+		return nil, err
+	}
+
 	// Create service tasks
-	serviceTasks, err := p.createServiceTasks(ctx, protoTasks)
+	serviceTasks, err := p.createServiceTasks(protoTasks)
 	if err != nil {
 		return nil, err
 	}
@@ -272,20 +279,6 @@ func (p *Parser) ParseFromFile(ctx context.Context, path string) (*Result, error
 	}
 
 	return p.Parse(ctx, string(config))
-}
-
-func (p *Parser) fileHash(ctx context.Context, path string, additionalBytes []byte) (string, error) {
-	// Note that this will be empty if we don't know anything about the file,
-	// so we'll return MD5(""), but that's OK since the purpose is caching
-	fileBytes, err := p.fs.Get(ctx, path)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return "", err
-	}
-
-	// nolint:gosec // backwards compatibility
-	digest := md5.Sum(append(fileBytes, additionalBytes...))
-
-	return fmt.Sprintf("%x", digest), nil
 }
 
 func (p *Parser) NextTaskID() int64 {
@@ -467,7 +460,7 @@ func (p *Parser) createServiceTask(
 	return serviceTask, nil
 }
 
-func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task) ([]*api.Task, error) {
+func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error) {
 	serviceTasks := make(map[string]*api.Task)
 
 	for _, protoTask := range protoTasks {
@@ -494,30 +487,22 @@ func (p *Parser) createServiceTasks(ctx context.Context, protoTasks []*api.Task)
 			continue
 		}
 
-		// Craft Docker build arguments: arguments used in content hash calculation
-		var hashableArgsSlice []string
-		for key, value := range taskContainer.DockerArguments {
-			hashableArgsSlice = append(hashableArgsSlice, key+value)
-		}
-		sort.Strings(hashableArgsSlice)
-		hashableArgs := strings.Join(hashableArgsSlice, ", ")
-
-		dockerfileHash, err := p.fileHash(ctx, taskContainer.Dockerfile, []byte(hashableArgs))
-		if err != nil {
-			return nil, err
+		// Retrieve the Dockerfile hash calculated for this task earlier in the parsing routine
+		dockerfileHash, ok := protoTask.Metadata.Properties[metadataPropertyDockerfileHash]
+		if !ok {
+			return nil, fmt.Errorf("%w: %q is missing it's Dockerfile hash which should've been pre-calculated",
+				parsererror.ErrInternal, protoTask.Name)
 		}
 
 		// Find or create service task
-		serviceTaskKey := taskContainer.Dockerfile + hashableArgs
-
-		serviceTask, ok := serviceTasks[serviceTaskKey]
+		serviceTask, ok := serviceTasks[dockerfileHash]
 		if !ok {
 			serviceTask, err = p.createServiceTask(dockerfileHash, protoTask, taskContainer)
 			if err != nil {
 				return nil, err
 			}
 
-			serviceTasks[serviceTaskKey] = serviceTask
+			serviceTasks[dockerfileHash] = serviceTask
 		}
 
 		// Set dependency to the found or created service task

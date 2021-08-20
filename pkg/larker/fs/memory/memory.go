@@ -7,6 +7,8 @@ import (
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/util"
 	"io/ioutil"
+	"path"
+	"syscall"
 )
 
 type Memory struct {
@@ -37,6 +39,11 @@ func (memory *Memory) Stat(ctx context.Context, path string) (*fs.FileInfo, erro
 }
 
 func (memory *Memory) Get(ctx context.Context, path string) ([]byte, error) {
+	fileInfo, err := memory.fs.Stat(path)
+	if err == nil && fileInfo.IsDir() {
+		return nil, fs.ErrNormalizedIsADirectory
+	}
+
 	file, err := memory.fs.Open(path)
 	if err != nil {
 		return nil, err
@@ -51,6 +58,11 @@ func (memory *Memory) Get(ctx context.Context, path string) ([]byte, error) {
 }
 
 func (memory *Memory) ReadDir(ctx context.Context, path string) ([]string, error) {
+	fileInfo, err := memory.fs.Stat(path)
+	if err == nil && !fileInfo.IsDir() {
+		return nil, syscall.ENOTDIR
+	}
+
 	fileInfos, err := memory.fs.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -62,4 +74,8 @@ func (memory *Memory) ReadDir(ctx context.Context, path string) ([]string, error
 	}
 
 	return result, nil
+}
+
+func (memory *Memory) Join(elem ...string) string {
+	return path.Join(elem...)
 }
