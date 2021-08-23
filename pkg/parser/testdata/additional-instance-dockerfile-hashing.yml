@@ -1,16 +1,16 @@
 only_dockerfile_task:
-  container:
+  proto_container:
     dockerfile: Dockerfile
 
 dockerfile_with_arguments_task:
-  container:
+  proto_container:
     dockerfile: Dockerfile.with-arguments
     docker_arguments:
       A: B
       C: D
 
 dockerfile_with_arguments_and_sources_task:
-  container:
+  proto_container:
     dockerfile: Dockerfile.with-arguments-and-sources
     docker_arguments:
       A: B

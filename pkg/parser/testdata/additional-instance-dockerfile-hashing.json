@@ -11,10 +11,8 @@
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
-      "cpu": 2,
       "dockerfile": "Dockerfile",
-      "image": "gcr.io/cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df:latest",
-      "memory": 4096
+      "image": "gcr.io/cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df:latest"
     },
     "metadata": {
       "properties": {
@@ -43,14 +41,12 @@
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
-      "cpu": 2,
       "dockerArguments": {
         "A": "B",
         "C": "D"
       },
       "dockerfile": "Dockerfile.with-arguments",
-      "image": "gcr.io/cirrus-ci-community/de7830bffac8e089e6da768deffcf0ee:latest",
-      "memory": 4096
+      "image": "gcr.io/cirrus-ci-community/de7830bffac8e089e6da768deffcf0ee:latest"
     },
     "localGroupId": "1",
     "metadata": {
@@ -80,14 +76,12 @@
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
-      "cpu": 2,
       "dockerArguments": {
         "A": "B",
         "C": "D"
       },
       "dockerfile": "Dockerfile.with-arguments-and-sources",
-      "image": "gcr.io/cirrus-ci-community/c9e62f3db70646306bd60ede09ddefa408c0ee1996e118c1409a94e4a90db12b:latest",
-      "memory": 4096
+      "image": "gcr.io/cirrus-ci-community/c9e62f3db70646306bd60ede09ddefa408c0ee1996e118c1409a94e4a90db12b:latest"
     },
     "localGroupId": "2",
     "metadata": {
