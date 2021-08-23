@@ -224,8 +224,16 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 		return nil, err
 	}
 
+	protoTaskToInstanceNode := map[int64]*node.Node{}
 	var protoTasks []*api.Task
 	for _, task := range tasks {
+		type HasInstanceNode interface {
+			InstanceNode() *node.Node
+		}
+		if taskWithInstanceNode, ok := task.(HasInstanceNode); ok {
+			protoTaskToInstanceNode[task.ID()] = taskWithInstanceNode.InstanceNode()
+		}
+
 		protoTask := task.Proto().(*api.Task)
 
 		if err := validateTask(protoTask); err != nil {
@@ -236,7 +244,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	}
 
 	// Calculate Dockerfile hashes uses to create service tasks and in the Cirrus Cloud
-	if err := p.calculateDockerfileHashes(ctx, protoTasks); err != nil {
+	if err := p.calculateDockerfileHashes(ctx, protoTasks, protoTaskToInstanceNode); err != nil {
 		return nil, err
 	}
 

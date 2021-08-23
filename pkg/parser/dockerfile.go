@@ -11,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/dockerfile"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -21,7 +22,16 @@ import (
 	"syscall"
 )
 
-func (p *Parser) calculateDockerfileHashes(ctx context.Context, protoTasks []*api.Task) error {
+var (
+	ErrFailedToRetrieve = errors.New("failed to retrieve")
+	ErrFailedToAnalyze  = errors.New("failed to analyze")
+)
+
+func (p *Parser) calculateDockerfileHashes(
+	ctx context.Context,
+	protoTasks []*api.Task,
+	protoTaskToInstanceNode map[int64]*node.Node,
+) error {
 	for _, protoTask := range protoTasks {
 		if protoTask.Instance == nil && p.missingInstancesAllowed {
 			continue
@@ -60,8 +70,20 @@ func (p *Parser) calculateDockerfileHashes(ctx context.Context, protoTasks []*ap
 			}
 		}
 
+		// Retrieve a parser node associated with this instance
+		// to generate line/column-specific errors and warnings
+		instanceNode, ok := protoTaskToInstanceNode[protoTask.LocalGroupId]
+		if !ok {
+			continue
+		}
+
+		dockerfileNode := instanceNode.FindChild("dockerfile")
+		if dockerfileNode == nil {
+			continue
+		}
+
 		// Calculate the Dockerfile hash
-		dockerfileHash, err := p.calculateDockerfileHash(ctx, dockerfilePath, dockerArguments)
+		dockerfileHash, err := p.calculateDockerfileHash(ctx, dockerfilePath, dockerArguments, dockerfileNode)
 		if err != nil {
 			return err
 		}
@@ -78,11 +100,11 @@ func (p *Parser) calculateDockerfileHash(
 	ctx context.Context,
 	dockerfilePath string,
 	dockerArguments map[string]string,
+	dockerfileNode *node.Node,
 ) (string, error) {
 	dockerfileContents, err := p.fs.Get(ctx, dockerfilePath)
 	if err != nil {
-		return "", parsererror.NewRich(1, 1, "failed to retrieve %q: %v",
-			dockerfilePath, err)
+		return "", dockerfileNode.ParserError("%v %q: %v", ErrFailedToRetrieve, dockerfilePath, err)
 	}
 
 	// nolint:gosec // backwards compatibility
@@ -100,7 +122,8 @@ func (p *Parser) calculateDockerfileHash(
 	// Try to calculate a deep hash
 	sourcePaths, err := dockerfile.LocalContextSourcePaths(ctx, dockerfileContents, dockerArguments)
 	if err != nil {
-		p.registerIssuef(api.Issue_WARNING, 1, 1, "failed to analyze %q: %v", dockerfilePath, err)
+		p.registerIssuef(api.Issue_WARNING, dockerfileNode.Line, dockerfileNode.Column,
+			"%v %q: %v", ErrFailedToAnalyze, dockerfilePath, err)
 
 		return hex.EncodeToString(oldHash.Sum([]byte{})), nil
 	}
@@ -112,7 +135,7 @@ func (p *Parser) calculateDockerfileHash(
 			newHash.Write(fileContents)
 			hashedAtLeastOneSource = true
 		}); err != nil {
-			return "", err
+			return "", dockerfileNode.ParserError(err.Error())
 		}
 	}
 
@@ -148,7 +171,7 @@ func find(ctx context.Context, fs fs.FileSystem, path string, cb func(path strin
 			if errors.Is(err, syscall.ENOTDIR) {
 				todoContents, err := fs.Get(ctx, todoPath)
 				if err != nil {
-					return parsererror.NewRich(1, 1, "failed to retrieve %q: %v", todoPath, err)
+					return fmt.Errorf("%w %q: %v", ErrFailedToRetrieve, todoPath, err)
 				}
 
 				cb(todoPath, todoContents)
@@ -156,7 +179,7 @@ func find(ctx context.Context, fs fs.FileSystem, path string, cb func(path strin
 				continue
 			}
 
-			return parsererror.NewRich(1, 1, "failed to retrieve %q: %v", todoPath, err)
+			return fmt.Errorf("%w %q: %v", ErrFailedToRetrieve, todoPath, err)
 		}
 
 		for _, name := range namesInDir {

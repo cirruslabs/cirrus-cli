@@ -144,6 +144,92 @@ func TestAdditionalInstanceDockerfileHashing(t *testing.T) {
 	assertExpectedTasks(t, absolutize("additional-instance-dockerfile-hashing.json"), result)
 }
 
+func TestAdditionalInstanceDockerfileHashingErrors(t *testing.T) {
+	testCases := []struct {
+		Name      string
+		Config    string
+		Files     map[string][]byte
+		RichError *parsererror.Rich
+	}{
+		{
+			Name: "nonexistent Dockerfile",
+			Config: `task:
+  proto_container:
+    dockerfile: nonexistent
+`,
+			Files:     map[string][]byte{},
+			RichError: parsererror.NewRich(3, 5, "failed to retrieve \"nonexistent\": file does not exist"),
+		},
+		{
+			Name: "nonexistent source in Dockerfile",
+			Config: `task:
+  proto_container:
+    dockerfile: Dockerfile
+`,
+			Files: map[string][]byte{
+				"Dockerfile": []byte("FROM debian:latest\nCOPY some-file /some-file\n"),
+			},
+			RichError: parsererror.NewRich(3, 5, "failed to retrieve \"some-file\": file does not exist"),
+		},
+	}
+
+	additionalInstances := parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
+		"proto_container": (&api.ContainerInstance{}).ProtoReflect().Descriptor(),
+	})
+
+	for _, testCase := range testCases {
+		testCase := testCase
+
+		t.Run(testCase.Name, func(t *testing.T) {
+			fs, err := memory.New(testCase.Files)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			p := parser.New(parser.WithFileSystem(fs), additionalInstances)
+			_, err = p.Parse(context.Background(), testCase.Config)
+
+			testCase.RichError.Enrich(testCase.Config)
+
+			assert.Equal(t, testCase.RichError, err)
+		})
+	}
+}
+
+func TestAdditionalInstanceDockerfileHashingWarnings(t *testing.T) {
+	fs, err := memory.New(map[string][]byte{
+		"Dockerfile": []byte("FORM scratch\n"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	additionalInstances := parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
+		"proto_container": (&api.ContainerInstance{}).ProtoReflect().Descriptor(),
+	})
+
+	config := `task:
+  proto_container:
+    dockerfile: Dockerfile
+`
+
+	p := parser.New(parser.WithFileSystem(fs), additionalInstances)
+	result, err := p.Parse(context.Background(), config)
+	require.NoError(t, err)
+
+	expectedIssues := []*api.Issue{
+		{
+			Level: api.Issue_WARNING,
+			Message: "failed to analyze \"Dockerfile\": dockerfile parse error on line 1: " +
+				"unknown instruction: FORM (did you mean FROM?)",
+			Path:   ".cirrus.yml",
+			Line:   3,
+			Column: 5,
+		},
+	}
+	require.Equal(t, expectedIssues, result.Issues)
+}
+
 func TestAdditionalInstanceStability(t *testing.T) {
 	containerInstanceReflect := (&api.ContainerInstance{}).ProtoReflect()
 	p := parser.New(parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
