@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/google/go-github/v32/github"
+	lru "github.com/hashicorp/golang-lru"
 	"golang.org/x/oauth2"
 	"net/http"
 	"os"
@@ -21,15 +22,29 @@ type GitHub struct {
 	owner     string
 	repo      string
 	reference string
+
+	contentsCache *lru.Cache
 }
 
-func New(owner, repo, reference, token string) *GitHub {
+type Contents struct {
+	File      *github.RepositoryContent
+	Directory []*github.RepositoryContent
+}
+
+func New(owner, repo, reference, token string) (*GitHub, error) {
+	contentsCache, err := lru.New(16)
+	if err != nil {
+		return nil, err
+	}
+
 	return &GitHub{
 		token:     token,
 		owner:     owner,
 		repo:      repo,
 		reference: reference,
-	}
+
+		contentsCache: contentsCache,
+	}, nil
 }
 
 func (gh *GitHub) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
@@ -104,6 +119,11 @@ func (gh *GitHub) getContentsWrapper(
 	ctx context.Context,
 	path string,
 ) (*github.RepositoryContent, []*github.RepositoryContent, error) {
+	contents, ok := gh.contentsCache.Get(path)
+	if ok {
+		return contents.(*Contents).File, contents.(*Contents).Directory, nil
+	}
+
 	fileContent, directoryContent, resp, err := gh.client(ctx).Repositories.GetContents(ctx, gh.owner, gh.repo, path,
 		&github.RepositoryContentGetOptions{
 			Ref: gh.reference,
@@ -116,6 +136,8 @@ func (gh *GitHub) getContentsWrapper(
 
 		return nil, nil, fmt.Errorf("%w: %v", ErrAPI, err)
 	}
+
+	gh.contentsCache.Add(path, &Contents{File: fileContent, Directory: directoryContent})
 
 	return fileContent, directoryContent, nil
 }

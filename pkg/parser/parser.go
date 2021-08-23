@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/cachinglayer"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/matrix"
@@ -81,6 +82,13 @@ func New(opts ...Option) *Parser {
 	for _, opt := range opts {
 		opt(parser)
 	}
+
+	// Wrap the final file system in a caching layer
+	wrappedFS, err := cachinglayer.Wrap(parser.fs)
+	if err != nil {
+		panic(err)
+	}
+	parser.fs = wrappedFS
 
 	// Initialize boolevator
 	parser.boolevator = boolevator.New(boolevator.WithFunctions(map[string]boolevator.Function{
