@@ -77,7 +77,7 @@ func Serve(ctx context.Context, lis net.Listener) error {
 	}
 }
 
-func fsFromEnvironment(env map[string]string) (fs fs.FileSystem) {
+func fsFromEnvironment(env map[string]string) (fs fs.FileSystem, err error) {
 	// Fallback to failing filesystem implementation that will fail the evaluation only
 	// if cirrus.fs is used
 	fs = failing.New(ErrGitHubFromEnvFailed)
@@ -116,7 +116,10 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		yamlConfigs = append(yamlConfigs, request.YamlConfig)
 	}
 
-	fs := fsFromEnvironment(request.Environment)
+	fs, err := fsFromEnvironment(request.Environment)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to initialize file system: %v", err)
+	}
 
 	// Run Starlark script and register generated YAML configuration (if any)
 	// nolint:nestif // doesn't seem too complicated
