@@ -99,3 +99,7 @@ func (cl *CachingLayer) ReadDir(ctx context.Context, path string) ([]string, err
 
 	return directoryContent.([]string), nil
 }
+
+func (cl *CachingLayer) Join(elem ...string) string {
+	return cl.fs.Join(elem...)
+}

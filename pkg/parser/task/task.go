@@ -21,6 +21,8 @@ import (
 type Task struct {
 	proto api.Task
 
+	instanceNode *node.Node
+
 	fallbackName string
 	alias        string
 	dependsOn    []string
@@ -55,6 +57,8 @@ func NewTask(
 		task.CollectibleField("container",
 			instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
 			func(node *node.Node) error {
+				task.instanceNode = node
+
 				inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
 				containerInstance, err := inst.Parse(node)
 				if err != nil {
@@ -80,6 +84,8 @@ func NewTask(
 		task.CollectibleField("windows_container",
 			instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
 			func(node *node.Node) error {
+				task.instanceNode = node
+
 				inst := instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
 				containerInstance, err := inst.Parse(node)
 				if err != nil {
@@ -105,6 +111,8 @@ func NewTask(
 		task.CollectibleField("persistent_worker",
 			instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env)).Schema(),
 			func(node *node.Node) error {
+				task.instanceNode = node
+
 				inst := instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env))
 				persistentWorkerInstance, err := inst.Parse(node)
 				if err != nil {
@@ -142,6 +150,8 @@ func NewTask(
 
 		instanceSchema := instance.NewProtoParser(scopedDescriptor, nil, nil).Schema()
 		task.CollectibleField(scopedInstanceName, instanceSchema, func(node *node.Node) error {
+			task.instanceNode = node
+
 			parser := instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), boolevator)
 			parserInstance, err := parser.Parse(node)
 			if err != nil {
@@ -261,6 +271,10 @@ func (task *Task) SetDependsOnIDs(ids []int64) { task.proto.RequiredGroups = ids
 
 func (task *Task) Proto() interface{} {
 	return &task.proto
+}
+
+func (task *Task) InstanceNode() *node.Node {
+	return task.instanceNode
 }
 
 func (task *Task) Enabled(env map[string]string, boolevator *boolevator.Boolevator) (bool, error) {

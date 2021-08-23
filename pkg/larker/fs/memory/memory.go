@@ -2,11 +2,15 @@ package memory
 
 import (
 	"context"
+	"errors"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/util"
 	"io/ioutil"
+	"os"
+	"path"
+	"syscall"
 )
 
 type Memory struct {
@@ -37,6 +41,13 @@ func (memory *Memory) Stat(ctx context.Context, path string) (*fs.FileInfo, erro
 }
 
 func (memory *Memory) Get(ctx context.Context, path string) ([]byte, error) {
+	// Work around github.com/go-git/go-billy quirks
+	// in regard to treatment of directories in memory FS
+	fileInfo, err := memory.fs.Stat(path)
+	if err == nil && fileInfo.IsDir() {
+		return nil, fs.ErrNormalizedIsADirectory
+	}
+
 	file, err := memory.fs.Open(path)
 	if err != nil {
 		return nil, err
@@ -51,6 +62,16 @@ func (memory *Memory) Get(ctx context.Context, path string) ([]byte, error) {
 }
 
 func (memory *Memory) ReadDir(ctx context.Context, path string) ([]string, error) {
+	// Work around github.com/go-git/go-billy quirks
+	// in regard to treatment of directories in memory FS
+	fileInfo, err := memory.fs.Stat(path)
+	if err == nil && !fileInfo.IsDir() {
+		return nil, syscall.ENOTDIR
+	}
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, err
+	}
+
 	fileInfos, err := memory.fs.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -62,4 +83,8 @@ func (memory *Memory) ReadDir(ctx context.Context, path string) ([]string, error
 	}
 
 	return result, nil
+}
+
+func (memory *Memory) Join(elem ...string) string {
+	return path.Join(elem...)
 }

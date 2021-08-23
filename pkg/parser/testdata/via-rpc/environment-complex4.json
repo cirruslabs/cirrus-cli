@@ -111,7 +111,8 @@
         "experimental": "false",
         "indexWithinBuild": "0",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC"
+        "trigger_type": "AUTOMATIC",
+        "dockerfile_hash": "d41d8cd98f00b204e9800998ecf8427e"
       }
     },
     "name": "docs-linux",

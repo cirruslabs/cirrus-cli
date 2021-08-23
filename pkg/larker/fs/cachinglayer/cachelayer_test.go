@@ -5,6 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/cachinglayer"
 	"github.com/stretchr/testify/require"
+	"path"
 	"testing"
 )
 
@@ -44,6 +45,10 @@ func (cfs *canaryFilesystem) ReadDir(ctx context.Context, path string) ([]string
 	cfs.readDirCalls[path]++
 
 	return directoryContentFixture, nil
+}
+
+func (cfs *canaryFilesystem) Join(elem ...string) string {
+	return path.Join(elem...)
 }
 
 func (cfs *canaryFilesystem) StatCount(path string) int    { return cfs.statCalls[path] }

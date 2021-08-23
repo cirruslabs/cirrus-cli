@@ -1,0 +1,245 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "dockerfile": "Dockerfile",
+      "image": "gcr.io/cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df:latest"
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "dockerfile_hash": "ef74f2c966fb4f2fb970bd14d79237df",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "only_dockerfile",
+    "requiredGroups": [
+      "3"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "dockerArguments": {
+        "A": "B",
+        "C": "D"
+      },
+      "dockerfile": "Dockerfile.with-arguments",
+      "image": "gcr.io/cirrus-ci-community/de7830bffac8e089e6da768deffcf0ee:latest"
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "dockerfile_hash": "de7830bffac8e089e6da768deffcf0ee",
+        "experimental": "false",
+        "indexWithinBuild": "1",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "dockerfile_with_arguments",
+    "requiredGroups": [
+      "4"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "dockerArguments": {
+        "A": "B",
+        "C": "D"
+      },
+      "dockerfile": "Dockerfile.with-arguments-and-sources",
+      "image": "gcr.io/cirrus-ci-community/c9e62f3db70646306bd60ede09ddefa408c0ee1996e118c1409a94e4a90db12b:latest"
+    },
+    "localGroupId": "2",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "dockerfile_hash": "c9e62f3db70646306bd60ede09ddefa408c0ee1996e118c1409a94e4a90db12b",
+        "experimental": "false",
+        "indexWithinBuild": "2",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "dockerfile_with_arguments_and_sources",
+    "requiredGroups": [
+      "5"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df:latest --file Dockerfile ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df:latest"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "dockerfile": "Dockerfile",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df"
+    },
+    "localGroupId": "3",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "3",
+        "skip_notifications": "true",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild Dockerfile"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/de7830bffac8e089e6da768deffcf0ee:latest --file Dockerfile.with-arguments --build-arg A=\"B\" --build-arg C=\"D\" ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/de7830bffac8e089e6da768deffcf0ee:latest"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "arguments": {
+        "A": "B",
+        "C": "D"
+      },
+      "dockerfile": "Dockerfile.with-arguments",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/de7830bffac8e089e6da768deffcf0ee"
+    },
+    "localGroupId": "4",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "4",
+        "skip_notifications": "true",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild Dockerfile.with-arguments A=B C=D"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/c9e62f3db70646306bd60ede09ddefa408c0ee1996e118c1409a94e4a90db12b:latest --file Dockerfile.with-arguments-and-sources --build-arg A=\"B\" --build-arg C=\"D\" ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/c9e62f3db70646306bd60ede09ddefa408c0ee1996e118c1409a94e4a90db12b:latest"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "arguments": {
+        "A": "B",
+        "C": "D"
+      },
+      "dockerfile": "Dockerfile.with-arguments-and-sources",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/c9e62f3db70646306bd60ede09ddefa408c0ee1996e118c1409a94e4a90db12b"
+    },
+    "localGroupId": "5",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "5",
+        "skip_notifications": "true",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild Dockerfile.with-arguments-and-sources A=B C=D"
+  }
+]

@@ -33,7 +33,8 @@
         "experimental": "false",
         "indexWithinBuild": "0",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC"
+        "trigger_type": "AUTOMATIC",
+        "dockerfile_hash": "2b4c0074861f1fe6525d23e24dd12e99"
       },
       "uniqueLabels": [
         "foo:bar"
@@ -79,7 +80,8 @@
         "experimental": "false",
         "indexWithinBuild": "1",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC"
+        "trigger_type": "AUTOMATIC",
+        "dockerfile_hash": "930472895952b2e55cd88ac886de4bf3"
       },
       "uniqueLabels": [
         "bar:baz baz"

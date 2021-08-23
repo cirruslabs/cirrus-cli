@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"os"
+	"path"
 )
 
 type Dummy struct{}
@@ -22,4 +23,8 @@ func (dfs *Dummy) Get(ctx context.Context, path string) ([]byte, error) {
 
 func (dfs *Dummy) ReadDir(ctx context.Context, path string) ([]string, error) {
 	return nil, os.ErrNotExist
+}
+
+func (dfs *Dummy) Join(elem ...string) string {
+	return path.Join(elem...)
 }

@@ -10,6 +10,7 @@ import (
 	"golang.org/x/oauth2"
 	"net/http"
 	"os"
+	"path"
 	"syscall"
 )
 
@@ -80,6 +81,10 @@ func (gh *GitHub) ReadDir(ctx context.Context, path string) ([]string, error) {
 	}
 
 	return entries, nil
+}
+
+func (gh *GitHub) Join(elem ...string) string {
+	return path.Join(elem...)
 }
 
 func (gh *GitHub) client(ctx context.Context) *github.Client {

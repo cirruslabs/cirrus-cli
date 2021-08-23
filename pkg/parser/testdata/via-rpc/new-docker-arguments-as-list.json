@@ -26,7 +26,8 @@
         "experimental": "false",
         "indexWithinBuild": "0",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC"
+        "trigger_type": "AUTOMATIC",
+        "dockerfile_hash": "911841e355f49974066e7cd1b9ba5849"
       }
     },
     "name": "main",

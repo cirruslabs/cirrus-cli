@@ -67,6 +67,10 @@ func (lfs *Local) ReadDir(ctx context.Context, path string) ([]string, error) {
 	return result, nil
 }
 
+func (lfs *Local) Join(elem ...string) string {
+	return filepath.Join(elem...)
+}
+
 func (lfs *Local) Pivot(path string) (string, error) {
 	// To make Starlark scripts cross-platform, load statements are expected to always use slashes,
 	// but to actually make this work on non-Unix platforms we need to adapt the path
