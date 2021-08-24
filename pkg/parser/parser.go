@@ -275,7 +275,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	}
 
 	// Create service tasks
-	if p.noServiceTasks {
+	if !p.noServiceTasks {
 		serviceTasks, err := p.createServiceTasks(protoTasks)
 		if err != nil {
 			return nil, err
