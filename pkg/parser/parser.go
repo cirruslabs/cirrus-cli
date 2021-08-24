@@ -48,8 +48,6 @@ type Parser struct {
 	// A list of changed files useful when evaluating changesInclude() boolevator's function.
 	affectedFiles []string
 
-	noServiceTasks bool
-
 	boolevator *boolevator.Boolevator
 
 	parsers                  map[nameable.Nameable]parseable.Parseable
@@ -275,13 +273,11 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	}
 
 	// Create service tasks
-	if !p.noServiceTasks {
-		serviceTasks, err := p.createServiceTasks(protoTasks)
-		if err != nil {
-			return nil, err
-		}
-		protoTasks = append(protoTasks, serviceTasks...)
+	serviceTasks, err := p.createServiceTasks(protoTasks)
+	if err != nil {
+		return nil, err
 	}
+	protoTasks = append(protoTasks, serviceTasks...)
 
 	// Postprocess individual tasks
 	for _, protoTask := range protoTasks {

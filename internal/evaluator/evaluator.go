@@ -161,7 +161,6 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		parser.WithFileSystem(fs),
 		parser.WithAdditionalInstances(additionalInstances),
 		parser.WithAdditionalTaskProperties(request.AdditionalTaskProperties),
-		parser.WithNoServiceTasks(),
 	)
 
 	result.ProcessedConfig = strings.Join(yamlConfigs, "\n")
@@ -200,7 +199,7 @@ func (r *ConfigurationEvaluatorServiceServer) JSONSchema(
 	}
 
 	// Generate schema
-	p := parser.New(parser.WithAdditionalInstances(additionalInstances), parser.WithNoServiceTasks())
+	p := parser.New(parser.WithAdditionalInstances(additionalInstances))
 
 	schemaBytes, err := json.Marshal(p.Schema())
 	if err != nil {
