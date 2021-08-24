@@ -21,6 +21,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 	"io/ioutil"
 	"regexp"
@@ -201,6 +202,21 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 			re.Enrich(config)
 		}
 	}()
+
+	// Register additional instances
+	for _, additionalInstance := range p.additionalInstances {
+		_, err := protoregistry.GlobalTypes.FindMessageByName(additionalInstance.FullName())
+		if err == nil {
+			continue
+		} else if !errors.Is(err, protoregistry.NotFound) {
+			return nil, err
+		}
+
+		additionalType := dynamicpb.NewMessageType(additionalInstance)
+		if err := protoregistry.GlobalTypes.RegisterMessage(additionalType); err != nil {
+			return nil, err
+		}
+	}
 
 	// Convert the parsed and nested YAML structure into a tree
 	// to get the ability to walk parents
