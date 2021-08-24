@@ -21,6 +21,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
+	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 	"io/ioutil"
 	"regexp"
@@ -46,6 +47,8 @@ type Parser struct {
 
 	// A list of changed files useful when evaluating changesInclude() boolevator's function.
 	affectedFiles []string
+
+	noServiceTasks bool
 
 	boolevator *boolevator.Boolevator
 
@@ -202,6 +205,21 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 		}
 	}()
 
+	// Register additional instances
+	for _, additionalInstance := range p.additionalInstances {
+		_, err := protoregistry.GlobalTypes.FindMessageByName(additionalInstance.FullName())
+		if err == nil {
+			continue
+		} else if !errors.Is(err, protoregistry.NotFound) {
+			return nil, err
+		}
+
+		additionalType := dynamicpb.NewMessageType(additionalInstance)
+		if err := protoregistry.GlobalTypes.RegisterMessage(additionalType); err != nil {
+			return nil, err
+		}
+	}
+
 	// Convert the parsed and nested YAML structure into a tree
 	// to get the ability to walk parents
 	tree, err := node.NewFromText(config)
@@ -257,11 +275,13 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	}
 
 	// Create service tasks
-	serviceTasks, err := p.createServiceTasks(protoTasks)
-	if err != nil {
-		return nil, err
+	if p.noServiceTasks {
+		serviceTasks, err := p.createServiceTasks(protoTasks)
+		if err != nil {
+			return nil, err
+		}
+		protoTasks = append(protoTasks, serviceTasks...)
 	}
-	protoTasks = append(protoTasks, serviceTasks...)
 
 	// Postprocess individual tasks
 	for _, protoTask := range protoTasks {

@@ -43,3 +43,9 @@ func WithMissingInstancesAllowed() Option {
 		parser.missingInstancesAllowed = true
 	}
 }
+
+func WithNoServiceTasks() Option {
+	return func(parser *Parser) {
+		parser.noServiceTasks = true
+	}
+}
