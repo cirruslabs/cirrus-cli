@@ -11,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/failing"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/memory"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"google.golang.org/grpc"
@@ -116,7 +117,21 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		yamlConfigs = append(yamlConfigs, request.YamlConfig)
 	}
 
-	fs, err := fsFromEnvironment(request.Environment)
+	var fs fs.FileSystem
+	var err error
+
+	if len(request.FilesContents) != 0 {
+		// memory.New() expects a map with []byte
+		// values instead of string values
+		filesContents := map[string][]byte{}
+		for key, value := range request.FilesContents {
+			filesContents[key] = []byte(value)
+		}
+
+		fs, err = memory.New(filesContents)
+	} else {
+		fs, err = fsFromEnvironment(request.Environment)
+	}
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to initialize file system: %v", err)
 	}
