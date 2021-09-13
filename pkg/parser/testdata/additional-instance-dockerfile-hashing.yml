@@ -15,3 +15,10 @@ dockerfile_with_arguments_and_sources_task:
     docker_arguments:
       A: B
       C: D
+
+docker_context_task:
+  env:
+    CIRRUS_DOCKER_CONTEXT: docker-context/
+
+  proto_container:
+    dockerfile: Dockerfile.docker-context

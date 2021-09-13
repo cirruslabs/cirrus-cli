@@ -83,7 +83,8 @@ func (p *Parser) calculateDockerfileHashes(
 		}
 
 		// Calculate the Dockerfile hash
-		dockerfileHash, err := p.calculateDockerfileHash(ctx, dockerfilePath, dockerArguments, dockerfileNode)
+		dockerfileHash, err := p.calculateDockerfileHash(ctx, dockerfilePath, dockerArguments, dockerfileNode,
+			protoTask.Environment["CIRRUS_DOCKER_CONTEXT"])
 		if err != nil {
 			return err
 		}
@@ -101,6 +102,7 @@ func (p *Parser) calculateDockerfileHash(
 	dockerfilePath string,
 	dockerArguments map[string]string,
 	dockerfileNode *node.Node,
+	dockerContext string,
 ) (string, error) {
 	dockerfileContents, err := p.fs.Get(ctx, dockerfilePath)
 	if err != nil {
@@ -131,6 +133,10 @@ func (p *Parser) calculateDockerfileHash(
 	var hashedAtLeastOneSource bool
 
 	for _, sourcePath := range sourcePaths {
+		if dockerContext != "" {
+			sourcePath = p.fs.Join(dockerContext, sourcePath)
+		}
+
 		if err := find(ctx, p.fs, sourcePath, func(filePath string, fileContents []byte) {
 			newHash.Write(fileContents)
 			hashedAtLeastOneSource = true
