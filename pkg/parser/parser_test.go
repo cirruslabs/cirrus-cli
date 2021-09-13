@@ -128,6 +128,8 @@ func TestAdditionalInstanceDockerfileHashing(t *testing.T) {
 		"Dockerfile.with-arguments":             []byte("FROM debian:latest"),
 		"Dockerfile.with-arguments-and-sources": []byte("FROM debian:latest\nCOPY some-file /some-file"),
 		"some-file":                             []byte("some contents"),
+		"Dockerfile.docker-context":             []byte("FROM debian:latest\nCOPY file /file"),
+		"docker-context/file":                   []byte("doesn't matter"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -140,6 +142,7 @@ func TestAdditionalInstanceDockerfileHashing(t *testing.T) {
 
 	require.Nil(t, err)
 	require.NotEmpty(t, result.Tasks)
+	require.Empty(t, result.Issues)
 
 	assertExpectedTasks(t, absolutize("additional-instance-dockerfile-hashing.json"), result)
 }

@@ -26,7 +26,7 @@
     },
     "name": "only_dockerfile",
     "requiredGroups": [
-      "3"
+      "4"
     ]
   },
   {
@@ -61,7 +61,7 @@
     },
     "name": "dockerfile_with_arguments",
     "requiredGroups": [
-      "4"
+      "5"
     ]
   },
   {
@@ -96,7 +96,39 @@
     },
     "name": "dockerfile_with_arguments_and_sources",
     "requiredGroups": [
-      "5"
+      "6"
+    ]
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      }
+    ],
+    "environment": {
+      "CIRRUS_DOCKER_CONTEXT": "docker-context/",
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "dockerfile": "Dockerfile.docker-context",
+      "image": "gcr.io/cirrus-ci-community/c157d327d3a5f8f11b941d01d4a197b7b727ab040577ade86f2683fec0fed2b9:latest"
+    },
+    "localGroupId": "3",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "dockerfile_hash": "c157d327d3a5f8f11b941d01d4a197b7b727ab040577ade86f2683fec0fed2b9",
+        "experimental": "false",
+        "indexWithinBuild": "3",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "docker_context",
+    "requiredGroups": [
+      "7"
     ]
   },
   {
@@ -131,12 +163,12 @@
       "reference": "latest",
       "repository": "cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df"
     },
-    "localGroupId": "3",
+    "localGroupId": "4",
     "metadata": {
       "properties": {
         "allow_failures": "false",
         "experimental": "false",
-        "indexWithinBuild": "3",
+        "indexWithinBuild": "4",
         "skip_notifications": "true",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
@@ -180,12 +212,12 @@
       "reference": "latest",
       "repository": "cirrus-ci-community/de7830bffac8e089e6da768deffcf0ee"
     },
-    "localGroupId": "4",
+    "localGroupId": "5",
     "metadata": {
       "properties": {
         "allow_failures": "false",
         "experimental": "false",
-        "indexWithinBuild": "4",
+        "indexWithinBuild": "5",
         "skip_notifications": "true",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
@@ -229,17 +261,63 @@
       "reference": "latest",
       "repository": "cirrus-ci-community/c9e62f3db70646306bd60ede09ddefa408c0ee1996e118c1409a94e4a90db12b"
     },
-    "localGroupId": "5",
+    "localGroupId": "6",
     "metadata": {
       "properties": {
         "allow_failures": "false",
         "experimental": "false",
-        "indexWithinBuild": "5",
+        "indexWithinBuild": "6",
         "skip_notifications": "true",
         "timeout_in": "3600",
         "trigger_type": "AUTOMATIC"
       }
     },
     "name": "Prebuild Dockerfile.with-arguments-and-sources A=B C=D"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "build",
+        "scriptInstruction": {
+          "scripts": [
+            "docker build --tag gcr.io/cirrus-ci-community/c157d327d3a5f8f11b941d01d4a197b7b727ab040577ade86f2683fec0fed2b9:latest --file Dockerfile.docker-context ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+          ]
+        }
+      },
+      {
+        "name": "push",
+        "scriptInstruction": {
+          "scripts": [
+            "gcloud docker -- push gcr.io/cirrus-ci-community/c157d327d3a5f8f11b941d01d4a197b7b727ab040577ade86f2683fec0fed2b9:latest"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_DOCKER_CONTEXT": "docker-context/",
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
+      "dockerfile": "Dockerfile.docker-context",
+      "reference": "latest",
+      "repository": "cirrus-ci-community/c157d327d3a5f8f11b941d01d4a197b7b727ab040577ade86f2683fec0fed2b9"
+    },
+    "localGroupId": "7",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "7",
+        "skip_notifications": "true",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "Prebuild Dockerfile.docker-context"
   }
 ]
