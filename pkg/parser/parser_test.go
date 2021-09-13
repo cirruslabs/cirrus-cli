@@ -160,17 +160,6 @@ func TestAdditionalInstanceDockerfileHashingErrors(t *testing.T) {
 			Files:     map[string][]byte{},
 			RichError: parsererror.NewRich(3, 5, "failed to retrieve \"nonexistent\": file does not exist"),
 		},
-		{
-			Name: "nonexistent source in Dockerfile",
-			Config: `task:
-  proto_container:
-    dockerfile: Dockerfile
-`,
-			Files: map[string][]byte{
-				"Dockerfile": []byte("FROM debian:latest\nCOPY some-file /some-file\n"),
-			},
-			RichError: parsererror.NewRich(3, 5, "failed to retrieve \"some-file\": file does not exist"),
-		},
 	}
 
 	additionalInstances := parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
