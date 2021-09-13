@@ -177,7 +177,8 @@ func find(ctx context.Context, fs fs.FileSystem, path string, cb func(path strin
 			if errors.Is(err, syscall.ENOTDIR) {
 				todoContents, err := fs.Get(ctx, todoPath)
 				if err != nil {
-					return fmt.Errorf("%w %q: %v", ErrFailedToRetrieve, todoPath, err)
+					return fmt.Errorf("%w file %q referenced in ADD/COPY instruction: %v",
+						ErrFailedToRetrieve, todoPath, err)
 				}
 
 				cb(todoPath, todoContents)
@@ -185,7 +186,8 @@ func find(ctx context.Context, fs fs.FileSystem, path string, cb func(path strin
 				continue
 			}
 
-			return fmt.Errorf("%w %q: %v", ErrFailedToRetrieve, todoPath, err)
+			return fmt.Errorf("%w directory %q referenced in ADD/COPY instruction: %v",
+				ErrFailedToRetrieve, todoPath, err)
 		}
 
 		for _, name := range namesInDir {
