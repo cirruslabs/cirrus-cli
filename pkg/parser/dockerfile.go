@@ -135,7 +135,7 @@ func (p *Parser) calculateDockerfileHash(
 			newHash.Write(fileContents)
 			hashedAtLeastOneSource = true
 		}); err != nil {
-			return "", dockerfileNode.ParserError(err.Error())
+			p.registerIssuef(api.Issue_WARNING, dockerfileNode.Line, dockerfileNode.Column, "%v", err)
 		}
 	}
 
