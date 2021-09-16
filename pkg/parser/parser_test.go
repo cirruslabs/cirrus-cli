@@ -94,6 +94,9 @@ func TestProblematicConfigs(t *testing.T) {
 		{"problematic-potentially-missed-task", []*api.Issue{
 			{Level: api.Issue_WARNING, Message: "you've probably meant foo_task", Path: ".cirrus.yml", Line: 4, Column: 1},
 		}},
+		{"problematic-artifacts-instruction-is-not-a-map", []*api.Issue{
+			{Level: api.Issue_WARNING, Message: "expected a map, found scalar", Path: ".cirrus.yml", Line: 9, Column: 3},
+		}},
 	}
 
 	for _, problematicCase := range problematicCases {

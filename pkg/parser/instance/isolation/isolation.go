@@ -5,6 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	jsschema "github.com/lestrrat-go/jsschema"
 )
 
@@ -14,14 +15,14 @@ type Isolation struct {
 	parseable.DefaultParser
 }
 
-func NewIsolation(mergedEnv map[string]string) *Isolation {
+func NewIsolation(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Isolation {
 	isolation := &Isolation{}
 
 	parallelsSchema := NewParallels(mergedEnv).Schema()
 	isolation.OptionalField(nameable.NewSimpleNameable("parallels"), parallelsSchema, func(node *node.Node) error {
 		parallels := NewParallels(mergedEnv)
 
-		if err := parallels.Parse(node); err != nil {
+		if err := parallels.Parse(node, parserKit); err != nil {
 			return err
 		}
 
@@ -34,7 +35,7 @@ func NewIsolation(mergedEnv map[string]string) *Isolation {
 	isolation.OptionalField(nameable.NewSimpleNameable("container"), containerSchema, func(node *node.Node) error {
 		container := NewContainer(mergedEnv)
 
-		if err := container.Parse(node); err != nil {
+		if err := container.Parse(node, parserKit); err != nil {
 			return err
 		}
 
@@ -46,8 +47,8 @@ func NewIsolation(mergedEnv map[string]string) *Isolation {
 	return isolation
 }
 
-func (isolation *Isolation) Parse(node *node.Node) error {
-	return isolation.DefaultParser.Parse(node)
+func (isolation *Isolation) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	return isolation.DefaultParser.Parse(node, parserKit)
 }
 
 func (isolation *Isolation) Proto() *api.Isolation {

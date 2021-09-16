@@ -126,8 +126,8 @@ func NewCacheCommand(mergedEnv map[string]string, parserKit *parserkit.ParserKit
 	return cache
 }
 
-func (cache *CacheCommand) Parse(node *node.Node) error {
-	if err := cache.DefaultParser.Parse(node); err != nil {
+func (cache *CacheCommand) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := cache.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 

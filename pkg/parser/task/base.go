@@ -167,7 +167,7 @@ func AttachBaseTaskInstructions(
 	cacheSchema := command.NewCacheCommand(nil, nil).Schema()
 	parser.OptionalField(cacheNameable, cacheSchema, func(node *node.Node) error {
 		cache := command.NewCacheCommand(environment.Merge(task.Environment, env), parserKit)
-		if err := cache.Parse(node); err != nil {
+		if err := cache.Parse(node, parserKit); err != nil {
 			return err
 		}
 		task.Commands = append(task.Commands, cache.Proto())
@@ -190,7 +190,7 @@ func AttachBaseTaskInstructions(
 	artifactsSchema := command.NewArtifactsCommand(nil).Schema()
 	parser.OptionalField(artifactsNameable, artifactsSchema, func(node *node.Node) error {
 		artifacts := command.NewArtifactsCommand(environment.Merge(task.Environment, env))
-		if err := artifacts.Parse(node); err != nil {
+		if err := artifacts.Parse(node, parserKit); err != nil {
 			return err
 		}
 		task.Commands = append(task.Commands, artifacts.Proto())
@@ -201,7 +201,7 @@ func AttachBaseTaskInstructions(
 	fileSchema := command.NewFileCommand(nil).Schema()
 	parser.OptionalField(fileNameable, fileSchema, func(node *node.Node) error {
 		file := command.NewFileCommand(environment.Merge(task.Environment, env))
-		if err := file.Parse(node); err != nil {
+		if err := file.Parse(node, parserKit); err != nil {
 			return err
 		}
 		task.Commands = append(task.Commands, file.Proto())
@@ -215,7 +215,7 @@ func AttachBaseTaskInstructions(
 		behaviorSchema.Description = name + " commands."
 		parser.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), behaviorSchema, func(node *node.Node) error {
 			behavior := NewBehavior(environment.Merge(task.Environment, env), parserKit, task.Commands)
-			if err := behavior.Parse(node); err != nil {
+			if err := behavior.Parse(node, parserKit); err != nil {
 				return err
 			}
 

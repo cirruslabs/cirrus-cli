@@ -5,6 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"sort"
@@ -93,8 +94,8 @@ func NewParallels(mergedEnv map[string]string) *Parallels {
 	return parallels
 }
 
-func (parallels *Parallels) Parse(node *node.Node) error {
-	return parallels.DefaultParser.Parse(node)
+func (parallels *Parallels) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	return parallels.DefaultParser.Parse(node, parserKit)
 }
 
 func (parallels *Parallels) Proto() *api.Isolation_Parallels_ {

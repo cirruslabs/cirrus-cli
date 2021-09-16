@@ -22,6 +22,30 @@ type ScalarValue struct {
 	Value string
 }
 
+func (node *Node) ValueTypeAsString() string {
+	switch node.Value.(type) {
+	case *MapValue:
+		return "map"
+	case *ListValue:
+		return "list"
+	case *ScalarValue:
+		return "scalar"
+	default:
+		return "unknown"
+	}
+}
+
+func (node *Node) ValueIsEmpty() bool {
+	switch value := node.Value.(type) {
+	case *MapValue, *ListValue:
+		return len(node.Children) == 0
+	case *ScalarValue:
+		return value.Value == ""
+	default:
+		return false
+	}
+}
+
 func (node *Node) String() string {
 	switch value := node.Value.(type) {
 	case *MapValue:

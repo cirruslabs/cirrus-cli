@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
@@ -119,8 +120,8 @@ func NewContainer(mergedEnv map[string]string) *Container {
 	return container
 }
 
-func (container *Container) Parse(node *node.Node) error {
-	if err := container.DefaultParser.Parse(node); err != nil {
+func (container *Container) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := container.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 

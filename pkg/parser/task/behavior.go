@@ -52,7 +52,7 @@ func NewBehavior(
 	cacheSchema := command.NewCacheCommand(nil, nil).Schema()
 	b.OptionalField(cacheNameable, cacheSchema, func(node *node.Node) error {
 		cache := command.NewCacheCommand(mergedEnv, parserKit)
-		if err := cache.Parse(node); err != nil {
+		if err := cache.Parse(node, parserKit); err != nil {
 			return err
 		}
 		b.commands = append(b.commands, cache.Proto())
@@ -75,7 +75,7 @@ func NewBehavior(
 	artifactsSchema := command.NewArtifactsCommand(nil).Schema()
 	b.OptionalField(artifactsNameable, artifactsSchema, func(node *node.Node) error {
 		artifacts := command.NewArtifactsCommand(mergedEnv)
-		if err := artifacts.Parse(node); err != nil {
+		if err := artifacts.Parse(node, parserKit); err != nil {
 			return err
 		}
 		b.commands = append(b.commands, artifacts.Proto())
@@ -86,7 +86,7 @@ func NewBehavior(
 	fileSchema := command.NewFileCommand(nil).Schema()
 	b.OptionalField(fileNameable, fileSchema, func(node *node.Node) error {
 		file := command.NewFileCommand(mergedEnv)
-		if err := file.Parse(node); err != nil {
+		if err := file.Parse(node, parserKit); err != nil {
 			return err
 		}
 		b.commands = append(b.commands, file.Proto())
@@ -96,8 +96,8 @@ func NewBehavior(
 	return b
 }
 
-func (b *Behavior) Parse(node *node.Node) error {
-	return b.DefaultParser.Parse(node)
+func (b *Behavior) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	return b.DefaultParser.Parse(node, parserKit)
 }
 
 func (b *Behavior) Proto() []*api.Command {

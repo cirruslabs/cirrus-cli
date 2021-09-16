@@ -7,16 +7,22 @@ import (
 
 const pathYAML = ".cirrus.yml"
 
-type IssueRegistry struct {
+type Registry struct {
 	issues []*api.Issue
 }
 
-func NewRegistry() *IssueRegistry {
-	return &IssueRegistry{}
+func NewRegistry() *Registry {
+	return &Registry{}
 }
 
-func (ireg *IssueRegistry) RegisterIssuef(level api.Issue_Level, line int, column int, format string, args ...interface{}) {
-	ireg.issues = append(ireg.issues, &api.Issue{
+func (registry *Registry) RegisterIssuef(
+	level api.Issue_Level,
+	line int,
+	column int,
+	format string,
+	args ...interface{},
+) {
+	registry.issues = append(registry.issues, &api.Issue{
 		Level:   level,
 		Message: fmt.Sprintf(format, args...),
 		Path:    pathYAML,
@@ -25,6 +31,6 @@ func (ireg *IssueRegistry) RegisterIssuef(level api.Issue_Level, line int, colum
 	})
 }
 
-func (ireg *IssueRegistry) Issues() []*api.Issue {
-	return ireg.issues
+func (registry *Registry) Issues() []*api.Issue {
+	return registry.issues
 }

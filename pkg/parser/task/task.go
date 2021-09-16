@@ -61,7 +61,7 @@ func NewTask(
 				task.instanceNode = node
 
 				inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), parserKit)
-				containerInstance, err := inst.Parse(node)
+				containerInstance, err := inst.Parse(node, parserKit)
 				if err != nil {
 					return err
 				}
@@ -88,7 +88,7 @@ func NewTask(
 				task.instanceNode = node
 
 				inst := instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), parserKit)
-				containerInstance, err := inst.Parse(node)
+				containerInstance, err := inst.Parse(node, parserKit)
 				if err != nil {
 					return err
 				}
@@ -110,12 +110,12 @@ func NewTask(
 	}
 	if _, ok := additionalInstances["persistent_worker"]; !ok {
 		task.CollectibleField("persistent_worker",
-			instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env)).Schema(),
+			instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env), parserKit).Schema(),
 			func(node *node.Node) error {
 				task.instanceNode = node
 
-				inst := instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env))
-				persistentWorkerInstance, err := inst.Parse(node)
+				inst := instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env), parserKit)
+				persistentWorkerInstance, err := inst.Parse(node, parserKit)
 				if err != nil {
 					return err
 				}
@@ -154,7 +154,7 @@ func NewTask(
 			task.instanceNode = node
 
 			parser := instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), parserKit)
-			parserInstance, err := parser.Parse(node)
+			parserInstance, err := parser.Parse(node, parserKit)
 			if err != nil {
 				return err
 			}
@@ -218,8 +218,8 @@ func NewTask(
 	return task
 }
 
-func (task *Task) Parse(node *node.Node) error {
-	if err := task.DefaultParser.Parse(node); err != nil {
+func (task *Task) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := task.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 

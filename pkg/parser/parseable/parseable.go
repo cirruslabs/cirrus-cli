@@ -1,20 +1,22 @@
 package parseable
 
 import (
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
+	nodepkg "github.com/cirruslabs/cirrus-cli/pkg/parser/node"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/lestrrat-go/jsschema"
 	"regexp"
 )
 
 type Parseable interface {
-	Parse(node *node.Node) error
+	Parse(node *nodepkg.Node, parserKit *parserkit.ParserKit) error
 	Schema() *schema.Schema
 	CollectibleFields() []CollectibleField
 	Proto() interface{}
 }
 
-type nodeFunc func(node *node.Node) error
+type nodeFunc func(node *nodepkg.Node) error
 
 type Field struct {
 	name     nameable.Nameable
@@ -29,7 +31,15 @@ type CollectibleField struct {
 	Schema  *schema.Schema
 }
 
-func (parser *DefaultParser) Parse(node *node.Node) error {
+func (parser *DefaultParser) Parse(node *nodepkg.Node, parserKit *parserkit.ParserKit) error {
+	// Detect possible incorrect usage of fields that expect a map
+	// (e.g. "container: ruby:latest"), yet allow "container:" since
+	// there's no clear intention to configure this field from the user
+	if _, ok := node.Value.(*nodepkg.MapValue); !ok && !node.ValueIsEmpty() {
+		parserKit.IssueRegistry.RegisterIssuef(api.Issue_WARNING, node.Line, node.Column,
+			"expected a map, found %s", node.ValueTypeAsString())
+	}
+
 	// Evaluate collectible fields
 	for _, field := range parser.collectibleFields {
 		if err := evaluateCollectible(node, field); err != nil {
@@ -108,7 +118,7 @@ func (parser *DefaultParser) CollectibleFields() []CollectibleField {
 	return parser.collectibleFields
 }
 
-func evaluateCollectible(node *node.Node, field CollectibleField) error {
+func evaluateCollectible(node *nodepkg.Node, field CollectibleField) error {
 	children := node.DeepFindCollectible(field.Name)
 
 	if children == nil {

@@ -94,7 +94,7 @@ func NewDockerPipe(
 	pipe.OptionalField(nameable.NewSimpleNameable("resources"), resourcesSchema, func(node *node.Node) error {
 		resources := NewPipeResources(environment.Merge(pipe.proto.Environment, env))
 
-		if err := resources.Parse(node); err != nil {
+		if err := resources.Parse(node, parserKit); err != nil {
 			return err
 		}
 
@@ -111,7 +111,7 @@ func NewDockerPipe(
 
 		for _, child := range stepsNode.Children {
 			step := NewPipeStep(environment.Merge(pipe.proto.Environment, env), parserKit, pipe.proto.Commands)
-			if err := step.Parse(child); err != nil {
+			if err := step.Parse(child, parserKit); err != nil {
 				return err
 			}
 			pipe.proto.Commands = append(pipe.proto.Commands, step.protoCommands...)
@@ -153,8 +153,8 @@ func NewDockerPipe(
 	return pipe
 }
 
-func (pipe *DockerPipe) Parse(node *node.Node) error {
-	if err := pipe.DefaultParser.Parse(node); err != nil {
+func (pipe *DockerPipe) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := pipe.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 

@@ -1,0 +1,10 @@
+container:
+  image: debian:latest
+
+ok_task:
+  container:
+
+notok_task:
+  script: touch artifact.txt
+  artifacts: |
+    path: artifact.txt

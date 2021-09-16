@@ -111,8 +111,8 @@ func NewDockerBuilder(
 	return dbuilder
 }
 
-func (dbuilder *DockerBuilder) Parse(node *node.Node) error {
-	if err := dbuilder.DefaultParser.Parse(node); err != nil {
+func (dbuilder *DockerBuilder) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := dbuilder.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 

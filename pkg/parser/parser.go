@@ -144,7 +144,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 				continue
 			}
 
-			err := taskLike.Parse(treeItem)
+			err := taskLike.Parse(treeItem, p.parserKit)
 			if err != nil {
 				return nil, err
 			}

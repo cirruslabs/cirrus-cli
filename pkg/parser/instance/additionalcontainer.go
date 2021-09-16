@@ -216,8 +216,11 @@ func NewAdditionalContainer(mergedEnv map[string]string, parserKit *parserkit.Pa
 	return ac
 }
 
-func (ac *AdditionalContainer) Parse(node *node.Node) (*api.AdditionalContainer, error) {
-	if err := ac.DefaultParser.Parse(node); err != nil {
+func (ac *AdditionalContainer) Parse(
+	node *node.Node,
+	parserKit *parserkit.ParserKit,
+) (*api.AdditionalContainer, error) {
+	if err := ac.DefaultParser.Parse(node, parserKit); err != nil {
 		return nil, err
 	}
 

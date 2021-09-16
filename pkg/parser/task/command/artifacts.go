@@ -5,6 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 )
@@ -74,8 +75,8 @@ func NewArtifactsCommand(mergedEnv map[string]string) *ArtifactsCommand {
 	return articom
 }
 
-func (articom *ArtifactsCommand) Parse(node *node.Node) error {
-	if err := articom.DefaultParser.Parse(node); err != nil {
+func (articom *ArtifactsCommand) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := articom.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 

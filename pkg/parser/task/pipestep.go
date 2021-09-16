@@ -53,7 +53,7 @@ func NewPipeStep(
 	cacheSchema := command.NewCacheCommand(nil, nil).Schema()
 	step.OptionalField(cacheNameable, cacheSchema, func(node *node.Node) error {
 		cache := command.NewCacheCommand(mergedEnv, parserKit)
-		if err := cache.Parse(node); err != nil {
+		if err := cache.Parse(node, parserKit); err != nil {
 			return err
 		}
 		step.protoCommands = append(step.protoCommands, cache.Proto())
@@ -76,7 +76,7 @@ func NewPipeStep(
 	artifactsSchema := command.NewArtifactsCommand(nil).Schema()
 	step.OptionalField(artifactsNameable, artifactsSchema, func(node *node.Node) error {
 		artifacts := command.NewArtifactsCommand(mergedEnv)
-		if err := artifacts.Parse(node); err != nil {
+		if err := artifacts.Parse(node, parserKit); err != nil {
 			return err
 		}
 		step.protoCommands = append(step.protoCommands, artifacts.Proto())
@@ -87,7 +87,7 @@ func NewPipeStep(
 	fileSchema := command.NewFileCommand(nil).Schema()
 	step.OptionalField(fileNameable, fileSchema, func(node *node.Node) error {
 		file := command.NewFileCommand(mergedEnv)
-		if err := file.Parse(node); err != nil {
+		if err := file.Parse(node, parserKit); err != nil {
 			return err
 		}
 		step.protoCommands = append(step.protoCommands, file.Proto())
@@ -101,7 +101,7 @@ func NewPipeStep(
 		behaviorSchema.Description = name + " commands."
 		step.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), behaviorSchema, func(node *node.Node) error {
 			behavior := NewBehavior(mergedEnv, parserKit, append(previousCommands, step.protoCommands...))
-			if err := behavior.Parse(node); err != nil {
+			if err := behavior.Parse(node, parserKit); err != nil {
 				return err
 			}
 
@@ -119,8 +119,8 @@ func NewPipeStep(
 	return step
 }
 
-func (step *PipeStep) Parse(node *node.Node) error {
-	if err := step.DefaultParser.Parse(node); err != nil {
+func (step *PipeStep) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := step.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 

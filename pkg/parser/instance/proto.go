@@ -95,7 +95,7 @@ func NewProtoParser(
 						// a little bit of magic to support port forwarding via `port` field instead of two fields
 						if fieldName == "additional_containers" {
 							childParser := NewAdditionalContainer(mergedEnv, parserKit)
-							additionalContainer, err := childParser.Parse(child)
+							additionalContainer, err := childParser.Parse(child, parserKit)
 							if err != nil {
 								return err
 							}
@@ -108,7 +108,7 @@ func NewProtoParser(
 							err = proto.Unmarshal(additionalContainerBytes, parsedChild)
 						} else {
 							childParser := NewProtoParser(field.Message(), mergedEnv, parserKit)
-							parsedChild, err = childParser.Parse(child)
+							parsedChild, err = childParser.Parse(child, parserKit)
 						}
 						if err != nil {
 							return err
@@ -119,7 +119,7 @@ func NewProtoParser(
 					return nil
 				default:
 					childParser := NewProtoParser(field.Message(), mergedEnv, parserKit)
-					parserChild, err := childParser.Parse(node)
+					parserChild, err := childParser.Parse(node, parserKit)
 					if err != nil {
 						return err
 					}
@@ -303,8 +303,8 @@ func NewProtoParser(
 	return instance
 }
 
-func (p *ProtoInstance) Parse(node *node.Node) (*dynamicpb.Message, error) {
-	if err := p.DefaultParser.Parse(node); err != nil {
+func (p *ProtoInstance) Parse(node *node.Node, parserKit *parserkit.ParserKit) (*dynamicpb.Message, error) {
+	if err := p.DefaultParser.Parse(node, parserKit); err != nil {
 		return nil, err
 	}
 	return p.proto, nil

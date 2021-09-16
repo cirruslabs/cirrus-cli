@@ -6,6 +6,6 @@ import (
 )
 
 type ParserKit struct {
-	Boolevator *boolevator.Boolevator
-	IssueRegistry *issue.IssueRegistry
+	Boolevator    *boolevator.Boolevator
+	IssueRegistry *issue.Registry
 }

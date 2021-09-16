@@ -104,8 +104,11 @@ func NewWindowsCommunityContainer(mergedEnv map[string]string, parserKit *parser
 	return container
 }
 
-func (container *WindowsContainer) Parse(node *node.Node) (*api.ContainerInstance, error) {
-	if err := container.DefaultParser.Parse(node); err != nil {
+func (container *WindowsContainer) Parse(
+	node *node.Node,
+	parserKit *parserkit.ParserKit,
+) (*api.ContainerInstance, error) {
+	if err := container.DefaultParser.Parse(node, parserKit); err != nil {
 		return nil, err
 	}
 

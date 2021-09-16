@@ -90,7 +90,7 @@ func NewCommunityContainer(mergedEnv map[string]string, parserKit *parserkit.Par
 	container.OptionalField(additionalContainersNameable, acSchema, func(node *node.Node) error {
 		for _, child := range node.Children {
 			ac := NewAdditionalContainer(mergedEnv, parserKit)
-			additionalContainer, err := ac.Parse(child)
+			additionalContainer, err := ac.Parse(child, parserKit)
 			if err != nil {
 				return err
 			}
@@ -124,8 +124,8 @@ func NewCommunityContainer(mergedEnv map[string]string, parserKit *parserkit.Par
 	return container
 }
 
-func (container *Container) Parse(node *node.Node) (*api.ContainerInstance, error) {
-	if err := container.DefaultParser.Parse(node); err != nil {
+func (container *Container) Parse(node *node.Node, parserKit *parserkit.ParserKit) (*api.ContainerInstance, error) {
+	if err := container.DefaultParser.Parse(node, parserKit); err != nil {
 		return nil, err
 	}
 
