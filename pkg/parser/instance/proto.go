@@ -1,11 +1,11 @@
 package instance
 
 import (
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"google.golang.org/protobuf/proto"
@@ -27,7 +27,7 @@ type ProtoInstance struct {
 func NewProtoParser(
 	desc protoreflect.MessageDescriptor,
 	mergedEnv map[string]string,
-	boolevator *boolevator.Boolevator,
+	parserKit *parserkit.ParserKit,
 ) *ProtoInstance {
 	instance := &ProtoInstance{
 		proto: dynamicpb.NewMessage(desc),
@@ -94,7 +94,7 @@ func NewProtoParser(
 						var parsedChild *dynamicpb.Message
 						// a little bit of magic to support port forwarding via `port` field instead of two fields
 						if fieldName == "additional_containers" {
-							childParser := NewAdditionalContainer(mergedEnv, boolevator)
+							childParser := NewAdditionalContainer(mergedEnv, parserKit)
 							additionalContainer, err := childParser.Parse(child)
 							if err != nil {
 								return err
@@ -107,7 +107,7 @@ func NewProtoParser(
 							//nolint:ineffassign,staticcheck
 							err = proto.Unmarshal(additionalContainerBytes, parsedChild)
 						} else {
-							childParser := NewProtoParser(field.Message(), mergedEnv, boolevator)
+							childParser := NewProtoParser(field.Message(), mergedEnv, parserKit)
 							parsedChild, err = childParser.Parse(child)
 						}
 						if err != nil {
@@ -118,7 +118,7 @@ func NewProtoParser(
 					instance.proto.Set(field, fieldInstance)
 					return nil
 				default:
-					childParser := NewProtoParser(field.Message(), mergedEnv, boolevator)
+					childParser := NewProtoParser(field.Message(), mergedEnv, parserKit)
 					parserChild, err := childParser.Parse(node)
 					if err != nil {
 						return err
@@ -258,7 +258,7 @@ func NewProtoParser(
 			boolSchema := schema.Boolean(fieldDescription)
 
 			instance.OptionalField(nameable.NewSimpleNameable(fieldName), boolSchema, func(node *node.Node) error {
-				evaluation, err := node.GetBoolValue(mergedEnv, boolevator)
+				evaluation, err := node.GetBoolValue(mergedEnv, parserKit.Boolevator)
 				if err != nil {
 					return err
 				}

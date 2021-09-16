@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -36,7 +37,7 @@ type DockerPipe struct {
 
 func NewDockerPipe(
 	env map[string]string,
-	boolevator *boolevator.Boolevator,
+	parserKit *parserkit.ParserKit,
 	additionalTaskProperties []*descriptor.FieldDescriptorProto,
 ) *DockerPipe {
 	pipe := &DockerPipe{}
@@ -47,7 +48,7 @@ func NewDockerPipe(
 	pipe.SetCollectible(true)
 
 	AttachEnvironmentFields(&pipe.DefaultParser, &pipe.proto)
-	AttachBaseTaskFields(&pipe.DefaultParser, &pipe.proto, env, boolevator, additionalTaskProperties)
+	AttachBaseTaskFields(&pipe.DefaultParser, &pipe.proto, env, parserKit, additionalTaskProperties)
 
 	autoCancellation := env["CIRRUS_BRANCH"] != env["CIRRUS_DEFAULT_BRANCH"]
 	if autoCancellation {
@@ -109,7 +110,7 @@ func NewDockerPipe(
 		}
 
 		for _, child := range stepsNode.Children {
-			step := NewPipeStep(environment.Merge(pipe.proto.Environment, env), boolevator, pipe.proto.Commands)
+			step := NewPipeStep(environment.Merge(pipe.proto.Environment, env), parserKit, pipe.proto.Commands)
 			if err := step.Parse(child); err != nil {
 				return err
 			}

@@ -2,11 +2,11 @@ package instance
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
@@ -18,7 +18,7 @@ type WindowsContainer struct {
 	parseable.DefaultParser
 }
 
-func NewWindowsCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *WindowsContainer {
+func NewWindowsCommunityContainer(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *WindowsContainer {
 	container := &WindowsContainer{
 		proto: &api.ContainerInstance{
 			Platform:  api.Platform_WINDOWS,

@@ -2,10 +2,10 @@ package task
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	jsschema "github.com/lestrrat-go/jsschema"
@@ -19,7 +19,7 @@ type Behavior struct {
 
 func NewBehavior(
 	mergedEnv map[string]string,
-	boolevator *boolevator.Boolevator,
+	parserKit *parserkit.ParserKit,
 	previousCommands []*api.Command,
 ) *Behavior {
 	b := &Behavior{}
@@ -51,7 +51,7 @@ func NewBehavior(
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
 	cacheSchema := command.NewCacheCommand(nil, nil).Schema()
 	b.OptionalField(cacheNameable, cacheSchema, func(node *node.Node) error {
-		cache := command.NewCacheCommand(mergedEnv, boolevator)
+		cache := command.NewCacheCommand(mergedEnv, parserKit)
 		if err := cache.Parse(node); err != nil {
 			return err
 		}

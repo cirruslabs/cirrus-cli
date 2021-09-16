@@ -2,11 +2,11 @@ package instance
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
@@ -23,7 +23,7 @@ type Container struct {
 	parseable.DefaultParser
 }
 
-func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *Container {
+func NewCommunityContainer(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Container {
 	container := &Container{
 		proto: &api.ContainerInstance{},
 	}
@@ -89,7 +89,7 @@ func NewCommunityContainer(mergedEnv map[string]string, boolevator *boolevator.B
 	acSchema := schema.ArrayOf(NewAdditionalContainer(nil, nil).Schema())
 	container.OptionalField(additionalContainersNameable, acSchema, func(node *node.Node) error {
 		for _, child := range node.Children {
-			ac := NewAdditionalContainer(mergedEnv, boolevator)
+			ac := NewAdditionalContainer(mergedEnv, parserKit)
 			additionalContainer, err := ac.Parse(child)
 			if err != nil {
 				return err

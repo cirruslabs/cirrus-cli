@@ -3,10 +3,10 @@ package task
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -43,7 +43,7 @@ func AttachBaseTaskFields(
 	parser *parseable.DefaultParser,
 	task *api.Task,
 	env map[string]string,
-	boolevator *boolevator.Boolevator,
+	parserKit *parserkit.ParserKit,
 	additionalTaskProperties []*descriptor.FieldDescriptorProto,
 ) {
 	task.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
@@ -63,7 +63,7 @@ func AttachBaseTaskFields(
 	})
 
 	parser.CollectibleField("skip", schema.Condition(""), func(node *node.Node) error {
-		skipped, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
+		skipped, err := node.GetBoolValue(environment.Merge(task.Environment, env), parserKit.Boolevator)
 		if err != nil {
 			return err
 		}
@@ -74,7 +74,7 @@ func AttachBaseTaskFields(
 	})
 
 	parser.CollectibleField("allow_failures", schema.Condition(""), func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
+		evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), parserKit.Boolevator)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func AttachBaseTaskFields(
 		switch fieldType {
 		case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
 			parser.CollectibleField(fieldName, schema.Condition(""), func(node *node.Node) error {
-				evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), boolevator)
+				evaluation, err := node.GetBoolValue(environment.Merge(task.Environment, env), parserKit.Boolevator)
 				if err != nil {
 					return err
 				}
@@ -137,7 +137,7 @@ func AttachBaseTaskInstructions(
 	parser *parseable.DefaultParser,
 	task *api.Task,
 	env map[string]string,
-	boolevator *boolevator.Boolevator,
+	parserKit *parserkit.ParserKit,
 ) {
 	bgNameable := nameable.NewRegexNameable("^(.*)background_script$")
 	parser.OptionalField(bgNameable, schema.Script(""), func(node *node.Node) error {
@@ -166,7 +166,7 @@ func AttachBaseTaskInstructions(
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
 	cacheSchema := command.NewCacheCommand(nil, nil).Schema()
 	parser.OptionalField(cacheNameable, cacheSchema, func(node *node.Node) error {
-		cache := command.NewCacheCommand(environment.Merge(task.Environment, env), boolevator)
+		cache := command.NewCacheCommand(environment.Merge(task.Environment, env), parserKit)
 		if err := cache.Parse(node); err != nil {
 			return err
 		}
@@ -214,7 +214,7 @@ func AttachBaseTaskInstructions(
 		behaviorSchema := NewBehavior(nil, nil, nil).Schema()
 		behaviorSchema.Description = name + " commands."
 		parser.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), behaviorSchema, func(node *node.Node) error {
-			behavior := NewBehavior(environment.Merge(task.Environment, env), boolevator, task.Commands)
+			behavior := NewBehavior(environment.Merge(task.Environment, env), parserKit, task.Commands)
 			if err := behavior.Parse(node); err != nil {
 				return err
 			}

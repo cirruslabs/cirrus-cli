@@ -15,6 +15,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/lestrrat-go/jsschema"
@@ -48,7 +49,7 @@ type Parser struct {
 	// A list of changed files useful when evaluating changesInclude() boolevator's function.
 	affectedFiles []string
 
-	boolevator *boolevator.Boolevator
+	parserKit *parserkit.ParserKit
 
 	parsers                  map[nameable.Nameable]parseable.Parseable
 	idNumbering              int64
@@ -92,10 +93,12 @@ func New(opts ...Option) *Parser {
 	parser.fs = wrappedFS
 
 	// Initialize boolevator
-	parser.boolevator = boolevator.New(boolevator.WithFunctions(map[string]boolevator.Function{
-		"changesInclude":     parser.bfuncChangesInclude(),
-		"changesIncludeOnly": parser.bfuncChangesIncludeOnly(),
-	}))
+	parser.parserKit = &parserkit.ParserKit{
+		Boolevator: boolevator.New(boolevator.WithFunctions(map[string]boolevator.Function{
+			"changesInclude":     parser.bfuncChangesInclude(),
+			"changesIncludeOnly": parser.bfuncChangesIncludeOnly(),
+		})),
+	}
 
 	// Register parsers
 	taskParser := task.NewTask(nil, nil, parser.additionalInstances, parser.additionalTaskProperties,
@@ -136,15 +139,15 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			case *task.Task:
 				taskLike = task.NewTask(
 					environment.Copy(p.environment),
-					p.boolevator,
+					p.parserKit,
 					p.additionalInstances,
 					p.additionalTaskProperties,
 					p.missingInstancesAllowed,
 				)
 			case *task.DockerPipe:
-				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.boolevator, p.additionalTaskProperties)
+				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.parserKit, p.additionalTaskProperties)
 			case *task.DockerBuilder:
-				taskLike = task.NewDockerBuilder(environment.Copy(p.environment), p.boolevator, p.additionalTaskProperties)
+				taskLike = task.NewDockerBuilder(environment.Copy(p.environment), p.parserKit, p.additionalTaskProperties)
 			default:
 				panic("unknown task-like object")
 			}
@@ -176,7 +179,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 
 			p.tasksCountBeforeFiltering++
 
-			enabled, err := taskLike.Enabled(environment.Merge(taskSpecificEnv, p.environment), p.boolevator)
+			enabled, err := taskLike.Enabled(environment.Merge(taskSpecificEnv, p.environment), p.parserKit.Boolevator)
 			if err != nil {
 				return nil, err
 			}
