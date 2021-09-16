@@ -124,7 +124,7 @@ func (p *Parser) calculateDockerfileHash(
 	// Try to calculate a deep hash
 	sourcePaths, err := dockerfile.LocalContextSourcePaths(ctx, dockerfileContents, dockerArguments)
 	if err != nil {
-		p.registerIssuef(api.Issue_WARNING, dockerfileNode.Line, dockerfileNode.Column,
+		p.parserKit.IssueRegistry.RegisterIssuef(api.Issue_WARNING, dockerfileNode.Line, dockerfileNode.Column,
 			"%v %q: %v", ErrFailedToAnalyze, dockerfilePath, err)
 
 		return hex.EncodeToString(oldHash.Sum([]byte{})), nil
@@ -141,7 +141,7 @@ func (p *Parser) calculateDockerfileHash(
 			newHash.Write(fileContents)
 			hashedAtLeastOneSource = true
 		}); err != nil {
-			p.registerIssuef(api.Issue_WARNING, dockerfileNode.Line, dockerfileNode.Column, "%v", err)
+			p.parserKit.IssueRegistry.RegisterIssuef(api.Issue_WARNING, dockerfileNode.Line, dockerfileNode.Column, "%v", err)
 		}
 	}
 

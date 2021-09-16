@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/cachinglayer"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/issue"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/matrix"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
@@ -32,8 +33,6 @@ import (
 )
 
 const (
-	pathYAML = ".cirrus.yml"
-
 	metadataPropertyDockerfileHash = "dockerfile_hash"
 )
 
@@ -60,8 +59,6 @@ type Parser struct {
 
 	tasksCountBeforeFiltering   int64
 	disabledTaskNamesAndAliases map[string]struct{}
-
-	issues []*api.Issue
 }
 
 type Result struct {
@@ -98,6 +95,7 @@ func New(opts ...Option) *Parser {
 			"changesInclude":     parser.bfuncChangesInclude(),
 			"changesIncludeOnly": parser.bfuncChangesIncludeOnly(),
 		})),
+		IssueRegistry: issue.NewRegistry(),
 	}
 
 	// Register parsers
@@ -114,22 +112,12 @@ func New(opts ...Option) *Parser {
 	return parser
 }
 
-func (p *Parser) registerIssuef(level api.Issue_Level, line int, column int, format string, args ...interface{}) {
-	p.issues = append(p.issues, &api.Issue{
-		Level:   level,
-		Message: fmt.Sprintf(format, args...),
-		Path:    pathYAML,
-		Line:    uint64(line),
-		Column:  uint64(column),
-	})
-}
-
 func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 	var tasks []task.ParseableTaskLike
 
 	for _, treeItem := range tree.Children {
 		if strings.HasPrefix(treeItem.Name, "task_") {
-			p.registerIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
+			p.parserKit.IssueRegistry.RegisterIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
 				"you've probably meant %s_task", strings.TrimPrefix(treeItem.Name, "task_"))
 		}
 
@@ -244,7 +232,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	}
 
 	if len(tasks) == 0 {
-		return &Result{Issues: p.issues}, nil
+		return &Result{Issues: p.parserKit.IssueRegistry.Issues()}, nil
 	}
 
 	if err := validateDependenciesDeep(tasks); err != nil {
@@ -303,7 +291,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	return &Result{
 		Tasks:                     protoTasks,
 		TasksCountBeforeFiltering: p.tasksCountBeforeFiltering,
-		Issues:                    p.issues,
+		Issues:                    p.parserKit.IssueRegistry.Issues(),
 	}, nil
 }
 
