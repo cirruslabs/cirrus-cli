@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -33,15 +34,15 @@ type DockerBuilder struct {
 
 func NewDockerBuilder(
 	env map[string]string,
-	boolevator *boolevator.Boolevator,
+	parserKit *parserkit.ParserKit,
 	additionalTaskProperties []*descriptor.FieldDescriptorProto,
 ) *DockerBuilder {
 	dbuilder := &DockerBuilder{}
 	dbuilder.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 
 	AttachEnvironmentFields(&dbuilder.DefaultParser, &dbuilder.proto)
-	AttachBaseTaskFields(&dbuilder.DefaultParser, &dbuilder.proto, env, boolevator, additionalTaskProperties)
-	AttachBaseTaskInstructions(&dbuilder.DefaultParser, &dbuilder.proto, env, boolevator)
+	AttachBaseTaskFields(&dbuilder.DefaultParser, &dbuilder.proto, env, parserKit, additionalTaskProperties)
+	AttachBaseTaskInstructions(&dbuilder.DefaultParser, &dbuilder.proto, env, parserKit)
 
 	dbuilder.OptionalField(nameable.NewSimpleNameable("alias"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(dbuilder.proto.Environment, env))
@@ -110,8 +111,8 @@ func NewDockerBuilder(
 	return dbuilder
 }
 
-func (dbuilder *DockerBuilder) Parse(node *node.Node) error {
-	if err := dbuilder.DefaultParser.Parse(node); err != nil {
+func (dbuilder *DockerBuilder) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := dbuilder.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 

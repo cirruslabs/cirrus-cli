@@ -5,6 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strings"
@@ -61,8 +62,8 @@ func NewFileCommand(mergedEnv map[string]string) *FileCommand {
 	return fileCommand
 }
 
-func (fileCommand *FileCommand) Parse(node *node.Node) error {
-	if err := fileCommand.DefaultParser.Parse(node); err != nil {
+func (fileCommand *FileCommand) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := fileCommand.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 

@@ -5,6 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
@@ -49,8 +50,8 @@ func NewPipeResources(mergedEnv map[string]string) *PipeResources {
 	return res
 }
 
-func (res *PipeResources) Parse(node *node.Node) error {
-	return res.DefaultParser.Parse(node)
+func (res *PipeResources) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	return res.DefaultParser.Parse(node, parserKit)
 }
 
 func (res *PipeResources) Schema() *jsschema.Schema {

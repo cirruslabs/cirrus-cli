@@ -10,11 +10,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/cachinglayer"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/issue"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/matrix"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/lestrrat-go/jsschema"
@@ -31,8 +33,6 @@ import (
 )
 
 const (
-	pathYAML = ".cirrus.yml"
-
 	metadataPropertyDockerfileHash = "dockerfile_hash"
 )
 
@@ -48,7 +48,7 @@ type Parser struct {
 	// A list of changed files useful when evaluating changesInclude() boolevator's function.
 	affectedFiles []string
 
-	boolevator *boolevator.Boolevator
+	parserKit *parserkit.ParserKit
 
 	parsers                  map[nameable.Nameable]parseable.Parseable
 	idNumbering              int64
@@ -59,8 +59,6 @@ type Parser struct {
 
 	tasksCountBeforeFiltering   int64
 	disabledTaskNamesAndAliases map[string]struct{}
-
-	issues []*api.Issue
 }
 
 type Result struct {
@@ -92,10 +90,13 @@ func New(opts ...Option) *Parser {
 	parser.fs = wrappedFS
 
 	// Initialize boolevator
-	parser.boolevator = boolevator.New(boolevator.WithFunctions(map[string]boolevator.Function{
-		"changesInclude":     parser.bfuncChangesInclude(),
-		"changesIncludeOnly": parser.bfuncChangesIncludeOnly(),
-	}))
+	parser.parserKit = &parserkit.ParserKit{
+		Boolevator: boolevator.New(boolevator.WithFunctions(map[string]boolevator.Function{
+			"changesInclude":     parser.bfuncChangesInclude(),
+			"changesIncludeOnly": parser.bfuncChangesIncludeOnly(),
+		})),
+		IssueRegistry: issue.NewRegistry(),
+	}
 
 	// Register parsers
 	taskParser := task.NewTask(nil, nil, parser.additionalInstances, parser.additionalTaskProperties,
@@ -111,22 +112,12 @@ func New(opts ...Option) *Parser {
 	return parser
 }
 
-func (p *Parser) registerIssuef(level api.Issue_Level, line int, column int, format string, args ...interface{}) {
-	p.issues = append(p.issues, &api.Issue{
-		Level:   level,
-		Message: fmt.Sprintf(format, args...),
-		Path:    pathYAML,
-		Line:    uint64(line),
-		Column:  uint64(column),
-	})
-}
-
 func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 	var tasks []task.ParseableTaskLike
 
 	for _, treeItem := range tree.Children {
 		if strings.HasPrefix(treeItem.Name, "task_") {
-			p.registerIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
+			p.parserKit.IssueRegistry.RegisterIssuef(api.Issue_WARNING, treeItem.Line, treeItem.Column,
 				"you've probably meant %s_task", strings.TrimPrefix(treeItem.Name, "task_"))
 		}
 
@@ -136,15 +127,15 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 			case *task.Task:
 				taskLike = task.NewTask(
 					environment.Copy(p.environment),
-					p.boolevator,
+					p.parserKit,
 					p.additionalInstances,
 					p.additionalTaskProperties,
 					p.missingInstancesAllowed,
 				)
 			case *task.DockerPipe:
-				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.boolevator, p.additionalTaskProperties)
+				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.parserKit, p.additionalTaskProperties)
 			case *task.DockerBuilder:
-				taskLike = task.NewDockerBuilder(environment.Copy(p.environment), p.boolevator, p.additionalTaskProperties)
+				taskLike = task.NewDockerBuilder(environment.Copy(p.environment), p.parserKit, p.additionalTaskProperties)
 			default:
 				panic("unknown task-like object")
 			}
@@ -153,7 +144,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 				continue
 			}
 
-			err := taskLike.Parse(treeItem)
+			err := taskLike.Parse(treeItem, p.parserKit)
 			if err != nil {
 				return nil, err
 			}
@@ -176,7 +167,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 
 			p.tasksCountBeforeFiltering++
 
-			enabled, err := taskLike.Enabled(environment.Merge(taskSpecificEnv, p.environment), p.boolevator)
+			enabled, err := taskLike.Enabled(environment.Merge(taskSpecificEnv, p.environment), p.parserKit.Boolevator)
 			if err != nil {
 				return nil, err
 			}
@@ -241,7 +232,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	}
 
 	if len(tasks) == 0 {
-		return &Result{Issues: p.issues}, nil
+		return &Result{Issues: p.parserKit.IssueRegistry.Issues()}, nil
 	}
 
 	if err := validateDependenciesDeep(tasks); err != nil {
@@ -300,7 +291,7 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 	return &Result{
 		Tasks:                     protoTasks,
 		TasksCountBeforeFiltering: p.tasksCountBeforeFiltering,
-		Issues:                    p.issues,
+		Issues:                    p.parserKit.IssueRegistry.Issues(),
 	}, nil
 }
 

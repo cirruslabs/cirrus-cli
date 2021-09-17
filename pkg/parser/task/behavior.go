@@ -2,10 +2,10 @@ package task
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	jsschema "github.com/lestrrat-go/jsschema"
@@ -19,7 +19,7 @@ type Behavior struct {
 
 func NewBehavior(
 	mergedEnv map[string]string,
-	boolevator *boolevator.Boolevator,
+	parserKit *parserkit.ParserKit,
 	previousCommands []*api.Command,
 ) *Behavior {
 	b := &Behavior{}
@@ -51,8 +51,8 @@ func NewBehavior(
 	cacheNameable := nameable.NewRegexNameable("^(.*)cache$")
 	cacheSchema := command.NewCacheCommand(nil, nil).Schema()
 	b.OptionalField(cacheNameable, cacheSchema, func(node *node.Node) error {
-		cache := command.NewCacheCommand(mergedEnv, boolevator)
-		if err := cache.Parse(node); err != nil {
+		cache := command.NewCacheCommand(mergedEnv, parserKit)
+		if err := cache.Parse(node, parserKit); err != nil {
 			return err
 		}
 		b.commands = append(b.commands, cache.Proto())
@@ -75,7 +75,7 @@ func NewBehavior(
 	artifactsSchema := command.NewArtifactsCommand(nil).Schema()
 	b.OptionalField(artifactsNameable, artifactsSchema, func(node *node.Node) error {
 		artifacts := command.NewArtifactsCommand(mergedEnv)
-		if err := artifacts.Parse(node); err != nil {
+		if err := artifacts.Parse(node, parserKit); err != nil {
 			return err
 		}
 		b.commands = append(b.commands, artifacts.Proto())
@@ -86,7 +86,7 @@ func NewBehavior(
 	fileSchema := command.NewFileCommand(nil).Schema()
 	b.OptionalField(fileNameable, fileSchema, func(node *node.Node) error {
 		file := command.NewFileCommand(mergedEnv)
-		if err := file.Parse(node); err != nil {
+		if err := file.Parse(node, parserKit); err != nil {
 			return err
 		}
 		b.commands = append(b.commands, file.Proto())
@@ -96,8 +96,8 @@ func NewBehavior(
 	return b
 }
 
-func (b *Behavior) Parse(node *node.Node) error {
-	return b.DefaultParser.Parse(node)
+func (b *Behavior) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	return b.DefaultParser.Parse(node, parserKit)
 }
 
 func (b *Behavior) Proto() []*api.Command {

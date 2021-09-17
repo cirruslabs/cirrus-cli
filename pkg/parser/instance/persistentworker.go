@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 )
@@ -16,7 +17,7 @@ type PersistentWorker struct {
 	parseable.DefaultParser
 }
 
-func NewPersistentWorker(mergedEnv map[string]string) *PersistentWorker {
+func NewPersistentWorker(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *PersistentWorker {
 	pworker := &PersistentWorker{}
 
 	labelsSchema := schema.String("Labels for selection.")
@@ -31,11 +32,11 @@ func NewPersistentWorker(mergedEnv map[string]string) *PersistentWorker {
 		return nil
 	})
 
-	isolationSchema := isolation.NewIsolation(mergedEnv).Schema()
+	isolationSchema := isolation.NewIsolation(mergedEnv, parserKit).Schema()
 	pworker.OptionalField(nameable.NewSimpleNameable("isolation"), isolationSchema, func(node *node.Node) error {
-		isolation := isolation.NewIsolation(mergedEnv)
+		isolation := isolation.NewIsolation(mergedEnv, parserKit)
 
-		if err := isolation.Parse(node); err != nil {
+		if err := isolation.Parse(node, parserKit); err != nil {
 			return err
 		}
 
@@ -47,8 +48,11 @@ func NewPersistentWorker(mergedEnv map[string]string) *PersistentWorker {
 	return pworker
 }
 
-func (pworker *PersistentWorker) Parse(node *node.Node) (*api.PersistentWorkerInstance, error) {
-	if err := pworker.DefaultParser.Parse(node); err != nil {
+func (pworker *PersistentWorker) Parse(
+	node *node.Node,
+	parserKit *parserkit.ParserKit,
+) (*api.PersistentWorkerInstance, error) {
+	if err := pworker.DefaultParser.Parse(node, parserKit); err != nil {
 		return nil, err
 	}
 

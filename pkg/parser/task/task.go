@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/task/command"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -37,7 +38,7 @@ type Task struct {
 // nolint:gocognit,nestif // it's a parser helper, there is a lot of boilerplate
 func NewTask(
 	env map[string]string,
-	boolevator *boolevator.Boolevator,
+	parserKit *parserkit.ParserKit,
 	additionalInstances map[string]protoreflect.MessageDescriptor,
 	additionalTaskProperties []*descriptor.FieldDescriptorProto,
 	missingInstancesAllowed bool,
@@ -55,12 +56,12 @@ func NewTask(
 
 	if _, ok := additionalInstances["container"]; !ok {
 		task.CollectibleField("container",
-			instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
+			instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), parserKit).Schema(),
 			func(node *node.Node) error {
 				task.instanceNode = node
 
-				inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
-				containerInstance, err := inst.Parse(node)
+				inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), parserKit)
+				containerInstance, err := inst.Parse(node, parserKit)
 				if err != nil {
 					return err
 				}
@@ -82,12 +83,12 @@ func NewTask(
 	}
 	if _, ok := additionalInstances["windows_container"]; !ok {
 		task.CollectibleField("windows_container",
-			instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator).Schema(),
+			instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), parserKit).Schema(),
 			func(node *node.Node) error {
 				task.instanceNode = node
 
-				inst := instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), boolevator)
-				containerInstance, err := inst.Parse(node)
+				inst := instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), parserKit)
+				containerInstance, err := inst.Parse(node, parserKit)
 				if err != nil {
 					return err
 				}
@@ -109,12 +110,12 @@ func NewTask(
 	}
 	if _, ok := additionalInstances["persistent_worker"]; !ok {
 		task.CollectibleField("persistent_worker",
-			instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env)).Schema(),
+			instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env), parserKit).Schema(),
 			func(node *node.Node) error {
 				task.instanceNode = node
 
-				inst := instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env))
-				persistentWorkerInstance, err := inst.Parse(node)
+				inst := instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env), parserKit)
+				persistentWorkerInstance, err := inst.Parse(node, parserKit)
 				if err != nil {
 					return err
 				}
@@ -152,8 +153,8 @@ func NewTask(
 		task.CollectibleField(scopedInstanceName, instanceSchema, func(node *node.Node) error {
 			task.instanceNode = node
 
-			parser := instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), boolevator)
-			parserInstance, err := parser.Parse(node)
+			parser := instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), parserKit)
+			parserInstance, err := parser.Parse(node, parserKit)
 			if err != nil {
 				return err
 			}
@@ -183,8 +184,8 @@ func NewTask(
 	}
 
 	// Only after environment and instances should we add all the rest fields.
-	AttachBaseTaskFields(&task.DefaultParser, &task.proto, env, boolevator, additionalTaskProperties)
-	AttachBaseTaskInstructions(&task.DefaultParser, &task.proto, env, boolevator)
+	AttachBaseTaskFields(&task.DefaultParser, &task.proto, env, parserKit, additionalTaskProperties)
+	AttachBaseTaskInstructions(&task.DefaultParser, &task.proto, env, parserKit)
 
 	task.OptionalField(nameable.NewSimpleNameable("alias"), schema.String(""), func(node *node.Node) error {
 		name, err := node.GetExpandedStringValue(environment.Merge(task.proto.Environment, env))
@@ -217,8 +218,8 @@ func NewTask(
 	return task
 }
 
-func (task *Task) Parse(node *node.Node) error {
-	if err := task.DefaultParser.Parse(node); err != nil {
+func (task *Task) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := task.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 

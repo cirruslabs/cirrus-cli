@@ -3,10 +3,10 @@ package command
 import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strings"
@@ -23,7 +23,7 @@ type CacheCommand struct {
 	parseable.DefaultParser
 }
 
-func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Boolevator) *CacheCommand {
+func NewCacheCommand(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *CacheCommand {
 	cache := &CacheCommand{
 		proto: &api.Command{},
 		instruction: &api.CacheInstruction{
@@ -112,7 +112,7 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 
 	reuploadSchema := schema.Condition("A flag to check if contents of folder has changed after a cache hit.")
 	cache.OptionalField(nameable.NewSimpleNameable("reupload_on_changes"), reuploadSchema, func(node *node.Node) error {
-		evaluation, err := node.GetBoolValue(mergedEnv, boolevator)
+		evaluation, err := node.GetBoolValue(mergedEnv, parserKit.Boolevator)
 		if err != nil {
 			return err
 		}
@@ -126,8 +126,8 @@ func NewCacheCommand(mergedEnv map[string]string, boolevator *boolevator.Booleva
 	return cache
 }
 
-func (cache *CacheCommand) Parse(node *node.Node) error {
-	if err := cache.DefaultParser.Parse(node); err != nil {
+func (cache *CacheCommand) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	if err := cache.DefaultParser.Parse(node, parserKit); err != nil {
 		return err
 	}
 
