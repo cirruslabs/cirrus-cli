@@ -1,0 +1,8 @@
+env:
+    IMAGE_TAG: "latest"
+    IMAGE_TEMPLATE: "debian:${IMAGE_TAG}"
+
+task:
+    container:
+        docker_arguments:
+            IMAGE: '${IMAGE_TEMPLATE}'

@@ -63,13 +63,15 @@ func NewProtoParser(
 				case field.IsMap():
 					fieldInstance := instance.proto.NewField(field)
 
-					mappingRetriever := node.GetStringMapping
-
-					if field.Name() == "docker_arguments" {
-						mappingRetriever = node.GetMapOrListOfMaps
+					mappingRetriever := func(env map[string]string) (map[string]string, error) {
+						return node.GetStringMapping()
 					}
 
-					mapping, err := mappingRetriever()
+					if field.Name() == "docker_arguments" {
+						mappingRetriever = node.GetMapOrListOfMapsWithExpansion
+					}
+
+					mapping, err := mappingRetriever(mergedEnv)
 					if err != nil {
 						return err
 					}
