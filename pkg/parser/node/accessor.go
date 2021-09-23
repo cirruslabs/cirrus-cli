@@ -210,3 +210,16 @@ func (node *Node) GetMapOrListOfMaps() (map[string]string, error) {
 		return nil, node.ParserError("expected a map or a list of maps")
 	}
 }
+
+func (node *Node) GetMapOrListOfMapsWithExpansion(env map[string]string) (map[string]string, error) {
+	result, err := node.GetMapOrListOfMaps()
+	if err != nil {
+		return nil, err
+	}
+
+	for key, value := range result {
+		result[key] = expander.ExpandEnvironmentVariables(value, env)
+	}
+
+	return result, nil
+}

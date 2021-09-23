@@ -40,6 +40,7 @@ var validCases = []string{
 	"pipe-cache",
 	"upload-caches",
 	"cache-fingerprint-key",
+	"docker-arguments-expansion",
 }
 
 func absolutize(file string) string {

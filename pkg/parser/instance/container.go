@@ -51,7 +51,7 @@ func NewCommunityContainer(mergedEnv map[string]string, parserKit *parserkit.Par
 	dockerArgumentsNameable := nameable.NewSimpleNameable("docker_arguments")
 	dockerArgumentsSchema := schema.Map("Arguments for Docker build")
 	container.OptionalField(dockerArgumentsNameable, dockerArgumentsSchema, func(node *node.Node) error {
-		dockerArguments, err := node.GetMapOrListOfMaps()
+		dockerArguments, err := node.GetMapOrListOfMapsWithExpansion(mergedEnv)
 		if err != nil {
 			return err
 		}
