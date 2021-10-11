@@ -36,8 +36,9 @@ func validateTask(task *api.Task) error {
 
 	for _, command := range task.Commands {
 		if seenInstructionName, seen := alreadySeenNames[command.Name]; seen {
-			return fmt.Errorf("%w: task '%s' %s and %s instructions have identical name",
-				parsererror.ErrBasic, task.Name, seenInstructionName, commandInstructionName(command))
+			return fmt.Errorf("%w: task '%s' %s and %s instructions have identical name '%s'",
+				parsererror.ErrBasic, task.Name, seenInstructionName, commandInstructionName(command),
+				command.Name)
 		}
 
 		alreadySeenNames[command.Name] = commandInstructionName(command)

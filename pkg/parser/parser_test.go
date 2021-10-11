@@ -447,9 +447,18 @@ func TestViaRPCInvalid(t *testing.T) {
 		File    string
 		Message string
 	}{
-		{"validation-badDependencies.yml", "error in dependencies between tasks: b, c, d"},
-		{"validation-duplicateCommands.yml", "task 'main' cache and script instructions have identical name"},
-		{"validation-missingDependency.yml", "there's no task 'fooo', but task 'bar' depends on it"},
+		{
+			"validation-badDependencies.yml",
+			"parsing error: error in dependencies between tasks: b, c, d",
+		},
+		{
+			"validation-duplicateCommands.yml",
+			"parsing error: task 'main' cache and script instructions have identical name 'foo'",
+		},
+		{
+			"validation-missingDependency.yml",
+			"parsing error: there's no task 'fooo', but task 'bar' depends on it",
+		},
 	}
 
 	for _, testCase := range invalidCases {
@@ -464,7 +473,7 @@ func TestViaRPCInvalid(t *testing.T) {
 			localParser := parser.New()
 			_, err = localParser.Parse(context.Background(), string(yamlBytes))
 			require.Error(t, err, "parser should return an error")
-			require.Contains(t, err.Error(), testCase.Message, "parser should return a specific error")
+			require.Equal(t, testCase.Message, err.Error(), "parser should return a specific error")
 		})
 	}
 }
