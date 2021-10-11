@@ -453,11 +453,15 @@ func TestViaRPCInvalid(t *testing.T) {
 		},
 		{
 			"validation-duplicateCommands.yml",
-			"parsing error: task 'main' cache and script instructions have identical name 'foo'",
+			"parsing error: task 'main' has cache and script instructions with an identical name 'foo'",
 		},
 		{
 			"validation-missingDependency.yml",
 			"parsing error: there's no task 'fooo', but task 'bar' depends on it",
+		},
+		{
+			"validation-duplicate-commands-of-same-type.yml",
+			"parsing error: task 'main' has two script instructions with an identical name 'foo'",
 		},
 	}
 
