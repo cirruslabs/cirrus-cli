@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func commandInstructionName(command *api.Command) string {
+func commandInstructionType(command *api.Command) string {
 	switch command.Instruction.(type) {
 	case *api.Command_ExitInstruction:
 		return "exit"
@@ -35,18 +35,18 @@ func validateTask(task *api.Task) error {
 	alreadySeenNames := make(map[string]string)
 
 	for _, command := range task.Commands {
-		if seenInstructionName, seen := alreadySeenNames[command.Name]; seen {
-			designator := fmt.Sprintf("%s and %s instructions", seenInstructionName, commandInstructionName(command))
+		if seenInstructionType, seen := alreadySeenNames[command.Name]; seen {
+			designator := fmt.Sprintf("%s and %s instructions", seenInstructionType, commandInstructionType(command))
 
-			if seenInstructionName == commandInstructionName(command) {
-				designator = fmt.Sprintf("two %s instructions", seenInstructionName)
+			if seenInstructionType == commandInstructionType(command) {
+				designator = fmt.Sprintf("two %s instructions", seenInstructionType)
 			}
 
 			return fmt.Errorf("%w: task '%s' has %s with an identical name '%s'",
 				parsererror.ErrBasic, task.Name, designator, command.Name)
 		}
 
-		alreadySeenNames[command.Name] = commandInstructionName(command)
+		alreadySeenNames[command.Name] = commandInstructionType(command)
 	}
 
 	return nil
