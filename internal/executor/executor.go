@@ -135,6 +135,9 @@ func (e *Executor) Run(ctx context.Context) error {
 			if firstErr == nil {
 				firstErr = err
 			}
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				break
+			}
 		}
 	}
 
