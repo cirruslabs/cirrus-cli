@@ -50,6 +50,11 @@ func TestKeySanitization(t *testing.T) {
 		actualFiles = append(actualFiles, dirEntry.Name())
 	}
 
+	// Remove created blobs from disk to avoid wasting space
+	for key := range examples {
+		require.NoError(t, c.Delete(key))
+	}
+
 	require.ElementsMatch(t, expectedFiles, actualFiles)
 }
 
@@ -78,6 +83,11 @@ func TestMultipleGetAndPut(t *testing.T) {
 	// Read from cache
 	for key, value := range examples {
 		require.EqualValues(t, value, cacheRead(t, c, key))
+	}
+
+	// Remove created blobs from disk to avoid wasting space
+	for key := range examples {
+		require.NoError(t, c.Delete(key))
 	}
 }
 
