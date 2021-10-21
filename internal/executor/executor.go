@@ -132,8 +132,12 @@ func (e *Executor) Run(ctx context.Context) error {
 		}
 
 		if err := e.runSingleTask(ctx, task); err != nil {
+			task.SetStatus(taskstatus.Failed)
 			if firstErr == nil {
 				firstErr = err
+			}
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				break
 			}
 		}
 	}
