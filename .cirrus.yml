@@ -46,8 +46,6 @@ task:
   persistent_worker:
     labels:
       os: darwin
-      docker: installed
-      parallels: installed
   env:
     CIRRUS_INTERNAL_PARALLELS_DARWIN_VM: big-sur-base
     CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_USER: admin
