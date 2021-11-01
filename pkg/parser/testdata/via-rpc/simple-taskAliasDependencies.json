@@ -26,6 +26,7 @@
     },
     "metadata": {
       "properties": {
+        "alias": "tests",
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "0",
@@ -63,6 +64,7 @@
     "localGroupId": "1",
     "metadata": {
       "properties": {
+        "alias": "tests",
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "1",
@@ -100,6 +102,7 @@
     "localGroupId": "2",
     "metadata": {
       "properties": {
+        "alias": "tests",
         "allow_failures": "false",
         "experimental": "false",
         "indexWithinBuild": "2",

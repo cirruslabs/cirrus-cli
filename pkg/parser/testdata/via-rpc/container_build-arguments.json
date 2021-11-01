@@ -32,11 +32,11 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
+        "dockerfile_hash": "e02d522efc69d3863e49972eb177dd6a",
         "experimental": "false",
         "indexWithinBuild": "0",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC",
-        "dockerfile_hash": "e02d522efc69d3863e49972eb177dd6a"
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "task1",

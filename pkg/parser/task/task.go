@@ -192,7 +192,10 @@ func NewTask(
 		if err != nil {
 			return err
 		}
+
 		task.alias = name
+		task.proto.Metadata.Properties["alias"] = name
+
 		return nil
 	})
 

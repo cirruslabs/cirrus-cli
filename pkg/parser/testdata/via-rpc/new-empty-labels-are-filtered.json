@@ -30,11 +30,11 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
+        "dockerfile_hash": "5246424cb3d2918e9a3e285ae0e523e1",
         "experimental": "false",
         "indexWithinBuild": "0",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC",
-        "dockerfile_hash": "5246424cb3d2918e9a3e285ae0e523e1"
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "VERSION:value that is not missing"
@@ -77,11 +77,11 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
+        "dockerfile_hash": "021321e8c168ba3ae39ce3a2e7b3ec87",
         "experimental": "false",
         "indexWithinBuild": "1",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC",
-        "dockerfile_hash": "021321e8c168ba3ae39ce3a2e7b3ec87"
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "main",
