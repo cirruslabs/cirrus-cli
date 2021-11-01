@@ -10,7 +10,9 @@
           "fingerprintScripts": [
             "cat package-lock.json"
           ],
-          "folders": ["node_modules"],
+          "folders": [
+            "node_modules"
+          ],
           "populateScripts": [
             "npm ci"
           ]
@@ -63,7 +65,9 @@
           "fingerprintScripts": [
             "cat package-lock.json"
           ],
-          "folders": ["node_modules"],
+          "folders": [
+            "node_modules"
+          ],
           "populateScripts": [
             "npm ci"
           ]
@@ -117,7 +121,9 @@
           "fingerprintScripts": [
             "cat package-lock.json"
           ],
-          "folders": ["node_modules"],
+          "folders": [
+            "node_modules"
+          ],
           "populateScripts": [
             "npm ci"
           ]
@@ -171,7 +177,9 @@
           "fingerprintScripts": [
             "cat package-lock.json"
           ],
-          "folders": ["node_modules"],
+          "folders": [
+            "node_modules"
+          ],
           "populateScripts": [
             "npm ci"
           ]
@@ -225,7 +233,9 @@
           "fingerprintScripts": [
             "cat package-lock.json"
           ],
-          "folders": ["node_modules"],
+          "folders": [
+            "node_modules"
+          ],
           "populateScripts": [
             "npm ci"
           ]
@@ -282,7 +292,9 @@
           "fingerprintScripts": [
             "cat package-lock.json"
           ],
-          "folders": ["node_modules"],
+          "folders": [
+            "node_modules"
+          ],
           "populateScripts": [
             "npm ci"
           ]
@@ -339,7 +351,9 @@
           "fingerprintScripts": [
             "cat package-lock.json"
           ],
-          "folders": ["node_modules"],
+          "folders": [
+            "node_modules"
+          ],
           "populateScripts": [
             "npm ci"
           ]

@@ -32,13 +32,13 @@
           "image": "memcached:1.5.0-alpine",
           "memory": 777,
           "name": "memcached",
-          "readinessCommand": [
-            "./health.sh"
-          ],
           "ports": [
             {
               "containerPort": 6379
             }
+          ],
+          "readinessCommand": [
+            "./health.sh"
           ]
         },
         {
@@ -58,12 +58,12 @@
           "image": "docker:18.06-dind",
           "memory": 512,
           "name": "docker",
-          "privileged": true,
           "ports": [
             {
               "containerPort": 2375
             }
-          ]
+          ],
+          "privileged": true
         }
       ],
       "cpu": 2,

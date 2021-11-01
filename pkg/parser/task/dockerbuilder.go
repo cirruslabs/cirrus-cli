@@ -49,7 +49,10 @@ func NewDockerBuilder(
 		if err != nil {
 			return err
 		}
+
 		dbuilder.alias = name
+		dbuilder.proto.Metadata.Properties["alias"] = name
+
 		return nil
 	})
 

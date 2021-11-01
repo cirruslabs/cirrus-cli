@@ -30,11 +30,11 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
+        "dockerfile_hash": "2b4c0074861f1fe6525d23e24dd12e99",
         "experimental": "false",
         "indexWithinBuild": "0",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC",
-        "dockerfile_hash": "2b4c0074861f1fe6525d23e24dd12e99"
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "foo:bar"
@@ -77,11 +77,11 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
+        "dockerfile_hash": "930472895952b2e55cd88ac886de4bf3",
         "experimental": "false",
         "indexWithinBuild": "1",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC",
-        "dockerfile_hash": "930472895952b2e55cd88ac886de4bf3"
+        "trigger_type": "AUTOMATIC"
       },
       "uniqueLabels": [
         "bar:baz baz"

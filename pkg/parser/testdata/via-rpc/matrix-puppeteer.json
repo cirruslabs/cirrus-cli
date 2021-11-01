@@ -44,11 +44,11 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
+        "dockerfile_hash": "e55f410835991439e5ec0ab4830daf29",
         "experimental": "false",
         "indexWithinBuild": "0",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC",
-        "dockerfile_hash": "e55f410835991439e5ec0ab4830daf29"
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "node6 (linux)",
@@ -118,11 +118,11 @@
     "metadata": {
       "properties": {
         "allow_failures": "false",
+        "dockerfile_hash": "3687850f77ee15dd7dc5d1e5f025b885",
         "experimental": "false",
         "indexWithinBuild": "1",
         "timeout_in": "3600",
-        "trigger_type": "AUTOMATIC",
-        "dockerfile_hash": "3687850f77ee15dd7dc5d1e5f025b885"
+        "trigger_type": "AUTOMATIC"
       }
     },
     "name": "node7 (linux)",

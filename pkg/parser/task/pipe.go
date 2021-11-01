@@ -86,7 +86,10 @@ func NewDockerPipe(
 		if err != nil {
 			return err
 		}
+
 		pipe.alias = name
+		pipe.proto.Metadata.Properties["alias"] = name
+
 		return nil
 	})
 
