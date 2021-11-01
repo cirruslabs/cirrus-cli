@@ -72,6 +72,10 @@ func (c *Cache) Put(key string) (*PutOperation, error) {
 	}, nil
 }
 
+func (c *Cache) Delete(key string) error {
+	return os.Remove(c.blobPath(key))
+}
+
 func (c *Cache) blobPath(key string) string {
 	if needsSanitization(key) {
 		keyHash := sha256.Sum256([]byte(key))
