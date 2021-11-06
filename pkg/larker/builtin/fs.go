@@ -13,6 +13,7 @@ func FS(ctx context.Context, fs fs.FileSystem) starlark.StringDict {
 		"exists":  exists(ctx, fs),
 		"read":    read(ctx, fs),
 		"readdir": readdir(ctx, fs),
+		"isdir":   isdir(ctx, fs),
 	}
 }
 
@@ -84,5 +85,27 @@ func readdir(ctx context.Context, fs fs.FileSystem) starlark.Value {
 		}
 
 		return starlark.NewList(starlarkEntries), nil
+	})
+}
+
+func isdir(ctx context.Context, fs fs.FileSystem) starlark.Value {
+	const funcName = "isdir"
+
+	return starlark.NewBuiltin(funcName, func(thread *starlark.Thread, fn *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		var path string
+		if err := starlark.UnpackPositionalArgs(funcName, args, kwargs, 1, &path); err != nil {
+			return nil, err
+		}
+
+		fileInfo, err := fs.Stat(ctx, path)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return starlark.None, nil
+			}
+
+			return nil, err
+		}
+
+		return starlark.Bool(fileInfo.IsDir), nil
 	})
 }

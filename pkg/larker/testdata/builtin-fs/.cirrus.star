@@ -7,6 +7,7 @@ def main(ctx):
     test_exists()
     test_read()
     test_readdir()
+    test_isdir()
 
     return []
 
@@ -35,14 +36,28 @@ def test_read():
 def test_readdir():
     expectedFiles = [
         ".cirrus.star",
+        "dir",
         shouldExist,
         someFile,
     ]
     actualFiles = fs.readdir(".")
 
     if expectedFiles != actualFiles:
-        fail("directory contains %s instead of %s" % (expectedFiles, actualFiles))
+        fail("directory contains %s instead of %s" % (actualFiles, expectedFiles))
 
     shouldNotExist = "readdir-should-not-exist"
     if fs.readdir(shouldNotExist) != None:
         fail("non-existent directory %s should not be readable" % shouldNotExist)
+
+def test_isdir():
+    file = "dir/file"
+    dir = "dir"
+
+    if fs.isdir(file):
+        fail("fs.isdir() reports that the file we've created is a directory")
+
+    if not fs.isdir(dir):
+        fail("fs.isdir() reports that the directory we've created is not a directory")
+
+    if fs.isdir("does-not-exist-really") != None:
+        fail("fs.isdir() should return None on non-existent path")
