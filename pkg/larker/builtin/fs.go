@@ -100,7 +100,7 @@ func isdir(ctx context.Context, fs fs.FileSystem) starlark.Value {
 		fileInfo, err := fs.Stat(ctx, path)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
-				return starlark.None, nil
+				return starlark.False, nil
 			}
 
 			return nil, err

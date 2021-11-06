@@ -59,5 +59,5 @@ def test_isdir():
     if not fs.isdir(dir):
         fail("fs.isdir() reports that the directory we've created is not a directory")
 
-    if fs.isdir("does-not-exist-really") != None:
-        fail("fs.isdir() should return None on non-existent path")
+    if fs.isdir("does-not-exist-really") != False:
+        fail("fs.isdir() should return False on non-existent path")
