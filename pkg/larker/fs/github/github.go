@@ -48,12 +48,17 @@ func New(owner, repo, reference, token string) (*GitHub, error) {
 }
 
 func (gh *GitHub) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
-	_, directoryContent, err := gh.getContentsWrapper(ctx, path)
-	if err != nil {
-		return nil, err
+	_, contentsDirectory, cached := gh.getCachedContents(path)
+
+	if !cached {
+		var err error
+		_, contentsDirectory, err = gh.getContents(ctx, path)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if directoryContent != nil {
+	if contentsDirectory != nil {
 		return &fs.FileInfo{IsDir: true}, nil
 	}
 
@@ -61,7 +66,7 @@ func (gh *GitHub) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
 }
 
 func (gh *GitHub) Get(ctx context.Context, path string) ([]byte, error) {
-	fileContent, _, err := gh.getContentsWrapper(ctx, path)
+	fileContent, _, err := gh.getContents(ctx, path)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +85,7 @@ func (gh *GitHub) Get(ctx context.Context, path string) ([]byte, error) {
 }
 
 func (gh *GitHub) ReadDir(ctx context.Context, path string) ([]string, error) {
-	_, directoryContent, err := gh.getContentsWrapper(ctx, path)
+	_, directoryContent, err := gh.getContents(ctx, path)
 	if err != nil {
 		return nil, err
 	}
@@ -115,18 +120,28 @@ func (gh *GitHub) client(ctx context.Context) *github.Client {
 	return github.NewClient(client)
 }
 
-func (gh *GitHub) getContentsWrapper(
+func (gh *GitHub) getCachedContents(
+	path string,
+) (*github.RepositoryContent, []*github.RepositoryContent, bool) {
+	cachedContentsValue, ok := gh.contentsCache.Get(path)
+	if !ok {
+		return nil, nil, false
+	}
+	cachedContents := cachedContentsValue.(*Contents)
+	return cachedContents.File, cachedContents.Directory, true
+}
+
+func (gh *GitHub) getContents(
 	ctx context.Context,
 	path string,
 ) (*github.RepositoryContent, []*github.RepositoryContent, error) {
-	cachedContentsValue, ok := gh.contentsCache.Get(path)
+	cachedContentsFile, cachedContentsDirectory, ok := gh.getCachedContents(path)
 	if ok {
-		cachedContents := cachedContentsValue.(*Contents)
-		// Case when getContentsWrapper was called before to list files in the parent directory,
+		// Case when getContents was called before to list files in the parent directory,
 		// and we optimistically populated caches with partial information for files inside the directory.
-		partialFileCache := cachedContents.File != nil && cachedContents.File.Content == nil
+		partialFileCache := cachedContentsFile != nil && cachedContentsFile.Content == nil
 		if !partialFileCache {
-			return cachedContents.File, cachedContents.Directory, nil
+			return cachedContentsFile, cachedContentsDirectory, nil
 		}
 	}
 

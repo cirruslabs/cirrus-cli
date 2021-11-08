@@ -103,6 +103,16 @@ func TestReadDirDirectory(t *testing.T) {
 	cachedFileInfo := cachedContents.(*Contents).File
 	assert.Nil(t, cachedFileInfo.Content) // partial cache
 
+	_, err = testFS.Stat(context.Background(), "go.mod")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cachedContents, ok = testFS.contentsCache.Get("go.mod")
+	assert.True(t, ok)
+	cachedFileInfo = cachedContents.(*Contents).File
+	assert.Nil(t, cachedFileInfo.Content) // still partial cache
+
 	_, err = testFS.Get(context.Background(), "go.mod")
 	if err != nil {
 		t.Fatal(err)
