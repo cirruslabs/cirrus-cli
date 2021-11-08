@@ -1,10 +1,9 @@
-package github_test
+package github
 
 import (
 	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -13,7 +12,7 @@ import (
 )
 
 func selfFS(t *testing.T) fs.FileSystem {
-	selfFS, err := github.New("cirruslabs", "cirrus-cli", "master", "")
+	selfFS, err := New("cirruslabs", "cirrus-cli", "master", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,12 +89,28 @@ func TestReadDirFile(t *testing.T) {
 func TestReadDirDirectory(t *testing.T) {
 	possiblySkip(t)
 
-	entries, err := selfFS(t).ReadDir(context.Background(), ".")
+	testFS := selfFS(t).(*GitHub)
+	entries, err := testFS.ReadDir(context.Background(), ".")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	assert.Contains(t, entries, "go.mod", "go.sum")
+
+	cachedContents, ok := testFS.contentsCache.Get("go.mod")
+	assert.True(t, ok)
+	cachedFileInfo := cachedContents.(*Contents).File
+	assert.Nil(t, cachedFileInfo.Content) // partial cache
+
+	_, err = testFS.Get(context.Background(), "go.mod")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cachedContents, ok = testFS.contentsCache.Get("go.mod")
+	assert.True(t, ok)
+	cachedFileInfo = cachedContents.(*Contents).File
+	assert.NotNil(t, cachedFileInfo.Content) // verify cache entry got re-populated
 }
 
 func TestReadDirNonExistentDirectory(t *testing.T) {

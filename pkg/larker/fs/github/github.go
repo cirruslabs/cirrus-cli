@@ -119,9 +119,15 @@ func (gh *GitHub) getContentsWrapper(
 	ctx context.Context,
 	path string,
 ) (*github.RepositoryContent, []*github.RepositoryContent, error) {
-	contents, ok := gh.contentsCache.Get(path)
+	cachedContentsValue, ok := gh.contentsCache.Get(path)
 	if ok {
-		return contents.(*Contents).File, contents.(*Contents).Directory, nil
+		cachedContents := cachedContentsValue.(*Contents)
+		// Case when getContentsWrapper was called before to list files in the parent directory,
+		// and we optimistically populated caches with partial information for files inside the directory.
+		partialFileCache := cachedContents.File != nil && cachedContents.File.Content == nil
+		if !partialFileCache {
+			return cachedContents.File, cachedContents.Directory, nil
+		}
 	}
 
 	fileContent, directoryContent, resp, err := gh.client(ctx).Repositories.GetContents(ctx, gh.owner, gh.repo, path,
@@ -138,6 +144,17 @@ func (gh *GitHub) getContentsWrapper(
 	}
 
 	gh.contentsCache.Add(path, &Contents{File: fileContent, Directory: directoryContent})
+
+	// Optimistically populate cache for files inside the directory
+	if directoryContent != nil {
+		for _, directoryContentItem := range directoryContent {
+			if directoryContentItem.GetType() != "file" {
+				continue
+			}
+			// note: directoryContentItem's Content field is not populated here
+			gh.contentsCache.Add(directoryContentItem.GetPath(), &Contents{File: directoryContentItem})
+		}
+	}
 
 	return fileContent, directoryContent, nil
 }
