@@ -39,7 +39,7 @@ func New(owner, repo, reference, token string) (*GitHub, error) {
 	if err != nil {
 		return nil, err
 	}
-	fileInfosCache, err := lru.New(16)
+	fileInfosCache, err := lru.New(1024)
 	if err != nil {
 		return nil, err
 	}
