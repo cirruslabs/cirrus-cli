@@ -106,3 +106,28 @@ func TestReadDirNonExistentDirectory(t *testing.T) {
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, os.ErrNotExist))
 }
+
+func TestStatUsesFileInfosCache(t *testing.T) {
+	possiblySkip(t)
+
+	fs := selfFS(t).(*github.GitHub)
+	require.EqualValues(t, 0, fs.APICallCount(),
+		"GitHub FS should be initialized with zero API call count")
+
+	_, err := fs.ReadDir(context.Background(), ".")
+	require.NoError(t, err)
+	require.EqualValues(t, 1, fs.APICallCount(),
+		"ReadDir() should trigger a real API call")
+
+	fileInfo, err := fs.Stat(context.Background(), "go.mod")
+	require.NoError(t, err)
+	require.False(t, fileInfo.IsDir)
+	require.EqualValues(t, 1, fs.APICallCount(),
+		"Stat() calls in the root directory should've triggered no additional API calls")
+
+	fileInfo, err = fs.Stat(context.Background(), "pkg")
+	require.NoError(t, err)
+	require.True(t, fileInfo.IsDir)
+	require.EqualValues(t, 1, fs.APICallCount(),
+		"Stat() calls in the root directory should've triggered no additional API calls")
+}
