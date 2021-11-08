@@ -146,14 +146,12 @@ func (gh *GitHub) getContentsWrapper(
 	gh.contentsCache.Add(path, &Contents{File: fileContent, Directory: directoryContent})
 
 	// Optimistically populate cache for files inside the directory
-	if directoryContent != nil {
-		for _, directoryContentItem := range directoryContent {
-			if directoryContentItem.GetType() != "file" {
-				continue
-			}
-			// note: directoryContentItem's Content field is not populated here
-			gh.contentsCache.Add(directoryContentItem.GetPath(), &Contents{File: directoryContentItem})
+	for _, directoryContentItem := range directoryContent {
+		if directoryContentItem.GetType() != "file" {
+			continue
 		}
+		// note: directoryContentItem's Content field is not populated here
+		gh.contentsCache.Add(directoryContentItem.GetPath(), &Contents{File: directoryContentItem})
 	}
 
 	return fileContent, directoryContent, nil
