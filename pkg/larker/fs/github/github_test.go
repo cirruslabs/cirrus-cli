@@ -1,4 +1,4 @@
-// nolint:testpackage asserting private fields
+// nolint:testpackage // asserting private fields in tests
 package github
 
 import (
