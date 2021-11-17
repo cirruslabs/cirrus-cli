@@ -27,8 +27,7 @@ type gitHubLocation struct {
 }
 
 var (
-	ErrRetrievalFailed     = errors.New("failed to retrieve a file from Git repository")
-	ErrFileNotFound        = errors.New("file not found in a Git repository")
+	ErrRetrievalFailed     = errors.New("failed to retrieve a module")
 	ErrUnsupportedLocation = errors.New("unsupported location")
 )
 
@@ -102,6 +101,7 @@ func findModuleFS(
 ) (fs.FileSystem, string, error) {
 	return findLocatorFS(ctx, currentFS, env, parseLocation(module))
 }
+
 func findLocatorFS(
 	ctx context.Context,
 	currentFS fs.FileSystem,

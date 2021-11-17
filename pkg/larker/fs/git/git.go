@@ -13,14 +13,12 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/storage/filesystem"
 	"io/ioutil"
-	"os"
 	"path"
-	"strings"
 	"syscall"
 )
 
 var (
-	ErrRetrievalFailed = errors.New("failed to retrieve a file from Git repository")
+	ErrRetrievalFailed = errors.New("failed to retrieve a Git repository")
 )
 
 type Git struct {
@@ -82,44 +80,38 @@ func (g Git) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &fs.FileInfo{IsDir: stat.IsDir()}, nil
 }
 
 func (g Git) Get(ctx context.Context, path string) ([]byte, error) {
+	if err := g.ensureDirectory(path, false); err != nil {
+		return nil, err
+	}
+
 	file, err := g.worktree.Filesystem.Open(path)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, err
-		}
-		if strings.Contains(err.Error(), "cannot open directory") {
-			return nil, fs.ErrNormalizedIsADirectory
-		}
-
-		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
+		return nil, err
 	}
+
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
+		return nil, err
 	}
 
 	return fileBytes, nil
 }
 
 func (g Git) ReadDir(ctx context.Context, path string) ([]string, error) {
-	stat, err := g.worktree.Filesystem.Stat(path)
-	if err != nil {
+	if err := g.ensureDirectory(path, true); err != nil {
 		return nil, err
 	}
-	if !stat.IsDir() {
-		return nil, syscall.ENOTDIR
-	}
+
 	infos, err := g.worktree.Filesystem.ReadDir(path)
 	if err != nil {
 		return nil, err
 	}
-	if len(infos) == 0 {
-		return nil, os.ErrNotExist
-	}
+
 	var entries []string
 	for _, info := range infos {
 		entries = append(entries, info.Name())
@@ -130,4 +122,21 @@ func (g Git) ReadDir(ctx context.Context, path string) ([]string, error) {
 
 func (g Git) Join(elem ...string) string {
 	return path.Join(elem...)
+}
+
+func (g Git) ensureDirectory(path string, directory bool) error {
+	stat, err := g.worktree.Filesystem.Stat(path)
+	if err != nil {
+		return err
+	}
+
+	if directory && !stat.IsDir() {
+		return syscall.ENOTDIR
+	}
+
+	if !directory && stat.IsDir() {
+		return fs.ErrNormalizedIsADirectory
+	}
+
+	return nil
 }

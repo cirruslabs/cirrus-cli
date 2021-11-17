@@ -87,7 +87,7 @@ func (loader *Loader) LoadFunc(
 		}
 		source, err := moduleFS.Get(loader.ctx, path)
 		if err != nil {
-			if errors.Is(err, os.ErrNotExist) || errors.Is(err, ErrFileNotFound) {
+			if errors.Is(err, os.ErrNotExist) {
 				var hint string
 
 				if strings.Contains(module, ".start") {
@@ -104,7 +104,6 @@ func (loader *Loader) LoadFunc(
 		loader.cache[module] = nil
 
 		// Load the module and cache results
-
 		oldLoad := thread.Load
 		thread.Load = loader.LoadFunc(moduleFS)
 		globals, err := starlark.ExecFile(thread, filepath.Base(module), source, nil)

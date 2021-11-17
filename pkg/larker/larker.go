@@ -191,9 +191,8 @@ func (larker *Larker) Hook(
 		_, _ = fmt.Fprintln(outputLogsBuffer, msg)
 	}
 
-	loader := loader.NewLoader(ctx, larker.fs, larker.env, []string{}, larker.isTest)
 	thread := &starlark.Thread{
-		Load:  loader.LoadFunc(larker.fs),
+		Load:  loader.NewLoader(ctx, larker.fs, larker.env, []string{}, larker.isTest).LoadFunc(larker.fs),
 		Print: capture,
 	}
 
