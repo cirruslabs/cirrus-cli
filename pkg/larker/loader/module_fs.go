@@ -27,7 +27,7 @@ type gitHubLocation struct {
 }
 
 var (
-	ErrRetrievalFailed     = errors.New("failed to retrieve a file from Git repository")
+	ErrRetrievalFailed     = errors.New("failed to retrieve a module")
 	ErrUnsupportedLocation = errors.New("unsupported location")
 )
 
