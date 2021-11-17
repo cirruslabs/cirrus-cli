@@ -13,7 +13,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/storage/filesystem"
 	"io/ioutil"
-	"os"
 	"path"
 	"syscall"
 )
@@ -112,9 +111,7 @@ func (g Git) ReadDir(ctx context.Context, path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(infos) == 0 {
-		return nil, os.ErrNotExist
-	}
+
 	var entries []string
 	for _, info := range infos {
 		entries = append(entries, info.Name())
