@@ -213,7 +213,7 @@ func TestLoadSeveralFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "Foo\n", string(result.OutputLogs))
+	assert.Equal(t, "Hello, World!\n", string(result.OutputLogs))
 }
 
 // TestLoadTypoStarVsStart ensures that we return a user-friendly hint when loading of the module
