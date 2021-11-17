@@ -1,9 +1,10 @@
-package git
+package git_test
 
 import (
 	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -11,12 +12,12 @@ import (
 	"testing"
 )
 
-func selfFS(t *testing.T) map[string]fs.FileSystem {
-	ghFS, err := NewGitHub("cirruslabs", "cirrus-cli", "master", "")
+func fileSystemsToTest(t *testing.T) map[string]fs.FileSystem {
+	ghFS, err := git.NewGitHub("cirruslabs", "cirrus-cli", "master", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	gitFS, err := NewGit(context.Background(), "https://github.com/cirruslabs/cirrus-cli", "master")
+	gitFS, err := git.NewGit(context.Background(), "https://github.com/cirruslabs/cirrus-cli", "master")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +34,8 @@ func possiblySkip(t *testing.T) {
 func TestStatFile(t *testing.T) {
 	possiblySkip(t)
 
-	for name, fileSystem := range selfFS(t) {
+	for name, currentFS := range fileSystemsToTest(t) {
+		fileSystem := currentFS
 		t.Run(name, func(t *testing.T) {
 			stat, err := fileSystem.Stat(context.Background(), "go.mod")
 			if err != nil {
@@ -48,7 +50,8 @@ func TestStatFile(t *testing.T) {
 func TestStatDirectory(t *testing.T) {
 	possiblySkip(t)
 
-	for name, fileSystem := range selfFS(t) {
+	for name, currentFS := range fileSystemsToTest(t) {
+		fileSystem := currentFS
 		t.Run(name, func(t *testing.T) {
 			stat, err := fileSystem.Stat(context.Background(), ".")
 			if err != nil {
@@ -63,7 +66,8 @@ func TestStatDirectory(t *testing.T) {
 func TestGetFile(t *testing.T) {
 	possiblySkip(t)
 
-	for name, fileSystem := range selfFS(t) {
+	for name, currentFS := range fileSystemsToTest(t) {
+		fileSystem := currentFS
 		t.Run(name, func(t *testing.T) {
 			fileBytes, err := fileSystem.Get(context.Background(), "go.mod")
 			if err != nil {
@@ -78,7 +82,8 @@ func TestGetFile(t *testing.T) {
 func TestGetDirectory(t *testing.T) {
 	possiblySkip(t)
 
-	for name, fileSystem := range selfFS(t) {
+	for name, currentFS := range fileSystemsToTest(t) {
+		fileSystem := currentFS
 		t.Run(name, func(t *testing.T) {
 			_, err := fileSystem.Get(context.Background(), ".")
 
@@ -91,7 +96,8 @@ func TestGetDirectory(t *testing.T) {
 func TestGetNonExistentFile(t *testing.T) {
 	possiblySkip(t)
 
-	for name, fileSystem := range selfFS(t) {
+	for name, currentFS := range fileSystemsToTest(t) {
+		fileSystem := currentFS
 		t.Run(name, func(t *testing.T) {
 			_, err := fileSystem.Get(context.Background(), "the-file-that-should-not-exist.txt")
 
@@ -104,7 +110,8 @@ func TestGetNonExistentFile(t *testing.T) {
 func TestReadDirFile(t *testing.T) {
 	possiblySkip(t)
 
-	for name, fileSystem := range selfFS(t) {
+	for name, currentFS := range fileSystemsToTest(t) {
+		fileSystem := currentFS
 		t.Run(name, func(t *testing.T) {
 			_, err := fileSystem.ReadDir(context.Background(), "go.mod")
 
@@ -117,7 +124,8 @@ func TestReadDirFile(t *testing.T) {
 func TestReadDirDirectory(t *testing.T) {
 	possiblySkip(t)
 
-	for name, fileSystem := range selfFS(t) {
+	for name, currentFS := range fileSystemsToTest(t) {
+		fileSystem := currentFS
 		t.Run(name, func(t *testing.T) {
 			entries, err := fileSystem.ReadDir(context.Background(), ".")
 			if err != nil {
@@ -132,7 +140,8 @@ func TestReadDirDirectory(t *testing.T) {
 func TestReadDirNonExistentDirectory(t *testing.T) {
 	possiblySkip(t)
 
-	for name, fileSystem := range selfFS(t) {
+	for name, currentFS := range fileSystemsToTest(t) {
+		fileSystem := currentFS
 		t.Run(name, func(t *testing.T) {
 			_, err := fileSystem.ReadDir(context.Background(), "the-directory-that-should-not-exist")
 

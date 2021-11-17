@@ -1,3 +1,4 @@
+// nolint:testpackage // testing private methods
 package loader
 
 import (

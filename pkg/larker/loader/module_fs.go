@@ -41,7 +41,9 @@ const (
 )
 
 var (
-	githubRegexVariant = regexp.MustCompile(`^(?P<root>github\.com/(?P<owner>.*?)/(?P<name>.*?))` + optionalPath + optionalRevision + `$`)
+	githubRegexVariant = regexp.MustCompile(
+		`^(?P<root>github\.com/(?P<owner>.*?)/(?P<name>.*?))` + optionalPath + optionalRevision + `$`,
+	)
 
 	genericGitRegexVariant = regexp.MustCompile(`^(?P<root>.*?)\.git` + optionalPath + optionalRevision + `$`)
 )
@@ -92,10 +94,20 @@ func parseLocation(module string) interface{} {
 	return localLocation{Path: module}
 }
 
-func findModuleFS(ctx context.Context, currentFS fs.FileSystem, env map[string]string, module string) (fs.FileSystem, string, error) {
+func findModuleFS(
+	ctx context.Context,
+	currentFS fs.FileSystem,
+	env map[string]string,
+	module string,
+) (fs.FileSystem, string, error) {
 	return findLocatorFS(ctx, currentFS, env, parseLocation(module))
 }
-func findLocatorFS(ctx context.Context, currentFS fs.FileSystem, env map[string]string, location interface{}) (fs.FileSystem, string, error) {
+func findLocatorFS(
+	ctx context.Context,
+	currentFS fs.FileSystem,
+	env map[string]string,
+	location interface{},
+) (fs.FileSystem, string, error) {
 	switch l := location.(type) {
 	case gitHubLocation:
 		token, _ := util.GetFirstValue(env, "CIRRUS_GITHUB_TOKEN", "CIRRUS_REPO_CLONE_TOKEN")

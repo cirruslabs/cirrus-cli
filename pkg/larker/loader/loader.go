@@ -58,7 +58,9 @@ func NewLoader(
 	}
 }
 
-func (loader *Loader) LoadFunc(frameFS fs.FileSystem) func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
+func (loader *Loader) LoadFunc(
+	frameFS fs.FileSystem,
+) func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
 	return func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
 		// Lookup cache
 		entry, ok := loader.cache[module]

@@ -27,7 +27,7 @@ type Git struct {
 	worktree *git.Worktree
 }
 
-func NewGit(ctx context.Context, URL string, Revision string) (*Git, error) {
+func NewGit(ctx context.Context, url string, Revision string) (*Git, error) {
 	const (
 		cacheBytes = 1 * units.MiB
 
@@ -44,7 +44,7 @@ func NewGit(ctx context.Context, URL string, Revision string) (*Git, error) {
 
 	// Clone the repository
 	repo, err := git.CloneContext(ctx, boundedStorage, boundedFilesystem, &git.CloneOptions{
-		URL: URL,
+		URL: url,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)

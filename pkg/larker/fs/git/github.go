@@ -17,6 +17,7 @@ import (
 
 var ErrAPI = errors.New("failed to communicate with the GitHub API")
 
+// nolint:golint
 type GitHub struct {
 	token     string
 	owner     string
