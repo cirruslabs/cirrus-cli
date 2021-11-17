@@ -110,7 +110,7 @@ func findLocatorFS(
 ) (fs.FileSystem, string, error) {
 	switch l := location.(type) {
 	case gitHubLocation:
-		token, _ := env["CIRRUS_REPO_CLONE_TOKEN"]
+		token := env["CIRRUS_REPO_CLONE_TOKEN"]
 
 		ghFS, err := github.New(l.Owner, l.Name, l.Revision, token)
 		if err != nil {
