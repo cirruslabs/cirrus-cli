@@ -87,7 +87,7 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 	}
 
 	thread := &starlark.Thread{
-		Load:  loader.NewLoader(ctx, larker.fs, larker.env, larker.affectedFiles, larker.isTest).LoadFunc(),
+		Load:  loader.NewLoader(ctx, larker.fs, larker.env, larker.affectedFiles, larker.isTest).LoadFunc(larker.fs),
 		Print: capture,
 	}
 
@@ -192,7 +192,7 @@ func (larker *Larker) Hook(
 	}
 
 	thread := &starlark.Thread{
-		Load:  loader.NewLoader(ctx, larker.fs, larker.env, []string{}, larker.isTest).LoadFunc(),
+		Load:  loader.NewLoader(ctx, larker.fs, larker.env, []string{}, larker.isTest).LoadFunc(larker.fs),
 		Print: capture,
 	}
 

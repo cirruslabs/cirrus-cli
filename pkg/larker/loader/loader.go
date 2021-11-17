@@ -8,7 +8,6 @@ import (
 	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/builtin"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git"
 	"github.com/qri-io/starlib/encoding/base64"
 	"github.com/qri-io/starlib/encoding/yaml"
 	"github.com/qri-io/starlib/hash"
@@ -25,8 +24,7 @@ import (
 )
 
 var (
-	ErrCycle           = errors.New("import cycle detected")
-	ErrRetrievalFailed = errors.New("failed to retrieve module")
+	ErrCycle = errors.New("import cycle detected")
 )
 
 type CacheEntry struct {
@@ -60,16 +58,9 @@ func NewLoader(
 	}
 }
 
-func (loader *Loader) Retrieve(module string) ([]byte, error) {
-	gitLocator := git.Parse(module)
-	if gitLocator != nil {
-		return git.Retrieve(loader.ctx, gitLocator)
-	}
-
-	return loader.fs.Get(loader.ctx, module)
-}
-
-func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
+func (loader *Loader) LoadFunc(
+	frameFS fs.FileSystem,
+) func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
 	return func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
 		// Lookup cache
 		entry, ok := loader.cache[module]
@@ -90,10 +81,13 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 			return loader.loadCirrusModule()
 		}
 
-		// Retrieve module source code
-		source, err := loader.Retrieve(module)
+		moduleFS, path, err := findModuleFS(loader.ctx, frameFS, loader.env, module)
 		if err != nil {
-			if errors.Is(err, os.ErrNotExist) || errors.Is(err, git.ErrFileNotFound) {
+			return nil, err
+		}
+		source, err := moduleFS.Get(loader.ctx, path)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
 				var hint string
 
 				if strings.Contains(module, ".start") {
@@ -110,7 +104,10 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 		loader.cache[module] = nil
 
 		// Load the module and cache results
+		oldLoad := thread.Load
+		thread.Load = loader.LoadFunc(moduleFS)
 		globals, err := starlark.ExecFile(thread, filepath.Base(module), source, nil)
+		thread.Load = oldLoad
 
 		loader.cache[module] = &CacheEntry{
 			globals: globals,

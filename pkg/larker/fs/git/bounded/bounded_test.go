@@ -3,7 +3,7 @@ package bounded_test
 import (
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git/bounded"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git/bounded"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
