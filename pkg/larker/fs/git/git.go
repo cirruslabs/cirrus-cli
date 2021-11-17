@@ -27,7 +27,7 @@ type Git struct {
 	worktree *git.Worktree
 }
 
-func NewGit(ctx context.Context, url string, Revision string) (*Git, error) {
+func NewGit(ctx context.Context, url string, revision string) (*Git, error) {
 	const (
 		cacheBytes = 1 * units.MiB
 
@@ -63,7 +63,7 @@ func NewGit(ctx context.Context, url string, Revision string) (*Git, error) {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
-	hash, err := repo.ResolveRevision(plumbing.Revision(Revision))
+	hash, err := repo.ResolveRevision(plumbing.Revision(revision))
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
