@@ -58,11 +58,7 @@ func NewLoader(
 	}
 }
 
-func (loader *Loader) Retrieve(module string) ([]byte, error) {
-	return loader.retrieveModule(module)
-}
-
-func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
+func (loader *Loader) LoadFunc(frameFS fs.FileSystem) func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
 	return func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
 		// Lookup cache
 		entry, ok := loader.cache[module]
@@ -83,8 +79,11 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 			return loader.loadCirrusModule()
 		}
 
-		// Retrieve module source code
-		source, err := loader.Retrieve(module)
+		moduleFS, path, err := findModuleFS(loader.ctx, frameFS, loader.env, module)
+		if err != nil {
+			return nil, err
+		}
+		source, err := moduleFS.Get(loader.ctx, path)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) || errors.Is(err, ErrFileNotFound) {
 				var hint string
@@ -103,7 +102,11 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 		loader.cache[module] = nil
 
 		// Load the module and cache results
+
+		oldLoad := thread.Load
+		thread.Load = loader.LoadFunc(moduleFS)
 		globals, err := starlark.ExecFile(thread, filepath.Base(module), source, nil)
+		thread.Load = oldLoad
 
 		loader.cache[module] = &CacheEntry{
 			globals: globals,

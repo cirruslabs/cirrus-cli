@@ -49,7 +49,7 @@ func TestParse(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
-			assert.Equal(t, testCase.ExpectedGitLocator, parseLocator(testCase.Module))
+			assert.Equal(t, testCase.ExpectedGitLocator, parseLocation(testCase.Module))
 		})
 	}
 }
@@ -95,8 +95,11 @@ func TestRetrieve(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
-			loader := NewLoader(context.Background(), dummy.New(), make(map[string]string), make([]string, 0), true)
-			result, err := loader.retrieveViaLocator(testCase.Locator)
+			filesystem, path, err := findLocatorFS(context.Background(), dummy.New(), make(map[string]string), testCase.Locator)
+			if err != nil {
+				t.Fatal(err)
+			}
+			result, err := filesystem.Get(context.Background(), path)
 			if err != nil {
 				t.Fatal(err)
 			}

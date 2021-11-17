@@ -197,6 +197,25 @@ func TestLoadGitHelpers(t *testing.T) {
 	assert.YAMLEq(t, string(expected), result.YAMLConfig)
 }
 
+func TestLoadSeveralFiles(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/load-several-files")
+
+	// Read the source code
+	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the source code
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
+	result, err := lrk.Main(context.Background(), string(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "Foo\n", string(result.OutputLogs))
+}
+
 // TestLoadTypoStarVsStart ensures that we return a user-friendly hint when loading of the module
 // that ends with ".start" fails.
 func TestLoadTypoStarVsStart(t *testing.T) {

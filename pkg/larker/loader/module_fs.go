@@ -1,8 +1,10 @@
 package loader
 
 import (
+	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/util"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git"
 	"regexp"
 )
@@ -44,7 +46,7 @@ var (
 	genericGitRegexVariant = regexp.MustCompile(`^(?P<root>.*?)\.git` + optionalPath + optionalRevision + `$`)
 )
 
-func parseLocator(module string) interface{} {
+func parseLocation(module string) interface{} {
 	matches := githubRegexVariant.FindStringSubmatch(module)
 	if matches != nil {
 		owner := matches[githubRegexVariant.SubexpIndex("owner")]
@@ -90,29 +92,28 @@ func parseLocator(module string) interface{} {
 	return localLocation{Path: module}
 }
 
-func (loader *Loader) retrieveModule(module string) ([]byte, error) {
-	return loader.retrieveViaLocator(parseLocator(module))
+func findModuleFS(ctx context.Context, currentFS fs.FileSystem, env map[string]string, module string) (fs.FileSystem, string, error) {
+	return findLocatorFS(ctx, currentFS, env, parseLocation(module))
 }
-
-func (loader *Loader) retrieveViaLocator(l interface{}) ([]byte, error) {
-	switch l := l.(type) {
+func findLocatorFS(ctx context.Context, currentFS fs.FileSystem, env map[string]string, location interface{}) (fs.FileSystem, string, error) {
+	switch l := location.(type) {
 	case gitHubLocation:
-		token, _ := util.GetFirstValue(loader.env, "CIRRUS_GITHUB_TOKEN", "CIRRUS_REPO_CLONE_TOKEN")
+		token, _ := util.GetFirstValue(env, "CIRRUS_GITHUB_TOKEN", "CIRRUS_REPO_CLONE_TOKEN")
 
 		ghFS, err := git.NewGitHub(l.Owner, l.Name, l.Revision, token)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
-		return ghFS.Get(loader.ctx, l.Path)
+		return ghFS, l.Path, nil
 	case gitLocation:
-		gitFS, err := git.NewGit(loader.ctx, l.URL, l.Revision)
+		gitFS, err := git.NewGit(ctx, l.URL, l.Revision)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
-		return gitFS.Get(loader.ctx, l.Path)
+		return gitFS, l.Path, nil
 	case localLocation:
-		return loader.fs.Get(loader.ctx, l.Path)
+		return currentFS, l.Path, nil
 	default:
-		return nil, ErrUnsupportedLocation
+		return nil, "", ErrUnsupportedLocation
 	}
 }
