@@ -15,7 +15,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 	"syscall"
 )
 
@@ -86,13 +85,14 @@ func (g Git) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
 }
 
 func (g Git) Get(ctx context.Context, path string) ([]byte, error) {
+	if err := g.ensureDirectory(path, false); err != nil {
+		return nil, err
+	}
+
 	file, err := g.worktree.Filesystem.Open(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil, err
-		}
-		if strings.Contains(err.Error(), "cannot open directory") {
-			return nil, fs.ErrNormalizedIsADirectory
 		}
 
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
@@ -106,13 +106,10 @@ func (g Git) Get(ctx context.Context, path string) ([]byte, error) {
 }
 
 func (g Git) ReadDir(ctx context.Context, path string) ([]string, error) {
-	stat, err := g.worktree.Filesystem.Stat(path)
-	if err != nil {
+	if err := g.ensureDirectory(path, true); err != nil {
 		return nil, err
 	}
-	if !stat.IsDir() {
-		return nil, syscall.ENOTDIR
-	}
+
 	infos, err := g.worktree.Filesystem.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -130,4 +127,25 @@ func (g Git) ReadDir(ctx context.Context, path string) ([]string, error) {
 
 func (g Git) Join(elem ...string) string {
 	return path.Join(elem...)
+}
+
+func (g Git) ensureDirectory(path string, directory bool) error {
+	stat, err := g.worktree.Filesystem.Stat(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+
+		return fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
+	}
+
+	if directory && !stat.IsDir() {
+		return syscall.ENOTDIR
+	}
+
+	if !directory && stat.IsDir() {
+		return fs.ErrNormalizedIsADirectory
+	}
+
+	return nil
 }
