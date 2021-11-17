@@ -18,7 +18,7 @@ func fileSystemsToTest(t *testing.T) map[string]fs.FileSystem {
 	if err != nil {
 		t.Fatal(err)
 	}
-	gitFS, err := git.NewGit(context.Background(), "https://github.com/cirruslabs/cirrus-cli", "master")
+	gitFS, err := git.New(context.Background(), "https://github.com/cirruslabs/cirrus-cli", "master")
 	if err != nil {
 		t.Fatal(err)
 	}

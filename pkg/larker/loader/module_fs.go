@@ -118,7 +118,7 @@ func findLocatorFS(
 		}
 		return ghFS, l.Path, nil
 	case gitLocation:
-		gitFS, err := git.NewGit(ctx, l.URL, l.Revision)
+		gitFS, err := git.New(ctx, l.URL, l.Revision)
 		if err != nil {
 			return nil, "", err
 		}
