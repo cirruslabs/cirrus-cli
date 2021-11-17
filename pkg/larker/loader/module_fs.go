@@ -101,6 +101,7 @@ func findModuleFS(
 ) (fs.FileSystem, string, error) {
 	return findLocatorFS(ctx, currentFS, env, parseLocation(module))
 }
+
 func findLocatorFS(
 	ctx context.Context,
 	currentFS fs.FileSystem,

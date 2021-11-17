@@ -81,6 +81,7 @@ func (g Git) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &fs.FileInfo{IsDir: stat.IsDir()}, nil
 }
 
@@ -93,6 +94,7 @@ func (g Git) Get(ctx context.Context, path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
