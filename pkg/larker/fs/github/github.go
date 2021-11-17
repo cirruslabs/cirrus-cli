@@ -1,4 +1,4 @@
-package git
+package github
 
 import (
 	"context"
@@ -17,9 +17,6 @@ import (
 
 var ErrAPI = errors.New("failed to communicate with the GitHub API")
 
-// Work around golint's false positive:
-// "type name will be used as git.GitHub by other packages, and that stutters; consider calling this Hub"
-// nolint:golint
 type GitHub struct {
 	token     string
 	owner     string
@@ -37,7 +34,7 @@ type Contents struct {
 	Directory []*github.RepositoryContent
 }
 
-func NewGitHub(owner, repo, reference, token string) (*GitHub, error) {
+func New(owner, repo, reference, token string) (*GitHub, error) {
 	contentsCache, err := lru.New(16)
 	if err != nil {
 		return nil, err

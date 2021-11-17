@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -13,7 +14,7 @@ import (
 )
 
 func fileSystemsToTest(t *testing.T) map[string]fs.FileSystem {
-	ghFS, err := git.NewGitHub("cirruslabs", "cirrus-cli", "master", "")
+	ghFS, err := github.New("cirruslabs", "cirrus-cli", "master", "")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,8 +1,8 @@
-package git_test
+package github_test
 
 import (
 	"context"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
@@ -13,7 +13,7 @@ func TestStatUsesFileInfosCache(t *testing.T) {
 		t.SkipNow()
 	}
 
-	fileSystem, err := git.NewGitHub("cirruslabs", "cirrus-cli", "master", "")
+	fileSystem, err := github.New("cirruslabs", "cirrus-cli", "master", "")
 	if err != nil {
 		t.Fatal(err)
 	}
