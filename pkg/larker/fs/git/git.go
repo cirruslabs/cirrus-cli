@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git/bounded"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git/bounded"
 	"github.com/docker/go-units"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -13,74 +14,28 @@ import (
 	"github.com/go-git/go-git/v5/storage/filesystem"
 	"io/ioutil"
 	"os"
-	"regexp"
+	"path"
+	"strings"
+	"syscall"
 )
-
-type Locator struct {
-	URL      string
-	Path     string
-	Revision string
-}
 
 var (
 	ErrRetrievalFailed = errors.New("failed to retrieve a file from Git repository")
-	ErrFileNotFound    = errors.New("file not found in a Git repository")
 )
 
-const (
-	// Captures the path after / in non-greedy manner.
-	optionalPath = `(?:/(?P<path>.*?))?`
-
-	// Captures the revision after @ in non-greedy manner.
-	optionalRevision = `(?:@(?P<revision>.*))?`
-)
-
-var regexVariants = []*regexp.Regexp{
-	// GitHub
-	regexp.MustCompile(`^(?P<root>github\.com/.*?/.*?)` + optionalPath + optionalRevision + `$`),
-	// Other Git hosting services
-	regexp.MustCompile(`^(?P<root>.*?)\.git` + optionalPath + optionalRevision + `$`),
+type Git struct {
+	worktree *git.Worktree
 }
 
-func Parse(module string) *Locator {
-	result := &Locator{
-		Path:     "lib.star",
-		Revision: "main",
-	}
-
-	for _, regex := range regexVariants {
-		matches := regex.FindStringSubmatch(module)
-		if matches == nil {
-			continue
-		}
-
-		result.URL = "https://" + matches[regex.SubexpIndex("root")] + ".git"
-
-		path := matches[regex.SubexpIndex("path")]
-		if path != "" {
-			result.Path = path
-		}
-
-		revision := matches[regex.SubexpIndex("revision")]
-		if revision != "" {
-			result.Revision = revision
-		}
-
-		return result
-	}
-
-	return nil
-}
-
-func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
+func NewGit(ctx context.Context, URL string, Revision string) (*Git, error) {
 	const (
 		cacheBytes = 1 * units.MiB
 
 		storageBytes = 4 * units.MiB
-		storageFiles = 512
+		storageFiles = 4096
 
 		filesystemBytes = 4 * units.MiB
-		filesystemFiles = 512
+		filesystemFiles = 4096
 	)
 
 	boundedCache := cache.NewObjectLRU(cacheBytes)
@@ -89,7 +44,7 @@ func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
 
 	// Clone the repository
 	repo, err := git.CloneContext(ctx, boundedStorage, boundedFilesystem, &git.CloneOptions{
-		URL: locator.URL,
+		URL: URL,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
@@ -108,7 +63,7 @@ func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
-	hash, err := repo.ResolveRevision(plumbing.Revision(locator.Revision))
+	hash, err := repo.ResolveRevision(plumbing.Revision(Revision))
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
@@ -119,20 +74,60 @@ func Retrieve(ctx context.Context, locator *Locator) ([]byte, error) {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
-	// Read the file from the working tree
-	file, err := worktree.Filesystem.Open(locator.Path)
+	return &Git{worktree: worktree}, nil
+}
+
+func (g Git) Stat(ctx context.Context, path string) (*fs.FileInfo, error) {
+	stat, err := g.worktree.Filesystem.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	return &fs.FileInfo{IsDir: stat.IsDir()}, nil
+}
+
+func (g Git) Get(ctx context.Context, path string) ([]byte, error) {
+	file, err := g.worktree.Filesystem.Open(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf("%w: %v", ErrFileNotFound, err)
+			return nil, err
+		}
+		if strings.Contains(err.Error(), "cannot open directory") {
+			return nil, fs.ErrNormalizedIsADirectory
 		}
 
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
-
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
 	return fileBytes, nil
+}
+
+func (g Git) ReadDir(ctx context.Context, path string) ([]string, error) {
+	stat, err := g.worktree.Filesystem.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	if !stat.IsDir() {
+		return nil, syscall.ENOTDIR
+	}
+	infos, err := g.worktree.Filesystem.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+	if len(infos) == 0 {
+		return nil, os.ErrNotExist
+	}
+	var entries []string
+	for _, info := range infos {
+		entries = append(entries, info.Name())
+	}
+
+	return entries, nil
+}
+
+func (g Git) Join(elem ...string) string {
+	return path.Join(elem...)
 }

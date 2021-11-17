@@ -11,7 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/failing"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/memory"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
@@ -102,7 +102,7 @@ func fsFromEnvironment(env map[string]string) (fs fs.FileSystem, err error) {
 		return
 	}
 
-	return github.New(owner, repo, reference, token)
+	return git.NewGitHub(owner, repo, reference, token)
 }
 
 func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(

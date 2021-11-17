@@ -8,7 +8,6 @@ import (
 	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/builtin"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader/git"
 	"github.com/qri-io/starlib/encoding/base64"
 	"github.com/qri-io/starlib/encoding/yaml"
 	"github.com/qri-io/starlib/hash"
@@ -25,8 +24,7 @@ import (
 )
 
 var (
-	ErrCycle           = errors.New("import cycle detected")
-	ErrRetrievalFailed = errors.New("failed to retrieve module")
+	ErrCycle = errors.New("import cycle detected")
 )
 
 type CacheEntry struct {
@@ -61,12 +59,7 @@ func NewLoader(
 }
 
 func (loader *Loader) Retrieve(module string) ([]byte, error) {
-	gitLocator := git.Parse(module)
-	if gitLocator != nil {
-		return git.Retrieve(loader.ctx, gitLocator)
-	}
-
-	return loader.fs.Get(loader.ctx, module)
+	return loader.retrieveModule(module)
 }
 
 func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
@@ -93,7 +86,7 @@ func (loader *Loader) LoadFunc() func(thread *starlark.Thread, module string) (s
 		// Retrieve module source code
 		source, err := loader.Retrieve(module)
 		if err != nil {
-			if errors.Is(err, os.ErrNotExist) || errors.Is(err, git.ErrFileNotFound) {
+			if errors.Is(err, os.ErrNotExist) || errors.Is(err, ErrFileNotFound) {
 				var hint string
 
 				if strings.Contains(module, ".start") {

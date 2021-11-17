@@ -1,4 +1,4 @@
-package github
+package git
 
 import (
 	"context"
@@ -34,7 +34,7 @@ type Contents struct {
 	Directory []*github.RepositoryContent
 }
 
-func New(owner, repo, reference, token string) (*GitHub, error) {
+func NewGitHub(owner, repo, reference, token string) (*GitHub, error) {
 	contentsCache, err := lru.New(16)
 	if err != nil {
 		return nil, err
