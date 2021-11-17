@@ -17,6 +17,8 @@ import (
 
 var ErrAPI = errors.New("failed to communicate with the GitHub API")
 
+// Work around golint's false positive:
+// "type name will be used as git.GitHub by other packages, and that stutters; consider calling this Hub"
 // nolint:golint
 type GitHub struct {
 	token     string
