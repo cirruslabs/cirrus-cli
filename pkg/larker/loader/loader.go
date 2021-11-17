@@ -104,7 +104,6 @@ func (loader *Loader) LoadFunc(
 		loader.cache[module] = nil
 
 		// Load the module and cache results
-
 		oldLoad := thread.Load
 		thread.Load = loader.LoadFunc(moduleFS)
 		globals, err := starlark.ExecFile(thread, filepath.Base(module), source, nil)
