@@ -1,19 +1,35 @@
-package git_test
+package github_test
 
 import (
 	"context"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/githubfixture"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 )
 
-func TestStatUsesFileInfosCache(t *testing.T) {
+func possiblySkip(t *testing.T) {
 	if _, ok := os.LookupEnv("CIRRUS_INTERNAL_NO_GITHUB_API_TESTS"); ok {
 		t.SkipNow()
 	}
+}
 
-	fileSystem, err := git.NewGitHub("cirruslabs", "cirrus-cli", "master", "")
+func TestGitHubFixture(t *testing.T) {
+	possiblySkip(t)
+
+	ghFS, err := github.New(githubfixture.Owner, githubfixture.Repo, githubfixture.Reference, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	githubfixture.Run(t, ghFS)
+}
+
+func TestStatUsesFileInfosCache(t *testing.T) {
+	possiblySkip(t)
+
+	fileSystem, err := github.New("cirruslabs", "cirrus-cli", "master", "")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
 	"regexp"
 )
 
@@ -109,15 +110,15 @@ func findLocatorFS(
 ) (fs.FileSystem, string, error) {
 	switch l := location.(type) {
 	case gitHubLocation:
-		token, _ := env["CIRRUS_REPO_CLONE_TOKEN"]
+		token := env["CIRRUS_REPO_CLONE_TOKEN"]
 
-		ghFS, err := git.NewGitHub(l.Owner, l.Name, l.Revision, token)
+		ghFS, err := github.New(l.Owner, l.Name, l.Revision, token)
 		if err != nil {
 			return nil, "", err
 		}
 		return ghFS, l.Path, nil
 	case gitLocation:
-		gitFS, err := git.NewGit(ctx, l.URL, l.Revision)
+		gitFS, err := git.New(ctx, l.URL, l.Revision)
 		if err != nil {
 			return nil, "", err
 		}

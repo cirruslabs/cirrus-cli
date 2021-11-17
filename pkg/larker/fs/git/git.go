@@ -27,7 +27,7 @@ type Git struct {
 	worktree *git.Worktree
 }
 
-func NewGit(ctx context.Context, url string, revision string) (*Git, error) {
+func New(ctx context.Context, url string, revision string) (*Git, error) {
 	const (
 		cacheBytes = 1 * units.MiB
 
