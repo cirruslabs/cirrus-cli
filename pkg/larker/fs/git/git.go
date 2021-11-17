@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	ErrRetrievalFailed = errors.New("failed to retrieve a file from Git repository")
+	ErrRetrievalFailed = errors.New("failed to retrieve a Git repository")
 )
 
 type Git struct {
@@ -91,15 +91,11 @@ func (g Git) Get(ctx context.Context, path string) ([]byte, error) {
 
 	file, err := g.worktree.Filesystem.Open(path)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil, err
-		}
-
-		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
+		return nil, err
 	}
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
+		return nil, err
 	}
 
 	return fileBytes, nil
@@ -132,11 +128,7 @@ func (g Git) Join(elem ...string) string {
 func (g Git) ensureDirectory(path string, directory bool) error {
 	stat, err := g.worktree.Filesystem.Stat(path)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return err
-		}
-
-		return fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
+		return err
 	}
 
 	if directory && !stat.IsDir() {
