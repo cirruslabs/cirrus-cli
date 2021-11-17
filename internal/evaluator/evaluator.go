@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-cli/internal/util"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
@@ -97,7 +96,7 @@ func fsFromEnvironment(env map[string]string) (fs fs.FileSystem, err error) {
 	if !ok {
 		return
 	}
-	token, ok := util.GetFirstValue(env, "CIRRUS_GITHUB_TOKEN", "CIRRUS_REPO_CLONE_TOKEN")
+	token, ok := env["CIRRUS_REPO_CLONE_TOKEN"]
 	if !ok {
 		return
 	}
