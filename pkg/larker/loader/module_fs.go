@@ -28,7 +28,6 @@ type gitHubLocation struct {
 
 var (
 	ErrRetrievalFailed     = errors.New("failed to retrieve a file from Git repository")
-	ErrFileNotFound        = errors.New("file not found in a Git repository")
 	ErrUnsupportedLocation = errors.New("unsupported location")
 )
 
