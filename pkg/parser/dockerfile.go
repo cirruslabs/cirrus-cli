@@ -169,8 +169,8 @@ func find(ctx context.Context, fs fs.FileSystem, path string, cb func(path strin
 
 	todo.PushBack(path)
 
-	for todoEntry := todo.Front(); todoEntry != nil; todoEntry = todo.Front() {
-		todoPath := todo.Remove(todoEntry).(string)
+	for todo.Len() > 0 {
+		todoPath := todo.Remove(todo.Front()).(string)
 
 		namesInDir, err := fs.ReadDir(ctx, todoPath)
 		if err != nil {
