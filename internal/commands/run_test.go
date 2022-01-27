@@ -369,3 +369,18 @@ func TestAffectedFiles(t *testing.T) {
 	require.Nil(t, err)
 	assert.Contains(t, buf.String(), "Debian GNU/Linux")
 }
+
+func TestHasStaticEnvironment(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-has-static-environment")
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-v", "-o simple"})
+	command.SetOut(writer)
+	command.SetErr(writer)
+	err := command.Execute()
+	require.Nil(t, err)
+}
