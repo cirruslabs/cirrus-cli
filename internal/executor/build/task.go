@@ -83,7 +83,8 @@ func NewFromProto(protoTask *api.Task, logger logger.Lightweight) (*Task, error)
 	if protoTask.Metadata != nil {
 		uniqueLabels = protoTask.Metadata.UniqueLabels
 	}
-	return &Task{
+
+	task := &Task{
 		ID:          protoTask.LocalGroupId,
 		RequiredIDs: protoTask.RequiredGroups,
 		Name:        protoTask.Name,
@@ -92,7 +93,19 @@ func NewFromProto(protoTask *api.Task, logger logger.Lightweight) (*Task, error)
 		Timeout:     timeout,
 		Environment: protoTask.Environment,
 		Commands:    wrappedCommands,
-	}, nil
+	}
+
+	switch protoTask.Status {
+	case api.Task_CREATED:
+		task.SetStatus(taskstatus.New)
+	case api.Task_SKIPPED:
+		task.SetStatus(taskstatus.Skipped)
+	default:
+		return nil, fmt.Errorf("%w %q: unhandled task status: %v", ErrFailedToCreateTask, protoTask.Name,
+			protoTask.Status)
+	}
+
+	return task, nil
 }
 
 func (task *Task) ProtoCommands() []*api.Command {
