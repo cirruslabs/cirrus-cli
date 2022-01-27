@@ -1,0 +1,6 @@
+container:
+  image: debian:latest
+
+task:
+  skip: "$CIRRUS_ENVIRONMENT == 'CLI'"
+  script: false

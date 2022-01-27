@@ -86,7 +86,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Parse
 	p := parser.New(
-		parser.WithEnvironment(userSpecifiedEnvironment),
+		parser.WithEnvironment(eenvironment.Merge(eenvironment.Static(), userSpecifiedEnvironment)),
 		parser.WithMissingInstancesAllowed(),
 		parser.WithAffectedFiles(affectedFiles),
 		parser.WithFileSystem(local.New(projectDir)),
