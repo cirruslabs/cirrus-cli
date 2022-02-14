@@ -26,6 +26,8 @@ cirrus worker run --token <poll registration token> --name z390-worker
 
 Note that persistent worker's name should be unique within a pool.
 
+Note that by default a persistent worker has the privileges of the user that invoked it. Read more [about isolation](#isolation) below to learn how to limit or extend persistent worker privileges.
+
 ## Configuration
 
 Path to the YAML configuration can be specified via the `--file` (or `-f` for short version) command-line flag.
@@ -85,13 +87,21 @@ task:
   script: echo "running on-premise"
 ```
 
-### Isolation
+## Isolation
+
+### No isolation
 
 By default, a persistent worker does not isolate execution of a task. All the task instructions are executed directly on
 the worker which can have side effects. This is intended since the main use case for persistent workers is to test on
-bare metal. There are options to enable isolation of task execution:
+bare metal.
 
-#### Parallels Desktop for Mac
+Note that the user that starts the Persistent Worker is the user under which the task will run. You may create a separate user with limited access to limit tasks privileges, or conversely grant tasks access to the whole machine by running the Persistent Worker as `root`:
+
+```
+sudo cirrus worker run --token <poll registration token>
+```
+
+### Parallels Desktop for Mac
 
 If your host has [Parallels Desktop](https://www.parallels.com/products/desktop/) installed, then a persistent worker
 can execute tasks in available Parallels VMs (worker will clone a VM, run the task and then remove the temporary cloned
