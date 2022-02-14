@@ -13,7 +13,7 @@ Follow the instruction in the [INSTALL.md](INSTALL.md) but note that Docker or P
 The simplest invocation looks like this:
 
 ```
-cirrus worker run --token <poll registration token>
+[sudo] cirrus worker run --token <poll registration token>
 ```
 
 This will start the persistent worker that periodically poll for new tasks in the foreground mode.
@@ -21,7 +21,7 @@ This will start the persistent worker that periodically poll for new tasks in th
 By default, the worker's name is equal to the name of the current system. Specify `--name` to explicitly provide the worker's name:
 
 ```
-cirrus worker run --token <poll registration token> --name z390-worker
+[sudo] cirrus worker run --token <poll registration token> --name z390-worker
 ```
 
 Note that persistent worker's name should be unique within a pool.
