@@ -133,37 +133,6 @@ func (r *RPC) InitialCommands(
 	}, nil
 }
 
-func (r *RPC) ReportSingleCommand(
-	ctx context.Context,
-	req *api.ReportSingleCommandRequest,
-) (*api.ReportSingleCommandResponse, error) {
-	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
-	if err != nil {
-		return nil, err
-	}
-
-	// Register whether the current command succeeded or failed
-	// so that the main loop can make the decision whether
-	// to proceed with the execution or not.
-	command := task.GetCommand(req.CommandName)
-	if command == nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "attempt to set status for non-existent command %s",
-			req.CommandName)
-	}
-	commandLogger := r.getCommandLogger(task, command)
-
-	if req.Succeded {
-		command.SetStatus(commandstatus.Success)
-		commandLogger.Debugf("command succeeded")
-	} else {
-		command.SetStatus(commandstatus.Failure)
-		commandLogger.Debugf("command failed")
-	}
-	commandLogger.Finish(req.Succeded)
-
-	return &api.ReportSingleCommandResponse{}, nil
-}
-
 func (r *RPC) ReportCommandUpdates(
 	ctx context.Context,
 	req *api.ReportCommandUpdatesRequest,
