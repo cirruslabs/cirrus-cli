@@ -96,9 +96,9 @@ func NewFromProto(protoTask *api.Task, logger logger.Lightweight) (*Task, error)
 	}
 
 	switch protoTask.Status {
-	case api.Task_CREATED:
+	case api.Status_CREATED:
 		task.SetStatus(taskstatus.New)
-	case api.Task_SKIPPED:
+	case api.Status_SKIPPED:
 		task.SetStatus(taskstatus.Skipped)
 	default:
 		return nil, fmt.Errorf("%w %q: unhandled task status: %v", ErrFailedToCreateTask, protoTask.Name,

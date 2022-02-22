@@ -68,7 +68,7 @@ func AttachBaseTaskFields(
 			return err
 		}
 		if skipped {
-			task.Status = api.Task_SKIPPED
+			task.Status = api.Status_SKIPPED
 		}
 		return nil
 	})
