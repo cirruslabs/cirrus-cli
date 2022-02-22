@@ -164,6 +164,50 @@ func (r *RPC) ReportSingleCommand(
 	return &api.ReportSingleCommandResponse{}, nil
 }
 
+func (r *RPC) ReportCommandUpdates(
+	ctx context.Context,
+	req *api.ReportCommandUpdatesRequest,
+) (*api.ReportCommandUpdatesResponse, error) {
+	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, update := range req.Updates {
+		command := task.GetCommand(update.Name)
+		if command == nil {
+			return nil, status.Errorf(codes.FailedPrecondition, "attempt to set status for non-existent command %s",
+				update.Name)
+		}
+
+		commandLogger := r.getCommandLogger(task, command)
+
+		// Register whether the current command succeeded or failed
+		// so that the main loop can make the decision whether
+		// to proceed with the execution or not.
+		succeeded := update.Status == api.Status_COMPLETED
+
+		if succeeded {
+			command.SetStatus(commandstatus.Success)
+			commandLogger.Debugf("command succeeded")
+		} else {
+			command.SetStatus(commandstatus.Failure)
+			commandLogger.Debugf("command failed")
+		}
+
+		commandLogger.Finish(succeeded)
+	}
+
+	return &api.ReportCommandUpdatesResponse{}, nil
+}
+
+func (r *RPC) ReportAgentFinished(
+	ctx context.Context,
+	req *api.ReportAgentFinishedRequest,
+) (*api.ReportAgentFinishedResponse, error) {
+	return &api.ReportAgentFinishedResponse{}, nil
+}
+
 func (r *RPC) getCommandLogger(task *build.Task, command *build.Command) *echelon.Logger {
 	commandLoggerScope := fmt.Sprintf("'%s'", command.ProtoCommand.Name)
 	command.ProtoCommand.GetScriptInstruction()
