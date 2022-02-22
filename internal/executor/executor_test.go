@@ -256,9 +256,13 @@ func TestDockerPipeTermination(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/docker-pipe-fail-propagation")
 	err := testutil.ExecuteWithOptions(t, dir, executor.WithLogger(logger))
 	assert.Error(t, err)
-	assert.Contains(t, buf.String(), "failing")
-	assert.Contains(t, buf.String(), "validate")
-	assert.NotContains(t, buf.String(), "never")
+	assert.Contains(t, buf.String(), "command failing failed")
+	assert.Contains(t, buf.String(), "command validate_first succeeded")
+	assert.Contains(t, buf.String(), "command validate_second succeeded")
+	assert.Contains(t, buf.String(), "command never_before_first was skipped")
+	assert.Contains(t, buf.String(), "command never_after_first was skipped")
+	assert.Contains(t, buf.String(), "command never_before_second was skipped")
+	assert.Contains(t, buf.String(), "command never_after_second was skipped")
 }
 
 // TestExecutionBehavior ensures that individual command's execution behavior is respected.
@@ -274,9 +278,9 @@ func TestExecutionBehavior(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/execution-behavior")
 	err := testutil.ExecuteWithOptions(t, dir, executor.WithLogger(logger))
 	assert.Error(t, err)
-	assert.Contains(t, buf.String(), "should_run_because_on_failure")
-	assert.Contains(t, buf.String(), "should_run_because_always")
-	assert.NotContains(t, buf.String(), "should_not_run_because_on_success")
+	assert.Contains(t, buf.String(), "command should_run_because_on_failure succeeded")
+	assert.Contains(t, buf.String(), "command should_run_because_always succeeded")
+	assert.Contains(t, buf.String(), "command should_not_run_because_on_success was skipped")
 }
 
 // TestDirtyMode ensures that files created in dirty mode exist on the host.

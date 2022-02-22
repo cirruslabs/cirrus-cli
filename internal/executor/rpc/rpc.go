@@ -133,35 +133,51 @@ func (r *RPC) InitialCommands(
 	}, nil
 }
 
-func (r *RPC) ReportSingleCommand(
+func (r *RPC) ReportCommandUpdates(
 	ctx context.Context,
-	req *api.ReportSingleCommandRequest,
-) (*api.ReportSingleCommandResponse, error) {
+	req *api.ReportCommandUpdatesRequest,
+) (*api.ReportCommandUpdatesResponse, error) {
 	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
 	if err != nil {
 		return nil, err
 	}
 
-	// Register whether the current command succeeded or failed
-	// so that the main loop can make the decision whether
-	// to proceed with the execution or not.
-	command := task.GetCommand(req.CommandName)
-	if command == nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "attempt to set status for non-existent command %s",
-			req.CommandName)
-	}
-	commandLogger := r.getCommandLogger(task, command)
+	for _, update := range req.Updates {
+		command := task.GetCommand(update.Name)
+		if command == nil {
+			return nil, status.Errorf(codes.FailedPrecondition, "attempt to set status for non-existent command %s",
+				update.Name)
+		}
 
-	if req.Succeded {
-		command.SetStatus(commandstatus.Success)
-		commandLogger.Debugf("command succeeded")
-	} else {
-		command.SetStatus(commandstatus.Failure)
-		commandLogger.Debugf("command failed")
-	}
-	commandLogger.Finish(req.Succeded)
+		commandLogger := r.getCommandLogger(task, command)
 
-	return &api.ReportSingleCommandResponse{}, nil
+		// Register whether the current command succeeded or failed
+		// so that the main loop can make the decision whether
+		// to proceed with the execution or not.
+		switch {
+		case update.Status == api.Status_COMPLETED:
+			command.SetStatus(commandstatus.Success)
+			commandLogger.Debugf("command %s succeeded", update.Name)
+			commandLogger.FinishWithType(echelon.FinishTypeSucceeded)
+		case update.Status == api.Status_SKIPPED:
+			command.SetStatus(commandstatus.Success)
+			commandLogger.Debugf("command %s was skipped", update.Name)
+			commandLogger.FinishWithType(echelon.FinishTypeSkipped)
+		case update.Status == api.Status_ABORTED || update.Status == api.Status_FAILED:
+			command.SetStatus(commandstatus.Failure)
+			commandLogger.Debugf("command %s failed", update.Name)
+			commandLogger.FinishWithType(echelon.FinishTypeFailed)
+		}
+	}
+
+	return &api.ReportCommandUpdatesResponse{}, nil
+}
+
+func (r *RPC) ReportAgentFinished(
+	ctx context.Context,
+	req *api.ReportAgentFinishedRequest,
+) (*api.ReportAgentFinishedResponse, error) {
+	return &api.ReportAgentFinishedResponse{}, nil
 }
 
 func (r *RPC) getCommandLogger(task *build.Task, command *build.Command) *echelon.Logger {
