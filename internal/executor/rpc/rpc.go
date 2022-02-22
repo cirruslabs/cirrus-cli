@@ -185,17 +185,20 @@ func (r *RPC) ReportCommandUpdates(
 		// Register whether the current command succeeded or failed
 		// so that the main loop can make the decision whether
 		// to proceed with the execution or not.
-		succeeded := update.Status == api.Status_COMPLETED
-
-		if succeeded {
+		switch {
+		case update.Status == api.Status_COMPLETED:
 			command.SetStatus(commandstatus.Success)
-			commandLogger.Debugf("command succeeded")
-		} else {
+			commandLogger.Debugf("command %s succeeded", update.Name)
+			commandLogger.FinishWithType(echelon.FinishTypeSucceeded)
+		case update.Status == api.Status_SKIPPED:
+			command.SetStatus(commandstatus.Success)
+			commandLogger.Debugf("command %s was skipped", update.Name)
+			commandLogger.FinishWithType(echelon.FinishTypeSkipped)
+		case update.Status == api.Status_ABORTED || update.Status == api.Status_FAILED:
 			command.SetStatus(commandstatus.Failure)
-			commandLogger.Debugf("command failed")
+			commandLogger.Debugf("command %s failed", update.Name)
+			commandLogger.FinishWithType(echelon.FinishTypeFailed)
 		}
-
-		commandLogger.Finish(succeeded)
 	}
 
 	return &api.ReportCommandUpdatesResponse{}, nil
