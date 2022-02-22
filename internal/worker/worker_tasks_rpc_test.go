@@ -50,15 +50,24 @@ func (tasksRPC *TasksRPC) InitialCommands(
 	}, nil
 }
 
-func (tasksRPC *TasksRPC) ReportSingleCommand(
+func (tasksRPC *TasksRPC) ReportCommandUpdates(
 	ctx context.Context,
-	request *api.ReportSingleCommandRequest,
-) (*api.ReportSingleCommandResponse, error) {
-	if request.Succeded {
-		tasksRPC.SucceededCommands = append(tasksRPC.SucceededCommands, request.CommandName)
+	request *api.ReportCommandUpdatesRequest,
+) (*api.ReportCommandUpdatesResponse, error) {
+	return &api.ReportCommandUpdatesResponse{}, nil
+}
+
+func (tasksRPC *TasksRPC) ReportAgentFinished(
+	ctx context.Context,
+	request *api.ReportAgentFinishedRequest,
+) (*api.ReportAgentFinishedResponse, error) {
+	for _, commandResult := range request.CommandResults {
+		if commandResult.Status == api.Status_COMPLETED || commandResult.Status == api.Status_SKIPPED {
+			tasksRPC.SucceededCommands = append(tasksRPC.SucceededCommands, commandResult.Name)
+		}
 	}
 
-	return &api.ReportSingleCommandResponse{}, nil
+	return &api.ReportAgentFinishedResponse{}, nil
 }
 
 func (tasksRPC *TasksRPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
