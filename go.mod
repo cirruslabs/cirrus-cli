@@ -41,7 +41,7 @@ require (
 	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0
-	github.com/otiai10/copy v1.4.2
+	github.com/otiai10/copy v1.7.0
 	github.com/pkg/sftp v1.12.0
 	github.com/qri-io/starlib v0.5.0
 	github.com/sergi/go-diff v1.2.0
