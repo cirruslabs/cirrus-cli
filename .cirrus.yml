@@ -46,6 +46,7 @@ task:
   persistent_worker:
     labels:
       os: darwin
+      parallels: installed
   env:
     CIRRUS_INTERNAL_PARALLELS_DARWIN_VM: monterey-base
     CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_USER: admin
@@ -55,9 +56,7 @@ task:
     CIRRUS_INTERNAL_PARALLELS_LINUX_SSH_PASSWORD: parallels
     CIRRUS_INTERNAL_NO_GITHUB_API_TESTS: yes
   test_script:
-    # Work around https://github.com/Homebrew/homebrew-core/pull/83413 not being merged yet
-    - /usr/local/go/bin/go version
-    - /usr/local/go/bin/go test -p 1 ./...
+    - go test -p 1 ./...
 
 task:
   name: Release (Dry Run)
