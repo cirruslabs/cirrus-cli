@@ -10,6 +10,7 @@ docker_builder:
 
 docker_builder:
   name: Test (Linux with Podman)
+  allow_failures: true
   alias: Tests
   install_podman_script:
     - sudo apt-get -y install podman
