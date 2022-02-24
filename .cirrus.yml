@@ -10,14 +10,9 @@ docker_builder:
 
 docker_builder:
   name: Test (Linux with Podman)
+  allow_failures: true
   alias: Tests
   install_podman_script:
-    - sudo rm /root/.docker/config.json || true
-    - . /etc/os-release
-    - echo "deb https://ftp.gwdg.de/pub/opensuse/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-    - curl -L https://ftp.gwdg.de/pub/opensuse/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add -
-    - sudo apt-get update
-    - sudo apt-get -y upgrade
     - sudo apt-get -y install podman
   run_podman_background_script:
     - podman system service -t 0 unix:///tmp/podman.sock
@@ -46,6 +41,7 @@ task:
   persistent_worker:
     labels:
       os: darwin
+      parallels: installed
   env:
     CIRRUS_INTERNAL_PARALLELS_DARWIN_VM: monterey-base
     CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_USER: admin
@@ -55,9 +51,7 @@ task:
     CIRRUS_INTERNAL_PARALLELS_LINUX_SSH_PASSWORD: parallels
     CIRRUS_INTERNAL_NO_GITHUB_API_TESTS: yes
   test_script:
-    # Work around https://github.com/Homebrew/homebrew-core/pull/83413 not being merged yet
-    - /usr/local/go/bin/go version
-    - /usr/local/go/bin/go test -p 1 ./...
+    - go test -p 1 ./...
 
 task:
   name: Release (Dry Run)
