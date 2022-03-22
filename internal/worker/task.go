@@ -50,8 +50,8 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 
 		config := runconfig.RunConfig{
 			ProjectDir:        "",
-			ContainerEndpoint: worker.agentRPCEndpoint,
-			DirectEndpoint:    worker.rpcEndpoint,
+			ContainerEndpoint: worker.agentContainerRPCEndpoint,
+			DirectEndpoint:    worker.agentDirectRPCEndpoint,
 			ServerSecret:      agentAwareTask.ServerSecret,
 			ClientSecret:      agentAwareTask.ClientSecret,
 			TaskID:            agentAwareTask.TaskId,

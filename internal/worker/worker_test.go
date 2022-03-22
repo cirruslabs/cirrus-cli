@@ -2,6 +2,7 @@ package worker_test
 
 import (
 	"context"
+	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
@@ -71,18 +72,16 @@ func workerTestHelper(t *testing.T, lis net.Listener, isolation *api.Isolation, 
 		}
 	}()
 
-	// Start the worker
-	opts = append(opts, worker.WithRegistrationToken(registrationToken))
+	var rearrangedOpts []worker.Option
 
-	rpcEndpoint := lis.Addr().String()
-	if lis.Addr().Network() == "unix" {
-		rpcEndpoint = "unix:" + rpcEndpoint
-	} else {
-		rpcEndpoint = "http://" + rpcEndpoint
-	}
-	opts = append(opts, worker.WithRPCEndpoint(rpcEndpoint))
+	// Append lower-priority options first
+	rearrangedOpts = append(rearrangedOpts, worker.WithRegistrationToken(registrationToken))
 
-	worker, err := worker.New(opts...)
+	// Only after lower-priority options
+	// append high-priority user-specified options
+	rearrangedOpts = append(rearrangedOpts, opts...)
+
+	worker, err := worker.New(rearrangedOpts...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +107,10 @@ func TestWorkerIsolationNone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	workerTestHelper(t, lis, nil)
+	endpoint := fmt.Sprintf("http://127.0.0.1:%d", lis.Addr().(*net.TCPAddr).Port)
+
+	workerTestHelper(t, lis, nil, worker.WithRPCEndpoint(endpoint),
+		worker.WithAgentDirectRPCEndpoint(endpoint))
 }
 
 func TestWorkerIsolationParallels(t *testing.T) {
@@ -142,7 +144,9 @@ func TestWorkerIsolationParallels(t *testing.T) {
 		},
 	}
 
-	workerTestHelper(t, lis, isolation)
+	endpoint := fmt.Sprintf("http://%s", lis.Addr().String())
+
+	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(endpoint), worker.WithAgentDirectRPCEndpoint(endpoint))
 }
 
 func TestWorkerIsolationContainer(t *testing.T) {
@@ -163,5 +167,55 @@ func TestWorkerIsolationContainer(t *testing.T) {
 		},
 	}
 
-	workerTestHelper(t, lis, isolation, worker.WithAgentRPCEndpoint(lis.ContainerEndpoint()))
+	var endpoint string
+
+	switch addr := lis.Addr().(type) {
+	case *net.TCPAddr:
+		endpoint = fmt.Sprintf("http://127.0.0.1:%d", addr.Port)
+	case *net.UnixAddr:
+		endpoint = fmt.Sprintf("unix:%s", addr.String())
+	default:
+		t.Fatalf("unknown listener address type: %T", addr)
+	}
+
+	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(endpoint),
+		worker.WithAgentContainerRPCEndpoint(lis.ContainerEndpoint()))
+}
+
+func TestWorkerIsolationTart(t *testing.T) {
+	// Support Tart isolation testing configured via environment variables
+	vm, vmOk := os.LookupEnv("CIRRUS_INTERNAL_TART_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_PASSWORD")
+	if !vmOk || !userOk || !passwordOk {
+		t.Skip("no Tart credentials configured")
+	}
+
+	t.Logf("Using Tart VM %s for testing...", vm)
+
+	// Virtualization.Framework only creates the network interface once the VM is running,
+	// and binding to 127.0.0.1 wouldn't work in terms of reachability from the VM,
+	// so this should be relatively OK, assuming we only do this in tests.
+	// nolint:gosec
+	lis, err := net.Listen("tcp", "0.0.0.0:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	isolation := &api.Isolation{
+		Type: &api.Isolation_Tart_{
+			Tart: &api.Isolation_Tart{
+				Vm:       vm,
+				User:     user,
+				Password: password,
+			},
+		},
+	}
+
+	listenerPort := lis.Addr().(*net.TCPAddr).Port
+	rpcEndpoint := fmt.Sprintf("http://127.0.0.1:%d", listenerPort)
+	agentRPCEndpoint := fmt.Sprintf("http://192.168.64.1:%d", listenerPort)
+
+	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(rpcEndpoint),
+		worker.WithAgentDirectRPCEndpoint(agentRPCEndpoint))
 }

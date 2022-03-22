@@ -58,6 +58,20 @@ task:
     - go test -p 1 ./...
 
 task:
+  name: Test (macOS with Tart)
+  alias: Tests
+  persistent_worker:
+    labels:
+      os: darwin
+      tart: installed
+  env:
+    CIRRUS_INTERNAL_TART_VM: monterey-base
+    CIRRUS_INTERNAL_TART_SSH_PASSWORD: admin
+    CIRRUS_INTERNAL_TART_SSH_USER: admin
+  test_script:
+    - go test -v -run TestWorkerIsolationTart ./...
+
+task:
   name: Release (Dry Run)
   only_if: $CIRRUS_TAG == ''
   container:

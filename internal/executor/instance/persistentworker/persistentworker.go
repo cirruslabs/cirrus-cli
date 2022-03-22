@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/none"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"strings"
 )
@@ -31,6 +32,8 @@ func New(isolation *api.Isolation, logger logger.Lightweight) (abstract.Instance
 			strings.ToLower(iso.Parallels.Platform.String()), parallels.WithLogger(logger))
 	case *api.Isolation_Container_:
 		return container.New(iso.Container.Image, iso.Container.Cpu, iso.Container.Memory, iso.Container.Volumes)
+	case *api.Isolation_Tart_:
+		return tart.New(iso.Tart.Vm, iso.Tart.User, iso.Tart.Password)
 	default:
 		return nil, fmt.Errorf("%w: unsupported isolation type %T", ErrInvalidIsolation, iso)
 	}

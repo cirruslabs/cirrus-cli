@@ -1,4 +1,4 @@
-package parallels
+package remoteagent
 
 import (
 	"context"
@@ -11,7 +11,13 @@ import (
 	"path"
 )
 
-func uploadAgent(ctx context.Context, cli *ssh.Client, agentOS, agentVersion string) (string, error) {
+func uploadAgent(
+	ctx context.Context,
+	cli *ssh.Client,
+	agentOS string,
+	agentVersion string,
+	agentArchitecture string,
+) (string, error) {
 	sftpCli, err := sftp.NewClient(cli)
 	if err != nil {
 		return "", err
@@ -24,7 +30,7 @@ func uploadAgent(ctx context.Context, cli *ssh.Client, agentOS, agentVersion str
 	}
 
 	// Open agent's binary locally
-	localAgentPath, err := agent.RetrieveBinary(ctx, agentVersion, agentOS, "amd64")
+	localAgentPath, err := agent.RetrieveBinary(ctx, agentVersion, agentOS, agentArchitecture)
 	if err != nil {
 		return "", err
 	}
