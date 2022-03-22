@@ -30,7 +30,7 @@ docker_builder:
   platform: windows
   os_version: 2019
   test_script:
-    - choco install -y golang
+    - choco install -y golang git
     - refreshenv
     - md C:\Windows\system32\config\systemprofile\AppData\Local\Temp
     - go test -v ./...
