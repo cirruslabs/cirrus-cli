@@ -16,6 +16,8 @@ docker_builder:
     - sudo apt-get -y install podman
   configure_podman_script:
     - echo 'unqualified-search-registries=["docker.io"]' > /etc/containers/registries.conf.d/docker.conf
+  work_around_gcloud_credential_helper_script:
+    - rm /root/.docker/config.json
   run_podman_background_script:
     - podman system service -t 0 unix:///tmp/podman.sock
   test_script:
