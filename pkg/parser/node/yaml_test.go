@@ -82,7 +82,14 @@ aliases_test:
 	}
 
 	aliasesTestNode.Children = []*node.Node{
-		{Name: "STATE", Parent: aliasesTestNode, Value: &node.ScalarValue{Value: "OFF"}, Line: 10, Column: 3},
+		{
+			Name:   "STATE",
+			Parent: aliasesTestNode,
+			Value:  &node.ScalarValue{Value: "OFF"},
+			Merged: true,
+			Line:   10,
+			Column: 3,
+		},
 	}
 
 	root.Children = []*node.Node{

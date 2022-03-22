@@ -11,6 +11,7 @@ type Node struct {
 	Value    interface{}
 	Parent   *Node
 	Children []*Node
+	Merged   bool
 
 	Line   int
 	Column int
@@ -44,6 +45,12 @@ func (node *Node) ValueIsEmpty() bool {
 	default:
 		return false
 	}
+}
+
+func (node *Node) IsMap() bool {
+	_, isMap := node.Value.(*MapValue)
+
+	return isMap
 }
 
 func (node *Node) String() string {

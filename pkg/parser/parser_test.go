@@ -41,6 +41,7 @@ var validCases = []string{
 	"upload-caches",
 	"cache-fingerprint-key",
 	"docker-arguments-expansion",
+	"yaml-scripts-merging",
 }
 
 func absolutize(file string) string {

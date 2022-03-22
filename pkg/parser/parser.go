@@ -12,6 +12,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/issue"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/matrix"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/merger"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -218,6 +219,9 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 
 	// Run modifiers on it
 	if err := matrix.ExpandMatrices(tree); err != nil {
+		return nil, err
+	}
+	if err := merger.MergeMapEntries(tree); err != nil {
 		return nil, err
 	}
 
