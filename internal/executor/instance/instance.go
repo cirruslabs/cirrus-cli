@@ -10,6 +10,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/golang/protobuf/ptypes/any"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 	"path"
@@ -95,7 +97,7 @@ func NewFromProto(
 		instanceOS := strings.ToLower(instance.Platform.String())
 		if runtime.GOOS != instanceOS {
 			return nil, fmt.Errorf("%w: cannot run %s Docker Builder instance on this platform",
-				ErrFailedToCreateInstance, strings.Title(instanceOS))
+				ErrFailedToCreateInstance, cases.Title(language.AmericanEnglish).String(instanceOS))
 		}
 
 		return persistentworker.New(&api.Isolation{
