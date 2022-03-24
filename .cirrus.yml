@@ -14,6 +14,10 @@ docker_builder:
   alias: Tests
   install_podman_script:
     - sudo apt-get -y install podman
+  configure_podman_script:
+    - echo 'unqualified-search-registries=["docker.io"]' > /etc/containers/registries.conf.d/docker.conf
+  work_around_gcloud_credential_helper_script:
+    - rm /root/.docker/config.json
   run_podman_background_script:
     - podman system service -t 0 unix:///tmp/podman.sock
   test_script:
@@ -30,7 +34,7 @@ docker_builder:
   platform: windows
   os_version: 2019
   test_script:
-    - choco install -y golang
+    - choco install -y golang git
     - refreshenv
     - md C:\Windows\system32\config\systemprofile\AppData\Local\Temp
     - go test -v ./...

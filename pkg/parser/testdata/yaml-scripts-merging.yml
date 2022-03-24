@@ -1,0 +1,16 @@
+container:
+  image: debian:latest
+
+.task_template: &task-template
+  install_tools_script:
+    - apt-get install screen
+
+merge_task:
+  << : *task-template
+  install_tools_script:
+    - apt-get install tmux
+
+no_merge_task:
+  install_tools_script:
+    - apt-get install tmux
+  <<: *task-template
