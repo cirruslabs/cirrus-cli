@@ -23,7 +23,7 @@ type Tart struct {
 }
 
 func New(vmName string, sshUser string, sshPassword string, opts ...Option) (*Tart, error) {
-	parallels := &Tart{
+	tart := &Tart{
 		vmName:      vmName,
 		sshUser:     sshUser,
 		sshPassword: sshPassword,
@@ -31,15 +31,15 @@ func New(vmName string, sshUser string, sshPassword string, opts ...Option) (*Ta
 
 	// Apply options
 	for _, opt := range opts {
-		opt(parallels)
+		opt(tart)
 	}
 
 	// Apply default options (to cover those that weren't specified)
-	if parallels.logger == nil {
-		parallels.logger = &logger.LightweightStub{}
+	if tart.logger == nil {
+		tart.logger = &logger.LightweightStub{}
 	}
 
-	return parallels, nil
+	return tart, nil
 }
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
