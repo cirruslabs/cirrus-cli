@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"runtime"
 	"strings"
 )
 
@@ -25,7 +26,12 @@ func New(isolation *api.Isolation, logger logger.Lightweight) (abstract.Instance
 		return none.New(none.WithLogger(logger))
 	case *api.Isolation_Parallels_:
 		if iso.Parallels.Platform != api.Platform_DARWIN && iso.Parallels.Platform != api.Platform_LINUX {
-			return nil, fmt.Errorf("%w: only Darwin and Linux are currently supported", ErrInvalidIsolation)
+			return nil, fmt.Errorf("%w: only Darwin and Linux are currently supported for Parallels",
+				ErrInvalidIsolation)
+		}
+		if runtime.GOARCH != "amd64" {
+			return nil, fmt.Errorf("%w: only Intel (amd64) is currently supported for Parallels, "+
+				"use Tart if you're running on Apple silicon (arm64)", ErrInvalidIsolation)
 		}
 
 		return parallels.New(iso.Parallels.Image, iso.Parallels.User, iso.Parallels.Password,
