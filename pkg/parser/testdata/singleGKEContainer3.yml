@@ -1,0 +1,33 @@
+.common:
+  cdTools: &cdTools cd-tools:latest
+  dockerBuildContainer: &dockerBuildContainer
+    image: *cdTools
+    cpu: 1
+    memory: 1Gb
+    additional_containers:
+      - name: docker
+        privileged: true
+        cpu: 2
+        memory: 10Gb
+        image: docker:18.09.8-dind
+        port: 2375
+        env:
+          DOCKER_TLS_CERTDIR: "" # Disabling TLS on daemon
+  dockerTestContainer: &dockerTestContainer
+    <<: *dockerBuildContainer
+    additional_containers:
+      - memory: 20Gb
+
+env:
+  DOCKER_HOST: tcp://localhost:2375
+
+ResolveUnitTests_task: &ContainerizedTestTask
+  container: *dockerBuildContainer
+  unit_script: ./scripts/unit-tests.sh
+
+ResolveIntegrationTests_task:
+  <<: *ContainerizedTestTask
+  container: *dockerTestContainer
+  env:
+    DOCKERFILE: integration.Dockerfile
+  integration_script: ./scripts/integration-test.sh

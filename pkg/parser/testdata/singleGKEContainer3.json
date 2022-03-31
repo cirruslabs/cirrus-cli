@@ -1,0 +1,118 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "unit",
+        "scriptInstruction": {
+          "scripts": [
+            "./scripts/unit-tests.sh"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux",
+      "DOCKER_HOST": "tcp://localhost:2375"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "additionalContainers": [
+        {
+          "cpu": 2,
+          "environment": {
+            "DOCKER_TLS_CERTDIR": ""
+          },
+          "image": "docker:18.09.8-dind",
+          "memory": 10240,
+          "name": "docker",
+          "ports": [
+            {
+              "containerPort": 2375
+            }
+          ],
+          "privileged": true
+        }
+      ],
+      "cpu": 1,
+      "image": "cd-tools:latest",
+      "memory": 1024
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "ResolveUnitTests"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "unit",
+        "scriptInstruction": {
+          "scripts": [
+            "./scripts/unit-tests.sh"
+          ]
+        }
+      },
+      {
+        "name": "integration",
+        "scriptInstruction": {
+          "scripts": [
+            "./scripts/integration-test.sh"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux",
+      "DOCKERFILE": "integration.Dockerfile",
+      "DOCKER_HOST": "tcp://localhost:2375"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "additionalContainers": [
+        {
+          "cpu": 2,
+          "environment": {
+            "DOCKER_TLS_CERTDIR": ""
+          },
+          "image": "docker:18.09.8-dind",
+          "memory": 20480,
+          "name": "docker",
+          "ports": [
+            {
+              "containerPort": 2375
+            }
+          ],
+          "privileged": true
+        }
+      ],
+      "cpu": 1,
+      "image": "cd-tools:latest",
+      "memory": 1024
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "1",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "ResolveIntegrationTests"
+  }
+]

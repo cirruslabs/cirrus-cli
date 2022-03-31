@@ -19,10 +19,11 @@ type Parseable interface {
 type nodeFunc func(node *nodepkg.Node) error
 
 type Field struct {
-	name     nameable.Nameable
-	required bool
-	onFound  nodeFunc
-	schema   *schema.Schema
+	name       nameable.Nameable
+	required   bool
+	repeatable bool
+	onFound    nodeFunc
+	schema     *schema.Schema
 }
 
 type CollectibleField struct {
@@ -59,22 +60,37 @@ func (parser *DefaultParser) Parse(node *nodepkg.Node, parserKit *parserkit.Pars
 		}
 	}
 
+	// Calculate redefinitions index to answer the question:
+	// "Is the field we're processing right now will be redefined later?"
+	redefinitions := map[string]*nodepkg.Node{}
+
+	for _, child := range node.Children {
+		redefinitions[child.Name] = child
+	}
+
+	// Evaluate ordinary fields
 	seenFields := map[string]struct{}{}
 
 	for _, child := range node.Children {
-		for _, field := range parser.fields {
-			if field.name.Matches(child.Name) {
-				seenFields[field.name.MapKey()] = struct{}{}
+		field := parser.NormalField(child.Name)
+		if field == nil {
+			continue
+		}
 
-				if err := field.onFound(child); err != nil {
-					return err
-				}
+		redefinition, hasRedefinition := redefinitions[child.Name]
+		redifinitionWillBeEncounteredLater := hasRedefinition && child != redefinition
+		if !field.repeatable && redifinitionWillBeEncounteredLater {
+			continue
+		}
 
-				break
-			}
+		seenFields[field.name.MapKey()] = struct{}{}
+
+		if err := field.onFound(child); err != nil {
+			return err
 		}
 	}
 
+	// Check ordinary fields with the "required" flag set
 	for _, field := range parser.fields {
 		_, seen := seenFields[field.name.MapKey()]
 

@@ -119,7 +119,6 @@ func (node *Node) MergeMapsOrOverwrite(with *Node) {
 			}
 
 			child.Parent = node
-			child.Merged = true
 			node.Children = append(node.Children, child)
 		}
 
