@@ -1,7 +1,10 @@
 package endpoint
 
 type Endpoint interface {
+	// Container returns an RPC endpoint URL suitable for use with the agent running in the container.
 	Container() string
+
+	// Direct returns an RPC endpoint URL suitable for use with the agent running on the host.
 	Direct() string
 }
 
