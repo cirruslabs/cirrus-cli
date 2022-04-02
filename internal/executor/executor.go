@@ -12,7 +12,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
@@ -148,21 +147,8 @@ func (e *Executor) Run(ctx context.Context) error {
 }
 
 func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
-	// Determine RPC address based on the task type (e.g. Parallels-isolated
-	// persistent worker instances use different network interface)
-	address := "localhost:0"
-
-	if _, ok := task.Instance.(*parallels.Parallels); ok {
-		ip, err := parallels.SharedNetworkHostIP(ctx)
-		if err != nil {
-			return err
-		}
-
-		address = ip + ":0"
-	}
-
 	e.rpc = rpc.New(e.build, rpc.WithLogger(e.logger))
-	if err := e.rpc.Start(ctx, address); err != nil {
+	if err := e.rpc.Start(ctx, "localhost:0"); err != nil {
 		return err
 	}
 	defer e.rpc.Stop()

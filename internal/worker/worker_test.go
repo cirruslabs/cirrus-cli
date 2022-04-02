@@ -6,7 +6,6 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
@@ -124,12 +123,8 @@ func TestWorkerIsolationParallels(t *testing.T) {
 	}
 
 	t.Logf("Using Parallels VM %s for testing...", image)
-	sharedNetworkHostIP, err := parallels.SharedNetworkHostIP(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	lis, err := net.Listen("tcp", sharedNetworkHostIP+":0")
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -156,7 +151,7 @@ func TestWorkerIsolationContainer(t *testing.T) {
 		t.Skip("no container backend configured")
 	}
 
-	lis, err := heuristic.NewListener(context.Background(), "0.0.0.0:0")
+	lis, err := heuristic.NewListener(context.Background(), "localhost:0")
 	if err != nil {
 		t.Fatal(err)
 	}
