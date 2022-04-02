@@ -172,6 +172,10 @@ func forwardViaSSH(vmListener net.Listener, logger logger.Lightweight, endpoint 
 	for {
 		vmConn, err := vmListener.Accept()
 		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return
+			}
+
 			logger.Debugf("failed to accept connection from the VM on forwarded port: %v", err)
 			continue
 		}
@@ -186,9 +190,13 @@ func forwardViaSSH(vmListener net.Listener, logger logger.Lightweight, endpoint 
 		}
 
 		go func() {
+			defer vmConn.Close()
+			defer localConn.Close()
 			_, _ = io.Copy(vmConn, localConn)
 		}()
 		go func() {
+			defer vmConn.Close()
+			defer localConn.Close()
 			_, _ = io.Copy(localConn, vmConn)
 		}()
 	}
