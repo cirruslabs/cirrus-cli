@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
@@ -107,10 +108,10 @@ func TestWorkerIsolationNone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	endpoint := fmt.Sprintf("http://127.0.0.1:%d", lis.Addr().(*net.TCPAddr).Port)
+	apiEndpoint := fmt.Sprintf("http://127.0.0.1:%d", lis.Addr().(*net.TCPAddr).Port)
 
-	workerTestHelper(t, lis, nil, worker.WithRPCEndpoint(endpoint),
-		worker.WithAgentDirectRPCEndpoint(endpoint))
+	workerTestHelper(t, lis, nil, worker.WithRPCEndpoint(apiEndpoint),
+		worker.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)))
 }
 
 func TestWorkerIsolationParallels(t *testing.T) {
@@ -144,9 +145,10 @@ func TestWorkerIsolationParallels(t *testing.T) {
 		},
 	}
 
-	endpoint := fmt.Sprintf("http://%s", lis.Addr().String())
+	apiEndpoint := fmt.Sprintf("http://%s", lis.Addr().String())
 
-	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(endpoint), worker.WithAgentDirectRPCEndpoint(endpoint))
+	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(apiEndpoint),
+		worker.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)))
 }
 
 func TestWorkerIsolationContainer(t *testing.T) {
@@ -167,19 +169,19 @@ func TestWorkerIsolationContainer(t *testing.T) {
 		},
 	}
 
-	var endpoint string
+	var apiEndpoint string
 
 	switch addr := lis.Addr().(type) {
 	case *net.TCPAddr:
-		endpoint = fmt.Sprintf("http://127.0.0.1:%d", addr.Port)
+		apiEndpoint = fmt.Sprintf("http://127.0.0.1:%d", addr.Port)
 	case *net.UnixAddr:
-		endpoint = fmt.Sprintf("unix:%s", addr.String())
+		apiEndpoint = fmt.Sprintf("unix:%s", addr.String())
 	default:
 		t.Fatalf("unknown listener address type: %T", addr)
 	}
 
-	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(endpoint),
-		worker.WithAgentContainerRPCEndpoint(lis.ContainerEndpoint()))
+	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(apiEndpoint),
+		worker.WithAgentEndpoint(endpoint.NewLocal(lis.ContainerEndpoint(), lis.ContainerEndpoint())))
 }
 
 func TestWorkerIsolationTart(t *testing.T) {
@@ -217,5 +219,5 @@ func TestWorkerIsolationTart(t *testing.T) {
 	agentRPCEndpoint := fmt.Sprintf("http://192.168.64.1:%d", listenerPort)
 
 	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(rpcEndpoint),
-		worker.WithAgentDirectRPCEndpoint(agentRPCEndpoint))
+		worker.WithAgentEndpoint(endpoint.NewLocal(agentRPCEndpoint, agentRPCEndpoint)))
 }

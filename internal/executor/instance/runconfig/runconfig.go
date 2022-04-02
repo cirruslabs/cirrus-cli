@@ -1,6 +1,7 @@
 package runconfig
 
 import (
+	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
@@ -12,8 +13,7 @@ import (
 type RunConfig struct {
 	ContainerBackend           containerbackend.ContainerBackend
 	ProjectDir                 string
-	ContainerEndpoint          string
-	DirectEndpoint             string
+	Endpoint                   endpoint.Endpoint
 	ServerSecret, ClientSecret string
 	TaskID                     int64
 	logger                     *echelon.Logger

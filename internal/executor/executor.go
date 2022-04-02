@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
@@ -171,15 +172,14 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 
 	// Prepare task's instance
 	instanceRunOpts := runconfig.RunConfig{
-		ContainerBackend:  e.containerBackend,
-		ProjectDir:        e.build.ProjectDir,
-		ContainerEndpoint: e.rpc.ContainerEndpoint(),
-		DirectEndpoint:    e.rpc.DirectEndpoint(),
-		ServerSecret:      e.rpc.ServerSecret(),
-		ClientSecret:      e.rpc.ClientSecret(),
-		TaskID:            task.ID,
-		DirtyMode:         e.dirtyMode,
-		ContainerOptions:  e.containerOptions,
+		ContainerBackend: e.containerBackend,
+		ProjectDir:       e.build.ProjectDir,
+		Endpoint:         endpoint.NewLocal(e.rpc.ContainerEndpoint(), e.rpc.DirectEndpoint()),
+		ServerSecret:     e.rpc.ServerSecret(),
+		ClientSecret:     e.rpc.ClientSecret(),
+		TaskID:           task.ID,
+		DirtyMode:        e.dirtyMode,
+		ContainerOptions: e.containerOptions,
 	}
 
 	instanceRunOpts.SetLogger(taskLogger)
