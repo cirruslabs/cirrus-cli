@@ -109,4 +109,9 @@ task:
 	assert.NoError(t, err)
 
 	assert.Contains(t, buf.String(), "'tart_check' script succeeded")
+
+	// Ensure we get the logs from the VM
+	assert.Contains(t, buf.String(), "Getting initial commands...")
+	assert.Contains(t, buf.String(), "Sending heartbeat...")
+	assert.Contains(t, buf.String(), "Background commands to clean up after:")
 }
