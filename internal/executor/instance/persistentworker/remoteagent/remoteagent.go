@@ -124,10 +124,16 @@ func WaitForAgent(
 
 	switch config.Endpoint.(type) {
 	case *endpoint.Local:
-		apiEndpoint, err = forwardViaSSH(cli, logger, config.Endpoint.Direct())
+		// Expose local RPC service to the VM via SSH port forwarding
+		vmListener, err := cli.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
-			return err
+			return fmt.Errorf("%w: failed to set-up SSH port forwarding: %v", ErrFailed, err)
 		}
+		defer vmListener.Close()
+
+		go forwardViaSSH(vmListener, logger, config.Endpoint.Direct())
+
+		apiEndpoint = "http://" + vmListener.Addr().String()
 	default:
 		apiEndpoint = config.Endpoint.Direct()
 	}
@@ -162,38 +168,28 @@ func WaitForAgent(
 	return nil
 }
 
-func forwardViaSSH(cli *ssh.Client, logger logger.Lightweight, endpoint string) (string, error) {
-	// Expose local RPC service to the VM via SSH port forwarding
-	vmListener, err := cli.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return "", fmt.Errorf("%w: failed to set-up SSH port forwarding: %v", ErrFailed, err)
-	}
-
-	go func() {
-		for {
-			vmConn, err := vmListener.Accept()
-			if err != nil {
-				logger.Debugf("failed to accept connection from the VM on forwarded port: %v", err)
-				continue
-			}
-
-			// Convert endpoint address to host
-			host := strings.TrimPrefix(endpoint, "http://")
-
-			localConn, err := net.Dial("tcp", host)
-			if err != nil {
-				logger.Debugf("failed to connect to the RPC service on %s: %v", endpoint, err)
-				continue
-			}
-
-			go func() {
-				_, _ = io.Copy(vmConn, localConn)
-			}()
-			go func() {
-				_, _ = io.Copy(localConn, vmConn)
-			}()
+func forwardViaSSH(vmListener net.Listener, logger logger.Lightweight, endpoint string) {
+	for {
+		vmConn, err := vmListener.Accept()
+		if err != nil {
+			logger.Debugf("failed to accept connection from the VM on forwarded port: %v", err)
+			continue
 		}
-	}()
 
-	return "http://" + vmListener.Addr().String(), nil
+		// Convert endpoint address to host
+		host := strings.TrimPrefix(endpoint, "http://")
+
+		localConn, err := net.Dial("tcp", host)
+		if err != nil {
+			logger.Debugf("failed to connect to the RPC service on %s: %v", endpoint, err)
+			continue
+		}
+
+		go func() {
+			_, _ = io.Copy(vmConn, localConn)
+		}()
+		go func() {
+			_, _ = io.Copy(localConn, vmConn)
+		}()
+	}
 }
