@@ -195,11 +195,7 @@ func TestWorkerIsolationTart(t *testing.T) {
 
 	t.Logf("Using Tart VM %s for testing...", vm)
 
-	// Virtualization.Framework only creates the network interface once the VM is running,
-	// and binding to 127.0.0.1 wouldn't work in terms of reachability from the VM,
-	// so this should be relatively OK, assuming we only do this in tests.
-	// nolint:gosec
-	lis, err := net.Listen("tcp", "0.0.0.0:0")
+	lis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -216,8 +212,7 @@ func TestWorkerIsolationTart(t *testing.T) {
 
 	listenerPort := lis.Addr().(*net.TCPAddr).Port
 	rpcEndpoint := fmt.Sprintf("http://127.0.0.1:%d", listenerPort)
-	agentRPCEndpoint := fmt.Sprintf("http://192.168.64.1:%d", listenerPort)
 
 	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(rpcEndpoint),
-		worker.WithAgentEndpoint(endpoint.NewLocal(agentRPCEndpoint, agentRPCEndpoint)))
+		worker.WithAgentEndpoint(endpoint.NewLocal(rpcEndpoint, rpcEndpoint)))
 }
