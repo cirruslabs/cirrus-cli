@@ -44,6 +44,19 @@ func NewIsolation(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *
 		return nil
 	})
 
+	tartSchema := NewTart(mergedEnv).Schema()
+	isolation.OptionalField(nameable.NewSimpleNameable("tart"), tartSchema, func(node *node.Node) error {
+		tart := NewTart(mergedEnv)
+
+		if err := tart.Parse(node, parserKit); err != nil {
+			return err
+		}
+
+		isolation.proto.Type = tart.Proto()
+
+		return nil
+	})
+
 	return isolation
 }
 

@@ -2513,6 +2513,24 @@
                     }
                   },
                   "type": "object"
+                },
+                "tart": {
+                  "description": "Tart VM isolation.",
+                  "properties": {
+                    "password": {
+                      "description": "SSH password",
+                      "type": "string"
+                    },
+                    "user": {
+                      "description": "SSH username",
+                      "type": "string"
+                    },
+                    "vm": {
+                      "description": "VM name.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 }
               },
               "type": "object"
@@ -2816,6 +2834,24 @@
                 },
                 "user": {
                   "description": "SSH username",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "tart": {
+              "description": "Tart VM isolation.",
+              "properties": {
+                "password": {
+                  "description": "SSH password",
+                  "type": "string"
+                },
+                "user": {
+                  "description": "SSH username",
+                  "type": "string"
+                },
+                "vm": {
+                  "description": "VM name.",
                   "type": "string"
                 }
               },

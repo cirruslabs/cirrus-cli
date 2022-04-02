@@ -1,0 +1,13 @@
+persistent_worker:
+  isolation:
+    tart:
+      vm: big-sur-base
+      user: admin
+      password: secret
+      platform: darwin
+  labels:
+    A: B
+    C: D
+
+task:
+  script: true
