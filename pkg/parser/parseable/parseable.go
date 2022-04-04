@@ -77,9 +77,12 @@ func (parser *DefaultParser) Parse(node *nodepkg.Node, parserKit *parserkit.Pars
 			continue
 		}
 
-		redefinition, hasRedefinition := redefinitions[child.Name]
-		redifinitionWillBeEncounteredLater := hasRedefinition && child != redefinition
-		if !field.repeatable && redifinitionWillBeEncounteredLater {
+		redefinitionWillBeEncounteredLater := child != redefinitions[child.Name]
+
+		// Skip processing this child if it corresponds to a non-repeatable
+		// field and there will be more similarly-named children in the next
+		// iterations
+		if !field.repeatable && redefinitionWillBeEncounteredLater {
 			continue
 		}
 
