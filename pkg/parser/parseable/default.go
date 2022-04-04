@@ -53,7 +53,7 @@ func (parser *DefaultParser) SetCollectible(value bool) {
 	parser.collectible = value
 }
 
-func (parser *DefaultParser) NormalField(name string) *Field {
+func (parser *DefaultParser) FindFieldByName(name string) *Field {
 	for _, field := range parser.fields {
 		if field.name.Matches(name) {
 			return &field

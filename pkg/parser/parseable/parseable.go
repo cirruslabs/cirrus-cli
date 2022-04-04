@@ -72,7 +72,7 @@ func (parser *DefaultParser) Parse(node *nodepkg.Node, parserKit *parserkit.Pars
 	seenFields := map[string]struct{}{}
 
 	for _, child := range node.Children {
-		field := parser.NormalField(child.Name)
+		field := parser.FindFieldByName(child.Name)
 		if field == nil {
 			continue
 		}
