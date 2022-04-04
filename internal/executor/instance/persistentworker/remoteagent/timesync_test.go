@@ -11,5 +11,5 @@ func TestTimeSyncCommand(t *testing.T) {
 	// https://www.epochconverter.com/?q=1234567890
 	timeFixture := time.Unix(1234567890, 0).UTC()
 
-	assert.Equal(t, "sudo date -u 021323312009\n", remoteagent.TimeSyncCommand(timeFixture))
+	assert.Equal(t, "sudo -n date -u 021323312009\n", remoteagent.TimeSyncCommand(timeFixture))
 }

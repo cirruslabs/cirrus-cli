@@ -62,7 +62,7 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.
 
 	cmd := exec.Command(agentPath,
 		"-api-endpoint",
-		config.DirectEndpoint,
+		config.Endpoint.Direct(),
 		"-server-token",
 		config.ServerSecret,
 		"-client-token",

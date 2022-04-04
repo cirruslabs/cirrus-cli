@@ -39,7 +39,7 @@ func New(isolation *api.Isolation, logger logger.Lightweight) (abstract.Instance
 	case *api.Isolation_Container_:
 		return container.New(iso.Container.Image, iso.Container.Cpu, iso.Container.Memory, iso.Container.Volumes)
 	case *api.Isolation_Tart_:
-		return tart.New(iso.Tart.Vm, iso.Tart.User, iso.Tart.Password)
+		return tart.New(iso.Tart.Vm, iso.Tart.User, iso.Tart.Password, tart.WithLogger(logger))
 	default:
 		return nil, fmt.Errorf("%w: unsupported isolation type %T", ErrInvalidIsolation, iso)
 	}

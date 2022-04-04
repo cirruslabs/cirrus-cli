@@ -121,14 +121,18 @@ func NewTask(
 				}
 
 				if isolation := persistentWorkerInstance.Isolation; isolation != nil {
-					if parallels, ok := isolation.Type.(*api.Isolation_Parallels_); ok {
-						if parallels.Parallels != nil {
-							task.proto.Environment = environment.Merge(
-								task.proto.Environment,
-								map[string]string{"CIRRUS_OS": strings.ToLower(parallels.Parallels.Platform.String())},
-							)
+					isolationVars := map[string]string{}
+
+					switch iso := isolation.Type.(type) {
+					case *api.Isolation_Parallels_:
+						if iso.Parallels != nil {
+							isolationVars["CIRRUS_OS"] = strings.ToLower(iso.Parallels.Platform.String())
 						}
+					case *api.Isolation_Tart_:
+						isolationVars["CIRRUS_OS"] = "darwin"
 					}
+
+					task.proto.Environment = environment.Merge(task.proto.Environment, isolationVars)
 				} else {
 					// Clear CIRRUS_OS since we don't know where we will be running
 					delete(task.proto.Environment, "CIRRUS_OS")

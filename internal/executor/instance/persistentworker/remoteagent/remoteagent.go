@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/avast/retry-go"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"golang.org/x/crypto/ssh"
@@ -119,10 +120,28 @@ func WaitForAgent(
 		}
 	}
 
+	var apiEndpoint string
+
+	switch config.Endpoint.(type) {
+	case *endpoint.Local:
+		// Expose local RPC service to the VM via SSH port forwarding
+		vmListener, err := cli.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			return fmt.Errorf("%w: failed to set-up SSH port forwarding: %v", ErrFailed, err)
+		}
+		defer vmListener.Close()
+
+		go forwardViaSSH(vmListener, logger, config.Endpoint.Direct())
+
+		apiEndpoint = "http://" + vmListener.Addr().String()
+	default:
+		apiEndpoint = config.Endpoint.Direct()
+	}
+
 	command := []string{
 		remoteAgentPath,
 		"-api-endpoint",
-		config.DirectEndpoint,
+		apiEndpoint,
 		"-server-token",
 		"\"" + config.ServerSecret + "\"",
 		"-client-token",
@@ -147,4 +166,38 @@ func WaitForAgent(
 	}
 
 	return nil
+}
+
+func forwardViaSSH(vmListener net.Listener, logger logger.Lightweight, endpoint string) {
+	for {
+		vmConn, err := vmListener.Accept()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return
+			}
+
+			logger.Debugf("failed to accept connection from the VM on forwarded port: %v", err)
+			continue
+		}
+
+		// Convert endpoint address to host
+		host := strings.TrimPrefix(endpoint, "http://")
+
+		localConn, err := net.Dial("tcp", host)
+		if err != nil {
+			logger.Debugf("failed to connect to the RPC service on %s: %v", endpoint, err)
+			continue
+		}
+
+		go func() {
+			defer vmConn.Close()
+			defer localConn.Close()
+			_, _ = io.Copy(vmConn, localConn)
+		}()
+		go func() {
+			defer vmConn.Close()
+			defer localConn.Close()
+			_, _ = io.Copy(localConn, vmConn)
+		}()
+	}
 }

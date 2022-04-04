@@ -8,6 +8,7 @@ import (
 	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-ci-agent/pkg/grpchelper"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -36,8 +37,7 @@ type Worker struct {
 	rpcInsecure bool
 	rpcClient   api.CirrusWorkersServiceClient
 
-	agentDirectRPCEndpoint    string
-	agentContainerRPCEndpoint string
+	agentEndpoint endpoint.Endpoint
 
 	name                string
 	userSpecifiedLabels map[string]string
@@ -54,9 +54,8 @@ type Worker struct {
 
 func New(opts ...Option) (*Worker, error) {
 	worker := &Worker{
-		rpcEndpoint:               DefaultRPCEndpoint,
-		agentDirectRPCEndpoint:    DefaultRPCEndpoint,
-		agentContainerRPCEndpoint: DefaultRPCEndpoint,
+		rpcEndpoint:   DefaultRPCEndpoint,
+		agentEndpoint: endpoint.NewRemote(DefaultRPCEndpoint),
 
 		userSpecifiedLabels: make(map[string]string),
 		pollIntervalSeconds: defaultPollIntervalSeconds,

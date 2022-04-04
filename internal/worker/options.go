@@ -1,6 +1,9 @@
 package worker
 
-import "github.com/sirupsen/logrus"
+import (
+	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
+	"github.com/sirupsen/logrus"
+)
 
 type Option func(*Worker)
 
@@ -34,14 +37,8 @@ func WithRPCEndpoint(rpcEndpoint string) Option {
 	}
 }
 
-func WithAgentDirectRPCEndpoint(rpcEndpoint string) Option {
+func WithAgentEndpoint(agentEndpoint endpoint.Endpoint) Option {
 	return func(e *Worker) {
-		e.agentDirectRPCEndpoint = rpcEndpoint
-	}
-}
-
-func WithAgentContainerRPCEndpoint(rpcEndpoint string) Option {
-	return func(e *Worker) {
-		e.agentContainerRPCEndpoint = rpcEndpoint
+		e.agentEndpoint = agentEndpoint
 	}
 }

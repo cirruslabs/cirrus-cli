@@ -74,3 +74,44 @@ task:
 	assert.Contains(t, buf.String(), "Sending heartbeat...")
 	assert.Contains(t, buf.String(), "Background commands to clean up after:")
 }
+
+func TestExecutorTart(t *testing.T) {
+	vm, vmOk := os.LookupEnv("CIRRUS_INTERNAL_TART_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_PASSWORD")
+	if !vmOk || !userOk || !passwordOk {
+		t.SkipNow()
+	}
+
+	config := fmt.Sprintf(`persistent_worker:
+  isolation:
+    tart:
+      vm: %s
+      user: %s
+      password: %s
+
+task:
+  tart_check_script: true
+`, vm, user, password)
+
+	if err := ioutil.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	err := testutil.ExecuteWithOptions(t, ".", executor.WithLogger(logger))
+	assert.NoError(t, err)
+
+	assert.Contains(t, buf.String(), "'tart_check' script succeeded")
+
+	// Ensure we get the logs from the VM
+	assert.Contains(t, buf.String(), "Getting initial commands...")
+	assert.Contains(t, buf.String(), "Sending heartbeat...")
+	assert.Contains(t, buf.String(), "Background commands to clean up after:")
+}

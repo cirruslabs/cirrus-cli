@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
@@ -107,10 +107,10 @@ func TestWorkerIsolationNone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	endpoint := fmt.Sprintf("http://127.0.0.1:%d", lis.Addr().(*net.TCPAddr).Port)
+	apiEndpoint := fmt.Sprintf("http://127.0.0.1:%d", lis.Addr().(*net.TCPAddr).Port)
 
-	workerTestHelper(t, lis, nil, worker.WithRPCEndpoint(endpoint),
-		worker.WithAgentDirectRPCEndpoint(endpoint))
+	workerTestHelper(t, lis, nil, worker.WithRPCEndpoint(apiEndpoint),
+		worker.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)))
 }
 
 func TestWorkerIsolationParallels(t *testing.T) {
@@ -123,12 +123,8 @@ func TestWorkerIsolationParallels(t *testing.T) {
 	}
 
 	t.Logf("Using Parallels VM %s for testing...", image)
-	sharedNetworkHostIP, err := parallels.SharedNetworkHostIP(context.Background())
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	lis, err := net.Listen("tcp", sharedNetworkHostIP+":0")
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,9 +140,10 @@ func TestWorkerIsolationParallels(t *testing.T) {
 		},
 	}
 
-	endpoint := fmt.Sprintf("http://%s", lis.Addr().String())
+	apiEndpoint := fmt.Sprintf("http://%s", lis.Addr().String())
 
-	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(endpoint), worker.WithAgentDirectRPCEndpoint(endpoint))
+	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(apiEndpoint),
+		worker.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)))
 }
 
 func TestWorkerIsolationContainer(t *testing.T) {
@@ -154,7 +151,7 @@ func TestWorkerIsolationContainer(t *testing.T) {
 		t.Skip("no container backend configured")
 	}
 
-	lis, err := heuristic.NewListener(context.Background(), "0.0.0.0:0")
+	lis, err := heuristic.NewListener(context.Background(), "localhost:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,19 +164,19 @@ func TestWorkerIsolationContainer(t *testing.T) {
 		},
 	}
 
-	var endpoint string
+	var apiEndpoint string
 
 	switch addr := lis.Addr().(type) {
 	case *net.TCPAddr:
-		endpoint = fmt.Sprintf("http://127.0.0.1:%d", addr.Port)
+		apiEndpoint = fmt.Sprintf("http://127.0.0.1:%d", addr.Port)
 	case *net.UnixAddr:
-		endpoint = fmt.Sprintf("unix:%s", addr.String())
+		apiEndpoint = fmt.Sprintf("unix:%s", addr.String())
 	default:
 		t.Fatalf("unknown listener address type: %T", addr)
 	}
 
-	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(endpoint),
-		worker.WithAgentContainerRPCEndpoint(lis.ContainerEndpoint()))
+	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(apiEndpoint),
+		worker.WithAgentEndpoint(endpoint.NewLocal(lis.ContainerEndpoint(), lis.ContainerEndpoint())))
 }
 
 func TestWorkerIsolationTart(t *testing.T) {
@@ -193,11 +190,7 @@ func TestWorkerIsolationTart(t *testing.T) {
 
 	t.Logf("Using Tart VM %s for testing...", vm)
 
-	// Virtualization.Framework only creates the network interface once the VM is running,
-	// and binding to 127.0.0.1 wouldn't work in terms of reachability from the VM,
-	// so this should be relatively OK, assuming we only do this in tests.
-	// nolint:gosec
-	lis, err := net.Listen("tcp", "0.0.0.0:0")
+	lis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -214,8 +207,7 @@ func TestWorkerIsolationTart(t *testing.T) {
 
 	listenerPort := lis.Addr().(*net.TCPAddr).Port
 	rpcEndpoint := fmt.Sprintf("http://127.0.0.1:%d", listenerPort)
-	agentRPCEndpoint := fmt.Sprintf("http://192.168.64.1:%d", listenerPort)
 
 	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(rpcEndpoint),
-		worker.WithAgentDirectRPCEndpoint(agentRPCEndpoint))
+		worker.WithAgentEndpoint(endpoint.NewLocal(rpcEndpoint, rpcEndpoint)))
 }

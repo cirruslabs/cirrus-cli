@@ -49,12 +49,11 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 		}
 
 		config := runconfig.RunConfig{
-			ProjectDir:        "",
-			ContainerEndpoint: worker.agentContainerRPCEndpoint,
-			DirectEndpoint:    worker.agentDirectRPCEndpoint,
-			ServerSecret:      agentAwareTask.ServerSecret,
-			ClientSecret:      agentAwareTask.ClientSecret,
-			TaskID:            agentAwareTask.TaskId,
+			ProjectDir:   "",
+			Endpoint:     worker.agentEndpoint,
+			ServerSecret: agentAwareTask.ServerSecret,
+			ClientSecret: agentAwareTask.ClientSecret,
+			TaskID:       agentAwareTask.TaskId,
 		}
 
 		if err := config.SetAgentVersionWithoutDowngrade(agentAwareTask.AgentVersion); err != nil {

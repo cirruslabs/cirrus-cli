@@ -70,6 +70,7 @@ task:
     CIRRUS_INTERNAL_TART_SSH_USER: admin
   test_script:
     - go test -v -run TestWorkerIsolationTart ./...
+    - go test -v -run TestExecutorTart ./...
 
 task:
   name: Release (Dry Run)

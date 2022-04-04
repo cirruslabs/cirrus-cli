@@ -60,7 +60,7 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 		Entrypoint: []string{
 			params.Platform.ContainerAgentPath(),
 			"-api-endpoint",
-			config.ContainerEndpoint,
+			config.Endpoint.Container(),
 			"-server-token",
 			config.ServerSecret,
 			"-client-token",
@@ -105,8 +105,8 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 
 	// Mount the  directory with the CLI's Unix domain socket in case it's used,
 	// assuming that we run in the same mount namespace as the Docker daemon
-	if strings.HasPrefix(config.ContainerEndpoint, "unix:") {
-		socketPath := strings.TrimPrefix(config.ContainerEndpoint, "unix:")
+	if strings.HasPrefix(config.Endpoint.Container(), "unix:") {
+		socketPath := strings.TrimPrefix(config.Endpoint.Container(), "unix:")
 		socketDir := filepath.Dir(socketPath)
 
 		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
