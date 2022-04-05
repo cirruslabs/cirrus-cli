@@ -60,7 +60,7 @@ func NewBehavior(
 	})
 
 	uploadCachesNameable := nameable.NewSimpleNameable("upload_caches")
-	b.OptionalField(uploadCachesNameable, command.UploadCachesSchema(), func(node *node.Node) error {
+	b.OptionalRepeatableField(uploadCachesNameable, command.UploadCachesSchema(), func(node *node.Node) error {
 		commandsToAppend, err := command.UploadCachesHelper(mergedEnv, append(previousCommands, b.commands...), node)
 		if err != nil {
 			return err

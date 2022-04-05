@@ -175,7 +175,7 @@ func AttachBaseTaskInstructions(
 	})
 
 	uploadCachesNameable := nameable.NewSimpleNameable("upload_caches")
-	parser.OptionalField(uploadCachesNameable, command.UploadCachesSchema(), func(node *node.Node) error {
+	parser.OptionalRepeatableField(uploadCachesNameable, command.UploadCachesSchema(), func(node *node.Node) error {
 		commandsToAppend, err := command.UploadCachesHelper(environment.Merge(task.Environment, env), task.Commands, node)
 		if err != nil {
 			return err
@@ -211,9 +211,10 @@ func AttachBaseTaskInstructions(
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
 
+		behaviorName := nameable.NewSimpleNameable(strings.ToLower(name))
 		behaviorSchema := NewBehavior(nil, nil, nil).Schema()
 		behaviorSchema.Description = name + " commands."
-		parser.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), behaviorSchema, func(node *node.Node) error {
+		parser.OptionalRepeatableField(behaviorName, behaviorSchema, func(node *node.Node) error {
 			behavior := NewBehavior(environment.Merge(task.Environment, env), parserKit, task.Commands)
 			if err := behavior.Parse(node, parserKit); err != nil {
 				return err

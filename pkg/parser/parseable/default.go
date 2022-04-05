@@ -19,6 +19,15 @@ func (parser *DefaultParser) OptionalField(name nameable.Nameable, schema *schem
 	})
 }
 
+func (parser *DefaultParser) OptionalRepeatableField(name nameable.Nameable, schema *schema.Schema, onFound nodeFunc) {
+	parser.fields = append(parser.fields, Field{
+		name:       name,
+		repeatable: true,
+		onFound:    onFound,
+		schema:     schema,
+	})
+}
+
 func (parser *DefaultParser) RequiredField(nameable nameable.Nameable, schema *schema.Schema, onFound nodeFunc) {
 	parser.fields = append(parser.fields, Field{
 		name:     nameable,
@@ -42,4 +51,14 @@ func (parser *DefaultParser) Collectible() bool {
 
 func (parser *DefaultParser) SetCollectible(value bool) {
 	parser.collectible = value
+}
+
+func (parser *DefaultParser) FindFieldByName(name string) *Field {
+	for _, field := range parser.fields {
+		if field.name.Matches(name) {
+			return &field
+		}
+	}
+
+	return nil
 }

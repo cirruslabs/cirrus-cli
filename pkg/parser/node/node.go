@@ -11,7 +11,6 @@ type Node struct {
 	Value    interface{}
 	Parent   *Node
 	Children []*Node
-	Merged   bool
 
 	Line   int
 	Column int

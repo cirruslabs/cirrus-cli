@@ -42,6 +42,7 @@ var validCases = []string{
 	"cache-fingerprint-key",
 	"docker-arguments-expansion",
 	"yaml-scripts-merging",
+	"singleGKEContainer3",
 }
 
 func absolutize(file string) string {
@@ -459,10 +460,6 @@ func TestViaRPCInvalid(t *testing.T) {
 		{
 			"validation-missingDependency.yml",
 			"parsing error: there's no task 'fooo', but task 'bar' depends on it",
-		},
-		{
-			"validation-duplicate-commands-of-same-type.yml",
-			"parsing error: task 'main' has two script instructions with an identical name 'foo'",
 		},
 	}
 

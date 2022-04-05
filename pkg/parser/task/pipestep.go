@@ -61,7 +61,7 @@ func NewPipeStep(
 	})
 
 	uploadCachesNameable := nameable.NewSimpleNameable("upload_caches")
-	step.OptionalField(uploadCachesNameable, command.UploadCachesSchema(), func(node *node.Node) error {
+	step.OptionalRepeatableField(uploadCachesNameable, command.UploadCachesSchema(), func(node *node.Node) error {
 		commandsToAppend, err := command.UploadCachesHelper(mergedEnv, append(previousCommands, step.protoCommands...), node)
 		if err != nil {
 			return err
@@ -97,9 +97,10 @@ func NewPipeStep(
 	for id, name := range api.Command_CommandExecutionBehavior_name {
 		idCopy := id
 
+		behaviorName := nameable.NewSimpleNameable(strings.ToLower(name))
 		behaviorSchema := NewBehavior(nil, nil, nil).Schema()
 		behaviorSchema.Description = name + " commands."
-		step.OptionalField(nameable.NewSimpleNameable(strings.ToLower(name)), behaviorSchema, func(node *node.Node) error {
+		step.OptionalRepeatableField(behaviorName, behaviorSchema, func(node *node.Node) error {
 			behavior := NewBehavior(mergedEnv, parserKit, append(previousCommands, step.protoCommands...))
 			if err := behavior.Parse(node, parserKit); err != nil {
 				return err
