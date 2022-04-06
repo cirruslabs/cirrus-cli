@@ -43,6 +43,7 @@ var validCases = []string{
 	"docker-arguments-expansion",
 	"yaml-scripts-merging",
 	"singleGKEContainer3",
+	"yaml-merge-sequence",
 }
 
 func absolutize(file string) string {

@@ -113,28 +113,59 @@ func convert(parent *Node, name string, yamlNode *yaml.Node, line, column int) (
 		}
 
 		for i := 0; i < len(yamlNode.Content); i += 2 {
+			key := yamlNode.Content[i]
+			value := yamlNode.Content[i+1]
+
 			// Handle "<<" keys
-			if yamlNode.Content[i].Tag == "!!merge" {
+			if key.Tag == "!!merge" {
 				// YAML aliases generally don't need line and column helper values
 				// since they are merged into some other data structure afterwards
 				// and this helps to find bugs easier in the future
-				aliasValue, err := convert(result, "", yamlNode.Content[i+1], 0, 0)
+				aliasValue, err := convert(result, "", value, 0, 0)
 				if err != nil {
 					return nil, err
 				}
 
-				result.MergeMapsOrOverwrite(aliasValue)
+				if value.Kind == yaml.AliasNode {
+					// According to spec[1], a merge key "<<" can either be associated with a single mapping node
+					// or a sequence.
+					//
+					// [1]: https://yaml.org/type/merge.html
+					switch aliasValue.Value.(type) {
+					case *MapValue:
+						result.MergeFromMap(aliasValue)
+					case *ListValue:
+						result.OverwriteWith(aliasValue)
+					default:
+						return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column,
+							"merge key should either be associated with a mapping or a sequence")
+					}
+				} else if value.Kind == yaml.SequenceNode {
+					// According to spec[1], if the value associated with the merge key is a sequence,
+					// then this sequence is expected to contain mapping nodes and each of these nodes
+					// is merged in turn according to its order in the sequence.
+					//
+					// [1]: https://yaml.org/type/merge.html
+					for _, aliasValueChild := range aliasValue.Children {
+						if !aliasValueChild.IsMap() {
+							return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column,
+								"got a sequence as a merge key's value, but not all of it's entries are mappings"+
+									" (as required per spec)")
+						}
+
+						result.MergeFromMap(aliasValueChild)
+					}
+				}
 
 				continue
 			}
 
 			// Apparently this is possible, so do the sanity check
-			if yamlNode.Content[i].Tag != "!!str" {
+			if key.Tag != "!!str" {
 				return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "map key is not a string")
 			}
 
-			mapSubtree, err := convert(result, yamlNode.Content[i].Value, yamlNode.Content[i+1],
-				yamlNode.Content[i].Line, yamlNode.Content[i].Column)
+			mapSubtree, err := convert(result, key.Value, value, key.Line, key.Column)
 			if err != nil {
 				return nil, err
 			}

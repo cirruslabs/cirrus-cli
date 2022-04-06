@@ -1,0 +1,14 @@
+# An example based on https://yaml.org/type/merge.html
+# but more appropriate to the parser's specifics
+
+container:
+  image: debian:latest
+
+templates:
+  - &FIRST { ACTUAL: UNDESIRED, CONTROL: DESIRED }
+  - &SECOND { CONTROL: UNDESIRED }
+
+task:
+  env:
+    <<: [ *FIRST, *SECOND ]
+    ACTUAL: DESIRED
