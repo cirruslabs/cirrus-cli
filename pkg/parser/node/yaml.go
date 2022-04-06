@@ -118,43 +118,8 @@ func convert(parent *Node, name string, yamlNode *yaml.Node, line, column int) (
 
 			// Handle "<<" keys
 			if key.Tag == "!!merge" {
-				// YAML aliases generally don't need line and column helper values
-				// since they are merged into some other data structure afterwards
-				// and this helps to find bugs easier in the future
-				aliasValue, err := convert(result, "", value, 0, 0)
-				if err != nil {
+				if err := result.merge(yamlNode, key, value); err != nil {
 					return nil, err
-				}
-
-				if value.Kind == yaml.AliasNode {
-					// According to spec[1], a merge key "<<" can either be associated with a single mapping node
-					// or a sequence.
-					//
-					// [1]: https://yaml.org/type/merge.html
-					switch aliasValue.Value.(type) {
-					case *MapValue:
-						result.MergeFromMap(aliasValue)
-					case *ListValue:
-						result.OverwriteWith(aliasValue)
-					default:
-						return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column,
-							"merge key should either be associated with a mapping or a sequence")
-					}
-				} else if value.Kind == yaml.SequenceNode {
-					// According to spec[1], if the value associated with the merge key is a sequence,
-					// then this sequence is expected to contain mapping nodes and each of these nodes
-					// is merged in turn according to its order in the sequence.
-					//
-					// [1]: https://yaml.org/type/merge.html
-					for _, aliasValueChild := range aliasValue.Children {
-						if !aliasValueChild.IsMap() {
-							return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column,
-								"got a sequence as a merge key's value, but not all of it's entries are mappings"+
-									" (as required per spec)")
-						}
-
-						result.MergeFromMap(aliasValueChild)
-					}
 				}
 
 				continue
@@ -190,6 +155,49 @@ func convert(parent *Node, name string, yamlNode *yaml.Node, line, column int) (
 	}
 
 	return result, nil
+}
+
+func (node *Node) merge(parent *yaml.Node, _ *yaml.Node, value *yaml.Node) error {
+	// YAML aliases generally don't need line and column helper values
+	// since they are merged into some other data structure afterwards
+	// and this helps to find bugs easier in the future
+	aliasValue, err := convert(node, "", value, 0, 0)
+	if err != nil {
+		return err
+	}
+
+	if value.Kind == yaml.AliasNode {
+		// According to spec[1], a merge key "<<" can either be associated with a single mapping node
+		// or a sequence.
+		//
+		// [1]: https://yaml.org/type/merge.html
+		switch aliasValue.Value.(type) {
+		case *MapValue:
+			node.MergeFromMap(aliasValue)
+		case *ListValue:
+			node.OverwriteWith(aliasValue)
+		default:
+			return parsererror.NewRich(parent.Line, parent.Column,
+				"merge key should either be associated with a mapping or a sequence")
+		}
+	} else if value.Kind == yaml.SequenceNode {
+		// According to spec[1], if the value associated with the merge key is a sequence,
+		// then this sequence is expected to contain mapping nodes and each of these nodes
+		// is merged in turn according to its order in the sequence.
+		//
+		// [1]: https://yaml.org/type/merge.html
+		for _, aliasValueChild := range aliasValue.Children {
+			if !aliasValueChild.IsMap() {
+				return parsererror.NewRich(parent.Line, parent.Column,
+					"got a sequence as a merge key's value, but not all of it's entries are mappings"+
+						" (as required per spec)")
+			}
+
+			node.MergeFromMap(aliasValueChild)
+		}
+	}
+
+	return nil
 }
 
 func yamlKindToString(kind yaml.Kind) string {
