@@ -111,7 +111,7 @@ func (node *Node) MergeMapsOrOverwrite(with *Node) {
 	// unless the key already exists in it.
 	//
 	// https://yaml.org/type/merge.html
-	if node.IsMap() && with.IsMap() {
+	if with.IsMap() {
 		for _, child := range with.Children {
 			// Skip merging the key if it already exists in node.
 			if node.FindChild(child.Name) != nil {
