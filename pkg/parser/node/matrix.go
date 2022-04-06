@@ -105,26 +105,24 @@ func (node *Node) ReplaceWith(with []*Node) {
 	node.Parent.Children = newChildren
 }
 
-func (node *Node) MergeMapsOrOverwrite(with *Node) {
+func (node *Node) MergeFromMap(with *Node) {
 	// If the value associated with the key is a single mapping node,
 	// each of its key/value pairs is inserted into the current mapping,
 	// unless the key already exists in it.
 	//
 	// https://yaml.org/type/merge.html
-	if node.IsMap() && with.IsMap() {
-		for _, child := range with.Children {
-			// Skip merging the key if it already exists in node.
-			if node.FindChild(child.Name) != nil {
-				continue
-			}
-
-			child.Parent = node
-			node.Children = append(node.Children, child)
+	for _, child := range with.Children {
+		// Skip merging the key if it already exists in node.
+		if node.FindChild(child.Name) != nil {
+			continue
 		}
 
-		return
+		child.Parent = node
+		node.Children = append(node.Children, child)
 	}
+}
 
+func (node *Node) OverwriteWith(with *Node) {
 	node.Value = with.Value
 	node.Children = node.Children[:0]
 	for _, child := range with.Children {
