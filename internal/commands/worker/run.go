@@ -3,6 +3,7 @@ package worker
 import (
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
@@ -69,6 +70,7 @@ func run(cmd *cobra.Command, args []string) error {
 	// Configure RPC server (used for testing)
 	if rpcEndpointAddress != "" {
 		opts = append(opts, worker.WithRPCEndpoint(rpcEndpointAddress))
+		opts = append(opts, worker.WithAgentEndpoint(endpoint.NewRemote(rpcEndpointAddress)))
 	}
 
 	// Configure logging
