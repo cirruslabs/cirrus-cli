@@ -1,0 +1,50 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "version",
+        "scriptInstruction": {
+          "scripts": [
+            "docker version"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux",
+      "DOCKER_HOST": "unix:///tmp/docker.sock"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "additionalContainers": [
+        {
+          "cpu": 1,
+          "environment": {
+            "DOCKER_HOST": "unix:///tmp/docker.sock"
+          },
+          "image": "docker:20.10.14-dind",
+          "memory": 5120,
+          "name": "docker",
+          "privileged": true
+        }
+      ],
+      "cpu": 1,
+      "image": "debian:latest",
+      "memory": 512
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  }
+]

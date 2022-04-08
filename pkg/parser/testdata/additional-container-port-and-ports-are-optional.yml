@@ -1,0 +1,18 @@
+# An example https://github.com/cirruslabs/cirrus-ci-docs/issues/992,
+# but with container: instead of gke_container:
+task:
+  container:
+    image: debian:latest
+    cpu: 1
+    memory: 512Mb
+    additional_containers:
+      - name: docker
+        image: docker:20.10.14-dind
+        cpu: 1
+        memory: 5Gb
+        env:
+          DOCKER_HOST: unix:///tmp/docker.sock
+        privileged: true
+  env:
+    DOCKER_HOST: unix:///tmp/docker.sock
+  version_script: docker version

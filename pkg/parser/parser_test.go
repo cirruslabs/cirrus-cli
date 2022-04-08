@@ -44,6 +44,7 @@ var validCases = []string{
 	"yaml-scripts-merging",
 	"singleGKEContainer3",
 	"yaml-merge-sequence",
+	"additional-container-port-and-ports-are-optional",
 }
 
 func absolutize(file string) string {
