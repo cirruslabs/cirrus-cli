@@ -224,7 +224,6 @@ func (ac *AdditionalContainer) Parse(
 		return nil, err
 	}
 
-	// Once "port" field is deprecated we can mark "ports" field as required and remove this logic
 	if node.HasChild("port") && node.HasChild("ports") {
 		return nil, node.ParserError("please only use \"ports\" field")
 	}
