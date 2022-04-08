@@ -7,10 +7,6 @@ import (
 	"io"
 )
 
-func (r *RPC) ReportAnnotations(ctx context.Context, req *api.ReportAnnotationsCommandRequest) (*empty.Empty, error) {
-	return &empty.Empty{}, nil
-}
-
 func (r *RPC) SaveLogs(stream api.CirrusCIService_SaveLogsServer) error {
 	for {
 		_, err := stream.Recv()

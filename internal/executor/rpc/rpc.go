@@ -298,3 +298,38 @@ func (r *RPC) ReportAgentSignal(ctx context.Context, req *api.ReportAgentSignalR
 
 	return &empty.Empty{}, nil
 }
+
+func (r *RPC) ReportAnnotations(ctx context.Context, req *api.ReportAnnotationsCommandRequest) (*empty.Empty, error) {
+	_, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, annotation := range req.Annotations {
+		if annotation.FileLocation == nil {
+			continue
+		}
+
+		var mappedLevel echelon.AnnotationLevel
+
+		switch annotation.Level {
+		case api.Annotation_NOTICE:
+			mappedLevel = echelon.AnnotationLevelNotice
+		case api.Annotation_WARNING:
+			mappedLevel = echelon.AnnotationLevelWarning
+		case api.Annotation_FAILURE:
+			mappedLevel = echelon.AnnotationLevelError
+		}
+
+		r.logger.Annotation(&echelon.Annotation{
+			Level:     mappedLevel,
+			File:      annotation.FileLocation.Path,
+			LineStart: annotation.FileLocation.StartLine,
+			LineEnd:   annotation.FileLocation.EndLine,
+			Title:     annotation.Message,
+			Message:   annotation.RawDetails,
+		})
+	}
+
+	return &empty.Empty{}, nil
+}

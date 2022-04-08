@@ -384,3 +384,31 @@ func TestHasStaticEnvironment(t *testing.T) {
 	err := command.Execute()
 	require.Nil(t, err)
 }
+
+func TestRunGitHubAnnotations(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-github-annotations")
+
+	t.Setenv("GITHUB_ACTIONS", "true")
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run"})
+	command.SetOut(writer)
+	command.SetErr(writer)
+	err := command.Execute()
+
+	require.NoError(t, err)
+
+	// It's important to check that the workflow command[1] is printed on a separate line
+	//
+	// [1]: https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions
+	lines := strings.Split(buf.String(), "\n")
+
+	assert.Contains(t, lines,
+		"::warning file=main.go,line=35,endLine=35,title=use of os.SEEK_START is deprecated::")
+	assert.Contains(t, lines,
+		"::error file=main_test.go,line=18,endLine=18,title=TestMain() failed!::main_test.go:18: expected a non-nil return")
+}

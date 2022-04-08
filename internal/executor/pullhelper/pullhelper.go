@@ -5,6 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/echelon"
+	"github.com/cirruslabs/echelon/renderers"
 )
 
 func PullHelper(
@@ -19,7 +20,7 @@ func PullHelper(
 	}
 
 	if logger == nil {
-		logger = echelon.NewLogger(echelon.ErrorLevel, &RendererStub{})
+		logger = echelon.NewLogger(echelon.ErrorLevel, &renderers.StubRenderer{})
 	}
 
 	dockerPullLogger := logger.Scoped("image pull")
