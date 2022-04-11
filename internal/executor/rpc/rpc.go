@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
@@ -305,30 +306,31 @@ func (r *RPC) ReportAnnotations(ctx context.Context, req *api.ReportAnnotationsC
 		return nil, err
 	}
 
+	ghaRenderer, ok := r.logger.Renderer().(*logs.GithubActionsLogsRenderer)
+	if !ok {
+		return &empty.Empty{}, nil
+	}
+
 	for _, annotation := range req.Annotations {
 		if annotation.FileLocation == nil {
 			continue
 		}
 
-		var mappedLevel echelon.AnnotationLevel
+		var mappedLevel string
 
 		switch annotation.Level {
 		case api.Annotation_NOTICE:
-			mappedLevel = echelon.AnnotationLevelNotice
+			mappedLevel = "notice"
 		case api.Annotation_WARNING:
-			mappedLevel = echelon.AnnotationLevelWarning
+			mappedLevel = "warning"
 		case api.Annotation_FAILURE:
-			mappedLevel = echelon.AnnotationLevelError
+			mappedLevel = "error"
 		}
 
-		r.logger.Annotation(&echelon.Annotation{
-			Level:     mappedLevel,
-			File:      annotation.FileLocation.Path,
-			LineStart: annotation.FileLocation.StartLine,
-			LineEnd:   annotation.FileLocation.EndLine,
-			Title:     annotation.Message,
-			Message:   annotation.RawDetails,
-		})
+		rawMessage := fmt.Sprintf("::%s file=%s,line=%d,endLine=%d,title=%s::%s", mappedLevel,
+			annotation.FileLocation.Path, annotation.FileLocation.StartLine, annotation.FileLocation.EndLine,
+			annotation.Message, annotation.RawDetails)
+		ghaRenderer.RenderRawMessage(rawMessage)
 	}
 
 	return &empty.Empty{}, nil
