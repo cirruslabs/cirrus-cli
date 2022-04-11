@@ -249,8 +249,8 @@ github.com/cirruslabs/cirrus-ci-agent v1.76.0 h1:0cJUbe+WQIITOj4RGEzjH1naQhYE164
 github.com/cirruslabs/cirrus-ci-agent v1.76.0/go.mod h1:FGsKASlhaawnIOxgKKJNwd7h4UpNwVjjOuP5+LQbeUE=
 github.com/cirruslabs/cirrus-ci-annotations v0.3.0/go.mod h1:xrmxzL58Pf4cSSQCmQEOPGQ3poeARxJdHneurUrqjZk=
 github.com/cirruslabs/cirrus-ci-annotations v0.8.0/go.mod h1:xrmxzL58Pf4cSSQCmQEOPGQ3poeARxJdHneurUrqjZk=
-github.com/cirruslabs/echelon v1.6.1-0.20220411071250-e2ebc788b628 h1:Zn7GxDl6bsZ1WLL2VYbGwujtmSKdsDsNJJ9udHKDC84=
-github.com/cirruslabs/echelon v1.6.1-0.20220411071250-e2ebc788b628/go.mod h1:1jFBACMy3tzodXyTtNNLN9bw6UUU7Xpq9tYMRydehtY=
+github.com/cirruslabs/echelon v1.7.0 h1:CENBpP6UXA2yind+JRR4ZtKOWejlkn51mEfVBaBeor4=
+github.com/cirruslabs/echelon v1.7.0/go.mod h1:1jFBACMy3tzodXyTtNNLN9bw6UUU7Xpq9tYMRydehtY=
 github.com/cirruslabs/go-java-glob v0.1.0 h1:qC4Fzrq2sXKTLLsBb7ih7BNdCjCR6ZJAAK4nOZ6d/Ak=
 github.com/cirruslabs/go-java-glob v0.1.0/go.mod h1:+4vLmYqEnKtVAdeYsP5GCcPBcTuWsqi6P9bO6HraGFE=
 github.com/cirruslabs/podmanapi v0.2.0 h1:RWBg5jCHI4W1e0IZ41+z4fycvJwdPH7lMRfeHYS0+5g=
