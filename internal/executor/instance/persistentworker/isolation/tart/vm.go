@@ -3,6 +3,7 @@ package tart
 import (
 	"context"
 	"github.com/google/uuid"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -16,7 +17,7 @@ type VM struct {
 	errChan      chan error
 }
 
-func NewVMClonedFrom(ctx context.Context, from string) (*VM, error) {
+func NewVMClonedFrom(ctx context.Context, from string, cpu uint32, memory uint32) (*VM, error) {
 	subCtx, subCtxCancel := context.WithCancel(ctx)
 
 	vm := &VM{
@@ -28,6 +29,17 @@ func NewVMClonedFrom(ctx context.Context, from string) (*VM, error) {
 
 	if _, _, err := Cmd(ctx, "clone", from, vm.ident); err != nil {
 		return nil, err
+	}
+
+	if cpu != 0 {
+		if _, _, err := Cmd(ctx, "set", vm.ident, "--cpu", strconv.FormatUint(uint64(cpu), 10)); err != nil {
+			return nil, err
+		}
+	}
+	if memory != 0 {
+		if _, _, err := Cmd(ctx, "set", vm.ident, "--memory", strconv.FormatUint(uint64(memory), 10)); err != nil {
+			return nil, err
+		}
 	}
 
 	return vm, nil

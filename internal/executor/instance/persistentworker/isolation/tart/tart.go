@@ -20,13 +20,17 @@ type Tart struct {
 	vmName      string
 	sshUser     string
 	sshPassword string
+	cpu         uint32
+	memory      uint32
 }
 
-func New(vmName string, sshUser string, sshPassword string, opts ...Option) (*Tart, error) {
+func New(vmName string, sshUser string, sshPassword string, cpu uint32, memory uint32, opts ...Option) (*Tart, error) {
 	tart := &Tart{
 		vmName:      vmName,
 		sshUser:     sshUser,
 		sshPassword: sshPassword,
+		cpu:         cpu,
+		memory:      memory,
 	}
 
 	// Apply options
@@ -43,7 +47,7 @@ func New(vmName string, sshUser string, sshPassword string, opts ...Option) (*Ta
 }
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
-	vm, err := NewVMClonedFrom(ctx, tart.vmName)
+	vm, err := NewVMClonedFrom(ctx, tart.vmName, tart.cpu, tart.memory)
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
 	}
