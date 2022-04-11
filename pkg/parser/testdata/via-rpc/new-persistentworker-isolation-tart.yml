@@ -4,7 +4,8 @@ persistent_worker:
       vm: big-sur-base
       user: admin
       password: secret
-      platform: darwin
+      cpu: 8
+      memory: 16G
   labels:
     A: B
     C: D

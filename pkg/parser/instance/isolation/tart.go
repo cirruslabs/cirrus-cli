@@ -2,12 +2,14 @@ package isolation
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
+	"strconv"
 )
 
 type Tart struct {
@@ -56,6 +58,35 @@ func NewTart(mergedEnv map[string]string) *Tart {
 
 		tart.proto.Tart.Password = password
 
+		return nil
+	})
+
+	cpuSchema := schema.Number("Number of VM CPUs.")
+	tart.OptionalField(nameable.NewSimpleNameable("cpu"), cpuSchema, func(node *node.Node) error {
+		cpu, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+		cpuParsed, err := strconv.ParseUint(cpu, 10, 32)
+		if err != nil {
+			return node.ParserError("%s", err.Error())
+		}
+		tart.proto.Tart.Cpu = uint32(cpuParsed)
+		return nil
+	})
+
+	memorySchema := schema.Memory()
+	memorySchema.Description = "VM memory size in megabytes."
+	tart.OptionalField(nameable.NewSimpleNameable("memory"), memorySchema, func(node *node.Node) error {
+		memory, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+		memoryParsed, err := resources.ParseMegaBytes(memory)
+		if err != nil {
+			return node.ParserError("%s", err.Error())
+		}
+		tart.proto.Tart.Memory = uint32(memoryParsed)
 		return nil
 	})
 
