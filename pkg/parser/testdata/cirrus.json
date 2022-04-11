@@ -2517,6 +2517,15 @@
                 "tart": {
                   "description": "Tart VM isolation.",
                   "properties": {
+                    "cpu": {
+                      "description": "Number of VM CPUs.",
+                      "type": "number"
+                    },
+                    "memory": {
+                      "description": "VM memory size in megabytes.",
+                      "pattern": "\\d+(G|Mb)?",
+                      "type": "string"
+                    },
                     "password": {
                       "description": "SSH password",
                       "type": "string"
@@ -2842,6 +2851,15 @@
             "tart": {
               "description": "Tart VM isolation.",
               "properties": {
+                "cpu": {
+                  "description": "Number of VM CPUs.",
+                  "type": "number"
+                },
+                "memory": {
+                  "description": "VM memory size in megabytes.",
+                  "pattern": "\\d+(G|Mb)?",
+                  "type": "string"
+                },
                 "password": {
                   "description": "SSH password",
                   "type": "string"
