@@ -5,10 +5,16 @@ import (
 	"github.com/cirruslabs/echelon/renderers"
 )
 
+type GithubActionsLogsRenderer struct {
+	*FoldableLogsRenderer
+}
+
 func NewGithubActionsLogsRenderer(renderer *renderers.SimpleRenderer) echelon.LogRendered {
-	return &FoldableLogsRenderer{
-		delegate:          renderer,
-		startFoldTemplate: "##[group]%s",
-		endFoldTemplate:   "##[endgroup]",
+	return &GithubActionsLogsRenderer{
+		&FoldableLogsRenderer{
+			delegate:          renderer,
+			startFoldTemplate: "##[group]%s",
+			endFoldTemplate:   "##[endgroup]",
+		},
 	}
 }

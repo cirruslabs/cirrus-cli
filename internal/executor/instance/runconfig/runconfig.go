@@ -5,8 +5,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/pullhelper"
 	"github.com/cirruslabs/echelon"
+	"github.com/cirruslabs/echelon/renderers"
 	"github.com/hashicorp/go-version"
 )
 
@@ -24,7 +24,7 @@ type RunConfig struct {
 
 func (rc *RunConfig) Logger() *echelon.Logger {
 	if rc.logger == nil {
-		rc.logger = echelon.NewLogger(echelon.ErrorLevel, &pullhelper.RendererStub{})
+		rc.logger = echelon.NewLogger(echelon.ErrorLevel, &renderers.StubRenderer{})
 	}
 
 	return rc.logger

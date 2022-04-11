@@ -1,0 +1,2 @@
+{"level": "warning", "message": "use of os.SEEK_START is deprecated", "path": "main.go", "start_line": 35, "end_line": 35}
+{"level": "failure", "message": "TestMain() failed!", "raw_details":  "main_test.go:18: expected a non-nil return", "path": "main_test.go", "start_line": 18, "end_line": 18}

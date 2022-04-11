@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
@@ -295,6 +296,42 @@ func (r *RPC) ReportAgentSignal(ctx context.Context, req *api.ReportAgentSignalR
 	}
 
 	r.logger.Scoped(task.UniqueDescription()).Debugf("agent signal: %s", req.Signal)
+
+	return &empty.Empty{}, nil
+}
+
+func (r *RPC) ReportAnnotations(ctx context.Context, req *api.ReportAnnotationsCommandRequest) (*empty.Empty, error) {
+	_, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	ghaRenderer, ok := r.logger.Renderer().(*logs.GithubActionsLogsRenderer)
+	if !ok {
+		return &empty.Empty{}, nil
+	}
+
+	for _, annotation := range req.Annotations {
+		if annotation.FileLocation == nil {
+			continue
+		}
+
+		var mappedLevel string
+
+		switch annotation.Level {
+		case api.Annotation_NOTICE:
+			mappedLevel = "notice"
+		case api.Annotation_WARNING:
+			mappedLevel = "warning"
+		case api.Annotation_FAILURE:
+			mappedLevel = "error"
+		}
+
+		rawMessage := fmt.Sprintf("::%s file=%s,line=%d,endLine=%d,title=%s::%s", mappedLevel,
+			annotation.FileLocation.Path, annotation.FileLocation.StartLine, annotation.FileLocation.EndLine,
+			annotation.Message, annotation.RawDetails)
+		ghaRenderer.RenderRawMessage(rawMessage)
+	}
 
 	return &empty.Empty{}, nil
 }
