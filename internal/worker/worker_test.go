@@ -201,6 +201,8 @@ func TestWorkerIsolationTart(t *testing.T) {
 				Vm:       vm,
 				User:     user,
 				Password: password,
+				Cpu:      5,
+				Memory:   1024 * 5,
 			},
 		},
 	}
