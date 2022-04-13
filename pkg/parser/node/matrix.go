@@ -1,5 +1,7 @@
 package node
 
+import "github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
+
 type Predicate func(nodeName string) bool
 
 func (node *Node) FindParent(predicate Predicate) *Node {
@@ -105,20 +107,27 @@ func (node *Node) ReplaceWith(with []*Node) {
 	node.Parent.Children = newChildren
 }
 
-func (node *Node) MergeFromMap(with *Node) {
+func (node *Node) MergeFromMap(with *Node, mergeExemptions []nameable.Nameable) {
 	// If the value associated with the key is a single mapping node,
 	// each of its key/value pairs is inserted into the current mapping,
-	// unless the key already exists in it.
+	// unless the key already exists in it[1] OR the key is associated with
+	// a collectible or repeatable field.
 	//
-	// https://yaml.org/type/merge.html
+	// [1]: https://yaml.org/type/merge.html
 	for _, child := range with.Children {
-		// Skip merging the key if it already exists in node.
-		if node.FindChild(child.Name) != nil {
-			continue
+		var mergeExemption bool
+
+		for _, nameable := range mergeExemptions {
+			if nameable.Matches(child.Name) {
+				mergeExemption = true
+				break
+			}
 		}
 
-		child.Parent = node
-		node.Children = append(node.Children, child)
+		if node.FindChild(child.Name) == nil || mergeExemption {
+			child.Parent = node
+			node.Children = append(node.Children, child)
+		}
 	}
 }
 

@@ -187,6 +187,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 	return tasks, nil
 }
 
+// nolint:gocognit // it's a parser, and it's complicated
 func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err error) {
 	defer func() {
 		if re, ok := err.(*parsererror.Rich); ok {
@@ -209,9 +210,31 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 		}
 	}
 
+	// Work around Cirus Cloud parser's historically lax merging
+	// of the YAML aliases[1]. See yaml-merge-sequence.yml and
+	// yaml-merge-collectible.yml for examples of conflicting
+	// behaviors that we should support.
+	//
+	// [1]: https://yaml.org/type/merge.html
+	var mergeExemptions []nameable.Nameable
+
+	for _, parser := range p.parsers {
+		for _, field := range parser.CollectibleFields() {
+			mergeExemptions = append(mergeExemptions, nameable.NewSimpleNameable(field.Name))
+		}
+
+		for _, field := range parser.Fields() {
+			if !field.Repeatable() {
+				continue
+			}
+
+			mergeExemptions = append(mergeExemptions, field.Name())
+		}
+	}
+
 	// Convert the parsed and nested YAML structure into a tree
 	// to get the ability to walk parents
-	tree, err := node.NewFromText(config)
+	tree, err := node.NewFromTextWithMergeExemptions(config, mergeExemptions)
 	if err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package node
 import (
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/cirruslabs/cirrus-cli/pkg/yamlhelper"
 	"gopkg.in/yaml.v3"
@@ -45,6 +46,10 @@ func (node *Node) MarshalYAML() (*yaml.Node, error) {
 }
 
 func NewFromText(text string) (*Node, error) {
+	return NewFromTextWithMergeExemptions(text, []nameable.Nameable{})
+}
+
+func NewFromTextWithMergeExemptions(text string, mergeExemptions []nameable.Nameable) (*Node, error) {
 	var yamlNode yaml.Node
 
 	// Unmarshal YAML
@@ -74,11 +79,18 @@ func NewFromText(text string) (*Node, error) {
 			" as it top-level element, but found %s", yamlKindToString(yamlNode.Kind))
 	}
 
-	return convert(nil, "root", yamlNode.Content[0], yamlNode.Line, yamlNode.Column)
+	return convert(nil, "root", yamlNode.Content[0], yamlNode.Line, yamlNode.Column, mergeExemptions)
 }
 
 // nolint:gocognit // splitting this into multiple functions would probably make this even less comprehensible
-func convert(parent *Node, name string, yamlNode *yaml.Node, line, column int) (*Node, error) {
+func convert(
+	parent *Node,
+	name string,
+	yamlNode *yaml.Node,
+	line int,
+	column int,
+	mergeExemptions []nameable.Nameable,
+) (*Node, error) {
 	result := &Node{
 		Name:   name,
 		Parent: parent,
@@ -98,7 +110,7 @@ func convert(parent *Node, name string, yamlNode *yaml.Node, line, column int) (
 				continue
 			}
 
-			listSubtree, err := convert(result, "", item, item.Line, item.Column)
+			listSubtree, err := convert(result, "", item, item.Line, item.Column, mergeExemptions)
 			if err != nil {
 				return nil, err
 			}
@@ -118,7 +130,7 @@ func convert(parent *Node, name string, yamlNode *yaml.Node, line, column int) (
 
 			// Handle "<<" keys
 			if key.Tag == "!!merge" {
-				if err := result.merge(yamlNode, key, value); err != nil {
+				if err := result.merge(yamlNode, key, value, mergeExemptions); err != nil {
 					return nil, err
 				}
 
@@ -130,7 +142,7 @@ func convert(parent *Node, name string, yamlNode *yaml.Node, line, column int) (
 				return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "map key is not a string")
 			}
 
-			mapSubtree, err := convert(result, key.Value, value, key.Line, key.Column)
+			mapSubtree, err := convert(result, key.Value, value, key.Line, key.Column, mergeExemptions)
 			if err != nil {
 				return nil, err
 			}
@@ -143,7 +155,7 @@ func convert(parent *Node, name string, yamlNode *yaml.Node, line, column int) (
 		// YAML aliases generally don't need line and column helper values
 		// since they are merged into some other data structure afterwards
 		// and this helps to find bugs easier in the future
-		resolvedAlias, err := convert(parent, name, yamlNode.Alias, 0, 0)
+		resolvedAlias, err := convert(parent, name, yamlNode.Alias, 0, 0, mergeExemptions)
 		if err != nil {
 			return nil, err
 		}
@@ -157,11 +169,11 @@ func convert(parent *Node, name string, yamlNode *yaml.Node, line, column int) (
 	return result, nil
 }
 
-func (node *Node) merge(parent *yaml.Node, _ *yaml.Node, value *yaml.Node) error {
+func (node *Node) merge(parent *yaml.Node, _ *yaml.Node, value *yaml.Node, mergeExemptions []nameable.Nameable) error {
 	// YAML aliases generally don't need line and column helper values
 	// since they are merged into some other data structure afterwards
 	// and this helps to find bugs easier in the future
-	aliasValue, err := convert(node, "", value, 0, 0)
+	aliasValue, err := convert(node, "", value, 0, 0, mergeExemptions)
 	if err != nil {
 		return err
 	}
@@ -173,7 +185,7 @@ func (node *Node) merge(parent *yaml.Node, _ *yaml.Node, value *yaml.Node) error
 		// [1]: https://yaml.org/type/merge.html
 		switch aliasValue.Value.(type) {
 		case *MapValue:
-			node.MergeFromMap(aliasValue)
+			node.MergeFromMap(aliasValue, mergeExemptions)
 		case *ListValue:
 			node.OverwriteWith(aliasValue)
 		default:
@@ -193,7 +205,7 @@ func (node *Node) merge(parent *yaml.Node, _ *yaml.Node, value *yaml.Node) error
 						" (as required per spec)")
 			}
 
-			node.MergeFromMap(aliasValueChild)
+			node.MergeFromMap(aliasValueChild, mergeExemptions)
 		}
 	}
 
