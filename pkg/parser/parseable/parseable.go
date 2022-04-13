@@ -13,6 +13,7 @@ type Parseable interface {
 	Parse(node *nodepkg.Node, parserKit *parserkit.ParserKit) error
 	Schema() *schema.Schema
 	CollectibleFields() []CollectibleField
+	Fields() []Field
 	Proto() interface{}
 }
 
@@ -24,6 +25,14 @@ type Field struct {
 	repeatable bool
 	onFound    nodeFunc
 	schema     *schema.Schema
+}
+
+func (field *Field) Name() nameable.Nameable {
+	return field.name
+}
+
+func (field *Field) Repeatable() bool {
+	return field.repeatable
 }
 
 type CollectibleField struct {
@@ -135,6 +144,10 @@ func (parser *DefaultParser) Schema() *schema.Schema {
 
 func (parser *DefaultParser) CollectibleFields() []CollectibleField {
 	return parser.collectibleFields
+}
+
+func (parser *DefaultParser) Fields() []Field {
+	return parser.fields
 }
 
 func evaluateCollectible(node *nodepkg.Node, field CollectibleField) error {

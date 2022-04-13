@@ -1,0 +1,15 @@
+container:
+  image: debian:latest
+
+first: &first
+  env:
+    FIRST: first
+
+second: &second
+  env:
+    SECOND: second
+
+task:
+  <<: *first
+  <<: *second
+  script: true
