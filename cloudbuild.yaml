@@ -2,6 +2,28 @@ steps:
   - name: gcr.io/cloud-builders/git
     args: [ 'fetch', '--unshallow' ]
   - name: 'gcr.io/cloud-builders/docker'
-    args: [ 'build', '-t', 'gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME', '-t', 'gcr.io/cirrus-ci-community/cirrus-cli:latest', '.' ]
-timeout: 2400s
-images: [ 'gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME', 'gcr.io/cirrus-ci-community/cirrus-cli:latest' ]
+    args: [ 'run', '--privileged', 'linuxkit/binfmt:v0.8' ]
+    id: 'initialize-qemu'
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'buildx', 'create', '--name', 'mybuilder' ]
+    id: 'create-builder'
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'buildx', 'use', 'mybuilder' ]
+    id: 'select-builder'
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'buildx', 'inspect', '--bootstrap' ]
+    id: 'show-target-build-platforms'
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', '--platform', 'linux/amd64,linux/arm64',
+      '--tag', 'gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME',
+      '--tag', 'gcr.io/cirrus-ci-community/cirrus-cli:latest',
+      '--push', '.'
+    ]
+
+options:
+  env:
+    # to use buildx for multiarch build via buildx
+    - 'DOCKER_CLI_EXPERIMENTAL=enabled'
+
+timeout: 3200s
