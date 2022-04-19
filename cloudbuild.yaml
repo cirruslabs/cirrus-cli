@@ -15,7 +15,7 @@ steps:
     id: 'show-target-build-platforms'
   - name: 'gcr.io/cloud-builders/docker'
     args: [
-      'build', '--platform', 'linux/amd64,linux/arm64',
+      'buildx', 'build', '--platform', 'linux/amd64,linux/arm64',
       '--tag', 'gcr.io/cirrus-ci-community/cirrus-cli:$TAG_NAME',
       '--tag', 'gcr.io/cirrus-ci-community/cirrus-cli:latest',
       '--push', '.'
