@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -172,7 +173,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 	var rpcSecurity grpc.DialOption
 
 	if worker.rpcInsecure {
-		rpcSecurity = grpc.WithInsecure()
+		rpcSecurity = grpc.WithTransportCredentials(insecure.NewCredentials())
 	} else {
 		certPool, _ := gocertifi.CACerts()
 		tlsCredentials := credentials.NewTLS(&tls.Config{

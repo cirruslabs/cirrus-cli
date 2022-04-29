@@ -38,7 +38,8 @@ func NewMacOSInstance(mergedEnv map[string]string, parserKit *parserkit.ParserKi
 		return nil
 	})
 
-	instance.OptionalField(nameable.NewSimpleNameable("user"), schema.String("username for SSH connection."), func(node *node.Node) error {
+	userSchema := schema.String("username for SSH connection.")
+	instance.OptionalField(nameable.NewSimpleNameable("user"), userSchema, func(node *node.Node) error {
 		user, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -47,7 +48,8 @@ func NewMacOSInstance(mergedEnv map[string]string, parserKit *parserkit.ParserKi
 		return nil
 	})
 
-	instance.OptionalField(nameable.NewSimpleNameable("password"), schema.String("password for SSH connection."), func(node *node.Node) error {
+	passwordSchema := schema.String("password for SSH connection.")
+	instance.OptionalField(nameable.NewSimpleNameable("password"), passwordSchema, func(node *node.Node) error {
 		password, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
