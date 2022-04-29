@@ -369,12 +369,6 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 		t.Fatal(err)
 	}
 
-	// Obtain expected result by loading JSON fixture
-	fixtureBytes, err := ioutil.ReadFile(fixturePath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	// Craft virtual in-memory filesystem with test-specific files
 	fileContents := make(map[string][]byte)
 
@@ -394,6 +388,18 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 	)
 	localResult, err := localParser.Parse(context.Background(), string(yamlBytes))
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Obtain expected result by loading JSON fixture
+	fixtureBytes, err := ioutil.ReadFile(fixturePath)
+	if os.IsNotExist(err) {
+		fixtureBytes = testutil.TasksToJSON(t, localResult.Tasks)
+		err := ioutil.WriteFile(fixturePath, fixtureBytes, 0600)
+		if err != nil {
+			t.Fatal(err)
+		}
+	} else if err != nil {
 		t.Fatal(err)
 	}
 

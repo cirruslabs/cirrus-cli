@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/golang/protobuf/ptypes/any"
@@ -105,6 +106,9 @@ func NewFromProto(
 				None: &api.Isolation_None{},
 			},
 		}, logger)
+	case *api.MacOSInstance:
+		return tart.New(instance.Image, instance.User, instance.Password, instance.Cpu, instance.Memory,
+			tart.WithLogger(logger))
 	default:
 		return &UnsupportedInstance{
 			err: fmt.Errorf("%w: %T", ErrUnsupportedInstance, instance),

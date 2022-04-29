@@ -83,35 +83,49 @@ func TestExecutorTart(t *testing.T) {
 		t.SkipNow()
 	}
 
-	config := fmt.Sprintf(`persistent_worker:
+	configs := map[string]string{
+		"persistent_worker": fmt.Sprintf(`persistent_worker:
   isolation:
     tart:
-      vm: %s
+      image: %s
       user: %s
       password: %s
 
 task:
   tart_check_script: true
-`, vm, user, password)
+`, vm, user, password),
+		"macos_instance": fmt.Sprintf(`macos_instance:
+  image: %s
+  user: %s
+  password: %s
 
-	if err := ioutil.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
-		t.Fatal(err)
+task:
+  tart_check_script: true
+`, vm, user, password),
 	}
 
-	// Create os.Stderr writer that duplicates it's output to buf
-	buf := bytes.NewBufferString("")
-	writer := io.MultiWriter(os.Stderr, buf)
+	for name, config := range configs {
+		t.Run(name, func(t *testing.T) {
+			if err := ioutil.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
+				t.Fatal(err)
+			}
 
-	renderer := renderers.NewSimpleRenderer(writer, nil)
-	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+			// Create os.Stderr writer that duplicates it's output to buf
+			buf := bytes.NewBufferString("")
+			writer := io.MultiWriter(os.Stderr, buf)
 
-	err := testutil.ExecuteWithOptions(t, ".", executor.WithLogger(logger))
-	assert.NoError(t, err)
+			renderer := renderers.NewSimpleRenderer(writer, nil)
+			logger := echelon.NewLogger(echelon.TraceLevel, renderer)
 
-	assert.Contains(t, buf.String(), "'tart_check' script succeeded")
+			err := testutil.ExecuteWithOptions(t, ".", executor.WithLogger(logger))
+			assert.NoError(t, err)
 
-	// Ensure we get the logs from the VM
-	assert.Contains(t, buf.String(), "Getting initial commands...")
-	assert.Contains(t, buf.String(), "Sending heartbeat...")
-	assert.Contains(t, buf.String(), "Background commands to clean up after:")
+			assert.Contains(t, buf.String(), "'tart_check' script succeeded")
+
+			// Ensure we get the logs from the VM
+			assert.Contains(t, buf.String(), "Getting initial commands...")
+			assert.Contains(t, buf.String(), "Sending heartbeat...")
+			assert.Contains(t, buf.String(), "Background commands to clean up after:")
+		})
+	}
 }

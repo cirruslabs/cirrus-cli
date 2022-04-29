@@ -181,14 +181,14 @@ func TestWorkerIsolationContainer(t *testing.T) {
 
 func TestWorkerIsolationTart(t *testing.T) {
 	// Support Tart isolation testing configured via environment variables
-	vm, vmOk := os.LookupEnv("CIRRUS_INTERNAL_TART_VM")
+	image, vmOk := os.LookupEnv("CIRRUS_INTERNAL_TART_VM")
 	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_USER")
 	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_PASSWORD")
 	if !vmOk || !userOk || !passwordOk {
 		t.Skip("no Tart credentials configured")
 	}
 
-	t.Logf("Using Tart VM %s for testing...", vm)
+	t.Logf("Using Tart VM %s for testing...", image)
 
 	lis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
@@ -198,7 +198,7 @@ func TestWorkerIsolationTart(t *testing.T) {
 	isolation := &api.Isolation{
 		Type: &api.Isolation_Tart_{
 			Tart: &api.Isolation_Tart{
-				Vm:       vm,
+				Image:    image,
 				User:     user,
 				Password: password,
 				Cpu:      5,

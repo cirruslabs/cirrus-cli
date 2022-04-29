@@ -9,7 +9,7 @@
         "name": "main",
         "scriptInstruction": {
           "scripts": [
-            "true"
+            "./test.sh"
           ]
         }
       }
@@ -18,20 +18,12 @@
       "CIRRUS_OS": "darwin"
     },
     "instance": {
-      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
-      "isolation": {
-        "tart": {
-          "password": "secret",
-          "user": "admin",
-          "image": "big-sur-base",
-          "cpu": 8,
-          "memory": 16384
-        }
-      },
-      "labels": {
-        "A": "B",
-        "C": "D"
-      }
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.MacOSInstance",
+      "cpu": 4,
+      "image": "monterey-base",
+      "memory": 8192,
+      "password": "admin",
+      "user": "admin"
     },
     "metadata": {
       "properties": {
@@ -42,6 +34,6 @@
         "trigger_type": "AUTOMATIC"
       }
     },
-    "name": "main"
+    "name": "Run via Tart"
   }
 ]

@@ -26,13 +26,13 @@ func NewTart(mergedEnv map[string]string) *Tart {
 	}
 
 	vmSchema := schema.String("VM name.")
-	tart.OptionalField(nameable.NewSimpleNameable("vm"), vmSchema, func(node *node.Node) error {
-		vm, err := node.GetExpandedStringValue(mergedEnv)
+	tart.OptionalField(nameable.NewSimpleNameable("image"), vmSchema, func(node *node.Node) error {
+		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
 
-		tart.proto.Tart.Vm = vm
+		tart.proto.Tart.Image = image
 
 		return nil
 	})
