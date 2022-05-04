@@ -330,6 +330,9 @@ func GuessPlatform(anyInstance *anypb.Any, descriptor protoreflect.MessageDescri
 	if strings.Contains(instanceType, "anka") {
 		return "darwin"
 	}
+	if strings.Contains(instanceType, "macos") {
+		return "darwin"
+	}
 
 	dynamicMessage := dynamicpb.NewMessage(descriptor)
 	_ = proto.Unmarshal(anyInstance.GetValue(), dynamicMessage)

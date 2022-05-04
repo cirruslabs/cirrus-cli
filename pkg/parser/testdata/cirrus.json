@@ -2089,6 +2089,31 @@
           },
           "type": "object"
         },
+        "macos_instance": {
+          "description": "MacOS VM definition.",
+          "properties": {
+            "cpu": {
+              "type": "number"
+            },
+            "image": {
+              "description": "Tart Image to use.",
+              "type": "string"
+            },
+            "memory": {
+              "pattern": "\\d+(G|Mb)?",
+              "type": "string"
+            },
+            "password": {
+              "description": "password for SSH connection.",
+              "type": "string"
+            },
+            "user": {
+              "description": "username for SSH connection.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
         "name": {
           "type": "string"
         },
@@ -2521,6 +2546,10 @@
                       "description": "Number of VM CPUs.",
                       "type": "number"
                     },
+                    "image": {
+                      "description": "VM name.",
+                      "type": "string"
+                    },
                     "memory": {
                       "description": "VM memory size in megabytes.",
                       "pattern": "\\d+(G|Mb)?",
@@ -2532,10 +2561,6 @@
                     },
                     "user": {
                       "description": "SSH username",
-                      "type": "string"
-                    },
-                    "vm": {
-                      "description": "VM name.",
                       "type": "string"
                     }
                   },
@@ -2780,6 +2805,31 @@
       },
       "type": "object"
     },
+    "macos_instance": {
+      "description": "MacOS VM definition.",
+      "properties": {
+        "cpu": {
+          "type": "number"
+        },
+        "image": {
+          "description": "Tart Image to use.",
+          "type": "string"
+        },
+        "memory": {
+          "pattern": "\\d+(G|Mb)?",
+          "type": "string"
+        },
+        "password": {
+          "description": "password for SSH connection.",
+          "type": "string"
+        },
+        "user": {
+          "description": "username for SSH connection.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "only_if": {
       "description": "Boolean expression that can use environment variables.",
       "type": "string"
@@ -2855,6 +2905,10 @@
                   "description": "Number of VM CPUs.",
                   "type": "number"
                 },
+                "image": {
+                  "description": "VM name.",
+                  "type": "string"
+                },
                 "memory": {
                   "description": "VM memory size in megabytes.",
                   "pattern": "\\d+(G|Mb)?",
@@ -2866,10 +2920,6 @@
                 },
                 "user": {
                   "description": "SSH username",
-                  "type": "string"
-                },
-                "vm": {
-                  "description": "VM name.",
                   "type": "string"
                 }
               },

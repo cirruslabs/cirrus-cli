@@ -108,6 +108,33 @@ func NewTask(
 				return nil
 			})
 	}
+	if _, ok := additionalInstances["macos_instance"]; !ok {
+		task.CollectibleField("macos_instance",
+			instance.NewMacOSInstance(environment.Merge(task.proto.Environment, env), parserKit).Schema(),
+			func(node *node.Node) error {
+				task.instanceNode = node
+
+				inst := instance.NewMacOSInstance(environment.Merge(task.proto.Environment, env), parserKit)
+				macosInstance, err := inst.Parse(node, parserKit)
+				if err != nil {
+					return err
+				}
+
+				// Retrieve the platform to update the environment
+				task.proto.Environment = environment.Merge(
+					task.proto.Environment,
+					map[string]string{"CIRRUS_OS": "darwin"},
+				)
+
+				anyInstance, err := anypb.New(macosInstance)
+				if err != nil {
+					return err
+				}
+				task.proto.Instance = anyInstance
+
+				return nil
+			})
+	}
 	if _, ok := additionalInstances["persistent_worker"]; !ok {
 		task.CollectibleField("persistent_worker",
 			instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env), parserKit).Schema(),

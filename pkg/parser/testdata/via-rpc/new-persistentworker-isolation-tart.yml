@@ -1,7 +1,7 @@
 persistent_worker:
   isolation:
     tart:
-      vm: big-sur-base
+      image: big-sur-base
       user: admin
       password: secret
       cpu: 8

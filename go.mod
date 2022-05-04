@@ -7,7 +7,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d
-	github.com/cirruslabs/cirrus-ci-agent v1.77.0
+	github.com/cirruslabs/cirrus-ci-agent v1.77.2
 	github.com/cirruslabs/echelon v1.7.0
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.2.0
@@ -57,11 +57,11 @@ require (
 	go.starlark.net v0.0.0-20210406145628-7a1108eaa012
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
+	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150
 	golang.org/x/text v0.3.7
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/grpc v1.41.0
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/grpc v1.46.0
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
@@ -108,9 +108,9 @@ require (
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190809123943-df4f5c81cb3b // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
-	golang.org/x/net v0.0.0-20220107192237-5cfca573fb4d // indirect
+	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	google.golang.org/genproto v0.0.0-20211021150943-2b146023228c // indirect
+	google.golang.org/genproto v0.0.0-20220426171045-31bebdecfb46 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

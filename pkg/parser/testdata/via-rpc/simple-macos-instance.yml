@@ -1,0 +1,6 @@
+macos_instance:
+  image: monterey-base
+
+task:
+  name: Run via Tart
+  script: ./test.sh
