@@ -292,7 +292,9 @@ func (worker *Worker) Pause(ctx context.Context, wait bool) error {
 		return nil
 	}
 	for {
-		response, err := worker.rpcClient.QueryRunningTasks(ctx, &api.QueryRunningTasksRequest{}, grpc.PerRPCCredentials(worker))
+		response, err := worker.rpcClient.QueryRunningTasks(
+			ctx, &api.QueryRunningTasksRequest{}, grpc.PerRPCCredentials(worker),
+		)
 		if err != nil {
 			worker.logger.Errorf("Ignoring an API error while waiting: %w", err)
 		} else if len(response.RunningTasks) == 0 {
