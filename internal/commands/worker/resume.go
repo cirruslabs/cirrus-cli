@@ -7,13 +7,11 @@ import (
 )
 
 func NewResumeCmd() *cobra.Command {
-	flags := &workerConfig{}
-
 	cmd := &cobra.Command{
 		Use:   "resume",
 		Short: "Resume task scheduling",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			worker, err := flags.buildWorker(cmd)
+			worker, err := buildWorker(cmd)
 			if err != nil {
 				return err
 			}
@@ -21,7 +19,7 @@ func NewResumeCmd() *cobra.Command {
 		},
 	}
 
-	flags.attacheFlags(cmd)
+	attacheFlags(cmd)
 
 	return cmd
 }

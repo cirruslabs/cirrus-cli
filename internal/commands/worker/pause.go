@@ -9,13 +9,11 @@ import (
 var waitForTasksToFinish bool
 
 func NewPauseCmd() *cobra.Command {
-	flags := &workerConfig{}
-
 	cmd := &cobra.Command{
 		Use:   "pause",
 		Short: "Pause task scheduling",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			worker, err := flags.buildWorker(cmd)
+			worker, err := buildWorker(cmd)
 			if err != nil {
 				return err
 			}
@@ -23,7 +21,7 @@ func NewPauseCmd() *cobra.Command {
 		},
 	}
 
-	flags.attacheFlags(cmd)
+	attacheFlags(cmd)
 
 	cmd.PersistentFlags().BoolVar(&waitForTasksToFinish, "wait", false, "wait for currently running tasks to finish")
 

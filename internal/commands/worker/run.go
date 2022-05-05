@@ -9,13 +9,11 @@ import (
 var ErrRun = errors.New("run failed")
 
 func NewRunCmd() *cobra.Command {
-	flags := &workerConfig{}
-
 	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "Run persistent worker",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			worker, err := flags.buildWorker(cmd)
+			worker, err := buildWorker(cmd)
 			if err != nil {
 				return err
 			}
@@ -26,7 +24,7 @@ func NewRunCmd() *cobra.Command {
 		},
 	}
 
-	flags.attacheFlags(cmd)
+	attacheFlags(cmd)
 
 	return cmd
 }
