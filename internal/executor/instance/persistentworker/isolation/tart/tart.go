@@ -47,7 +47,7 @@ func New(vmName string, sshUser string, sshPassword string, cpu uint32, memory u
 }
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
-	vm, err := NewVMClonedFrom(ctx, tart.vmName, tart.cpu, tart.memory)
+	vm, err := NewVMClonedFrom(ctx, tart.vmName, tart.cpu, tart.memory, config.Logger())
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
 	}
@@ -58,6 +58,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	// Wait for the VM to start and get it's DHCP address
 	var ip string
+	bootLogger := config.Logger().Scoped("boot virtual machine")
 
 	for {
 		select {
@@ -79,6 +80,9 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	}
 
 	tart.logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, vm.Ident())
+
+	bootLogger.Errorf("VM was assigned with %s IP", ip)
+	bootLogger.Finish(true)
 
 	return remoteagent.WaitForAgent(ctx, tart.logger, ip,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64", config, true)
