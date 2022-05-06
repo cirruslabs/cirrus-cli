@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/echelon"
+	"io"
 	"os/exec"
 	"strings"
 )
@@ -16,12 +18,35 @@ var (
 	ErrTartFailed   = errors.New("tart command returned non-zero exit code")
 )
 
+type loggerAsWriter struct {
+	level    echelon.LogLevel
+	delegate *echelon.Logger
+}
+
+func (l loggerAsWriter) Write(p []byte) (n int, err error) {
+	if l.delegate != nil {
+		l.delegate.Logf(l.level, string(p))
+	}
+	return len(p), nil
+}
+
 func Cmd(ctx context.Context, args ...string) (string, string, error) {
+	return CmdWithLogger(ctx, nil, args...)
+}
+
+func CmdWithLogger(ctx context.Context, logger *echelon.Logger, args ...string) (string, string, error) {
 	cmd := exec.CommandContext(ctx, tartCommandName, args...)
 
 	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+
+	cmd.Stdout = io.MultiWriter(&stdout, &loggerAsWriter{
+		level:    echelon.InfoLevel,
+		delegate: logger,
+	})
+	cmd.Stderr = io.MultiWriter(&stderr, &loggerAsWriter{
+		level:    echelon.WarnLevel,
+		delegate: logger,
+	})
 
 	err := cmd.Run()
 	if err != nil {

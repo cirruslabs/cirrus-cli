@@ -2,6 +2,7 @@ package tart
 
 import (
 	"context"
+	"github.com/cirruslabs/echelon"
 	"github.com/google/uuid"
 	"strconv"
 	"strings"
@@ -17,7 +18,7 @@ type VM struct {
 	errChan      chan error
 }
 
-func NewVMClonedFrom(ctx context.Context, from string, cpu uint32, memory uint32) (*VM, error) {
+func NewVMClonedFrom(ctx context.Context, from string, cpu uint32, memory uint32, logger *echelon.Logger) (*VM, error) {
 	subCtx, subCtxCancel := context.WithCancel(ctx)
 
 	vm := &VM{
@@ -27,21 +28,30 @@ func NewVMClonedFrom(ctx context.Context, from string, cpu uint32, memory uint32
 		errChan:      make(chan error, 1),
 	}
 
-	if _, _, err := Cmd(ctx, "clone", from, vm.ident); err != nil {
+	cloneLogger := logger.Scoped("clone virtual machine")
+	cloneLogger.Infof("Cloning virtual machine %s...", from)
+
+	if _, _, err := CmdWithLogger(ctx, cloneLogger, "clone", from, vm.ident); err != nil {
+		cloneLogger.Finish(false)
 		return nil, err
 	}
 
 	if cpu != 0 {
-		if _, _, err := Cmd(ctx, "set", vm.ident, "--cpu", strconv.FormatUint(uint64(cpu), 10)); err != nil {
+		cpuStr := strconv.FormatUint(uint64(cpu), 10)
+		if _, _, err := CmdWithLogger(ctx, cloneLogger, "set", vm.ident, "--cpu", cpuStr); err != nil {
+			cloneLogger.Finish(false)
 			return nil, err
 		}
 	}
 	if memory != 0 {
-		if _, _, err := Cmd(ctx, "set", vm.ident, "--memory", strconv.FormatUint(uint64(memory), 10)); err != nil {
+		memoryStr := strconv.FormatUint(uint64(memory), 10)
+		if _, _, err := CmdWithLogger(ctx, cloneLogger, "set", vm.ident, "--memory", memoryStr); err != nil {
+			cloneLogger.Finish(false)
 			return nil, err
 		}
 	}
 
+	cloneLogger.Finish(true)
 	return vm, nil
 }
 
@@ -55,7 +65,7 @@ func (vm *VM) Start() {
 	go func() {
 		defer vm.wg.Done()
 
-		_, _, err := Cmd(vm.subCtx, "run", vm.ident)
+		_, _, err := Cmd(vm.subCtx, "run", "--no-graphics", vm.ident)
 		vm.errChan <- err
 	}()
 }
