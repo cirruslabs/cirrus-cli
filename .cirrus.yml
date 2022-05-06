@@ -13,6 +13,7 @@ docker_builder:
   allow_failures: true
   alias: Tests
   install_podman_script:
+    - sudo apt-get update
     - sudo apt-get -y install podman
   configure_podman_script:
     - echo 'unqualified-search-registries=["docker.io"]' > /etc/containers/registries.conf.d/docker.conf
