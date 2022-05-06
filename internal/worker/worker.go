@@ -272,11 +272,44 @@ func (worker *Worker) poll(ctx context.Context) error {
 // PerRPCCredentials interface implementation.
 func (worker *Worker) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
 	return map[string]string{
-		"session-token": worker.sessionToken,
+		"registration-token": worker.registrationToken,
+		"session-token":      worker.sessionToken,
+		"worker-name":        worker.name,
 	}, nil
 }
 
 // PerRPCCredentials interface implementation.
 func (worker *Worker) RequireTransportSecurity() bool {
 	return !worker.rpcInsecure
+}
+
+func (worker *Worker) Pause(ctx context.Context, wait bool) error {
+	_, err := worker.rpcClient.UpdateStatus(ctx, &api.UpdateStatusRequest{Disabled: true}, grpc.PerRPCCredentials(worker))
+	if err != nil {
+		return err
+	}
+	if !wait {
+		return nil
+	}
+	for {
+		response, err := worker.rpcClient.QueryRunningTasks(
+			ctx, &api.QueryRunningTasksRequest{}, grpc.PerRPCCredentials(worker),
+		)
+		if err != nil {
+			worker.logger.Errorf("Ignoring an API error while waiting: %w", err)
+		} else if len(response.RunningTasks) == 0 {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(time.Duration(worker.pollIntervalSeconds) * time.Second):
+			// continue the loop
+		}
+	}
+}
+
+func (worker *Worker) Resume(ctx context.Context) error {
+	_, err := worker.rpcClient.UpdateStatus(ctx, &api.UpdateStatusRequest{Disabled: false}, grpc.PerRPCCredentials(worker))
+	return err
 }

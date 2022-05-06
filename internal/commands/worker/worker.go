@@ -13,6 +13,8 @@ func NewRootCmd() *cobra.Command {
 
 	commands := []*cobra.Command{
 		NewRunCmd(),
+		NewPauseCmd(),
+		NewResumeCmd(),
 	}
 
 	return helpers.ConsumeSubCommands(cmd, commands)
