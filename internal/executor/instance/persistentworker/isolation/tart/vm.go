@@ -37,13 +37,15 @@ func NewVMClonedFrom(ctx context.Context, from string, cpu uint32, memory uint32
 	}
 
 	if cpu != 0 {
-		if _, _, err := CmdWithLogger(ctx, cloneLogger, "set", vm.ident, "--cpu", strconv.FormatUint(uint64(cpu), 10)); err != nil {
+		cpuStr := strconv.FormatUint(uint64(cpu), 10)
+		if _, _, err := CmdWithLogger(ctx, cloneLogger, "set", vm.ident, "--cpu", cpuStr); err != nil {
 			cloneLogger.Finish(false)
 			return nil, err
 		}
 	}
 	if memory != 0 {
-		if _, _, err := CmdWithLogger(ctx, cloneLogger, "set", vm.ident, "--memory", strconv.FormatUint(uint64(memory), 10)); err != nil {
+		memoryStr := strconv.FormatUint(uint64(memory), 10)
+		if _, _, err := CmdWithLogger(ctx, cloneLogger, "set", vm.ident, "--memory", memoryStr); err != nil {
 			cloneLogger.Finish(false)
 			return nil, err
 		}
