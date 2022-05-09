@@ -93,6 +93,7 @@ func TestExecutorTart(t *testing.T) {
 
 task:
   tart_check_script: true
+  ls_script: ls
 `, vm, user, password),
 		"macos_instance": fmt.Sprintf(`macos_instance:
   image: %s
@@ -101,12 +102,16 @@ task:
 
 task:
   tart_check_script: true
+  ls_script: ls
 `, vm, user, password),
 	}
 
 	for name, config := range configs {
 		t.Run(name, func(t *testing.T) {
 			if err := ioutil.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
+				t.Fatal(err)
+			}
+			if err := ioutil.WriteFile("foo.txt", []byte(config), 0600); err != nil {
 				t.Fatal(err)
 			}
 
@@ -121,6 +126,9 @@ task:
 			assert.NoError(t, err)
 
 			assert.Contains(t, buf.String(), "'tart_check' script succeeded")
+			assert.Contains(t, buf.String(), "'ls' script succeeded")
+
+			assert.NotContains(t, buf.String(), "foo.txt")
 
 			// Ensure we get the logs from the VM
 			assert.Contains(t, buf.String(), "Getting initial commands...")
@@ -128,4 +136,43 @@ task:
 			assert.Contains(t, buf.String(), "Background commands to clean up after:")
 		})
 	}
+}
+
+func TestTartMountedWorkingDirectory(t *testing.T) {
+	vm, vmOk := os.LookupEnv("CIRRUS_INTERNAL_TART_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_PASSWORD")
+	if !vmOk || !userOk || !passwordOk {
+		t.SkipNow()
+	}
+
+	config := fmt.Sprintf(`macos_instance:
+  image: %s
+  user: %s
+  password: %s
+
+task:
+  ls_script: ls
+`, vm, user, password)
+
+	if err := ioutil.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := ioutil.WriteFile("foo.txt", []byte(config), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	renderer := renderers.NewSimpleRenderer(writer, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	err := testutil.ExecuteWithOptions(t, ".", executor.WithLogger(logger))
+	assert.NoError(t, err)
+
+	assert.Contains(t, buf.String(), "'ls' script succeeded")
+	assert.Contains(t, buf.String(), "foo.txt")
 }

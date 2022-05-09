@@ -8,6 +8,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/echelon"
+	"os/exec"
 	"time"
 )
 
@@ -84,6 +86,11 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
 
+	err = tart.syncProjectDir(ctx, config, ip)
+	if err != nil {
+		return err
+	}
+
 	return remoteagent.WaitForAgent(ctx, tart.logger, ip,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64", config, true)
 }
@@ -94,4 +101,34 @@ func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
 
 func (tart *Tart) Close() error {
 	return nil
+}
+
+func (tart *Tart) syncProjectDir(ctx context.Context, config *runconfig.RunConfig, ip string) error {
+	if config.ProjectDir == "" {
+		return nil
+	}
+	syncLogger := config.Logger().Scoped("syncing project directory")
+
+	remoteDst := fmt.Sprintf("rsync://%s@%s:%s", tart.sshUser, ip, platform.NewUnix().GenericWorkingDir())
+	rsyncCommand := fmt.Sprintf(
+		"rsync -e 'ssh -o StrictHostKeyChecking=no' -r --rsync-path='mkdir -p %s && rsync' --filter=':- .gitignore' %s/ %s",
+		platform.NewUnix().GenericWorkingDir(), config.ProjectDir, remoteDst,
+	)
+
+	cmd := exec.CommandContext(ctx, "sh", "-c", rsyncCommand)
+
+	cmd.Env = []string{fmt.Sprintf("RSYNC_PASSWORD=%s", tart.sshPassword)}
+
+	cmd.Stdout = &loggerAsWriter{
+		level:    echelon.InfoLevel,
+		delegate: syncLogger,
+	}
+	cmd.Stderr = &loggerAsWriter{
+		level:    echelon.WarnLevel,
+		delegate: syncLogger,
+	}
+
+	err := cmd.Run()
+	syncLogger.Finish(err == nil)
+	return err
 }
