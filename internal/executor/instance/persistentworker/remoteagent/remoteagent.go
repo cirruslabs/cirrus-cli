@@ -19,6 +19,8 @@ import (
 
 var ErrFailed = errors.New("remote agent failed")
 
+type WaitForAgentHook func(ctx context.Context, sshClient *ssh.Client) error
+
 func WaitForAgent(
 	ctx context.Context,
 	logger logger.Lightweight,
@@ -29,6 +31,7 @@ func WaitForAgent(
 	agentArchitecture string,
 	config *runconfig.RunConfig,
 	synchronizeTime bool,
+	hooks []WaitForAgentHook,
 ) error {
 	// Connect to the VM and upload the agent
 	var netConn net.Conn
@@ -70,6 +73,12 @@ func WaitForAgent(
 		_ = cli.Close()
 	}()
 	defer monitorCancel()
+
+	for _, hook := range hooks {
+		if err := hook(ctx, cli); err != nil {
+			return err
+		}
+	}
 
 	remoteAgentPath, err := uploadAgent(ctx, cli, agentOS, config.GetAgentVersion(), agentArchitecture)
 	if err != nil {
