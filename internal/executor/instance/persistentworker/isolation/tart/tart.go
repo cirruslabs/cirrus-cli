@@ -93,10 +93,13 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	var hooks []remoteagent.WaitForAgentHook
 	if config.ProjectDir != "" {
 		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
+			syncLogger := config.Logger().Scoped("syncing working directory")
 			if err := tart.syncProjectDir(config.ProjectDir, sshClient); err != nil {
+				syncLogger.Finish(false)
 				return fmt.Errorf("%w: %v", ErrSyncFailed, err)
 			}
 
+			syncLogger.Finish(true)
 			return nil
 		})
 	}
