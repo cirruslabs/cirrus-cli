@@ -8,13 +8,17 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
-	"github.com/cirruslabs/echelon"
-	"os/exec"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+	"io"
+	"os"
+	"path/filepath"
 	"time"
 )
 
 var (
-	ErrFailed = errors.New("tart isolation failed")
+	ErrFailed     = errors.New("tart isolation failed")
+	ErrSyncFailed = errors.New("failed to sync project directory")
 )
 
 type Tart struct {
@@ -86,13 +90,20 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
 
-	err = tart.syncProjectDir(ctx, config, ip)
-	if err != nil {
-		return err
+	var hooks []remoteagent.WaitForAgentHook
+	if config.ProjectDir != "" {
+		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
+			if err := tart.syncProjectDir(config.ProjectDir, sshClient); err != nil {
+				return fmt.Errorf("%w: %v", ErrSyncFailed, err)
+			}
+
+			return nil
+		})
 	}
 
 	return remoteagent.WaitForAgent(ctx, tart.logger, ip,
-		tart.sshUser, tart.sshPassword, "darwin", "arm64", config, true)
+		tart.sshUser, tart.sshPassword, "darwin", "arm64",
+		config, true, hooks)
 }
 
 func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
@@ -103,32 +114,45 @@ func (tart *Tart) Close() error {
 	return nil
 }
 
-func (tart *Tart) syncProjectDir(ctx context.Context, config *runconfig.RunConfig, ip string) error {
-	if config.ProjectDir == "" {
+func (tart *Tart) syncProjectDir(dir string, sshClient *ssh.Client) error {
+	sftpClient, err := sftp.NewClient(sshClient)
+	if err != nil {
+		return err
+	}
+	defer sftpClient.Close()
+
+	return filepath.Walk(dir, func(path string, fileInfo os.FileInfo, err error) error {
+		// Handle possible error that occurred when reading this directory entry information
+		if err != nil {
+			return err
+		}
+
+		relativePath, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+		remotePath := sftp.Join(platform.NewUnix().GenericWorkingDir(), relativePath)
+
+		if fileInfo.Mode().IsDir() {
+			return sftpClient.MkdirAll(remotePath)
+		} else if fileInfo.Mode().IsRegular() {
+			localFile, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer localFile.Close()
+
+			remoteFile, err := sftpClient.Create(remotePath)
+			if err != nil {
+				return err
+			}
+			defer remoteFile.Close()
+
+			if _, err := io.Copy(remoteFile, localFile); err != nil {
+				return err
+			}
+		}
+
 		return nil
-	}
-	syncLogger := config.Logger().Scoped("syncing project directory")
-
-	remoteDst := fmt.Sprintf("rsync://%s@%s:%s", tart.sshUser, ip, platform.NewUnix().GenericWorkingDir())
-	rsyncCommand := fmt.Sprintf(
-		"rsync -e 'ssh -o StrictHostKeyChecking=no' -r --rsync-path='mkdir -p %s && rsync' --filter=':- .gitignore' %s/ %s",
-		platform.NewUnix().GenericWorkingDir(), config.ProjectDir, remoteDst,
-	)
-
-	cmd := exec.CommandContext(ctx, "sh", "-c", rsyncCommand)
-
-	cmd.Env = []string{fmt.Sprintf("RSYNC_PASSWORD=%s", tart.sshPassword)}
-
-	cmd.Stdout = &loggerAsWriter{
-		level:    echelon.InfoLevel,
-		delegate: syncLogger,
-	}
-	cmd.Stderr = &loggerAsWriter{
-		level:    echelon.WarnLevel,
-		delegate: syncLogger,
-	}
-
-	err := cmd.Run()
-	syncLogger.Finish(err == nil)
-	return err
+	})
 }

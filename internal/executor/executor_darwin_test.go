@@ -11,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -93,7 +94,7 @@ func TestExecutorTart(t *testing.T) {
 
 task:
   tart_check_script: true
-  ls_script: ls
+  find_script: find .
 `, vm, user, password),
 		"macos_instance": fmt.Sprintf(`macos_instance:
   image: %s
@@ -102,16 +103,16 @@ task:
 
 task:
   tart_check_script: true
-  ls_script: ls
+  find_script: find .
 `, vm, user, password),
 	}
 
 	for name, config := range configs {
+		config := config
+
 		t.Run(name, func(t *testing.T) {
+			testutil.TempChdirPopulatedWith(t, filepath.Join("testdata", "tart"))
 			if err := ioutil.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
-				t.Fatal(err)
-			}
-			if err := ioutil.WriteFile("foo.txt", []byte(config), 0600); err != nil {
 				t.Fatal(err)
 			}
 
@@ -126,9 +127,10 @@ task:
 			assert.NoError(t, err)
 
 			assert.Contains(t, buf.String(), "'tart_check' script succeeded")
-			assert.Contains(t, buf.String(), "'ls' script succeeded")
+			assert.Contains(t, buf.String(), "'find' script succeeded")
 
-			assert.NotContains(t, buf.String(), "foo.txt")
+			assert.Contains(t, buf.String(), "./file-in-root.txt")
+			assert.Contains(t, buf.String(), "./dir/file-in-dir.txt")
 
 			// Ensure we get the logs from the VM
 			assert.Contains(t, buf.String(), "Getting initial commands...")
