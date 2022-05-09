@@ -21,9 +21,18 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 	taskCtx, cancel := context.WithCancel(ctx)
 	worker.tasks[agentAwareTask.TaskId] = cancel
 
+	taskIdentification := &api.TaskIdentification{
+		TaskId: agentAwareTask.TaskId,
+		Secret: agentAwareTask.ClientSecret,
+	}
+
 	inst, err := persistentworker.New(agentAwareTask.Isolation, worker.logger)
 	if err != nil {
 		worker.logger.Errorf("failed to create an instance for the task %d: %v", agentAwareTask.TaskId, err)
+		_, _ = worker.rpcClient.TaskFailed(ctx, &api.TaskFailedRequest{
+			TaskIdentification: taskIdentification,
+			Message:            err.Error(),
+		}, grpc.PerRPCCredentials(worker))
 		return
 	}
 
@@ -36,11 +45,6 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 
 			worker.taskCompletions <- agentAwareTask.TaskId
 		}()
-
-		taskIdentification := &api.TaskIdentification{
-			TaskId: agentAwareTask.TaskId,
-			Secret: agentAwareTask.ClientSecret,
-		}
 		_, err = worker.rpcClient.TaskStarted(taskCtx, taskIdentification, grpc.PerRPCCredentials(worker))
 		if err != nil {
 			worker.logger.Errorf("failed to notify the server about the started task %d: %v",
