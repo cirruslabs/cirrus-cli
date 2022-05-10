@@ -170,26 +170,12 @@ func (worker *Worker) Run(ctx context.Context) error {
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	var rpcSecurity grpc.DialOption
-
-	if worker.rpcInsecure {
-		rpcSecurity = grpc.WithTransportCredentials(insecure.NewCredentials())
-	} else {
-		certPool, _ := gocertifi.CACerts()
-		tlsCredentials := credentials.NewTLS(&tls.Config{
-			MinVersion: tls.VersionTLS13,
-			RootCAs:    certPool,
-		})
-		rpcSecurity = grpc.WithTransportCredentials(tlsCredentials)
-	}
-
-	// https://github.com/grpc/grpc-go/blob/master/Documentation/concurrency.md
-	conn, err := grpc.DialContext(subCtx, worker.rpcTarget, rpcSecurity)
+	connCancel, err := worker.initializeConnection(subCtx)
 	if err != nil {
 		worker.logger.Errorf("failed to dial %s: %v", worker.rpcEndpoint, err)
+		return err
 	}
-	worker.rpcClient = api.NewCirrusWorkersServiceClient(conn)
-	defer conn.Close()
+	defer connCancel()
 
 	for {
 		if worker.sessionToken == "" {
@@ -215,6 +201,30 @@ func (worker *Worker) Run(ctx context.Context) error {
 			// continue the loop
 		}
 	}
+}
+
+func (worker *Worker) initializeConnection(subCtx context.Context) (func(), error) {
+	var rpcSecurity grpc.DialOption
+
+	if worker.rpcInsecure {
+		rpcSecurity = grpc.WithTransportCredentials(insecure.NewCredentials())
+	} else {
+		certPool, _ := gocertifi.CACerts()
+		tlsCredentials := credentials.NewTLS(&tls.Config{
+			MinVersion: tls.VersionTLS13,
+			RootCAs:    certPool,
+		})
+		rpcSecurity = grpc.WithTransportCredentials(tlsCredentials)
+	}
+
+	// https://github.com/grpc/grpc-go/blob/master/Documentation/concurrency.md
+	conn, err := grpc.DialContext(subCtx, worker.rpcTarget, rpcSecurity)
+	if err == nil {
+		worker.rpcClient = api.NewCirrusWorkersServiceClient(conn)
+	}
+	return func() {
+		_ = conn.Close()
+	}, err
 }
 
 func (worker *Worker) register(ctx context.Context) error {
@@ -284,7 +294,18 @@ func (worker *Worker) RequireTransportSecurity() bool {
 }
 
 func (worker *Worker) Pause(ctx context.Context, wait bool) error {
-	_, err := worker.rpcClient.UpdateStatus(ctx, &api.UpdateStatusRequest{Disabled: true}, grpc.PerRPCCredentials(worker))
+	// A sub-context to cancel out all Run() side-effects when it finishes
+	subCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	connCancel, err := worker.initializeConnection(subCtx)
+	if err != nil {
+		worker.logger.Errorf("failed to dial %s: %v", worker.rpcEndpoint, err)
+		return err
+	}
+	defer connCancel()
+
+	_, err = worker.rpcClient.UpdateStatus(ctx, &api.UpdateStatusRequest{Disabled: true}, grpc.PerRPCCredentials(worker))
 	if err != nil {
 		return err
 	}
@@ -310,6 +331,16 @@ func (worker *Worker) Pause(ctx context.Context, wait bool) error {
 }
 
 func (worker *Worker) Resume(ctx context.Context) error {
-	_, err := worker.rpcClient.UpdateStatus(ctx, &api.UpdateStatusRequest{Disabled: false}, grpc.PerRPCCredentials(worker))
+	// A sub-context to cancel out all Run() side-effects when it finishes
+	subCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	connCancel, err := worker.initializeConnection(subCtx)
+	if err != nil {
+		worker.logger.Errorf("failed to dial %s: %v", worker.rpcEndpoint, err)
+		return err
+	}
+	defer connCancel()
+	_, err = worker.rpcClient.UpdateStatus(ctx, &api.UpdateStatusRequest{Disabled: false}, grpc.PerRPCCredentials(worker))
 	return err
 }
