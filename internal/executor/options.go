@@ -50,3 +50,9 @@ func WithContainerBackend(containerBackend containerbackend.ContainerBackend) Op
 		e.containerBackend = containerBackend
 	}
 }
+
+func WithTartOptions(tartOptions options.TartOptions) Option {
+	return func(e *Executor) {
+		e.tartOptions = tartOptions
+	}
+}

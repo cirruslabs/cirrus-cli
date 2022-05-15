@@ -19,6 +19,7 @@ type RunConfig struct {
 	logger                     *echelon.Logger
 	DirtyMode                  bool
 	ContainerOptions           options.ContainerOptions
+	TartOptions                options.TartOptions
 	agentVersion               string
 }
 

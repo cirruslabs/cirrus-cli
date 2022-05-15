@@ -18,7 +18,14 @@ type VM struct {
 	errChan      chan error
 }
 
-func NewVMClonedFrom(ctx context.Context, from string, cpu uint32, memory uint32, logger *echelon.Logger) (*VM, error) {
+func NewVMClonedFrom(
+	ctx context.Context,
+	from string,
+	cpu uint32,
+	memory uint32,
+	eagerPull bool,
+	logger *echelon.Logger,
+) (*VM, error) {
 	subCtx, subCtxCancel := context.WithCancel(ctx)
 
 	vm := &VM{
@@ -26,6 +33,20 @@ func NewVMClonedFrom(ctx context.Context, from string, cpu uint32, memory uint32
 		subCtx:       subCtx,
 		subCtxCancel: subCtxCancel,
 		errChan:      make(chan error, 1),
+	}
+
+	pullLogger := logger.Scoped("pull virtual machine")
+	if eagerPull {
+		pullLogger.Infof("Pulling virtual machine %s...", from)
+
+		if _, _, err := CmdWithLogger(ctx, pullLogger, "pull", from); err != nil {
+			pullLogger.FinishWithType(echelon.FinishTypeSucceeded)
+			return nil, err
+		}
+
+		pullLogger.FinishWithType(echelon.FinishTypeSucceeded)
+	} else {
+		pullLogger.FinishWithType(echelon.FinishTypeSkipped)
 	}
 
 	cloneLogger := logger.Scoped("clone virtual machine")
