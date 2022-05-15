@@ -1,5 +1,5 @@
 package options
 
 type TartOptions struct {
-	EagerPull bool
+	LazyPull bool
 }

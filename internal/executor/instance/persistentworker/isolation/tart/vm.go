@@ -23,7 +23,7 @@ func NewVMClonedFrom(
 	from string,
 	cpu uint32,
 	memory uint32,
-	eagerPull bool,
+	lazyPull bool,
 	logger *echelon.Logger,
 ) (*VM, error) {
 	subCtx, subCtxCancel := context.WithCancel(ctx)
@@ -36,7 +36,7 @@ func NewVMClonedFrom(
 	}
 
 	pullLogger := logger.Scoped("pull virtual machine")
-	if eagerPull {
+	if !lazyPull {
 		pullLogger.Infof("Pulling virtual machine %s...", from)
 
 		if _, _, err := CmdWithLogger(ctx, pullLogger, "pull", from); err != nil {

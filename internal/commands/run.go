@@ -135,7 +135,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Tart-related options
 	executorOpts = append(executorOpts, executor.WithTartOptions(options.TartOptions{
-		EagerPull: !(lazyPull || tartLazyPull),
+		LazyPull: lazyPull || tartLazyPull,
 	}))
 
 	// Environment
