@@ -1,0 +1,14 @@
+container:
+  image: debian:latest
+
+task:
+  name: build-arm64
+  script: make build
+
+task:
+  name: test-$ARCH
+  depends_on:
+    - build-$ARCH
+  script: make test
+  env:
+    ARCH: arm64
