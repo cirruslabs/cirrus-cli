@@ -126,7 +126,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Container-related options
 	executorOpts = append(executorOpts, executor.WithContainerOptions(options.ContainerOptions{
-		EagerPull: !(lazyPull || containerLazyPull),
+		LazyPull:  lazyPull || containerLazyPull,
 		NoCleanup: debugNoCleanup,
 
 		DockerfileImageTemplate: dockerfileImageTemplate,
