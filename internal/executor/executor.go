@@ -37,6 +37,7 @@ type Executor struct {
 	dirtyMode                bool
 	containerBackend         containerbackend.ContainerBackend
 	containerOptions         options.ContainerOptions
+	tartOptions              options.TartOptions
 }
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
@@ -166,6 +167,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 		TaskID:           task.ID,
 		DirtyMode:        e.dirtyMode,
 		ContainerOptions: e.containerOptions,
+		TartOptions:      e.tartOptions,
 	}
 
 	instanceRunOpts.SetLogger(taskLogger)

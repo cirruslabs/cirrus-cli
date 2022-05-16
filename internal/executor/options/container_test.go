@@ -11,7 +11,6 @@ import (
 
 func TestForcePull(t *testing.T) {
 	do := options.ContainerOptions{
-		EagerPull:    true,
 		NoPullImages: []string{"nonexistent.invalid/should/not/be:pulled"},
 	}
 
@@ -24,7 +23,7 @@ func TestForcePull(t *testing.T) {
 	// Shouldn't be pulled because it's blacklisted
 	assert.False(t, do.ShouldPullImage(ctx, backend, "nonexistent.invalid/should/not/be:pulled"))
 
-	// Should be pulled because EagerPull is set to true
+	// Should be pulled because lazy pull is disabled by default
 	image := canaryImage()
 
 	if err := backend.ImagePull(ctx, image); err != nil {
@@ -34,8 +33,9 @@ func TestForcePull(t *testing.T) {
 	assert.True(t, do.ShouldPullImage(ctx, backend, image))
 }
 
-func TestNormalPull(t *testing.T) {
+func TestLazyPull(t *testing.T) {
 	do := options.ContainerOptions{
+		LazyPull:     true,
 		NoPullImages: []string{"nonexistent.invalid/should/not/be:pulled"},
 	}
 

@@ -32,6 +32,9 @@ var affectedFilesGitRevision string
 var affectedFilesGitCachedRevision string
 var verbose bool
 
+// Common instance-related flags.
+var lazyPull bool
+
 // Container-related flags.
 var containerBackend string
 var containerLazyPull bool
@@ -40,6 +43,9 @@ var containerLazyPull bool
 // [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
 var dockerfileImageTemplate string
 var dockerfileImagePush bool
+
+// Tart-related flags.
+var tartLazyPull bool
 
 // Flags useful for debugging.
 var debugNoCleanup bool
@@ -120,11 +126,16 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Container-related options
 	executorOpts = append(executorOpts, executor.WithContainerOptions(options.ContainerOptions{
-		EagerPull: !containerLazyPull,
+		LazyPull:  lazyPull || containerLazyPull,
 		NoCleanup: debugNoCleanup,
 
 		DockerfileImageTemplate: dockerfileImageTemplate,
 		DockerfileImagePush:     dockerfileImagePush,
+	}))
+
+	// Tart-related options
+	executorOpts = append(executorOpts, executor.WithTartOptions(options.TartOptions{
+		LazyPull: lazyPull || tartLazyPull,
 	}))
 
 	// Environment
@@ -171,6 +182,11 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&output, "output", "o", logs.DefaultFormat(), fmt.Sprintf("output format of logs, "+
 		"supported values: %s", strings.Join(logs.Formats(), ", ")))
 
+	// Common instance-related flags
+	cmd.PersistentFlags().BoolVar(&lazyPull, "lazy-pull", false,
+		"attempt to pull container and VM images only if they are missing locally "+
+			"(helpful in case of registry rate limits; enables --container-lazy-pull and --tart-lazy-pull)")
+
 	// Container-related flags
 	cmd.PersistentFlags().StringVar(&containerBackend, "container-backend", containerbackend.BackendAuto,
 		fmt.Sprintf("container engine backend to use, either \"%s\", \"%s\" or \"%s\"",
@@ -183,6 +199,10 @@ func newRunCmd() *cobra.Command {
 		"gcr.io/cirrus-ci-community/%s:latest", "image that Dockerfile as CI environment feature should produce")
 	cmd.PersistentFlags().BoolVar(&dockerfileImagePush, "dockerfile-image-push",
 		false, "whether to push whe image produced by the Dockerfile as CI environment feature")
+
+	// Tart-related flags
+	cmd.PersistentFlags().BoolVar(&tartLazyPull, "tart-lazy-pull", false,
+		"attempt to pull Tart VM images only if they are missing locally (helpful in case of registry rate limits)")
 
 	// Flags useful for debugging
 	cmd.PersistentFlags().BoolVar(&debugNoCleanup, "debug-no-cleanup", false,
