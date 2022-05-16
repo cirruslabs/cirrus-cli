@@ -33,8 +33,9 @@ func TestForcePull(t *testing.T) {
 	assert.True(t, do.ShouldPullImage(ctx, backend, image))
 }
 
-func TestNormalPull(t *testing.T) {
+func TestLazyPull(t *testing.T) {
 	do := options.ContainerOptions{
+		LazyPull:     true,
 		NoPullImages: []string{"nonexistent.invalid/should/not/be:pulled"},
 	}
 
