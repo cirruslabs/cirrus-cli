@@ -58,7 +58,7 @@ func NewDockerBuilder(
 
 	dependsOnSchema := schema.StringOrListOfStrings("List of task names this task depends on.")
 	dbuilder.OptionalField(nameable.NewSimpleNameable("depends_on"), dependsOnSchema, func(node *node.Node) error {
-		dependsOn, err := node.GetSliceOfNonEmptyStrings()
+		dependsOn, err := node.GetSliceOfExpandedStrings(environment.Merge(dbuilder.proto.Environment, env))
 		if err != nil {
 			return err
 		}

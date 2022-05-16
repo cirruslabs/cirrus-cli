@@ -125,7 +125,7 @@ func NewDockerPipe(
 
 	dependsSchema := schema.StringOrListOfStrings("List of task names this task depends on.")
 	pipe.OptionalField(nameable.NewSimpleNameable("depends_on"), dependsSchema, func(node *node.Node) error {
-		dependsOn, err := node.GetSliceOfNonEmptyStrings()
+		dependsOn, err := node.GetSliceOfExpandedStrings(environment.Merge(pipe.proto.Environment, env))
 		if err != nil {
 			return err
 		}

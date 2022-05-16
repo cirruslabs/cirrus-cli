@@ -46,6 +46,7 @@ var validCases = []string{
 	"yaml-merge-sequence",
 	"additional-container-port-and-ports-are-optional",
 	"yaml-merge-collectible",
+	"depends-on-expansion",
 }
 
 func absolutize(file string) string {
