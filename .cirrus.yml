@@ -66,7 +66,7 @@ task:
       os: darwin
       tart: installed
   env:
-    CIRRUS_INTERNAL_TART_VM: monterey-base
+    CIRRUS_INTERNAL_TART_VM: ghcr.io/cirruslabs/macos-monterey-vanilla:12.4
     CIRRUS_INTERNAL_TART_SSH_PASSWORD: admin
     CIRRUS_INTERNAL_TART_SSH_USER: admin
   test_script:
