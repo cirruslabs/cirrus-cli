@@ -83,7 +83,7 @@ Persistent Worker supports resource management, [similarly to Kubernetes](https:
 
 Resources are key-value pairs, where key represents an arbitrary resource name, and value is a floating-point number specifying how many of that resource the worker has.
 
-When scheduling tasks, Cirrus CI ensures that all the tasks the worker receives do not exceed the resources defined in it's configuration file, for example, wit the following configuration:
+When scheduling tasks, Cirrus CI ensures that all the tasks the worker receives do not exceed the resources defined in it's configuration file, for example, with the following configuration:
 
 ```yaml
 token: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
