@@ -34,7 +34,7 @@ func NewPersistentWorker(mergedEnv map[string]string, parserKit *parserkit.Parse
 
 	resourcesSchema := schema.String("Resources to acquire on the Persistent Worker.")
 	pworker.OptionalField(nameable.NewSimpleNameable("resources"), resourcesSchema, func(node *node.Node) error {
-		resources, err := node.GetFloat64Mapping()
+		resources, err := node.GetFloat64Mapping(mergedEnv)
 		if err != nil {
 			return err
 		}

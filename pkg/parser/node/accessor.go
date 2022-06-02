@@ -97,7 +97,7 @@ func (node *Node) GetStringMapping() (map[string]string, error) {
 	return result, nil
 }
 
-func (node *Node) GetFloat64Mapping() (map[string]float64, error) {
+func (node *Node) GetFloat64Mapping(env map[string]string) (map[string]float64, error) {
 	result := make(map[string]float64)
 
 	if _, ok := node.Value.(*MapValue); !ok {
@@ -105,7 +105,7 @@ func (node *Node) GetFloat64Mapping() (map[string]float64, error) {
 	}
 
 	for _, child := range node.Children {
-		stringValue, err := child.GetStringValue()
+		stringValue, err := child.GetExpandedStringValue(env)
 		if err != nil {
 			return nil, err
 		}
