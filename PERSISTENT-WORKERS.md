@@ -98,6 +98,12 @@ resources:
 
 ```yaml
 persistent_worker:
+  isolation:
+    tart:
+      image: ghcr.io/cirruslabs/macos-monterey-base:latest
+      user: admin
+      password: admin
+
   resources:
     tart-vms: 1
 
