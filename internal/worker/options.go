@@ -31,6 +31,12 @@ func WithLabels(labels map[string]string) Option {
 	}
 }
 
+func WithResources(resources map[string]float64) Option {
+	return func(e *Worker) {
+		e.userSpecifiedResources = resources
+	}
+}
+
 func WithRPCEndpoint(rpcEndpoint string) Option {
 	return func(e *Worker) {
 		e.rpcEndpoint = rpcEndpoint

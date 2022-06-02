@@ -47,6 +47,7 @@ var validCases = []string{
 	"additional-container-port-and-ports-are-optional",
 	"yaml-merge-collectible",
 	"depends-on-expansion",
+	"persistent-worker-resource-management",
 }
 
 func absolutize(file string) string {

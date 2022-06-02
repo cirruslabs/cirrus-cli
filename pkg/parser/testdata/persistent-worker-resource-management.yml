@@ -1,0 +1,10 @@
+env:
+  CPU_LIMIT: 0.5
+
+persistent_worker:
+  resources:
+    tart-vms: 2
+    cpu: "$CPU_LIMIT"
+
+task:
+  script: date
