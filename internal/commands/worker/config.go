@@ -11,6 +11,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -28,6 +29,9 @@ var (
 	logFile         string
 	logRotateSize   string
 	logMaxRotations uint
+
+	// Resources-related variables.
+	resources map[string]string
 )
 
 func loggingLevelsExplainer() string {
@@ -91,6 +95,12 @@ func attacheFlags(cmd *cobra.Command) {
 		"how many already rotated log files to keep")
 	_ = viper.BindPFlag("log.max-rotations", cmd.PersistentFlags().Lookup("log-max-rotations"))
 	_ = cmd.PersistentFlags().MarkHidden("log-max-rotations")
+
+	// Resources-related variables
+	cmd.PersistentFlags().StringToStringVar(&resources, "resources", map[string]string{},
+		"user-defined resources available on this Persistent Worker")
+	_ = viper.BindPFlag("resources", cmd.PersistentFlags().Lookup("resources"))
+	_ = cmd.PersistentFlags().MarkHidden("resources")
 }
 
 func buildWorker(cmd *cobra.Command) (*worker.Worker, error) {
@@ -102,10 +112,23 @@ func buildWorker(cmd *cobra.Command) (*worker.Worker, error) {
 		}
 	}
 
+	// Convert resources from map[string]string to map[string]float64
+	resources := map[string]float64{}
+
+	for key, stringValue := range viper.GetStringMapString("resources") {
+		floatValue, err := strconv.ParseFloat(stringValue, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		resources[key] = floatValue
+	}
+
 	opts := []worker.Option{
 		worker.WithName(viper.GetString("name")),
 		worker.WithRegistrationToken(viper.GetString("token")),
 		worker.WithLabels(viper.GetStringMapString("labels")),
+		worker.WithResources(resources),
 	}
 
 	// Configure RPC server (used for testing)

@@ -41,6 +41,9 @@ name: "MacMini-Rack-1-Slot-2"
 
 labels:
   connected-device: iPhone12ProMax
+
+resources:
+  iphone-devices: 1
 ```
 
 Currently configuration files support the same set of options exposed via the command-line flags, while the rest of the options can only be configured via configuration file and are documented here.
@@ -72,6 +75,43 @@ log:
   file: cirrus-worker.log
   rotate-size: 100 MB
   max-rotations: 10
+```
+
+### Resource management
+
+Persistent Worker supports resource management, similarly to [Kubernetes](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/), but in a slightly more simplified way.
+
+Resources are key-value pairs, where key represents an arbitrary resource name, and value is a floating-point number specifying how many of that resource the worker has.
+
+When scheduling tasks, Cirrus CI ensures that all the task the worker receives do not exceed the resources defined in it's configuration file, for example, wit the following configuration:
+
+```yaml
+token: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+name: "mac-mini-1"
+
+resources:
+  tart-vms: 2
+```
+
+...a worker won't run more than 2 tasks simultaneously from the following `.cirrus.yml`:
+
+```yaml
+persistent_worker:
+  resources:
+    tart-vms: 1
+
+task:
+  name: Test
+  script: make test
+
+task:
+  name: Build
+  script: make build
+
+task:
+  name: Release
+  script: make release
 ```
 
 ## Writing tasks

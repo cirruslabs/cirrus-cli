@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/expander"
 	"golang.org/x/text/encoding/unicode"
+	"strconv"
 	"strings"
 )
 
@@ -91,6 +92,30 @@ func (node *Node) GetStringMapping() (map[string]string, error) {
 		}
 
 		result[child.Name] = flattenedValue
+	}
+
+	return result, nil
+}
+
+func (node *Node) GetFloat64Mapping() (map[string]float64, error) {
+	result := make(map[string]float64)
+
+	if _, ok := node.Value.(*MapValue); !ok {
+		return nil, node.ParserError("expected a map")
+	}
+
+	for _, child := range node.Children {
+		stringValue, err := child.GetStringValue()
+		if err != nil {
+			return nil, err
+		}
+
+		floatValue, err := strconv.ParseFloat(stringValue, 64)
+		if err != nil {
+			return nil, child.ParserError("failed to parse a floating-point value: %v", err)
+		}
+
+		result[child.Name] = floatValue
 	}
 
 	return result, nil

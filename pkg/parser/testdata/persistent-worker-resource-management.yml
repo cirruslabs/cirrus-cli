@@ -1,0 +1,7 @@
+persistent_worker:
+  resources:
+    tart-vms: 2
+    cpu: 0.5
+
+task:
+  script: date

@@ -2572,6 +2572,10 @@
             "labels": {
               "description": "Labels for selection.",
               "type": "string"
+            },
+            "resources": {
+              "description": "Resources to acquire on the Persistent Worker.",
+              "type": "string"
             }
           },
           "type": "object"
@@ -2930,6 +2934,10 @@
         },
         "labels": {
           "description": "Labels for selection.",
+          "type": "string"
+        },
+        "resources": {
+          "description": "Resources to acquire on the Persistent Worker.",
           "type": "string"
         }
       },

@@ -40,9 +40,10 @@ type Worker struct {
 
 	agentEndpoint endpoint.Endpoint
 
-	name                string
-	userSpecifiedLabels map[string]string
-	pollIntervalSeconds uint32
+	name                   string
+	userSpecifiedLabels    map[string]string
+	userSpecifiedResources map[string]float64
+	pollIntervalSeconds    uint32
 
 	registrationToken string
 	sessionToken      string
@@ -113,7 +114,8 @@ func (worker *Worker) info() *api.WorkerInfo {
 	}
 
 	return &api.WorkerInfo{
-		Labels: labels,
+		Labels:         labels,
+		ResourcesTotal: worker.userSpecifiedResources,
 	}
 }
 

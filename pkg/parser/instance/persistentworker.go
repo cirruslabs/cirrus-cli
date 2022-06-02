@@ -32,6 +32,18 @@ func NewPersistentWorker(mergedEnv map[string]string, parserKit *parserkit.Parse
 		return nil
 	})
 
+	resourcesSchema := schema.String("Resources to acquire on the Persistent Worker.")
+	pworker.OptionalField(nameable.NewSimpleNameable("resources"), resourcesSchema, func(node *node.Node) error {
+		resources, err := node.GetFloat64Mapping()
+		if err != nil {
+			return err
+		}
+
+		pworker.proto.ResourcesToAcquire = resources
+
+		return nil
+	})
+
 	isolationSchema := isolation.NewIsolation(mergedEnv, parserKit).Schema()
 	pworker.OptionalField(nameable.NewSimpleNameable("isolation"), isolationSchema, func(node *node.Node) error {
 		isolation := isolation.NewIsolation(mergedEnv, parserKit)
