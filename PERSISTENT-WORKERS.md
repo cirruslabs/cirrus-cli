@@ -79,7 +79,7 @@ log:
 
 ### Resource management
 
-Persistent Worker supports resource management, similarly to [Kubernetes](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/), but in a slightly more simplified way.
+Persistent Worker supports resource management, [similarly to Kubernetes](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/), but in a slightly more simplified way.
 
 Resources are key-value pairs, where key represents an arbitrary resource name, and value is a floating-point number specifying how many of that resource the worker has.
 
