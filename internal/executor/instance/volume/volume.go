@@ -36,10 +36,10 @@ func CreateWorkingVolumeFromConfig(
 	workingVolumeName := fmt.Sprintf("cirrus-working-volume-%s", identifier)
 
 	backend, err := config.GetContainerBackend()
-
 	if err != nil {
 		return nil, nil, err
 	}
+
 	agentVolume, workingVolume, err := CreateWorkingVolume(ctx, backend, config.ContainerOptions,
 		agentVolumeName, workingVolumeName, config.ProjectDir, config.DirtyMode, config.GetAgentVersion(), platform)
 	if err != nil {

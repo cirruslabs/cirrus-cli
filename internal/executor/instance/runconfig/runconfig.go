@@ -38,6 +38,7 @@ func (rc *RunConfig) GetContainerBackend() (containerbackend.ContainerBackend, e
 		return nil, err
 	}
 	rc.containerBackend = backend
+
 	return rc.containerBackend, nil
 }
 
