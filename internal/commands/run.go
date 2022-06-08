@@ -140,7 +140,7 @@ func run(cmd *cobra.Command, args []string) error {
 	)
 
 	// Container backend
-	executorOpts = append(executorOpts, executor.WithContainerBackend(containerBackendType))
+	executorOpts = append(executorOpts, executor.WithContainerBackendType(containerBackendType))
 
 	// Run
 	e, err := executor.New(projectDir, result.Tasks, executorOpts...)

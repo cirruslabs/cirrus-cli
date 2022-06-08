@@ -44,7 +44,7 @@ func WithContainerOptions(containerOptions options.ContainerOptions) Option {
 	}
 }
 
-func WithContainerBackend(containerBackendType string) Option {
+func WithContainerBackendType(containerBackendType string) Option {
 	return func(e *Executor) {
 		e.containerBackendType = containerBackendType
 	}
