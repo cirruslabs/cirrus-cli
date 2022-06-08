@@ -11,7 +11,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
@@ -35,7 +34,7 @@ type Executor struct {
 	baseEnvironment          map[string]string
 	userSpecifiedEnvironment map[string]string
 	dirtyMode                bool
-	containerBackend         containerbackend.ContainerBackend
+	containerBackendType     string
 	containerOptions         options.ContainerOptions
 	tartOptions              options.TartOptions
 }
@@ -159,15 +158,15 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 
 	// Prepare task's instance
 	instanceRunOpts := runconfig.RunConfig{
-		ContainerBackend: e.containerBackend,
-		ProjectDir:       e.build.ProjectDir,
-		Endpoint:         endpoint.NewLocal(e.rpc.ContainerEndpoint(), e.rpc.DirectEndpoint()),
-		ServerSecret:     e.rpc.ServerSecret(),
-		ClientSecret:     e.rpc.ClientSecret(),
-		TaskID:           task.ID,
-		DirtyMode:        e.dirtyMode,
-		ContainerOptions: e.containerOptions,
-		TartOptions:      e.tartOptions,
+		ContainerBackendType: e.containerBackendType,
+		ProjectDir:           e.build.ProjectDir,
+		Endpoint:             endpoint.NewLocal(e.rpc.ContainerEndpoint(), e.rpc.DirectEndpoint()),
+		ServerSecret:         e.rpc.ServerSecret(),
+		ClientSecret:         e.rpc.ClientSecret(),
+		TaskID:               task.ID,
+		DirtyMode:            e.dirtyMode,
+		ContainerOptions:     e.containerOptions,
+		TartOptions:          e.tartOptions,
 	}
 
 	instanceRunOpts.SetLogger(taskLogger)

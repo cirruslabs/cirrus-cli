@@ -11,7 +11,7 @@ import (
 )
 
 type RunConfig struct {
-	ContainerBackend           containerbackend.ContainerBackend
+	ContainerBackendType       string
 	ProjectDir                 string
 	Endpoint                   endpoint.Endpoint
 	ServerSecret, ClientSecret string
@@ -21,6 +21,25 @@ type RunConfig struct {
 	ContainerOptions           options.ContainerOptions
 	TartOptions                options.TartOptions
 	agentVersion               string
+	containerBackend           containerbackend.ContainerBackend
+}
+
+func (rc *RunConfig) GetContainerBackend() (containerbackend.ContainerBackend, error) {
+	if rc.containerBackend != nil {
+		return rc.containerBackend, nil
+	}
+
+	if rc.ContainerBackendType == "" {
+		rc.ContainerBackendType = containerbackend.BackendTypeAuto
+	}
+
+	backend, err := containerbackend.New(rc.ContainerBackendType)
+	if err != nil {
+		return nil, err
+	}
+	rc.containerBackend = backend
+
+	return rc.containerBackend, nil
 }
 
 func (rc *RunConfig) Logger() *echelon.Logger {

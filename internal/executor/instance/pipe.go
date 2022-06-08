@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
@@ -59,13 +58,9 @@ func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (e
 	platform := platform.NewUnix()
 	logger := config.Logger()
 
-	if config.ContainerBackend == nil {
-		backend, err := containerbackend.New(containerbackend.BackendAuto)
-		if err != nil {
-			return err
-		}
-
-		config.ContainerBackend = backend
+	containerBackend, err := config.GetContainerBackend()
+	if err != nil {
+		return err
 	}
 
 	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, platform)
@@ -82,12 +77,12 @@ func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (e
 			return
 		}
 
-		cleanupErr := agentVolume.Close(config.ContainerBackend)
+		cleanupErr := agentVolume.Close(containerBackend)
 		if err == nil {
 			err = cleanupErr
 		}
 
-		cleanupErr = workingVolume.Close(config.ContainerBackend)
+		cleanupErr = workingVolume.Close(containerBackend)
 		if err == nil {
 			err = cleanupErr
 		}

@@ -6,7 +6,7 @@ import (
 )
 
 func ContainerBackendFromEnv(t *testing.T) containerbackend.ContainerBackend {
-	backend, err := containerbackend.New(containerbackend.BackendAuto)
+	backend, err := containerbackend.New(containerbackend.BackendTypeAuto)
 	if err != nil {
 		t.Fatal(err)
 	}

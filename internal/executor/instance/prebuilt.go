@@ -85,10 +85,13 @@ func CreateTempArchive(dir string) (string, error) {
 
 func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *runconfig.RunConfig) error {
 	logger := config.Logger()
-	backend := config.ContainerBackend
+	backend, err := config.GetContainerBackend()
+	if err != nil {
+		return err
+	}
 
 	// Check if the image we're about to build is available locally
-	if err := backend.ImageInspect(ctx, prebuilt.Image); err == nil {
+	if err = backend.ImageInspect(ctx, prebuilt.Image); err == nil {
 		logger.Infof("Re-using local image %s...", prebuilt.Image)
 		return nil
 	}

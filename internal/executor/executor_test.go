@@ -36,7 +36,7 @@ import (
 func TestExecutorEmpty(t *testing.T) {
 	dir := testutil.TempDir(t)
 
-	e, err := executor.New(dir, []*api.Task{}, executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)))
+	e, err := executor.New(dir, []*api.Task{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func TestExecutorClone(t *testing.T) {
 			},
 			Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
-	}, executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)))
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +127,7 @@ func TestExecutorScript(t *testing.T) {
 			},
 			Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
-	}, executor.WithLogger(logger), executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)))
+	}, executor.WithLogger(logger))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func TestExecutorFails(t *testing.T) {
 			},
 			Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
-	}, executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)))
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

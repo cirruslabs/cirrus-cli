@@ -1,7 +1,6 @@
 package executor
 
 import (
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/echelon"
@@ -45,9 +44,9 @@ func WithContainerOptions(containerOptions options.ContainerOptions) Option {
 	}
 }
 
-func WithContainerBackend(containerBackend containerbackend.ContainerBackend) Option {
+func WithContainerBackendType(containerBackendType string) Option {
 	return func(e *Executor) {
-		e.containerBackend = containerBackend
+		e.containerBackendType = containerBackendType
 	}
 }
 

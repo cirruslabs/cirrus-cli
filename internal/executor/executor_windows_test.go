@@ -63,7 +63,7 @@ func TestExecutorClone(t *testing.T) {
 			},
 			Instance: instance,
 		},
-	}, executor.WithContainerBackend(testutil.ContainerBackendFromEnv(t)), executor.WithLogger(logger))
+	}, executor.WithLogger(logger))
 	if err != nil {
 		t.Fatal(err)
 	}
