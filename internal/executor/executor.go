@@ -159,7 +159,6 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 
 	// Prepare task's instance
 	instanceRunOpts := runconfig.RunConfig{
-		ContainerBackend: e.containerBackend,
 		ProjectDir:       e.build.ProjectDir,
 		Endpoint:         endpoint.NewLocal(e.rpc.ContainerEndpoint(), e.rpc.DirectEndpoint()),
 		ServerSecret:     e.rpc.ServerSecret(),
@@ -176,6 +175,8 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 	if agentVersionFromEnv, ok := task.Environment["CIRRUS_AGENT_VERSION"]; ok {
 		instanceRunOpts.SetAgentVersion(agentVersionFromEnv)
 	}
+
+	instanceRunOpts.SetContainerBackend(e.containerBackend)
 
 	// Wrap the context to enforce a timeout for this task
 	ctx, cancel := context.WithTimeout(ctx, task.Timeout)

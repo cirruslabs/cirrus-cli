@@ -54,11 +54,6 @@ func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
-	backend, err := containerbackend.New(containerBackend)
-	if err != nil {
-		return err
-	}
-
 	projectDir := "."
 	baseEnvironment := eenvironment.Merge(
 		eenvironment.Static(),
@@ -145,7 +140,14 @@ func run(cmd *cobra.Command, args []string) error {
 	)
 
 	// Container backend
-	executorOpts = append(executorOpts, executor.WithContainerBackend(backend))
+	if containerBackend != containerbackend.BackendAuto {
+		backend, err := containerbackend.New(containerBackend)
+		if err != nil {
+			return err
+		}
+
+		executorOpts = append(executorOpts, executor.WithContainerBackend(backend))
+	}
 
 	// Run
 	e, err := executor.New(projectDir, result.Tasks, executorOpts...)

@@ -11,7 +11,7 @@ import (
 )
 
 type RunConfig struct {
-	ContainerBackend           containerbackend.ContainerBackend
+	containerBackend           containerbackend.ContainerBackend
 	ProjectDir                 string
 	Endpoint                   endpoint.Endpoint
 	ServerSecret, ClientSecret string
@@ -65,4 +65,21 @@ func (rc *RunConfig) SetAgentVersionWithoutDowngrade(agentVersion string) error 
 	}
 
 	return nil
+}
+
+func (rc *RunConfig) SetContainerBackend(backend containerbackend.ContainerBackend) {
+	rc.containerBackend = backend
+}
+
+func (rc *RunConfig) GetContainerBackend() (containerbackend.ContainerBackend, error) {
+	if rc.containerBackend == nil {
+		backend, err := containerbackend.New(containerbackend.BackendAuto)
+		if err != nil {
+			return nil, err
+		}
+
+		rc.containerBackend = backend
+	}
+
+	return rc.containerBackend, nil
 }
