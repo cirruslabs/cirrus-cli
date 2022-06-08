@@ -15,7 +15,7 @@ func TestForcePull(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	backend, err := containerbackend.New(containerbackend.BackendAutoType)
+	backend, err := containerbackend.New(containerbackend.BackendTypeAuto)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +40,7 @@ func TestLazyPull(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	backend, err := containerbackend.New(containerbackend.BackendAutoType)
+	backend, err := containerbackend.New(containerbackend.BackendTypeAuto)
 	if err != nil {
 		t.Fatal(err)
 	}

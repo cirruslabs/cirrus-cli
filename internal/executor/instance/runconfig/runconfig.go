@@ -30,7 +30,7 @@ func (rc *RunConfig) GetContainerBackend() (containerbackend.ContainerBackend, e
 	}
 
 	if rc.ContainerBackendType == "" {
-		rc.ContainerBackendType = containerbackend.BackendAutoType
+		rc.ContainerBackendType = containerbackend.BackendTypeAuto
 	}
 
 	backend, err := containerbackend.New(rc.ContainerBackendType)

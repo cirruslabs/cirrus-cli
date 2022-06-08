@@ -183,9 +183,9 @@ func newRunCmd() *cobra.Command {
 			"(helpful in case of registry rate limits; enables --container-lazy-pull and --tart-lazy-pull)")
 
 	// Container-related flags
-	cmd.PersistentFlags().StringVar(&containerBackendType, "container-backend", containerbackend.BackendAutoType,
+	cmd.PersistentFlags().StringVar(&containerBackendType, "container-backend", containerbackend.BackendTypeAuto,
 		fmt.Sprintf("container engine backend to use, either \"%s\", \"%s\" or \"%s\"",
-			containerbackend.BackendDockerType, containerbackend.BackendPodmanType, containerbackend.BackendAutoType))
+			containerbackend.BackendTypeDocker, containerbackend.BackendTypePodman, containerbackend.BackendTypeAuto))
 	cmd.PersistentFlags().BoolVar(&containerLazyPull, "container-lazy-pull", false,
 		"attempt to pull images only if they are missing locally (helpful in case of registry rate limits)")
 
