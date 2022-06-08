@@ -34,6 +34,11 @@ type Params struct {
 func (inst *Instance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
 	logger := config.Logger()
 
+	containerBackend, err := config.GetContainerBackend()
+	if err != nil {
+		return err
+	}
+
 	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, inst.Platform)
 	if err != nil {
 		return err
@@ -46,11 +51,6 @@ func (inst *Instance) Run(ctx context.Context, config *runconfig.RunConfig) (err
 				workingVolume.Name(), workingVolume.Name())
 
 			return
-		}
-
-		containerBackend, creationError := config.GetContainerBackend()
-		if err == nil {
-			err = creationError
 		}
 
 		cleanupErr := agentVolume.Close(containerBackend)

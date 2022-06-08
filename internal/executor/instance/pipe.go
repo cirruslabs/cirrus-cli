@@ -58,6 +58,11 @@ func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (e
 	platform := platform.NewUnix()
 	logger := config.Logger()
 
+	containerBackend, err := config.GetContainerBackend()
+	if err != nil {
+		return err
+	}
+
 	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, platform)
 	if err != nil {
 		return err
@@ -70,11 +75,6 @@ func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (e
 				workingVolume.Name(), workingVolume.Name())
 
 			return
-		}
-
-		containerBackend, creationError := config.GetContainerBackend()
-		if err == nil {
-			err = creationError
 		}
 
 		cleanupErr := agentVolume.Close(containerBackend)
