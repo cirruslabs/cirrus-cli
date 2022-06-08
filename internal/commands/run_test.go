@@ -224,7 +224,7 @@ func TestRunYAMLAndStarlarkHooks(t *testing.T) {
 
 // TestRunContainerPull ensures that container images are pulled by default.
 func TestRunContainerPull(t *testing.T) {
-	backend, err := containerbackend.New(containerbackend.BackendAuto)
+	backend, err := containerbackend.New(containerbackend.BackendAutoType)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -36,7 +36,7 @@ var verbose bool
 var lazyPull bool
 
 // Container-related flags.
-var containerBackend string
+var containerBackendType string
 var containerLazyPull bool
 
 // Container-related flags: Dockerfile as CI environment[1] feature.
@@ -53,11 +53,6 @@ var debugNoCleanup bool
 func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
-
-	backend, err := containerbackend.New(containerBackend)
-	if err != nil {
-		return err
-	}
 
 	projectDir := "."
 	baseEnvironment := eenvironment.Merge(
@@ -145,7 +140,7 @@ func run(cmd *cobra.Command, args []string) error {
 	)
 
 	// Container backend
-	executorOpts = append(executorOpts, executor.WithContainerBackend(backend))
+	executorOpts = append(executorOpts, executor.WithContainerBackend(containerBackendType))
 
 	// Run
 	e, err := executor.New(projectDir, result.Tasks, executorOpts...)
@@ -188,9 +183,9 @@ func newRunCmd() *cobra.Command {
 			"(helpful in case of registry rate limits; enables --container-lazy-pull and --tart-lazy-pull)")
 
 	// Container-related flags
-	cmd.PersistentFlags().StringVar(&containerBackend, "container-backend", containerbackend.BackendAuto,
+	cmd.PersistentFlags().StringVar(&containerBackendType, "container-backend", containerbackend.BackendAutoType,
 		fmt.Sprintf("container engine backend to use, either \"%s\", \"%s\" or \"%s\"",
-			containerbackend.BackendDocker, containerbackend.BackendPodman, containerbackend.BackendAuto))
+			containerbackend.BackendDockerType, containerbackend.BackendPodmanType, containerbackend.BackendAutoType))
 	cmd.PersistentFlags().BoolVar(&containerLazyPull, "container-lazy-pull", false,
 		"attempt to pull images only if they are missing locally (helpful in case of registry rate limits)")
 

@@ -33,7 +33,10 @@ var (
 // nolint:gocognit
 func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, params *Params) error {
 	logger := config.Logger()
-	backend := config.ContainerBackend
+	backend, err := config.GetContainerBackend()
+	if err != nil {
+		return err
+	}
 
 	// Clamp resources to those available for container backend daemon
 	info, err := backend.SystemInfo(ctx)

@@ -98,24 +98,24 @@ type Version struct {
 }
 
 const (
-	BackendAuto   = "auto"
-	BackendDocker = "docker"
-	BackendPodman = "podman"
+	BackendAutoType   = "auto"
+	BackendDockerType = "docker"
+	BackendPodmanType = "podman"
 )
 
 func New(name string) (ContainerBackend, error) {
-	if name == BackendAuto {
+	if name == BackendAutoType {
 		if nameFromEnv, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); ok {
 			name = nameFromEnv
 		}
 	}
 
 	switch name {
-	case BackendDocker:
+	case BackendDockerType:
 		return NewDocker()
-	case BackendPodman:
+	case BackendPodmanType:
 		return NewPodman()
-	case BackendAuto:
+	case BackendAutoType:
 		if backend, err := NewDocker(); err == nil {
 			return backend, nil
 		}
@@ -126,7 +126,7 @@ func New(name string) (ContainerBackend, error) {
 
 		return nil, fmt.Errorf("%w: failed to instantiate all supported container backends"+
 			" (tried %q and %q, are these actually installed on the system?)",
-			ErrNewFailed, BackendDocker, BackendPodman)
+			ErrNewFailed, BackendDockerType, BackendPodmanType)
 	default:
 		return nil, fmt.Errorf("%w: unknown container backend name %q", ErrNewFailed, name)
 	}
