@@ -84,8 +84,9 @@ Or pass some extra environment variables with `-e` flag:
 cirrus run -e CIRRUS_TAG="test-release" Release
 ```
 
-**Note:** Cirrus CLI only support [Linux `container`s](https://cirrus-ci.org/guide/linux/#linux-containers) instances at the moment
-including [Dockerfile as a CI environment](https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment) feature.
+**Note:** Cirrus CLI only supports [Linux `container`](https://cirrus-ci.org/guide/linux/#linux-containers) and
+[`macos_instance` VMs](https://cirrus-ci.org/guide/macOS/) at the moment. Linux containers support the
+[Dockerfile as a CI environment](https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment) feature.
 
 ### Validating Cirrus Configuration
 
