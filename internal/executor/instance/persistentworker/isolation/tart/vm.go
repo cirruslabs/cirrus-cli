@@ -96,7 +96,7 @@ func (vm *VM) ErrChan() chan error {
 }
 
 func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
-	stdout, _, err := Cmd(ctx, "ip", vm.ident)
+	stdout, _, err := Cmd(ctx, "ip", "--wait", "60", vm.ident)
 	if err != nil {
 		return "", err
 	}
