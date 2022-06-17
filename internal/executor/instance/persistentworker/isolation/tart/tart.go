@@ -71,8 +71,8 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case err := <-vm.ErrChan():
-			return err
+		case vmErr := <-vm.ErrChan():
+			return vmErr
 		default:
 			time.Sleep(time.Second)
 		}
