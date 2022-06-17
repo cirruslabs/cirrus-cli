@@ -11,3 +11,9 @@ func WithLogger(logger *echelon.Logger) Option {
 		r.logger = logger
 	}
 }
+
+func WithArtifactsDir(artifactsDir string) Option {
+	return func(r *RPC) {
+		r.artifactsDir = artifactsDir
+	}
+}

@@ -55,3 +55,9 @@ func WithTartOptions(tartOptions options.TartOptions) Option {
 		e.tartOptions = tartOptions
 	}
 }
+
+func WithArtifactsDir(artifactsDir string) Option {
+	return func(e *Executor) {
+		e.artifactsDir = artifactsDir
+	}
+}
