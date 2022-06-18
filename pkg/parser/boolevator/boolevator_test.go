@@ -56,8 +56,8 @@ func TestComplex(t *testing.T) {
 }
 
 func TestRegEx(t *testing.T) {
-	assert.True(t, evalHelper(t, "'release-.*' =~ 'release-2018.1'", nil))
-	assert.False(t, evalHelper(t, "'release-.*' !=~ 'release-2018.1'", nil))
+	assert.True(t, evalHelper(t, "'release-2018.1' =~ 'release-.*'", nil))
+	assert.False(t, evalHelper(t, "'release-2018.1' !=~ 'release-.*'", nil))
 	assert.True(t, evalHelper(t, "'release-.*' !=~ 'foo'", nil))
 	assert.True(t, evalHelper(t, "'1.2.34' =~ '\\d+\\.\\d+\\.\\d+'", nil))
 }
@@ -79,7 +79,7 @@ func TestQuotes(t *testing.T) {
 }
 
 func TestPrRegEx(t *testing.T) {
-	assert.True(t, evalHelper(t, "'pull/.*' =~ 'pull/123'", nil))
+	assert.True(t, evalHelper(t, "'pull/123' =~ 'pull/.*'", nil))
 	assert.True(t, evalHelper(t, "'pull/123' =~ 'pull/.*'", nil))
 	assert.True(t, evalHelper(t, "'branch-foo' =~ 'branch-.*'", nil))
 }
