@@ -140,13 +140,3 @@ func TestComplexTag(t *testing.T) {
 
 	assert.True(t, evalHelper(t, "$CIRRUS_TAG =~ 'v\\d+(\\.\\d+){2}(-.*)?'", env))
 }
-
-// https://github.com/cirruslabs/cirrus-ci-docs/issues/1016
-func TestDocsIssue1016(t *testing.T) {
-	env := map[string]string{
-		"TASKS_TO_RUN":     "|windows|linux|",
-		"CIRRUS_TASK_NAME": "windows",
-	}
-
-	assert.True(t, evalHelper(t, "$TASKS_TO_RUN == '' || $TASKS_TO_RUN =~ '.*\\|$CIRRUS_TASK_NAME\\|.*'", env))
-}
