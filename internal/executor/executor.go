@@ -13,11 +13,13 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/pathsafe"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/rpc"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -37,6 +39,7 @@ type Executor struct {
 	containerBackendType     string
 	containerOptions         options.ContainerOptions
 	tartOptions              options.TartOptions
+	artifactsDir             string
 }
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
@@ -147,7 +150,14 @@ func (e *Executor) Run(ctx context.Context) error {
 }
 
 func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
-	e.rpc = rpc.New(e.build, rpc.WithLogger(e.logger))
+	rpcOpts := []rpc.Option{rpc.WithLogger(e.logger)}
+
+	if e.artifactsDir != "" && pathsafe.IsPathSafe(task.Name) {
+		taskSpecificArtifactsDir := filepath.Join(e.artifactsDir, task.Name)
+		rpcOpts = append(rpcOpts, rpc.WithArtifactsDir(taskSpecificArtifactsDir))
+	}
+
+	e.rpc = rpc.New(e.build, rpcOpts...)
 	if err := e.rpc.Start(ctx, "localhost:0"); err != nil {
 		return err
 	}

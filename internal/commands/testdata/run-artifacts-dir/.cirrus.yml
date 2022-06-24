@@ -1,0 +1,7 @@
+container:
+  image: debian:latest
+
+task:
+  script: echo "some data" > data.txt
+  text_artifacts:
+    paths: "*.txt"

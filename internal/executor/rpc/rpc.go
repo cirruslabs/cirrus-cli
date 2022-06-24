@@ -38,7 +38,8 @@ type RPC struct {
 
 	build *build.Build
 
-	logger *echelon.Logger
+	logger       *echelon.Logger
+	artifactsDir string
 }
 
 func New(build *build.Build, opts ...Option) *RPC {

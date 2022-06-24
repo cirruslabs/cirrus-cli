@@ -24,6 +24,7 @@ import (
 var ErrRun = errors.New("run failed")
 
 // General flags.
+var artifactsDir string
 var dirty bool
 var output string
 var environment []string
@@ -114,6 +115,11 @@ func run(cmd *cobra.Command, args []string) error {
 		executorOpts = append(executorOpts, executor.WithTaskFilter(taskFilter))
 	}
 
+	// Artifacts directory
+	if artifactsDir != "" {
+		executorOpts = append(executorOpts, executor.WithArtifactsDir(artifactsDir))
+	}
+
 	// Dirty mode
 	if dirty {
 		executorOpts = append(executorOpts, executor.WithDirtyMode())
@@ -160,6 +166,8 @@ func newRunCmd() *cobra.Command {
 	}
 
 	// General flags
+	cmd.PersistentFlags().StringVar(&artifactsDir, "artifacts-dir", "",
+		"directory in which to save the artifacts")
 	cmd.PersistentFlags().BoolVar(&dirty, "dirty", false, "if set the project directory will be mounted"+
 		"in read-write mode, otherwise the project directory files are copied, taking .gitignore into account")
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},

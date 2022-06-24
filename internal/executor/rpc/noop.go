@@ -27,26 +27,6 @@ func (r *RPC) SaveLogs(stream api.CirrusCIService_SaveLogsServer) error {
 	return nil
 }
 
-func (r *RPC) UploadArtifacts(stream api.CirrusCIService_UploadArtifactsServer) error {
-	for {
-		_, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			r.logger.Warnf("error while receiving artifacts: %v", err)
-			return err
-		}
-	}
-
-	if err := stream.SendAndClose(&api.UploadArtifactsResponse{}); err != nil {
-		r.logger.Warnf("error while closing artifacts stream: %v", err)
-		return err
-	}
-
-	return nil
-}
-
 func (r *RPC) ReportAgentLogs(ctx context.Context, req *api.ReportAgentLogsRequest) (*empty.Empty, error) {
 	return &empty.Empty{}, nil
 }

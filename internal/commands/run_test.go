@@ -412,3 +412,23 @@ func TestRunGitHubAnnotations(t *testing.T) {
 	assert.Contains(t, lines,
 		"::error file=main_test.go,line=18,endLine=18,title=TestMain() failed!::main_test.go:18: expected a non-nil return")
 }
+
+func TestRunArtifactsDir(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-artifacts-dir")
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "-v", "-o simple", "--artifacts-dir", "artifacts"})
+	command.SetOut(writer)
+	command.SetErr(writer)
+	err := command.Execute()
+
+	require.NoError(t, err)
+
+	data, err := os.ReadFile("artifacts/main/text/data.txt")
+	require.NoError(t, err)
+	require.Equal(t, "some data\n", string(data))
+}
