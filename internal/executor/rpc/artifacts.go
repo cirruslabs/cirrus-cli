@@ -73,7 +73,7 @@ func (aw *ArtifactWriter) WriteTo(name string, b []byte) (int, error) {
 	path := filepath.Join(aw.baseDir, name)
 
 	// nolint:nestif // doesn't look that complicated
-	if aw.currentFile == nil || aw.currentPath != path {
+	if aw.currentPath != path {
 		if aw.currentFile != nil {
 			if err := aw.currentFile.Close(); err != nil {
 				return 0, err
