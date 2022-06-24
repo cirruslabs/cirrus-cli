@@ -8,9 +8,14 @@ import (
 	"path/filepath"
 )
 
-func (r *RPC) UploadArtifacts(stream api.CirrusCIService_UploadArtifactsServer) error {
+func (r *RPC) UploadArtifacts(stream api.CirrusCIService_UploadArtifactsServer) (err error) {
 	var currentArtifactName string
-	var lastSeenArtifactPath string
+	artifactWriter := NewArtifactWriter(r.artifactsDir)
+	defer func() {
+		if awErr := artifactWriter.Close(); awErr != nil && err == nil {
+			err = awErr
+		}
+	}()
 
 	for {
 		artifactEntry, err := stream.Recv()
@@ -34,30 +39,9 @@ func (r *RPC) UploadArtifacts(stream api.CirrusCIService_UploadArtifactsServer) 
 				continue
 			}
 
-			artifactPath := filepath.Join(r.artifactsDir, currentArtifactName, obj.Chunk.ArtifactPath)
+			artifactPath := filepath.Join(currentArtifactName, obj.Chunk.ArtifactPath)
 
-			var maybeTruncate int
-
-			if obj.Chunk.ArtifactPath != lastSeenArtifactPath {
-				maybeTruncate = os.O_TRUNC
-
-				lastSeenArtifactPath = obj.Chunk.ArtifactPath
-			}
-
-			if err := os.MkdirAll(filepath.Dir(artifactPath), 0700); err != nil {
-				return err
-			}
-
-			artifact, err := os.OpenFile(artifactPath, os.O_WRONLY|os.O_APPEND|os.O_CREATE|maybeTruncate, 0600)
-			if err != nil {
-				return err
-			}
-
-			if _, err := artifact.Write(obj.Chunk.Data); err != nil {
-				return err
-			}
-
-			if err := artifact.Close(); err != nil {
+			if _, err := artifactWriter.WriteTo(artifactPath, obj.Chunk.Data); err != nil {
 				return err
 			}
 		}
@@ -69,4 +53,54 @@ func (r *RPC) UploadArtifacts(stream api.CirrusCIService_UploadArtifactsServer) 
 	}
 
 	return nil
+}
+
+type ArtifactWriter struct {
+	baseDir     string
+	currentPath string
+	currentFile *os.File
+}
+
+func NewArtifactWriter(baseDir string) *ArtifactWriter {
+	return &ArtifactWriter{
+		baseDir:     baseDir,
+		currentPath: "",
+		currentFile: nil,
+	}
+}
+
+func (aw *ArtifactWriter) WriteTo(name string, b []byte) (int, error) {
+	path := filepath.Join(aw.baseDir, name)
+
+	// nolint:nestif // doesn't look that complicated
+	if aw.currentFile == nil || aw.currentPath != path {
+		if aw.currentFile != nil {
+			if err := aw.currentFile.Close(); err != nil {
+				return 0, err
+			}
+		}
+
+		if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+			return 0, err
+		}
+
+		var err error
+
+		aw.currentFile, err = os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			return 0, err
+		}
+
+		aw.currentPath = path
+	}
+
+	return aw.currentFile.Write(b)
+}
+
+func (aw *ArtifactWriter) Close() error {
+	if aw.currentFile == nil {
+		return nil
+	}
+
+	return aw.currentFile.Close()
 }

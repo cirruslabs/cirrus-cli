@@ -1,6 +1,7 @@
 package task
 
 import (
+	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
@@ -94,6 +95,7 @@ func AttachBaseTaskFields(
 	})
 
 	for _, additionalTaskProperty := range additionalTaskProperties {
+		fmt.Println(additionalTaskProperty)
 		fieldNamePtr := additionalTaskProperty.Name
 		fieldTypePtr := additionalTaskProperty.Type
 		if fieldNamePtr == nil || fieldTypePtr == nil {
