@@ -10,6 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/docker"
+	"github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/config"
+	"github.com/docker/cli/cli/flags"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -21,12 +24,17 @@ import (
 )
 
 type Docker struct {
-	cli *client.Client
+	cli client.APIClient
 }
 
 func NewDocker() (ContainerBackend, error) {
 	// Create Docker client
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	config, err := config.Load("")
+	if err != nil {
+		return nil, err
+	}
+
+	cli, err := command.NewAPIClientFromFlags(flags.NewCommonOptions(), config)
 	if err != nil {
 		return nil, err
 	}
