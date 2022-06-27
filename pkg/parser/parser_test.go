@@ -15,7 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/yudai/gojsondiff"
 	"github.com/yudai/gojsondiff/formatter"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
+	"google.golang.org/protobuf/types/known/anypb"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
@@ -629,10 +632,24 @@ func TestAdditionalInstanceCredentials(t *testing.T) {
 
 	p := parser.New(parser.WithAdditionalInstances(additionalInstances))
 	result, err := p.ParseFromFile(context.Background(),
-		absolutize("additional-instance-credentials-as-map.yml"))
-
+		absolutize("additional-instance-credentials.yml"))
 	require.Nil(t, err)
-	require.NotEmpty(t, result.Tasks)
+	require.Len(t, result.Tasks, 1)
+	assertExpectedTasks(t, absolutize("additional-instance-credentials.json"), result)
 
-	assertExpectedTasks(t, absolutize("additional-instance-credentials-as-map.json"), result)
+	p = parser.New(parser.WithAdditionalInstances(additionalInstances))
+	resultAsMap, err := p.ParseFromFile(context.Background(),
+		absolutize("additional-instance-credentials-as-map.yml"))
+	require.Nil(t, err)
+	require.Len(t, resultAsMap.Tasks, 1)
+	assertExpectedTasks(t, absolutize("additional-instance-credentials-as-map.json"), resultAsMap)
+
+	// Instances should be identical
+	instance, err := anypb.UnmarshalNew(result.Tasks[0].Instance, proto.UnmarshalOptions{})
+	require.NoError(t, err)
+
+	instanceAsMap, err := anypb.UnmarshalNew(resultAsMap.Tasks[0].Instance, proto.UnmarshalOptions{})
+	require.NoError(t, err)
+
+	require.EqualValues(t, instance.(*dynamicpb.Message).String(), instanceAsMap.(*dynamicpb.Message).String())
 }
