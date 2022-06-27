@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/evaluator"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/executorservice"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/memory"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -617,4 +619,20 @@ func TestRepeatedKeys(t *testing.T) {
 	}
 
 	assert.Len(t, result.Tasks, 3)
+}
+
+func TestAdditionalInstanceCredentials(t *testing.T) {
+	supportedInstances, err := executorservice.New().SupportedInstances()
+	require.NoError(t, err)
+	additionalInstances, err := evaluator.TransformAdditionalInstances(supportedInstances)
+	require.NoError(t, err)
+
+	p := parser.New(parser.WithAdditionalInstances(additionalInstances))
+	result, err := p.ParseFromFile(context.Background(),
+		absolutize("additional-instance-credentials-as-map.yml"))
+
+	require.Nil(t, err)
+	require.NotEmpty(t, result.Tasks)
+
+	assertExpectedTasks(t, absolutize("additional-instance-credentials-as-map.json"), result)
 }
