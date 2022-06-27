@@ -9,3 +9,9 @@ func WithLogger(logger logger.Lightweight) Option {
 		tart.logger = logger
 	}
 }
+
+func WithSoftnet() Option {
+	return func(tart *Tart) {
+		tart.softnet = true
+	}
+}
