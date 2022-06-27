@@ -12,6 +12,8 @@ import (
 type VM struct {
 	ident string
 
+	softnet bool
+
 	subCtx       context.Context
 	subCtxCancel context.CancelFunc
 	wg           sync.WaitGroup
@@ -24,12 +26,16 @@ func NewVMClonedFrom(
 	cpu uint32,
 	memory uint32,
 	lazyPull bool,
+	softnet bool,
 	logger *echelon.Logger,
 ) (*VM, error) {
 	subCtx, subCtxCancel := context.WithCancel(ctx)
 
 	vm := &VM{
-		ident:        "cirrus-cli-" + uuid.New().String(),
+		ident: "cirrus-cli-" + uuid.New().String(),
+
+		softnet: softnet,
+
 		subCtx:       subCtx,
 		subCtxCancel: subCtxCancel,
 		errChan:      make(chan error, 1),
@@ -86,7 +92,15 @@ func (vm *VM) Start() {
 	go func() {
 		defer vm.wg.Done()
 
-		_, _, err := Cmd(vm.subCtx, "run", "--no-graphics", vm.ident)
+		args := []string{"run", "--no-graphics"}
+
+		if vm.softnet {
+			args = append(args, "--with-softnet")
+		}
+
+		args = append(args, vm.ident)
+
+		_, _, err := Cmd(vm.subCtx, args...)
 		vm.errChan <- err
 	}()
 }
