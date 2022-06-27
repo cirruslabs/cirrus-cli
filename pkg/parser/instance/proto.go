@@ -163,18 +163,28 @@ func NewProtoParser(
 					return nil
 				})
 			} else {
-				parseCallback := func(node *node.Node) error {
-					value, err := node.GetExpandedStringValue(mergedEnv)
-					if err != nil {
-						return err
-					}
-					instance.proto.Set(field, protoreflect.ValueOfString(value))
-					return nil
-				}
 				if strings.HasSuffix(fieldName, "credentials") || strings.HasSuffix(fieldName, "config") {
+					parseCallback := func(node *node.Node) error {
+						value, err := node.GetCredentials(mergedEnv)
+						if err != nil {
+							return err
+						}
+						instance.proto.Set(field, protoreflect.ValueOfString(value))
+						return nil
+					}
+
 					// some trickery to be able to specify top level credentials for instances
 					instance.CollectibleField(fieldName, schema.String(fieldDescription), parseCallback)
 				} else {
+					parseCallback := func(node *node.Node) error {
+						value, err := node.GetExpandedStringValue(mergedEnv)
+						if err != nil {
+							return err
+						}
+						instance.proto.Set(field, protoreflect.ValueOfString(value))
+						return nil
+					}
+
 					instance.OptionalField(nameable.NewSimpleNameable(fieldName), schema.String(fieldDescription), parseCallback)
 				}
 			}

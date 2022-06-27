@@ -2,6 +2,7 @@ package node
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
@@ -41,6 +42,27 @@ func (node *Node) GetExpandedStringValue(env map[string]string) (string, error) 
 	}
 
 	return expander.ExpandEnvironmentVariables(valueNode.Value, env), nil
+}
+
+func (node *Node) GetCredentials(env map[string]string) (string, error) {
+	switch node.Value.(type) {
+	case *ScalarValue:
+		return node.GetExpandedStringValue(env)
+	case *MapValue:
+		asInterface, err := node.ToInterface()
+		if err != nil {
+			return "", err
+		}
+
+		jsonBytes, err := json.Marshal(asInterface)
+		if err != nil {
+			return "", node.ParserError("failed to marshal credentials as JSON: %v", err)
+		}
+
+		return string(jsonBytes), nil
+	default:
+		return "", node.ParserError("expected a scalar value or a list with scalar values")
+	}
 }
 
 func (node *Node) GetSliceOfStrings() ([]string, error) {
