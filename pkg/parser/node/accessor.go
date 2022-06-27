@@ -49,18 +49,12 @@ func (node *Node) GetCredentials(env map[string]string) (string, error) {
 	case *ScalarValue:
 		return node.GetExpandedStringValue(env)
 	case *MapValue:
-		result := map[string]string{}
-
-		for _, child := range node.Children {
-			childValue, err := child.GetExpandedStringValue(env)
-			if err != nil {
-				return "", err
-			}
-
-			result[child.Name] = childValue
+		asInterface, err := node.ToInterface()
+		if err != nil {
+			return "", err
 		}
 
-		jsonBytes, err := json.Marshal(result)
+		jsonBytes, err := json.Marshal(asInterface)
 		if err != nil {
 			return "", node.ParserError("failed to marshal credentials as JSON: %v", err)
 		}
