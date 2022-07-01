@@ -3,7 +3,7 @@ FROM goreleaser/goreleaser:latest as builder
 WORKDIR /build
 ADD . /build
 
-RUN goreleaser build --single-target
+RUN goreleaser build --timeout 60m --single-target
 
 FROM alpine:latest
 LABEL org.opencontainers.image.source=https://github.com/cirruslabs/cirrus-cli/
