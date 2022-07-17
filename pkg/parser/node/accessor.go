@@ -204,7 +204,7 @@ func (node *Node) GetScript() ([]string, error) {
 
 					encodedValue := base64.StdEncoding.EncodeToString(valueBytes)
 
-					result = append(result, fmt.Sprintf("powershell.exe -NoLogo -EncodedCommand %s", encodedValue))
+					result = append(result, fmt.Sprintf("powershell.exe -OutputFormat Text -NoLogo -EncodedCommand %s", encodedValue))
 				} else {
 					// Minimally support incorrect, but historically accepted syntax, when a list value is unquoted
 					// and is treated as map, but then converted to a scalar by the parser silently, e.g.:
