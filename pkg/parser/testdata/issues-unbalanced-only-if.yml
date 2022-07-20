@@ -1,0 +1,13 @@
+container:
+  image: debian:latest
+
+test_task:
+  only_if: false
+
+  script: make test
+
+build_task:
+  depends_on:
+    - test
+
+  script: make build

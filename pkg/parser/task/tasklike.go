@@ -20,7 +20,11 @@ type ParseableTaskLike interface {
 	DependsOnIDs() []int64
 	SetDependsOnIDs(ids []int64)
 
+	OnlyIfExpression() string
 	Enabled(env map[string]string, boolevator *boolevator.Boolevator) (bool, error)
+
+	Line() int
+	Column() int
 
 	parseable.Parseable
 }

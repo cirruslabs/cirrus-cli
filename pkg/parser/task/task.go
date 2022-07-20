@@ -31,6 +31,8 @@ type Task struct {
 	onlyIfExpression string
 
 	missingInstancesAllowed bool
+	line                    int
+	column                  int
 
 	parseable.DefaultParser
 }
@@ -42,9 +44,13 @@ func NewTask(
 	additionalInstances map[string]protoreflect.MessageDescriptor,
 	additionalTaskProperties []*descriptor.FieldDescriptorProto,
 	missingInstancesAllowed bool,
+	line int,
+	column int,
 ) *Task {
 	task := &Task{
 		missingInstancesAllowed: missingInstancesAllowed,
+		line:                    line,
+		column:                  column,
 	}
 
 	// Don't force required fields in schema
@@ -312,6 +318,10 @@ func (task *Task) InstanceNode() *node.Node {
 	return task.instanceNode
 }
 
+func (task *Task) OnlyIfExpression() string {
+	return task.onlyIfExpression
+}
+
 func (task *Task) Enabled(env map[string]string, boolevator *boolevator.Boolevator) (bool, error) {
 	if task.onlyIfExpression == "" {
 		return true, nil
@@ -323,6 +333,14 @@ func (task *Task) Enabled(env map[string]string, boolevator *boolevator.Boolevat
 	}
 
 	return evaluation, nil
+}
+
+func (task *Task) Line() int {
+	return task.line
+}
+
+func (task *Task) Column() int {
+	return task.column
 }
 
 func (task *Task) Schema() *jsschema.Schema {

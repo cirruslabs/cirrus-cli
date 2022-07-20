@@ -31,6 +31,8 @@ type DockerPipe struct {
 	dependsOn    []string
 
 	onlyIfExpression string
+	line             int
+	column           int
 
 	parseable.DefaultParser
 }
@@ -39,8 +41,13 @@ func NewDockerPipe(
 	env map[string]string,
 	parserKit *parserkit.ParserKit,
 	additionalTaskProperties []*descriptor.FieldDescriptorProto,
+	line int,
+	column int,
 ) *DockerPipe {
-	pipe := &DockerPipe{}
+	pipe := &DockerPipe{
+		line:   line,
+		column: column,
+	}
 	pipe.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 	pipe.proto.Metadata = &api.Task_Metadata{Properties: DefaultTaskProperties()}
 
@@ -230,6 +237,10 @@ func (pipe *DockerPipe) Proto() interface{} {
 	return &pipe.proto
 }
 
+func (pipe *DockerPipe) OnlyIfExpression() string {
+	return pipe.onlyIfExpression
+}
+
 func (pipe *DockerPipe) Enabled(env map[string]string, boolevator *boolevator.Boolevator) (bool, error) {
 	if pipe.onlyIfExpression == "" {
 		return true, nil
@@ -241,6 +252,14 @@ func (pipe *DockerPipe) Enabled(env map[string]string, boolevator *boolevator.Bo
 	}
 
 	return evaluation, nil
+}
+
+func (pipe *DockerPipe) Line() int {
+	return pipe.line
+}
+
+func (pipe *DockerPipe) Column() int {
+	return pipe.column
 }
 
 func (pipe *DockerPipe) Schema() *jsschema.Schema {
