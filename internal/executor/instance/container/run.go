@@ -275,7 +275,8 @@ func runAdditionalContainer(
 			NanoCPUs: int64(additionalContainer.Cpu * nano),
 			Memory:   int64(additionalContainer.Memory * mebi),
 		},
-		Network: fmt.Sprintf("container:%s", connectToContainer),
+		Network:    fmt.Sprintf("container:%s", connectToContainer),
+		Privileged: additionalContainer.Privileged,
 	}
 	cont, err := backend.ContainerCreate(ctx, input, "")
 	if err != nil {
