@@ -28,7 +28,10 @@ var (
 	ErrFailedToAnalyze  = errors.New("failed to analyze")
 )
 
-func dockerfileAndArgumentsFromInstance(dynamicInstance proto.Message, instanceNode *node.Node) (string, map[string]string, *node.Node) {
+func dockerfileAndArgumentsFromInstance(
+	dynamicInstance proto.Message,
+	instanceNode *node.Node,
+) (string, map[string]string, *node.Node) {
 	pwi, ok := dynamicInstance.(*api.PersistentWorkerInstance)
 	if ok {
 		if pwi.Isolation == nil {
