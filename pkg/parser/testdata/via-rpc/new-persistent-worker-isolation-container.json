@@ -62,22 +62,26 @@
       }
     ],
     "instance": {
-      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container",
-      "cpu": 0.5,
-      "dockerfile": ".ci/Dockerfile",
-      "image": "gcr.io/cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df:latest",
-      "memory": 512,
-      "volumes": [
-        {
-          "source": "/root/.ccache",
-          "target": "/root/.ccache"
-        },
-        {
-          "readOnly": true,
-          "source": "/etc",
-          "target": "/host/etc"
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
+      "isolation": {
+        "container": {
+          "cpu": 0.5,
+          "dockerfile": ".ci/Dockerfile",
+          "image": "gcr.io/cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df:latest",
+          "memory": 512,
+          "volumes": [
+            {
+              "source": "/root/.ccache",
+              "target": "/root/.ccache"
+            },
+            {
+              "readOnly": true,
+              "source": "/etc",
+              "target": "/host/etc"
+            }
+          ]
         }
-      ]
+      }
     },
     "localGroupId": "1",
     "metadata": {
