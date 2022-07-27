@@ -8,7 +8,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
-	"sort"
 	"strings"
 )
 
@@ -61,20 +60,7 @@ func NewParallels(mergedEnv map[string]string) *Parallels {
 		return nil
 	})
 
-	// Prepare a list of platforms
-	var platformsLowercased []string
-	for _, platformName := range api.Platform_name {
-		platformsLowercased = append(platformsLowercased, strings.ToLower(platformName))
-	}
-
-	sort.Strings(platformsLowercased)
-
-	var platformsInterfaced []interface{}
-	for _, lowercasePlatform := range platformsLowercased {
-		platformsInterfaced = append(platformsInterfaced, lowercasePlatform)
-	}
-
-	platformSchema := schema.Enum(platformsInterfaced, "Image Platform.")
+	platformSchema := schema.Platform("Image Platform.")
 	parallels.OptionalField(nameable.NewSimpleNameable("platform"), platformSchema, func(node *node.Node) error {
 		platform, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {

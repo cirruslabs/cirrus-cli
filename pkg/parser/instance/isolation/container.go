@@ -43,7 +43,7 @@ func NewContainer(mergedEnv map[string]string) *Container {
 	}
 
 	imageSchema := schema.String("Container image to use.")
-	container.RequiredField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
+	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
 		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -113,6 +113,44 @@ func NewContainer(mergedEnv map[string]string) *Container {
 				return node.ParserError("only source:target[:ro] volume specification is currently supported")
 			}
 		}
+
+		return nil
+	})
+
+	dockerfileSchema := schema.String("Relative path to Dockerfile to build container from.")
+	container.OptionalField(nameable.NewSimpleNameable("dockerfile"), dockerfileSchema, func(node *node.Node) error {
+		dockerfile, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+		container.proto.Container.Dockerfile = dockerfile
+		return nil
+	})
+
+	dockerArgumentsNameable := nameable.NewSimpleNameable("docker_arguments")
+	dockerArgumentsSchema := schema.Map("Arguments for Docker build.")
+	container.OptionalField(dockerArgumentsNameable, dockerArgumentsSchema, func(node *node.Node) error {
+		dockerArguments, err := node.GetMapOrListOfMapsWithExpansion(mergedEnv)
+		if err != nil {
+			return err
+		}
+		container.proto.Container.DockerArguments = dockerArguments
+		return nil
+	})
+
+	platformSchema := schema.Platform("Image Platform.")
+	container.OptionalField(nameable.NewSimpleNameable("platform"), platformSchema, func(node *node.Node) error {
+		platform, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		resolvedPlatform, ok := api.Platform_value[strings.ToUpper(platform)]
+		if !ok {
+			return node.ParserError("unsupported platform name: %q", platform)
+		}
+
+		container.proto.Container.Platform = api.Platform(resolvedPlatform)
 
 		return nil
 	})

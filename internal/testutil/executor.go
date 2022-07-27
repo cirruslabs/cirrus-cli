@@ -59,7 +59,7 @@ func ExecuteWithOptionsNew(t *testing.T, dir string, opts ...executor.Option) er
 
 // ExecuteWithOptionsNewContext is the same thing as ExecuteWithOptionsNew, but allows the caller to set a context.
 func ExecuteWithOptionsNewContext(ctx context.Context, t *testing.T, dir string, opts ...executor.Option) error {
-	p := parser.New()
+	p := parser.New(parser.WithFileSystem(local.New(dir)))
 	result, err := p.ParseFromFile(ctx, filepath.Join(dir, ".cirrus.yml"))
 	if err != nil {
 		t.Fatal(err)

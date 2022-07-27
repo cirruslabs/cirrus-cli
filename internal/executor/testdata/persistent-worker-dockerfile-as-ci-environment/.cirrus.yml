@@ -1,0 +1,7 @@
+persistent_worker:
+  isolation:
+    container:
+      dockerfile: Dockerfile
+
+task:
+  script: test -f /canary-created-in-the-prebuilt-image

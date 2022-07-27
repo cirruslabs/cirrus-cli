@@ -38,7 +38,6 @@ var validCases = []string{
 	"collectible-order",
 	"yaml-12-booleans-only",
 	"dependency-on-disabled-only-if-task",
-	"persistent-worker-isolation-container",
 	"cache-multiple-folders",
 	"no-always-override",
 	"pipe-cache",

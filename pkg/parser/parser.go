@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/cachinglayer"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/abstractcontainer"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/issue"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/modifier/matrix"
@@ -297,7 +298,8 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 		protoTasks = append(protoTasks, protoTask)
 	}
 
-	// Calculate Dockerfile hashes uses to create service tasks and in the Cirrus Cloud
+	// Calculate Dockerfile hashes that will be used
+	// to create service tasks and in the Cirrus Cloud
 	if err := p.calculateDockerfileHashes(ctx, protoTasks, protoTaskToInstanceNode); err != nil {
 		return nil, err
 	}
@@ -460,14 +462,14 @@ func (p *Parser) resolveDependenciesShallow(tasks []task.ParseableTaskLike) erro
 func (p *Parser) createServiceTask(
 	dockerfileHash string,
 	protoTask *api.Task,
-	taskContainer *api.ContainerInstance,
+	abstractContainer abstractcontainer.AbstractContainer,
 ) (*api.Task, error) {
 	prebuiltInstance := &api.PrebuiltImageInstance{
 		Repository: fmt.Sprintf("cirrus-ci-community/%s", dockerfileHash),
 		Reference:  "latest",
-		Platform:   taskContainer.Platform,
-		Dockerfile: taskContainer.Dockerfile,
-		Arguments:  taskContainer.DockerArguments,
+		Platform:   abstractContainer.Platform(),
+		Dockerfile: abstractContainer.Dockerfile(),
+		Arguments:  abstractContainer.DockerArguments(),
 	}
 
 	anyInstance, err := anypb.New(prebuiltInstance)
@@ -477,7 +479,7 @@ func (p *Parser) createServiceTask(
 
 	// Craft Docker build arguments: task name
 	var buildArgsSlice []string
-	for key, value := range taskContainer.DockerArguments {
+	for key, value := range abstractContainer.DockerArguments() {
 		buildArgsSlice = append(buildArgsSlice, fmt.Sprintf("%s=%s", key, value))
 	}
 	sort.Strings(buildArgsSlice)
@@ -488,7 +490,7 @@ func (p *Parser) createServiceTask(
 
 	// Craft Docker build arguments: docker build command
 	var dockerBuildArgsSlice []string
-	for key, value := range taskContainer.DockerArguments {
+	for key, value := range abstractContainer.DockerArguments() {
 		dockerBuildArgsSlice = append(dockerBuildArgsSlice, fmt.Sprintf("%s=\"%s\"", key, value))
 	}
 	sort.Strings(dockerBuildArgsSlice)
@@ -501,16 +503,16 @@ func (p *Parser) createServiceTask(
 		"--tag gcr.io/%s:%s "+
 		"--file %s%s ",
 		prebuiltInstance.Repository, prebuiltInstance.Reference,
-		taskContainer.Dockerfile, dockerBuildArgs)
+		abstractContainer.Dockerfile(), dockerBuildArgs)
 
-	if taskContainer.Platform == api.Platform_WINDOWS {
+	if abstractContainer.Platform() == api.Platform_WINDOWS {
 		script += "."
 	} else {
 		script += "${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
 	}
 
 	serviceTask := &api.Task{
-		Name:         fmt.Sprintf("Prebuild %s%s", taskContainer.Dockerfile, buildArgs),
+		Name:         fmt.Sprintf("Prebuild %s%s", abstractContainer.Dockerfile(), buildArgs),
 		LocalGroupId: p.NextTaskID(),
 		Instance:     anyInstance,
 		Commands: []*api.Command{
@@ -570,12 +572,31 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 			return nil, fmt.Errorf("%w: failed to unmarshal task's instance: %v", parsererror.ErrInternal, err)
 		}
 
-		taskContainer, ok := dynamicInstance.(*api.ContainerInstance)
-		if !ok {
+		var abstractContainer abstractcontainer.AbstractContainer
+
+		switch instance := dynamicInstance.(type) {
+		case *api.ContainerInstance:
+			abstractContainer = &abstractcontainer.ContainerInstance{
+				Proto: instance,
+			}
+		case *api.PersistentWorkerInstance:
+			if instance.Isolation == nil {
+				continue
+			}
+
+			container := instance.Isolation.GetContainer()
+			if container == nil {
+				continue
+			}
+
+			abstractContainer = &abstractcontainer.IsolationContainer{
+				Proto: instance,
+			}
+		default:
 			continue
 		}
 
-		if taskContainer.Dockerfile == "" {
+		if abstractContainer.Dockerfile() == "" {
 			continue
 		}
 
@@ -589,7 +610,7 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 		// Find or create service task
 		serviceTask, ok := serviceTasks[dockerfileHash]
 		if !ok {
-			serviceTask, err = p.createServiceTask(dockerfileHash, protoTask, taskContainer)
+			serviceTask, err = p.createServiceTask(dockerfileHash, protoTask, abstractContainer)
 			if err != nil {
 				return nil, err
 			}
@@ -601,8 +622,8 @@ func (p *Parser) createServiceTasks(protoTasks []*api.Task) ([]*api.Task, error)
 		protoTask.RequiredGroups = append(protoTask.RequiredGroups, serviceTask.LocalGroupId)
 
 		// Ensure that the task will use our to-be-created image
-		taskContainer.Image = fmt.Sprintf("gcr.io/cirrus-ci-community/%s:latest", dockerfileHash)
-		updatedInstance, err := anypb.New(taskContainer)
+		abstractContainer.SetImage(fmt.Sprintf("gcr.io/cirrus-ci-community/%s:latest", dockerfileHash))
+		updatedInstance, err := anypb.New(abstractContainer.Message())
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", parsererror.ErrInternal, err)
 		}
