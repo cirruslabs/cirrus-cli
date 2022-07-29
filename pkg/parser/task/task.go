@@ -258,7 +258,8 @@ func (task *Task) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
 	}
 
 	if task.proto.Instance == nil && !task.missingInstancesAllowed {
-		return node.ParserError("task has no instance attached")
+		return node.ParserError("task has no instance or container attached, " +
+			"consult the documentation to find all possible execution environment types")
 	}
 
 	// Since the parsing is almost done and no other commands are expected,
