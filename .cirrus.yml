@@ -41,24 +41,6 @@ docker_builder:
     - go test -v ./...
 
 task:
-  name: Test (macOS with Docker and Parallels)
-  alias: Tests
-  persistent_worker:
-    labels:
-      os: darwin
-      parallels: installed
-  env:
-    CIRRUS_INTERNAL_PARALLELS_DARWIN_VM: monterey-base
-    CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_USER: admin
-    CIRRUS_INTERNAL_PARALLELS_DARWIN_SSH_PASSWORD: admin
-    CIRRUS_INTERNAL_PARALLELS_LINUX_VM: debian
-    CIRRUS_INTERNAL_PARALLELS_LINUX_SSH_USER: parallels
-    CIRRUS_INTERNAL_PARALLELS_LINUX_SSH_PASSWORD: parallels
-    CIRRUS_INTERNAL_NO_GITHUB_API_TESTS: yes
-  test_script:
-    - go test -p 1 ./...
-
-task:
   name: Test (macOS with Tart)
   alias: Tests
   persistent_worker:
