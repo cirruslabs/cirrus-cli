@@ -353,6 +353,7 @@ func (backend *Podman) ContainerCreate(
 		Command:    input.Command,
 		Env:        input.Env,
 		Image:      input.Image,
+		Privileged: input.Privileged,
 	}
 
 	if strings.HasPrefix(input.Network, "container:") {

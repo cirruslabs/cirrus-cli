@@ -57,6 +57,7 @@ type ContainerCreateInput struct {
 	Network        string
 	Resources      ContainerResources
 	DisableSELinux bool
+	Privileged     bool
 }
 
 type ContainerMountType int

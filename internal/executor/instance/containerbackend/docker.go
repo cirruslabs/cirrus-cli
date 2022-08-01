@@ -209,6 +209,7 @@ func (backend *Docker) ContainerCreate(
 			Memory:   input.Resources.Memory,
 		},
 		NetworkMode: container.NetworkMode(input.Network),
+		Privileged:  input.Privileged,
 	}
 
 	for _, ourMount := range input.Mounts {
