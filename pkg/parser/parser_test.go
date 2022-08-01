@@ -110,6 +110,24 @@ func TestProblematicConfigs(t *testing.T) {
 		{"problematic-artifacts-instruction-is-not-a-map", []*api.Issue{
 			{Level: api.Issue_WARNING, Message: "expected a map, found scalar", Path: ".cirrus.yml", Line: 9, Column: 3},
 		}},
+		{"issues-unbalanced-only-if", []*api.Issue{
+			{
+				Level:   api.Issue_WARNING,
+				Message: "task \"build\" depends on task \"test\", but their only_if conditions are different",
+				Path:    ".cirrus.yml",
+				Line:    9,
+				Column:  1,
+			},
+		}},
+		{"issues-unbalanced-only-if-prevent", []*api.Issue{
+			{
+				Level:   api.Issue_WARNING,
+				Message: "task \"build\" depends on task \"test\", but their only_if conditions are different",
+				Path:    ".cirrus.yml",
+				Line:    12,
+				Column:  1,
+			},
+		}},
 	}
 
 	for _, problematicCase := range problematicCases {

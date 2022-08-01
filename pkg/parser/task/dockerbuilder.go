@@ -28,6 +28,8 @@ type DockerBuilder struct {
 	dependsOn    []string
 
 	onlyIfExpression string
+	line             int
+	column           int
 
 	parseable.DefaultParser
 }
@@ -36,8 +38,13 @@ func NewDockerBuilder(
 	env map[string]string,
 	parserKit *parserkit.ParserKit,
 	additionalTaskProperties []*descriptor.FieldDescriptorProto,
+	line int,
+	column int,
 ) *DockerBuilder {
-	dbuilder := &DockerBuilder{}
+	dbuilder := &DockerBuilder{
+		line:   line,
+		column: column,
+	}
 	dbuilder.proto.Environment = map[string]string{"CIRRUS_OS": "linux"}
 
 	AttachEnvironmentFields(&dbuilder.DefaultParser, &dbuilder.proto)
@@ -178,6 +185,10 @@ func (dbuilder *DockerBuilder) Proto() interface{} {
 func (dbuilder *DockerBuilder) DependsOnIDs() []int64       { return dbuilder.proto.RequiredGroups }
 func (dbuilder *DockerBuilder) SetDependsOnIDs(ids []int64) { dbuilder.proto.RequiredGroups = ids }
 
+func (dbuilder *DockerBuilder) OnlyIfExpression() string {
+	return dbuilder.onlyIfExpression
+}
+
 func (dbuilder *DockerBuilder) Enabled(env map[string]string, boolevator *boolevator.Boolevator) (bool, error) {
 	if dbuilder.onlyIfExpression == "" {
 		return true, nil
@@ -189,6 +200,14 @@ func (dbuilder *DockerBuilder) Enabled(env map[string]string, boolevator *boolev
 	}
 
 	return evaluation, nil
+}
+
+func (dbuilder *DockerBuilder) Line() int {
+	return dbuilder.line
+}
+
+func (dbuilder *DockerBuilder) Column() int {
+	return dbuilder.column
 }
 
 func (dbuilder *DockerBuilder) Schema() *jsschema.Schema {

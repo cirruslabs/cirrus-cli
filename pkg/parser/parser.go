@@ -100,9 +100,9 @@ func New(opts ...Option) *Parser {
 
 	// Register parsers
 	taskParser := task.NewTask(nil, nil, parser.additionalInstances, parser.additionalTaskProperties,
-		parser.missingInstancesAllowed)
-	pipeParser := task.NewDockerPipe(nil, nil, parser.additionalTaskProperties)
-	builderParser := task.NewDockerBuilder(nil, nil, parser.additionalTaskProperties)
+		parser.missingInstancesAllowed, 0, 0)
+	pipeParser := task.NewDockerPipe(nil, nil, parser.additionalTaskProperties, 0, 0)
+	builderParser := task.NewDockerBuilder(nil, nil, parser.additionalTaskProperties, 0, 0)
 	parser.parsers = map[nameable.Nameable]parseable.Parseable{
 		nameable.NewRegexNameable("^(.*)task$"):           taskParser,
 		nameable.NewRegexNameable("^(.*)pipe$"):           pipeParser,
@@ -131,11 +131,25 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 					p.additionalInstances,
 					p.additionalTaskProperties,
 					p.missingInstancesAllowed,
+					treeItem.Line,
+					treeItem.Column,
 				)
 			case *task.DockerPipe:
-				taskLike = task.NewDockerPipe(environment.Copy(p.environment), p.parserKit, p.additionalTaskProperties)
+				taskLike = task.NewDockerPipe(
+					environment.Copy(p.environment),
+					p.parserKit,
+					p.additionalTaskProperties,
+					treeItem.Line,
+					treeItem.Column,
+				)
 			case *task.DockerBuilder:
-				taskLike = task.NewDockerBuilder(environment.Copy(p.environment), p.parserKit, p.additionalTaskProperties)
+				taskLike = task.NewDockerBuilder(
+					environment.Copy(p.environment),
+					p.parserKit,
+					p.additionalTaskProperties,
+					treeItem.Line,
+					treeItem.Column,
+				)
 			default:
 				panic("unknown task-like object")
 			}
@@ -262,6 +276,8 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 		return nil, err
 	}
 
+	p.searchForUnbalancedOnlyIfs(tasks)
+
 	protoTaskToInstanceNode := map[int64]*node.Node{}
 	var protoTasks []*api.Task
 	for _, task := range tasks {
@@ -316,6 +332,35 @@ func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err 
 		TasksCountBeforeFiltering: p.tasksCountBeforeFiltering,
 		Issues:                    p.parserKit.IssueRegistry.Issues(),
 	}, nil
+}
+
+func (p *Parser) searchForUnbalancedOnlyIfs(tasks []task.ParseableTaskLike) {
+	// Create an index
+	idx := map[int64]task.ParseableTaskLike{}
+
+	for _, task := range tasks {
+		idx[task.ID()] = task
+	}
+
+	// Analyze dependencies
+	for _, task := range tasks {
+		for _, dependsOnID := range task.DependsOnIDs() {
+			dependent, ok := idx[dependsOnID]
+			if !ok {
+				continue
+			}
+
+			if task.OnlyIfExpression() != dependent.OnlyIfExpression() {
+				p.registerUnbalancedOnlyIfIssue(task, dependent.Name())
+			}
+		}
+	}
+}
+
+func (p *Parser) registerUnbalancedOnlyIfIssue(dependent task.ParseableTaskLike, dependeeName string) {
+	p.parserKit.IssueRegistry.RegisterIssuef(api.Issue_WARNING, dependent.Line(), dependent.Column(),
+		"task \"%s\" depends on task \"%s\", but their only_if conditions are different",
+		dependent.Name(), dependeeName)
 }
 
 func (p *Parser) ParseFromFile(ctx context.Context, path string) (*Result, error) {
@@ -382,6 +427,7 @@ func (p *Parser) resolveDependenciesShallow(tasks []task.ParseableTaskLike) erro
 		for _, dependsOnName := range task.DependsOnNames() {
 			// Dependency may be missing due to only_if
 			if _, ok := p.disabledTaskNamesAndAliases[dependsOnName]; ok {
+				p.registerUnbalancedOnlyIfIssue(task, dependsOnName)
 				continue
 			}
 
