@@ -36,7 +36,7 @@ func TestNoCtxMain(t *testing.T) {
 	validateExpected(t, "testdata/no-ctx")
 }
 
-// TestMainReturnsDict ensures that we support <>.
+// TestMainReturnsDict ensures that we support overrides represented as dictionary.
 func TestMainReturnsDict(t *testing.T) {
 	validateExpected(t, "testdata/main-returns-dict")
 }
@@ -62,6 +62,12 @@ func TestMainReturnsTupleList(t *testing.T) {
 	resultConfig := loadStarlarkConfig(t, dir)
 	expectedConfig := loadExpectedConfig(t, dir)
 	assert.Equal(t, expectedConfig, resultConfig)
+}
+
+// TestMainReturnsString ensures that we support overrides represented as a string,
+// which is essentially a piece of YAML configuration.
+func TestMainReturnsString(t *testing.T) {
+	validateExpected(t, "testdata/main-returns-string")
 }
 
 func TestNoCtxHook(t *testing.T) {
