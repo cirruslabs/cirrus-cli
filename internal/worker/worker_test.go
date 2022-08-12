@@ -101,7 +101,7 @@ func workerTestHelper(t *testing.T, lis net.Listener, isolation *api.Isolation, 
 }
 
 func TestWorkerIsolationNone(t *testing.T) {
-	// nolint:gosec // this is a test, so it's fine to bind on 0.0.0.0
+	//nolint:gosec // this is a test, so it's fine to bind on 0.0.0.0
 	lis, err := net.Listen("tcp", "0.0.0.0:0")
 	if err != nil {
 		t.Fatal(err)

@@ -7,7 +7,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/spf13/cobra"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -64,7 +63,7 @@ func EnvArgsToMap(arguments []string) map[string]string {
 }
 
 func ReadYAMLConfig(path string) (string, error) {
-	yamlConfig, err := ioutil.ReadFile(path)
+	yamlConfig, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
@@ -73,7 +72,7 @@ func ReadYAMLConfig(path string) (string, error) {
 }
 
 func EvaluateStarlarkConfig(ctx context.Context, path string, env map[string]string) (string, error) {
-	starlarkSource, err := ioutil.ReadFile(path)
+	starlarkSource, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}

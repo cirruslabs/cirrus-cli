@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,7 +15,7 @@ import (
 
 // Makes sure all the test cases can be executed successfully.
 func TestAll(t *testing.T) {
-	fileInfos, err := ioutil.ReadDir("testdata")
+	fileInfos, err := os.ReadDir("testdata")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,12 +43,12 @@ func TestSimple(t *testing.T) {
 func TestReport(t *testing.T) {
 	_ = runTestCommandAndGetOutput(t, "testdata/report", []string{"--report", "report-actual.json"}, true)
 
-	expectedReportBytes, err := ioutil.ReadFile("report-expected.json")
+	expectedReportBytes, err := os.ReadFile("report-expected.json")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	actualReportBytes, err := ioutil.ReadFile("report-actual.json")
+	actualReportBytes, err := os.ReadFile("report-actual.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +64,7 @@ func TestUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expectedConfigBytes, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.expected.yml"))
+	expectedConfigBytes, err := os.ReadFile(filepath.Join(dir, ".cirrus.expected.yml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +75,7 @@ func TestUpdate(t *testing.T) {
   script: sleep 5
 `, string(expectedConfigBytes))
 
-	logsBytes, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.expected.log"))
+	logsBytes, err := os.ReadFile(filepath.Join(dir, ".cirrus.expected.log"))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/storage/filesystem"
-	"io/ioutil"
+	"io"
 	"path"
 	"syscall"
 )
@@ -94,7 +94,7 @@ func (g Git) Get(ctx context.Context, path string) ([]byte, error) {
 		return nil, err
 	}
 
-	fileBytes, err := ioutil.ReadAll(file)
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}

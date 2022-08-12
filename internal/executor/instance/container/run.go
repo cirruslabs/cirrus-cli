@@ -30,7 +30,7 @@ var (
 	ErrAdditionalContainerFailed = errors.New("additional container failed")
 )
 
-// nolint:gocognit
+//nolint:gocognit
 func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, params *Params) error {
 	logger := config.Logger()
 	backend, err := config.GetContainerBackend()

@@ -56,7 +56,7 @@ func parsePort(port string) (*api.PortMapping, error) {
 	return &api.PortMapping{ContainerPort: uint32(containerPort)}, nil
 }
 
-// nolint:gocognit
+//nolint:gocognit
 func NewAdditionalContainer(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *AdditionalContainer {
 	ac := &AdditionalContainer{
 		proto: &api.AdditionalContainer{},

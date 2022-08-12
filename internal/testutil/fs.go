@@ -2,7 +2,6 @@ package testutil
 
 import (
 	"github.com/otiai10/copy"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -32,7 +31,7 @@ func TempDir(t *testing.T) string {
 		tempDirRoot = "/tmp"
 	}
 
-	dir, err := ioutil.TempDir(tempDirRoot, filepath.Base(t.Name()))
+	dir, err := os.MkdirTemp(tempDirRoot, filepath.Base(t.Name()))
 	if err != nil {
 		t.Fatal(err)
 	}

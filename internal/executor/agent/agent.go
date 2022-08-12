@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -46,7 +45,7 @@ func RetrieveBinary(
 		return agentPath, nil
 	}
 
-	tmpAgentFile, err := ioutil.TempFile(agentCacheDir, "")
+	tmpAgentFile, err := os.CreateTemp(agentCacheDir, "")
 	if err != nil {
 		return "", err
 	}

@@ -3,7 +3,6 @@ package test
 import (
 	"errors"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
 )
 
@@ -19,7 +18,7 @@ func LoadConfiguration(path string) (*Configuration, error) {
 	}
 
 	// Load configuration from file (if exists)
-	yamlBytes, err := ioutil.ReadFile(path)
+	yamlBytes, err := os.ReadFile(path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return config, nil

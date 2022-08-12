@@ -5,7 +5,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -135,7 +134,7 @@ func TestBadCases(t *testing.T) {
 		t.Run(badCase, func(t *testing.T) {
 			t.Parallel()
 			newPath := filepath.Join("testdata", badCase)
-			testCaseBytes, err := ioutil.ReadFile(newPath)
+			testCaseBytes, err := os.ReadFile(newPath)
 			if err != nil {
 				t.Fatal(err)
 			}

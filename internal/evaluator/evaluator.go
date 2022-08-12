@@ -137,7 +137,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 	}
 
 	// Run Starlark script and register generated YAML configuration (if any)
-	// nolint:nestif // doesn't seem too complicated
+	//nolint:nestif // doesn't seem too complicated
 	if request.StarlarkConfig != "" {
 		lrk := larker.New(
 			larker.WithFileSystem(fs),

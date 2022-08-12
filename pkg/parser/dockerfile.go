@@ -3,7 +3,7 @@ package parser
 import (
 	"container/list"
 	"context"
-	"crypto/md5" // nolint:gosec // backwards compatibility
+	"crypto/md5" //nolint:gosec // backwards compatibility
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -109,7 +109,7 @@ func (p *Parser) calculateDockerfileHash(
 		return "", dockerfileNode.ParserError("%v %q: %v", ErrFailedToRetrieve, dockerfilePath, err)
 	}
 
-	// nolint:gosec // backwards compatibility
+	//nolint:gosec // backwards compatibility
 	oldHash := md5.New()
 	newHash := sha256.New()
 

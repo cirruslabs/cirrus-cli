@@ -109,7 +109,7 @@ func (vm *VM) Ident() string {
 
 func (vm *VM) isolate(ctx context.Context) error {
 	// Ensure that the VM is isolated[1] from the host (e.g. shared folders, clipboard, etc.)
-	// nolint:lll // https://github.com/walle/lll/issues/12
+	//nolint:lll // https://github.com/walle/lll/issues/12
 	// [1]: https://download.parallels.com/desktop/v14/docs/en_US/Parallels%20Desktop%20Pro%20Edition%20Command-Line%20Reference/43645.htm
 	_, _, err := Prlctl(ctx, "set", vm.Ident(), "--isolate-vm", "on")
 	if err != nil {

@@ -9,7 +9,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -74,7 +73,7 @@ func TestNoCtxHook(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/no-ctx")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +87,7 @@ func TestNoCtxHook(t *testing.T) {
 
 func loadStarlarkConfig(t *testing.T, dir string) string {
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +103,7 @@ func loadStarlarkConfig(t *testing.T, dir string) string {
 }
 
 func loadExpectedConfig(t *testing.T, dir string) string {
-	expectedConfiguration, err := ioutil.ReadFile(filepath.Join(dir, "expected.yaml"))
+	expectedConfiguration, err := os.ReadFile(filepath.Join(dir, "expected.yaml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,7 +123,7 @@ func TestLoadFileSystemLocal(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/load-fs-local")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +141,7 @@ func TestTimeout(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/timeout")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +162,7 @@ func TestCycle(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/cycle")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, "a.star"))
+	source, err := os.ReadFile(filepath.Join(dir, "a.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,7 +182,7 @@ func TestLoadGitHelpers(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/load-git-helpers")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -196,7 +195,7 @@ func TestLoadGitHelpers(t *testing.T) {
 	}
 
 	// Compare the output
-	expected, err := ioutil.ReadFile(filepath.Join(dir, "expected.yml"))
+	expected, err := os.ReadFile(filepath.Join(dir, "expected.yml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,7 +206,7 @@ func TestLoadSeveralFiles(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/load-several-files")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +250,7 @@ func TestBuiltinFS(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-fs")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -269,7 +268,7 @@ func TestBuiltinEnv(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-env")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -290,7 +289,7 @@ func TestBuiltinChangesInclude(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-changes-include")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -314,7 +313,7 @@ func TestBuiltinChangesIncludeOnly(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-changes-include-only")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -361,7 +360,7 @@ func TestBuiltinStarlib(t *testing.T) {
 	}
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -378,7 +377,7 @@ func TestTestMode(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/test-mode")
 
 	// Read the source code
-	source, err := ioutil.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -25,7 +25,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -201,7 +201,7 @@ func (p *Parser) parseTasks(tree *node.Node) ([]task.ParseableTaskLike, error) {
 	return tasks, nil
 }
 
-// nolint:gocognit // it's a parser, and it's complicated
+//nolint:gocognit // it's a parser, and it's complicated
 func (p *Parser) Parse(ctx context.Context, config string) (result *Result, err error) {
 	defer func() {
 		if re, ok := err.(*parsererror.Rich); ok {
@@ -364,7 +364,7 @@ func (p *Parser) registerUnbalancedOnlyIfIssue(dependent task.ParseableTaskLike,
 }
 
 func (p *Parser) ParseFromFile(ctx context.Context, path string) (*Result, error) {
-	config, err := ioutil.ReadFile(path)
+	config, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

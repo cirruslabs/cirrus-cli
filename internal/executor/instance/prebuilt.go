@@ -7,7 +7,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -19,7 +18,7 @@ type PrebuiltInstance struct {
 }
 
 func CreateTempArchive(dir string) (string, error) {
-	tmpFile, err := ioutil.TempFile("", "cirrus-prebuilt-archive-")
+	tmpFile, err := os.CreateTemp("", "cirrus-prebuilt-archive-")
 	if err != nil {
 		return "", err
 	}

@@ -20,7 +20,6 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -314,10 +313,10 @@ func TestAdditionalTaskProperties(t *testing.T) {
 func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.Result) {
 	actual := testutil.TasksToJSON(t, result.Tasks)
 
-	expected, err := ioutil.ReadFile(actualFixturePath)
+	expected, err := os.ReadFile(actualFixturePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			if err := ioutil.WriteFile(actualFixturePath, actual, 0600); err != nil {
+			if err := os.WriteFile(actualFixturePath, actual, 0600); err != nil {
 				t.Fatal(err)
 			}
 
@@ -364,7 +363,7 @@ func assertExpectedTasks(t *testing.T, actualFixturePath string, result *parser.
 func TestViaRPC(t *testing.T) {
 	cloudDir := absolutize("via-rpc")
 
-	fileInfos, err := ioutil.ReadDir(cloudDir)
+	fileInfos, err := os.ReadDir(cloudDir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -389,7 +388,7 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 	envPath := filepath.Join(cloudDir, baseName+".env")
 	fcPath := filepath.Join(cloudDir, baseName+".fc")
 
-	yamlBytes, err := ioutil.ReadFile(yamlConfigPath)
+	yamlBytes, err := os.ReadFile(yamlConfigPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -417,10 +416,10 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 	}
 
 	// Obtain expected result by loading JSON fixture
-	fixtureBytes, err := ioutil.ReadFile(fixturePath)
+	fixtureBytes, err := os.ReadFile(fixturePath)
 	if os.IsNotExist(err) {
 		fixtureBytes = testutil.TasksToJSON(t, localResult.Tasks)
-		err := ioutil.WriteFile(fixturePath, fixtureBytes, 0600)
+		err := os.WriteFile(fixturePath, fixtureBytes, 0600)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -462,7 +461,7 @@ func viaRPCRunSingle(t *testing.T, cloudDir string, yamlConfigName string) {
 }
 
 func viaRPCLoadMap(t *testing.T, yamlPath string) (result map[string]string) {
-	yamlBytes, err := ioutil.ReadFile(yamlPath)
+	yamlBytes, err := os.ReadFile(yamlPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return map[string]string{}
@@ -501,7 +500,7 @@ func TestViaRPCInvalid(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.File, func(t *testing.T) {
-			yamlBytes, err := ioutil.ReadFile(filepath.Join("testdata", "via-rpc-invalid", testCase.File))
+			yamlBytes, err := os.ReadFile(filepath.Join("testdata", "via-rpc-invalid", testCase.File))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -520,7 +519,7 @@ func TestSchema(t *testing.T) {
 	const schemaPath = "testdata/cirrus.json"
 
 	// Load reference schema
-	referenceBytes, err := ioutil.ReadFile(schemaPath)
+	referenceBytes, err := os.ReadFile(schemaPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -540,7 +539,7 @@ func TestSchema(t *testing.T) {
 	}
 
 	// Uncomment to update schema
-	// if err := ioutil.WriteFile(schemaPath, ourBytes, 0600); err != nil {
+	// if err := os.WriteFile(schemaPath, ourBytes, 0600); err != nil {
 	//	t.Fatal(err)
 	// }
 
@@ -594,7 +593,7 @@ func TestRichErrors(t *testing.T) {
 		testCase := testCase
 
 		t.Run(testCase.File, func(t *testing.T) {
-			config, err := ioutil.ReadFile(testCase.File)
+			config, err := os.ReadFile(testCase.File)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -610,7 +609,7 @@ func TestRichErrors(t *testing.T) {
 }
 
 func TestWithMissingInstancesAllowed(t *testing.T) {
-	config, err := ioutil.ReadFile("testdata/missing-instances.yml")
+	config, err := os.ReadFile("testdata/missing-instances.yml")
 	if err != nil {
 		t.Fatal(err)
 	}

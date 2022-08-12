@@ -118,13 +118,14 @@ func handleError(arguments ...interface{}) error {
 
 // PrepareRegexp ensures that:
 //
-// * we match the whole string to avoid partial match false positives (e.g. we don't want ".*smh.*" regular expression
-//   to match an empty string "")
-// * enable Pattern.DOTALL[1] alternative in Go because otherwise simply adding ^ and $ will be too restricting,
-//   since we actually support multi-line matches
-// * enable Pattern.CASE_INSENSITIVE alternative in Go to be compatible with the Cirrus Cloud parser
+//   - we match the whole string to avoid partial match false positives (e.g. we don't want ".*smh.*" regular expression
+//     to match an empty string "")
+//   - enable Pattern.DOTALL[1] alternative in Go because otherwise simply adding ^ and $ will be too restricting,
+//     since we actually support multi-line matches
+//   - enable Pattern.CASE_INSENSITIVE alternative in Go to be compatible with the Cirrus Cloud parser
 //
 // [1]: https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html#DOTALL
+//
 // [2]: https://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html#CASE_INSENSITIVE
 func PrepareRegexp(r string) string {
 	return "(?s)(?i)^" + r + "$"

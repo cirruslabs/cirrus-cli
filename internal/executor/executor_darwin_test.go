@@ -9,7 +9,6 @@ import (
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/stretchr/testify/assert"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,7 +53,7 @@ task:
   parallels_check_script: true
 `, image, user, password, platform)
 
-	if err := ioutil.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
+	if err := os.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -112,7 +111,7 @@ task:
 
 		t.Run(name, func(t *testing.T) {
 			testutil.TempChdirPopulatedWith(t, filepath.Join("testdata", "tart"))
-			if err := ioutil.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
+			if err := os.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
 				t.Fatal(err)
 			}
 
@@ -157,11 +156,11 @@ task:
   ls_script: ls
 `, vm, user, password)
 
-	if err := ioutil.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
+	if err := os.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := ioutil.WriteFile("foo.txt", []byte(config), 0600); err != nil {
+	if err := os.WriteFile("foo.txt", []byte(config), 0600); err != nil {
 		t.Fatal(err)
 	}
 
