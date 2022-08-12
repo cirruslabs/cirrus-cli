@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -27,7 +26,7 @@ import (
 func TestRun(t *testing.T) {
 	testutil.TempChdir(t)
 
-	if err := ioutil.WriteFile(".cirrus.yml", validConfig, 0600); err != nil {
+	if err := os.WriteFile(".cirrus.yml", validConfig, 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -318,7 +317,7 @@ func TestRunNoCleanup(t *testing.T) {
 func TestRunNonStandardExtension(t *testing.T) {
 	testutil.TempChdir(t)
 
-	if err := ioutil.WriteFile(".cirrus.yaml", validConfig, 0600); err != nil {
+	if err := os.WriteFile(".cirrus.yaml", validConfig, 0600); err != nil {
 		t.Fatal(err)
 	}
 

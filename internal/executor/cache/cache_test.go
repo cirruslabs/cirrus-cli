@@ -7,7 +7,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
+	"io"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -34,7 +35,7 @@ func TestKeySanitization(t *testing.T) {
 	}
 
 	// Examine cache directory
-	dirEntries, err := ioutil.ReadDir(filepath.Join(dir, "cirrus", "projects"))
+	dirEntries, err := os.ReadDir(filepath.Join(dir, "cirrus", "projects"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +123,7 @@ func cacheRead(t *testing.T, c *cache.Cache, key string) []byte {
 		t.Fatal(err)
 	}
 
-	data, err := ioutil.ReadAll(file)
+	data, err := io.ReadAll(file)
 	if err != nil {
 		t.Fatal(err)
 	}

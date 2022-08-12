@@ -1,4 +1,4 @@
-// nolint:testpackage // testing private methods
+//nolint:testpackage // testing private methods
 package loader
 
 import (

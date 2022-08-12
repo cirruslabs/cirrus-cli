@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -130,7 +129,7 @@ func (worker *Worker) oldWorkingDirectoryCleanup() {
 
 	// Clean-up static directory[1]
 	//
-	// nolint:lll
+	//nolint:lll
 	// [1]: https://github.com/cirruslabs/cirrus-ci-agent/blob/f88afe342106a6691d9e5b2d2e9187080c69fd2d/internal/executor/executor.go#L190
 	staticWorkingDir := filepath.Join(tmpDir, "cirrus-ci-build")
 	if err := os.RemoveAll(staticWorkingDir); err != nil {
@@ -140,9 +139,9 @@ func (worker *Worker) oldWorkingDirectoryCleanup() {
 
 	// Clean-up dynamic directories[1]
 	//
-	// nolint:lll
+	//nolint:lll
 	// [1]: https://github.com/cirruslabs/cirrus-ci-agent/blob/f88afe342106a6691d9e5b2d2e9187080c69fd2d/internal/executor/executor.go#L197
-	entries, err := ioutil.ReadDir(tmpDir)
+	entries, err := os.ReadDir(tmpDir)
 	if err != nil {
 		worker.logger.Infof("failed to clean up old cirrus-task-* dynamic working directories: %v", err)
 		return

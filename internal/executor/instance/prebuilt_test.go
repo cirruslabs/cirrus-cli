@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,7 +17,7 @@ func TestCreateArchive(t *testing.T) {
 	dir := testutil.TempDir(t)
 
 	// Create a simple file
-	if err := ioutil.WriteFile(filepath.Join(dir, "file.txt"), []byte(""), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "file.txt"), []byte(""), 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -27,7 +26,7 @@ func TestCreateArchive(t *testing.T) {
 	if err := os.Mkdir(subDir, 0700); err != nil {
 		t.Fatal(err)
 	}
-	if err := ioutil.WriteFile(filepath.Join(subDir, "file-in-a-directory"), []byte(""), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(subDir, "file-in-a-directory"), []byte(""), 0600); err != nil {
 		t.Fatal(err)
 	}
 

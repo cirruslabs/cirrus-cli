@@ -18,7 +18,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
-	"io/ioutil"
+	"io"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -60,7 +60,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 
 	// Apply default options (to cover those that weren't specified)
 	if e.logger == nil {
-		renderer := renderers.NewSimpleRenderer(ioutil.Discard, nil)
+		renderer := renderers.NewSimpleRenderer(io.Discard, nil)
 		e.logger = echelon.NewLogger(echelon.InfoLevel, renderer)
 	}
 

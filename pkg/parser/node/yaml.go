@@ -82,7 +82,7 @@ func NewFromTextWithMergeExemptions(text string, mergeExemptions []nameable.Name
 	return convert(nil, "root", yamlNode.Content[0], yamlNode.Line, yamlNode.Column, mergeExemptions)
 }
 
-// nolint:gocognit // splitting this into multiple functions would probably make this even less comprehensible
+//nolint:gocognit // splitting this into multiple functions would probably make this even less comprehensible
 func convert(
 	parent *Node,
 	name string,

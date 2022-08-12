@@ -24,7 +24,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -335,7 +334,7 @@ func filesContentsSingleVariation(t *testing.T, dir, dockerfileContents string) 
 		}
 	}
 
-	err := ioutil.WriteFile(dockerfilePath, []byte(dockerfileContents), 0600)
+	err := os.WriteFile(dockerfilePath, []byte(dockerfileContents), 0600)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -403,7 +402,7 @@ unix_task:
 
 	dirToBeExecutedFrom := testutil.TempDir(t)
 
-	if err := ioutil.WriteFile(filepath.Join(dirToBeExecutedFrom, ".cirrus.yml"), []byte(config), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(dirToBeExecutedFrom, ".cirrus.yml"), []byte(config), 0600); err != nil {
 		t.Fatal(err)
 	}
 

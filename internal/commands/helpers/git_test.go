@@ -6,7 +6,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -24,7 +24,7 @@ func TestGitDiff(t *testing.T) {
 	}
 
 	// Create a file and commit it
-	if err := ioutil.WriteFile("canary", []byte("original content"), 0600); err != nil {
+	if err := os.WriteFile("canary", []byte("original content"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := worktree.Add("canary"); err != nil {
@@ -42,7 +42,7 @@ func TestGitDiff(t *testing.T) {
 	}
 
 	// Modify the file and ensure that GitDiff detects the changes against the HEAD
-	if err := ioutil.WriteFile("canary", []byte("modified content"), 0600); err != nil {
+	if err := os.WriteFile("canary", []byte("modified content"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	affectedFiles, err := helpers.GitDiff(".", "HEAD", false)
@@ -63,7 +63,7 @@ func TestGitDiff(t *testing.T) {
 
 	// Revert the file contents to be similar with the first commit and ensure that
 	// GitDiff reports no changes when ran against the specific commit
-	if err := ioutil.WriteFile("canary", []byte("original content"), 0600); err != nil {
+	if err := os.WriteFile("canary", []byte("original content"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	affectedFiles, err = helpers.GitDiff(".", originalCommit.String(), false)

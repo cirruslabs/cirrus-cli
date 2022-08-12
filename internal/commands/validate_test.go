@@ -5,7 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -32,7 +32,7 @@ func TestValidateNoArgsNoFile(t *testing.T) {
 func TestValidateNoArgsHasFile(t *testing.T) {
 	testutil.TempChdir(t)
 
-	if err := ioutil.WriteFile(".cirrus.yml", validConfig, 0600); err != nil {
+	if err := os.WriteFile(".cirrus.yml", validConfig, 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -47,7 +47,7 @@ func TestValidateFileArgHasFile(t *testing.T) {
 	testutil.TempChdir(t)
 
 	// Craft a simplest possible (but valid) file
-	if err := ioutil.WriteFile("custom.yml", validConfig, 0600); err != nil {
+	if err := os.WriteFile("custom.yml", validConfig, 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -61,7 +61,7 @@ func TestValidateFileArgHasFile(t *testing.T) {
 func TestValidateNoArgsHasFileWithNonStandardExtension(t *testing.T) {
 	testutil.TempChdir(t)
 
-	if err := ioutil.WriteFile(".cirrus.yaml", validConfig, 0600); err != nil {
+	if err := os.WriteFile(".cirrus.yaml", validConfig, 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -75,7 +75,7 @@ func TestValidateNoArgsHasFileWithNonStandardExtension(t *testing.T) {
 func TestValidatePrintFlag(t *testing.T) {
 	testutil.TempChdir(t)
 
-	if err := ioutil.WriteFile(".cirrus.star", validStarlark, 0600); err != nil {
+	if err := os.WriteFile(".cirrus.star", validStarlark, 0600); err != nil {
 		t.Fatal(err)
 	}
 

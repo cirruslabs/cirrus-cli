@@ -161,8 +161,14 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 		if tasksNode == nil {
 			return &MainResult{OutputLogs: outputLogsBuffer.Bytes()}, nil
 		}
+	case starlark.String:
+		return &MainResult{
+			OutputLogs: outputLogsBuffer.Bytes(),
+			YAMLConfig: typedMainResult.GoString(),
+		}, nil
 	default:
-		return nil, fmt.Errorf("%w: result is not a list or a dict", ErrMainUnexpectedResult)
+		return nil, fmt.Errorf("%w: result is not a list, dict or str: %T", ErrMainUnexpectedResult,
+			typedMainResult)
 	}
 
 	formattedYaml, err := yamlhelper.PrettyPrint(tasksNode)

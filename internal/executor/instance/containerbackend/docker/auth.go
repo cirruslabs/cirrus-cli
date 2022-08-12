@@ -4,12 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/docker/cli/cli/config"
-	"io/ioutil"
+	"io"
 	"strings"
 )
 
 func XRegistryAuthForImage(reference string) (string, error) {
-	dockerConfig := config.LoadDefaultConfigFile(ioutil.Discard)
+	dockerConfig := config.LoadDefaultConfigFile(io.Discard)
 	referenceParts := strings.SplitN(reference, "/", 2)
 
 	authConfig, err := dockerConfig.GetAuthConfig(referenceParts[0])

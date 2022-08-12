@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	securejoin "github.com/cyphar/filepath-securejoin"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -45,7 +44,7 @@ func (lfs *Local) Get(ctx context.Context, path string) ([]byte, error) {
 		return nil, err
 	}
 
-	return ioutil.ReadFile(pivotedPath)
+	return os.ReadFile(pivotedPath)
 }
 
 func (lfs *Local) ReadDir(ctx context.Context, path string) ([]string, error) {
@@ -54,7 +53,7 @@ func (lfs *Local) ReadDir(ctx context.Context, path string) ([]string, error) {
 		return nil, err
 	}
 
-	fileInfos, err := ioutil.ReadDir(pivotedPath)
+	fileInfos, err := os.ReadDir(pivotedPath)
 	if err != nil {
 		return nil, err
 	}

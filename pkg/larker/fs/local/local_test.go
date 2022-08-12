@@ -8,7 +8,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,7 +17,7 @@ func TestStatFile(t *testing.T) {
 	// Prepare temporary directory
 	dir := testutil.TempDir(t)
 
-	if err := ioutil.WriteFile(filepath.Join(dir, "some-file.txt"), []byte("some-contents"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "some-file.txt"), []byte("some-contents"), 0600); err != nil {
 		t.Fatal(err)
 	}
 
@@ -46,7 +45,7 @@ func TestGetFile(t *testing.T) {
 	// Prepare temporary directory
 	dir := testutil.TempDir(t)
 
-	if err := ioutil.WriteFile(filepath.Join(dir, "some-file.txt"), []byte("some-contents"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "some-file.txt"), []byte("some-contents"), 0600); err != nil {
 		t.Fatal(err)
 	}
 

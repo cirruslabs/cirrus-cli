@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -38,7 +38,7 @@ func (snooper *DHCPSnooper) dhcpLeasesFile() string {
 func (snooper *DHCPSnooper) Leases() ([]*DHCPLease, error) {
 	var result []*DHCPLease
 
-	leases, err := ioutil.ReadFile(snooper.dhcpLeasesFile())
+	leases, err := os.ReadFile(snooper.dhcpLeasesFile())
 	if err != nil {
 		return nil, fmt.Errorf("%w: failed to read leases file %q: %v",
 			ErrDHCPSnoopFailed, snooper.dhcpLeasesFile(), err)

@@ -1,7 +1,6 @@
 package pwdir
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -13,5 +12,5 @@ func StaticTempDirWithDynamicFallback() (string, error) {
 		return staticTempDir, nil
 	}
 
-	return ioutil.TempDir("", "cirrus-build-")
+	return os.MkdirTemp("", "cirrus-build-")
 }

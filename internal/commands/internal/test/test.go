@@ -13,7 +13,6 @@ import (
 	"github.com/cirruslabs/echelon"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/spf13/cobra"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -57,7 +56,7 @@ func (comparison *Comparison) AsCirrusAnnotation() *CirrusAnnotation {
 // compareConfig compares generated configuration against an expected one.
 func compareConfig(logger *echelon.Logger, testDir string, yamlConfig string) (*Comparison, error) {
 	expectedConfigFilename := filepath.Join(testDir, ".cirrus.expected.yml")
-	expectedConfigBytes, err := ioutil.ReadFile(expectedConfigFilename)
+	expectedConfigBytes, err := os.ReadFile(expectedConfigFilename)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrTest, err)
 	}
@@ -66,7 +65,7 @@ func compareConfig(logger *echelon.Logger, testDir string, yamlConfig string) (*
 	comparison.Path = expectedConfigFilename
 
 	if update && comparison.FoundDifference {
-		if err := ioutil.WriteFile(expectedConfigFilename, []byte(yamlConfig), 0600); err != nil {
+		if err := os.WriteFile(expectedConfigFilename, []byte(yamlConfig), 0600); err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrTest, err)
 		}
 		comparison.FoundDifference = false
@@ -78,7 +77,7 @@ func compareConfig(logger *echelon.Logger, testDir string, yamlConfig string) (*
 // compareLogs compares generated log against an expected one.
 func compareLogs(logger *echelon.Logger, testDir string, actualLogs []byte) (*Comparison, error) {
 	logsFilename := filepath.Join(testDir, ".cirrus.expected.log")
-	logsBytes, err := ioutil.ReadFile(logsFilename)
+	logsBytes, err := os.ReadFile(logsFilename)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("%w: %v", ErrTest, err)
 	}
@@ -87,7 +86,7 @@ func compareLogs(logger *echelon.Logger, testDir string, actualLogs []byte) (*Co
 	comparison.Path = logsFilename
 
 	if update && comparison.FoundDifference {
-		if err := ioutil.WriteFile(logsFilename, actualLogs, 0600); err != nil {
+		if err := os.WriteFile(logsFilename, actualLogs, 0600); err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrTest, err)
 		}
 		comparison.FoundDifference = false
@@ -181,7 +180,7 @@ func test(cmd *cobra.Command, args []string) error {
 
 		lrk := larker.New(larkerOpts...)
 
-		sourceBytes, err := ioutil.ReadFile(filepath.Join(testDir, ".cirrus.star"))
+		sourceBytes, err := os.ReadFile(filepath.Join(testDir, ".cirrus.star"))
 		if err != nil {
 			return fmt.Errorf("%w: %v", ErrTest, err)
 		}

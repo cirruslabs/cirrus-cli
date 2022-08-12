@@ -7,7 +7,7 @@ import (
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/memfs"
 	"github.com/go-git/go-billy/v5/util"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"syscall"
@@ -53,7 +53,7 @@ func (memory *Memory) Get(ctx context.Context, path string) ([]byte, error) {
 		return nil, err
 	}
 
-	fileBytes, err := ioutil.ReadAll(file)
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}

@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -60,7 +59,7 @@ func (c *Cache) Get(key string) (*os.File, error) {
 }
 
 func (c *Cache) Put(key string) (*PutOperation, error) {
-	tmpBlobFile, err := ioutil.TempFile(c.namespaceDir, ".temporary-blob-")
+	tmpBlobFile, err := os.CreateTemp(c.namespaceDir, ".temporary-blob-")
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInternal, err)
 	}

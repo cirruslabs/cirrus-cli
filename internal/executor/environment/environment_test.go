@@ -9,7 +9,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -31,7 +31,7 @@ func TestProjectSpecific(t *testing.T) {
 
 	// Create a dummy file and add it to the staging area
 	const testFile = "test.txt"
-	if err := ioutil.WriteFile(filepath.Join(dir, testFile), []byte("test\n"), 0600); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, testFile), []byte("test\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	_, err = workTree.Add(testFile)

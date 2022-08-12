@@ -17,7 +17,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"io"
-	"io/ioutil"
 	"strings"
 	"sync"
 
@@ -60,7 +59,7 @@ func New(build *build.Build, opts ...Option) *RPC {
 
 	// Apply default options (to cover those that weren't specified)
 	if r.logger == nil {
-		renderer := renderers.NewSimpleRenderer(ioutil.Discard, nil)
+		renderer := renderers.NewSimpleRenderer(io.Discard, nil)
 		r.logger = echelon.NewLogger(echelon.InfoLevel, renderer)
 	}
 

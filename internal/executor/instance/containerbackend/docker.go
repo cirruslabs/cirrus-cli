@@ -20,7 +20,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"io"
-	"io/ioutil"
 )
 
 type Docker struct {
@@ -59,7 +58,7 @@ func (backend *Docker) ImagePull(ctx context.Context, reference string) error {
 		return err
 	}
 
-	if _, err = io.Copy(ioutil.Discard, stream); err != nil {
+	if _, err = io.Copy(io.Discard, stream); err != nil {
 		return err
 	}
 

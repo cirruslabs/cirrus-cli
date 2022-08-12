@@ -37,7 +37,7 @@ type Task struct {
 	parseable.DefaultParser
 }
 
-// nolint:gocognit,nestif // it's a parser helper, there is a lot of boilerplate
+//nolint:gocognit,nestif // it's a parser helper, there is a lot of boilerplate
 func NewTask(
 	env map[string]string,
 	parserKit *parserkit.ParserKit,
