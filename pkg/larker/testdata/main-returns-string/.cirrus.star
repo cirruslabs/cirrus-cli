@@ -1,8 +1,4 @@
+load("cirrus", "fs")
+
 def main():
-    return """
-    container:
-      image: debian:latest
-    
-    task:
-      script: true
-    """
+    return fs.read("expected.yaml")
