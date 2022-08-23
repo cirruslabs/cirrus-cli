@@ -4,6 +4,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/constants"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
@@ -212,7 +213,7 @@ func NewTask(
 			if architecture != "" {
 				task.proto.Environment = environment.Merge(
 					task.proto.Environment, map[string]string{
-						"CIRRUS_ARCH": architecture,
+						constants.EnvironmentCirrusArch: architecture,
 					},
 				)
 			}
