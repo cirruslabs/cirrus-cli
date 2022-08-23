@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/constants"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/dockerfile"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
@@ -84,7 +85,7 @@ func (p *Parser) calculateDockerfileHashes(
 
 		// Calculate the Dockerfile hash
 		dockerfileHash, err := p.calculateDockerfileHash(ctx, dockerfilePath, dockerArguments, dockerfileNode,
-			protoTask.Environment["CIRRUS_DOCKER_CONTEXT"])
+			protoTask.Environment["CIRRUS_DOCKER_CONTEXT"], protoTask.Environment[constants.EnvironmentCirrusArch])
 		if err != nil {
 			return err
 		}
@@ -103,6 +104,7 @@ func (p *Parser) calculateDockerfileHash(
 	dockerArguments map[string]string,
 	dockerfileNode *node.Node,
 	dockerContext string,
+	cirrusArch string,
 ) (string, error) {
 	dockerfileContents, err := p.fs.Get(ctx, dockerfilePath)
 	if err != nil {
@@ -120,6 +122,11 @@ func (p *Parser) calculateDockerfileHash(
 	hashableArgs := dockerArgumentsToString(dockerArguments)
 	oldHash.Write([]byte(hashableArgs))
 	newHash.Write([]byte(hashableArgs))
+
+	if cirrusArch != "" && cirrusArch != "amd64" {
+		oldHash.Write([]byte(cirrusArch))
+		newHash.Write([]byte(cirrusArch))
+	}
 
 	// Try to calculate a deep hash
 	sourcePaths, err := dockerfile.LocalContextSourcePaths(ctx, dockerfileContents, dockerArguments)
