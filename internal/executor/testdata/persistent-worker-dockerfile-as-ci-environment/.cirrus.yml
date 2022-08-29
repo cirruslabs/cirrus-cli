@@ -3,5 +3,8 @@ persistent_worker:
     container:
       dockerfile: Dockerfile
 
+env:
+  CIRRUS_ARCH: amd64
+
 task:
   script: test -f /canary-created-in-the-prebuilt-image
