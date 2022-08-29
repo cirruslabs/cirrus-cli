@@ -36,6 +36,7 @@ type Container struct {
 	parseable.DefaultParser
 }
 
+//nolint:gocognit // yes, it's complicated
 func NewContainer(mergedEnv map[string]string) *Container {
 	container := &Container{
 		proto: &api.Isolation_Container_{

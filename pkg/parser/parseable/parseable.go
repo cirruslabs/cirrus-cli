@@ -42,6 +42,7 @@ type CollectibleField struct {
 	Schema          *schema.Schema
 }
 
+//nolint:gocognit // yes, it's complicated
 func (parser *DefaultParser) Parse(node *nodepkg.Node, parserKit *parserkit.ParserKit) error {
 	// Detect possible incorrect usage of fields that expect a map
 	// (e.g. "container: ruby:latest"), yet allow "container:" since
