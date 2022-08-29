@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/evaluator"
 	eenvironment "github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/executorservice"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/spf13/cobra"
@@ -84,7 +85,9 @@ func validate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse
-	p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment), additionalInstancesOption(cmd.ErrOrStderr()))
+	p := parser.New(parser.WithEnvironment(userSpecifiedEnvironment),
+		additionalInstancesOption(cmd.ErrOrStderr()),
+		parser.WithFileSystem(local.New(".")))
 	_, err = p.Parse(cmd.Context(), configuration)
 	if err != nil {
 		if re, ok := err.(*parsererror.Rich); ok {

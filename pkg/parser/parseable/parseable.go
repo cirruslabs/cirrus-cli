@@ -36,9 +36,10 @@ func (field *Field) Repeatable() bool {
 }
 
 type CollectibleField struct {
-	Name    string
-	onFound nodeFunc
-	Schema  *schema.Schema
+	Name            string
+	DefinesInstance bool
+	onFound         nodeFunc
+	Schema          *schema.Schema
 }
 
 func (parser *DefaultParser) Parse(node *nodepkg.Node, parserKit *parserkit.ParserKit) error {
@@ -51,17 +52,41 @@ func (parser *DefaultParser) Parse(node *nodepkg.Node, parserKit *parserkit.Pars
 	}
 
 	// Evaluate collectible fields
+	var delayedError error
+	var atLeastOneInstanceMatched bool
+
 	for _, field := range parser.collectibleFields {
-		if err := evaluateCollectible(node, field); err != nil {
+		matched, err := evaluateCollectible(node, field)
+		if err != nil {
+			// Delay an error in the hope that we'll
+			// find another, more suitable instance
+			if field.DefinesInstance {
+				delayedError = err
+				continue
+			}
+
 			return err
 		}
+
+		// Record that we've successfully assigned
+		// at least one instance to the task (otherwise
+		// there would be an error above)
+		if field.DefinesInstance && matched {
+			atLeastOneInstanceMatched = true
+		}
+	}
+
+	// If no instances were assigned, and we've had an error —
+	// stop processing and output the error to the user
+	if !atLeastOneInstanceMatched && delayedError != nil {
+		return delayedError
 	}
 
 	for _, child := range node.Children {
 		// double check collectible fields
 		for _, collectibleField := range parser.collectibleFields {
 			if collectibleField.Name == child.Name {
-				if err := evaluateCollectible(node, collectibleField); err != nil {
+				if _, err := evaluateCollectible(node, collectibleField); err != nil {
 					return err
 				}
 				break
@@ -150,12 +175,12 @@ func (parser *DefaultParser) Fields() []Field {
 	return parser.fields
 }
 
-func evaluateCollectible(node *nodepkg.Node, field CollectibleField) error {
+func evaluateCollectible(node *nodepkg.Node, field CollectibleField) (bool, error) {
 	children := node.DeepFindCollectible(field.Name)
 
 	if children == nil {
-		return nil
+		return false, nil
 	}
 
-	return field.onFound(children)
+	return true, field.onFound(children)
 }

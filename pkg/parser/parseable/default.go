@@ -45,6 +45,15 @@ func (parser *DefaultParser) CollectibleField(name string, schema *schema.Schema
 	})
 }
 
+func (parser *DefaultParser) CollectibleInstanceField(name string, schema *schema.Schema, onFound nodeFunc) {
+	parser.collectibleFields = append(parser.collectibleFields, CollectibleField{
+		Name:            name,
+		DefinesInstance: true,
+		onFound:         onFound,
+		Schema:          schema,
+	})
+}
+
 func (parser *DefaultParser) Collectible() bool {
 	return parser.collectible
 }

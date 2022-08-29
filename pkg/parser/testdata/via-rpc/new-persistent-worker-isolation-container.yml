@@ -23,3 +23,6 @@ dockerfile_task:
           - /etc:/host/etc:ro
 
   script: uname -a
+
+  env:
+    CIRRUS_ARCH: arm64

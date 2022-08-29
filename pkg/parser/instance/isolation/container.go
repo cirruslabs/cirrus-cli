@@ -2,6 +2,7 @@ package isolation
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/constants"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
@@ -123,7 +124,19 @@ func NewContainer(mergedEnv map[string]string) *Container {
 		if err != nil {
 			return err
 		}
+
+		// Guard against container image collision risk that arises when using Dockerfile
+		// with no architecture. For more details see issue[1] and comment[2].
+		//
+		// [1]: https://github.com/cirruslabs/cirrus-cli/issues/550
+		// [2]: https://github.com/cirruslabs/cirrus-cli/pull/545#issuecomment-1224597905
+		if mergedEnv[constants.EnvironmentCirrusArch] == "" {
+			return node.ParserError("container with \"dockerfile:\" also needs" +
+				" a CIRRUS_ARCH environment variable to be specified")
+		}
+
 		container.proto.Container.Dockerfile = dockerfile
+
 		return nil
 	})
 
