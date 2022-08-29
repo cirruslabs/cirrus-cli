@@ -1,0 +1,10 @@
+persistent_worker:
+  isolation:
+    container:
+      dockerfile: Dockerfile
+
+env:
+  CIRRUS_ARCH: amd64
+
+task:
+  script: test -f /canary-created-in-the-prebuilt-image

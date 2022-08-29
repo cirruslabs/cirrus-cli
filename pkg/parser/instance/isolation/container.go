@@ -2,6 +2,7 @@ package isolation
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/constants"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
@@ -35,6 +36,7 @@ type Container struct {
 	parseable.DefaultParser
 }
 
+//nolint:gocognit // yes, it's complicated
 func NewContainer(mergedEnv map[string]string) *Container {
 	container := &Container{
 		proto: &api.Isolation_Container_{
@@ -43,7 +45,7 @@ func NewContainer(mergedEnv map[string]string) *Container {
 	}
 
 	imageSchema := schema.String("Container image to use.")
-	container.RequiredField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
+	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
 		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -113,6 +115,56 @@ func NewContainer(mergedEnv map[string]string) *Container {
 				return node.ParserError("only source:target[:ro] volume specification is currently supported")
 			}
 		}
+
+		return nil
+	})
+
+	dockerfileSchema := schema.String("Relative path to Dockerfile to build container from.")
+	container.OptionalField(nameable.NewSimpleNameable("dockerfile"), dockerfileSchema, func(node *node.Node) error {
+		dockerfile, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		// Guard against container image collision risk that arises when using Dockerfile
+		// with no architecture. For more details see issue[1] and comment[2].
+		//
+		// [1]: https://github.com/cirruslabs/cirrus-cli/issues/550
+		// [2]: https://github.com/cirruslabs/cirrus-cli/pull/545#issuecomment-1224597905
+		if mergedEnv[constants.EnvironmentCirrusArch] == "" {
+			return node.ParserError("container with \"dockerfile:\" also needs" +
+				" a CIRRUS_ARCH environment variable to be specified")
+		}
+
+		container.proto.Container.Dockerfile = dockerfile
+
+		return nil
+	})
+
+	dockerArgumentsNameable := nameable.NewSimpleNameable("docker_arguments")
+	dockerArgumentsSchema := schema.Map("Arguments for Docker build.")
+	container.OptionalField(dockerArgumentsNameable, dockerArgumentsSchema, func(node *node.Node) error {
+		dockerArguments, err := node.GetMapOrListOfMapsWithExpansion(mergedEnv)
+		if err != nil {
+			return err
+		}
+		container.proto.Container.DockerArguments = dockerArguments
+		return nil
+	})
+
+	platformSchema := schema.Platform("Image Platform.")
+	container.OptionalField(nameable.NewSimpleNameable("platform"), platformSchema, func(node *node.Node) error {
+		platform, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		resolvedPlatform, ok := api.Platform_value[strings.ToUpper(platform)]
+		if !ok {
+			return node.ParserError("unsupported platform name: %q", platform)
+		}
+
+		container.proto.Container.Platform = api.Platform(resolvedPlatform)
 
 		return nil
 	})

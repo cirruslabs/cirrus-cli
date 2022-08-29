@@ -28,6 +28,59 @@ var (
 	ErrFailedToAnalyze  = errors.New("failed to analyze")
 )
 
+func dockerfileAndArgumentsFromInstance(
+	dynamicInstance proto.Message,
+	instanceNode *node.Node,
+) (string, map[string]string, *node.Node) {
+	pwi, ok := dynamicInstance.(*api.PersistentWorkerInstance)
+	if ok {
+		if pwi.Isolation == nil {
+			return "", nil, nil
+		}
+
+		container := pwi.Isolation.GetContainer()
+		if container == nil {
+			return "", nil, nil
+		}
+
+		isolationNode := instanceNode.FindChild("isolation")
+		if isolationNode == nil {
+			return "", nil, nil
+		}
+
+		containerNode := isolationNode.FindChild("container")
+		if isolationNode == nil {
+			return "", nil, nil
+		}
+
+		return container.Dockerfile, container.DockerArguments, containerNode.FindChild("dockerfile")
+	}
+
+	reflectedInstance := dynamicInstance.ProtoReflect()
+
+	dockerfileField := reflectedInstance.Descriptor().Fields().ByName("dockerfile")
+	if dockerfileField == nil || !reflectedInstance.Has(dockerfileField) {
+		return "", nil, nil
+	}
+
+	dockerfilePath := reflectedInstance.Get(dockerfileField).String()
+
+	dockerArguments := map[string]string{}
+
+	dockerArgumentsField := reflectedInstance.Descriptor().Fields().ByName("docker_arguments")
+	if dockerArgumentsField != nil && reflectedInstance.Has(dockerArgumentsField) {
+		dockerArgumentsMap, ok := reflectedInstance.Get(dockerArgumentsField).Interface().(protoreflect.Map)
+		if ok {
+			dockerArgumentsMap.Range(func(key protoreflect.MapKey, value protoreflect.Value) bool {
+				dockerArguments[key.String()] = value.String()
+				return true
+			})
+		}
+	}
+
+	return dockerfilePath, dockerArguments, instanceNode.FindChild("dockerfile")
+}
+
 func (p *Parser) calculateDockerfileHashes(
 	ctx context.Context,
 	protoTasks []*api.Task,
@@ -48,29 +101,6 @@ func (p *Parser) calculateDockerfileHashes(
 			return fmt.Errorf("%w: failed to unmarshal task's instance: %v", parsererror.ErrInternal, err)
 		}
 
-		reflectedInstance := dynamicInstance.ProtoReflect()
-
-		// Pick up the "dockerfile:" field or skip the task
-		dockerfileField := reflectedInstance.Descriptor().Fields().ByName("dockerfile")
-		if dockerfileField == nil || !reflectedInstance.Has(dockerfileField) {
-			continue
-		}
-		dockerfilePath := reflectedInstance.Get(dockerfileField).String()
-
-		// Pick up the "docker_arguments:" field, if any
-		dockerArguments := map[string]string{}
-
-		dockerArgumentsField := reflectedInstance.Descriptor().Fields().ByName("docker_arguments")
-		if dockerArgumentsField != nil && reflectedInstance.Has(dockerArgumentsField) {
-			dockerArgumentsMap, ok := reflectedInstance.Get(dockerArgumentsField).Interface().(protoreflect.Map)
-			if ok {
-				dockerArgumentsMap.Range(func(key protoreflect.MapKey, value protoreflect.Value) bool {
-					dockerArguments[key.String()] = value.String()
-					return true
-				})
-			}
-		}
-
 		// Retrieve a parser node associated with this instance
 		// to generate line/column-specific errors and warnings
 		instanceNode, ok := protoTaskToInstanceNode[protoTask.LocalGroupId]
@@ -78,8 +108,9 @@ func (p *Parser) calculateDockerfileHashes(
 			continue
 		}
 
-		dockerfileNode := instanceNode.FindChild("dockerfile")
-		if dockerfileNode == nil {
+		// Pick up the "dockerfile:" field or skip the task
+		dockerfilePath, dockerArguments, dockerfileNode := dockerfileAndArgumentsFromInstance(dynamicInstance, instanceNode)
+		if dockerfilePath == "" || dockerfileNode == nil {
 			continue
 		}
 

@@ -1,8 +1,11 @@
 package schema
 
 import (
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	schema "github.com/lestrrat-go/jsschema"
 	"regexp"
+	"sort"
+	"strings"
 )
 
 func Map(description string) *schema.Schema {
@@ -99,6 +102,23 @@ func TriggerType() *schema.Schema {
 		"automatic",
 		"manual",
 	}, "Trigger type")
+}
+
+func Platform(description string) *schema.Schema {
+	// Prepare a list of platforms
+	var platformsLowercased []string
+	for _, platformName := range api.Platform_name {
+		platformsLowercased = append(platformsLowercased, strings.ToLower(platformName))
+	}
+
+	sort.Strings(platformsLowercased)
+
+	var platformsInterfaced []interface{}
+	for _, lowercasePlatform := range platformsLowercased {
+		platformsInterfaced = append(platformsInterfaced, lowercasePlatform)
+	}
+
+	return Enum(platformsInterfaced, description)
 }
 
 func Script(description string) *schema.Schema {

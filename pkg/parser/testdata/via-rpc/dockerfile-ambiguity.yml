@@ -1,0 +1,16 @@
+persistent_worker:
+  isolation:
+    container:
+      dockerfile: Dockerfile
+
+task:
+  script: true
+
+  env:
+    CIRRUS_ARCH: arm64
+
+task:
+  container:
+    image: debian:latest
+
+  script: true

@@ -62,7 +62,7 @@ func NewTask(
 	AttachEnvironmentFields(&task.DefaultParser, &task.proto)
 
 	if _, ok := additionalInstances["container"]; !ok {
-		task.CollectibleField("container",
+		task.CollectibleInstanceField("container",
 			instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), parserKit).Schema(),
 			func(node *node.Node) error {
 				task.instanceNode = node
@@ -89,7 +89,7 @@ func NewTask(
 			})
 	}
 	if _, ok := additionalInstances["windows_container"]; !ok {
-		task.CollectibleField("windows_container",
+		task.CollectibleInstanceField("windows_container",
 			instance.NewWindowsCommunityContainer(environment.Merge(task.proto.Environment, env), parserKit).Schema(),
 			func(node *node.Node) error {
 				task.instanceNode = node
@@ -116,7 +116,7 @@ func NewTask(
 			})
 	}
 	if _, ok := additionalInstances["macos_instance"]; !ok {
-		task.CollectibleField("macos_instance",
+		task.CollectibleInstanceField("macos_instance",
 			instance.NewMacOSInstance(environment.Merge(task.proto.Environment, env), parserKit).Schema(),
 			func(node *node.Node) error {
 				task.instanceNode = node
@@ -143,7 +143,7 @@ func NewTask(
 			})
 	}
 	if _, ok := additionalInstances["persistent_worker"]; !ok {
-		task.CollectibleField("persistent_worker",
+		task.CollectibleInstanceField("persistent_worker",
 			instance.NewPersistentWorker(environment.Merge(task.proto.Environment, env), parserKit).Schema(),
 			func(node *node.Node) error {
 				task.instanceNode = node
@@ -188,7 +188,7 @@ func NewTask(
 		scopedDescriptor := descriptor
 
 		instanceSchema := instance.NewProtoParser(scopedDescriptor, nil, nil).Schema()
-		task.CollectibleField(scopedInstanceName, instanceSchema, func(node *node.Node) error {
+		task.CollectibleInstanceField(scopedInstanceName, instanceSchema, func(node *node.Node) error {
 			task.instanceNode = node
 
 			parser := instance.NewProtoParser(scopedDescriptor, environment.Merge(task.proto.Environment, env), parserKit)

@@ -425,6 +425,17 @@ unix_task:
 	}
 }
 
+func TestPersistentWorkerDockerfileAsCIEnvironment(t *testing.T) {
+	// Create a logger and attach it to writer
+	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
+	dir := testutil.TempDirPopulatedWith(t,
+		"testdata/persistent-worker-dockerfile-as-ci-environment")
+	err := testutil.ExecuteWithOptionsNew(t, dir, executor.WithLogger(logger))
+	assert.NoError(t, err)
+}
+
 func TestPersistentWorkerNoneIsolationGracefulTermination(t *testing.T) {
 	// Create os.Stderr writer that duplicates it's output to buf
 	buf := bytes.NewBufferString("")

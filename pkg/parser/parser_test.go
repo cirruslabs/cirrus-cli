@@ -38,7 +38,6 @@ var validCases = []string{
 	"collectible-order",
 	"yaml-12-booleans-only",
 	"dependency-on-disabled-only-if-task",
-	"persistent-worker-isolation-container",
 	"cache-multiple-folders",
 	"no-always-override",
 	"pipe-cache",
@@ -83,6 +82,8 @@ func TestInvalidConfigs(t *testing.T) {
 			"since otherwise there's ambiguity about which one to prefer for cache key calculation"},
 		{"invalid-multiple-name-ambiguity", "parsing error: task 'deploy' depends on task 'rspec_code', which name " +
 			"was overridden by a name: field inside of that task"},
+		{"invalid-dockerfile-ambiguity", "parsing error: 4:7: container with \"dockerfile:\" also needs a CIRRUS_ARCH" +
+			" environment variable to be specified"},
 	}
 
 	for _, invalidCase := range invalidCases {

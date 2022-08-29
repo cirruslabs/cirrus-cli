@@ -257,8 +257,8 @@ github.com/cilium/ebpf v0.0.0-20200702112145-1c8d4c9ef775/go.mod h1:7cR51M8ViRLI
 github.com/cilium/ebpf v0.2.0/go.mod h1:To2CFviqOWL/M0gIMsvSMlqe7em/l1ALkX1PyjrX2Qs=
 github.com/cilium/ebpf v0.4.0/go.mod h1:4tRaxcgiL706VnOzHOdBlY8IEAIdxINsQBcU4xJJXRs=
 github.com/cirruslabs/cirrus-ci-agent v1.51.0/go.mod h1:lEH1v2tn22T359W3fGjiAcYAY6jsqz75eHc4teh2nCY=
-github.com/cirruslabs/cirrus-ci-agent v1.80.0 h1:cgoXpVWJWZy2KACNE5a106wJMtB9hOOMS0OWOsvgV+A=
-github.com/cirruslabs/cirrus-ci-agent v1.80.0/go.mod h1:mR7NM7u1X4yrQlAo9elKcYxOM9oaDQOdfDHxRoEaMF4=
+github.com/cirruslabs/cirrus-ci-agent v1.81.0 h1:Se9pJZAGj4SQS5AsRRK/Yi57/LURl5Yd9NuDEeIeupM=
+github.com/cirruslabs/cirrus-ci-agent v1.81.0/go.mod h1:mR7NM7u1X4yrQlAo9elKcYxOM9oaDQOdfDHxRoEaMF4=
 github.com/cirruslabs/cirrus-ci-annotations v0.3.0/go.mod h1:xrmxzL58Pf4cSSQCmQEOPGQ3poeARxJdHneurUrqjZk=
 github.com/cirruslabs/cirrus-ci-annotations v0.8.0/go.mod h1:xrmxzL58Pf4cSSQCmQEOPGQ3poeARxJdHneurUrqjZk=
 github.com/cirruslabs/echelon v1.7.0 h1:CENBpP6UXA2yind+JRR4ZtKOWejlkn51mEfVBaBeor4=

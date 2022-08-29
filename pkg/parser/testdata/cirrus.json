@@ -2488,6 +2488,19 @@
                       "description": "CPU units for the container to use.",
                       "type": "number"
                     },
+                    "docker_arguments": {
+                      "description": "Arguments for Docker build.",
+                      "patternProperties": {
+                        ".*": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "dockerfile": {
+                      "description": "Relative path to Dockerfile to build container from.",
+                      "type": "string"
+                    },
                     "image": {
                       "description": "Container image to use.",
                       "type": "string"
@@ -2496,6 +2509,14 @@
                       "description": "Memory in megabytes for the container to use.",
                       "pattern": "\\d+(G|Mb)?",
                       "type": "string"
+                    },
+                    "platform": {
+                      "description": "Image Platform.",
+                      "enum": [
+                        "darwin",
+                        "linux",
+                        "windows"
+                      ]
                     },
                     "volumes": {
                       "description": "A list of volumes mounted inside of the container.",
@@ -2508,9 +2529,6 @@
                       "type": "array"
                     }
                   },
-                  "required": [
-                    "image"
-                  ],
                   "type": "object"
                 },
                 "parallels": {
@@ -2851,6 +2869,19 @@
                   "description": "CPU units for the container to use.",
                   "type": "number"
                 },
+                "docker_arguments": {
+                  "description": "Arguments for Docker build.",
+                  "patternProperties": {
+                    ".*": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "dockerfile": {
+                  "description": "Relative path to Dockerfile to build container from.",
+                  "type": "string"
+                },
                 "image": {
                   "description": "Container image to use.",
                   "type": "string"
@@ -2859,6 +2890,14 @@
                   "description": "Memory in megabytes for the container to use.",
                   "pattern": "\\d+(G|Mb)?",
                   "type": "string"
+                },
+                "platform": {
+                  "description": "Image Platform.",
+                  "enum": [
+                    "darwin",
+                    "linux",
+                    "windows"
+                  ]
                 },
                 "volumes": {
                   "description": "A list of volumes mounted inside of the container.",
@@ -2871,9 +2910,6 @@
                   "type": "array"
                 }
               },
-              "required": [
-                "image"
-              ],
               "type": "object"
             },
             "parallels": {

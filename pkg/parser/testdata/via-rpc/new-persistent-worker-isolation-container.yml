@@ -1,0 +1,28 @@
+image_task:
+  persistent_worker:
+    isolation:
+      container:
+        image: debian:latest
+        cpu: 0.5
+        memory: 512
+        volumes:
+          - /root/.ccache:/root/.ccache
+          - /etc:/host/etc:ro
+
+  script: uname -a
+
+dockerfile_task:
+  persistent_worker:
+    isolation:
+      container:
+        dockerfile: .ci/Dockerfile
+        cpu: 0.5
+        memory: 512
+        volumes:
+          - /root/.ccache:/root/.ccache
+          - /etc:/host/etc:ro
+
+  script: uname -a
+
+  env:
+    CIRRUS_ARCH: arm64
