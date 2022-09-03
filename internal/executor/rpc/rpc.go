@@ -208,7 +208,7 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			break
 		}
 		if err != nil {
-			streamLogger.Warnf("Error while receivieng logs: %v", err)
+			streamLogger.Warnf("Error while receiving logs: %v", err)
 			return err
 		}
 
