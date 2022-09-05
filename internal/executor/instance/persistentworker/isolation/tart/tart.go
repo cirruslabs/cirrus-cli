@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 )
@@ -19,6 +20,11 @@ import (
 var (
 	ErrFailed     = errors.New("tart isolation failed")
 	ErrSyncFailed = errors.New("failed to sync project directory")
+)
+
+const (
+	macOSAutomountDirectoryPath = "/Volumes/My Shared Files"
+	macOSAutomountDirectoryItem = "working-dir"
 )
 
 type Tart struct {
@@ -54,15 +60,23 @@ func New(vmName string, sshUser string, sshPassword string, cpu uint32, memory u
 }
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
-	vm, err := NewVMClonedFrom(ctx, tart.vmName, tart.cpu, tart.memory, config.TartOptions.LazyPull,
-		tart.softnet, config.Logger())
+	vm, err := NewVMClonedFrom(ctx, tart.vmName, tart.cpu, tart.memory, config.TartOptions.LazyPull, config.Logger())
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
 	}
 	defer vm.Close()
 
 	// Start the VM (asynchronously)
-	vm.Start()
+	var directoryMounts []directoryMount
+	if config.DirtyMode {
+		directoryMounts = append(directoryMounts, directoryMount{
+			Name:     macOSAutomountDirectoryItem,
+			Path:     config.ProjectDir,
+			ReadOnly: false,
+		})
+	}
+
+	vm.Start(tart.softnet, directoryMounts)
 
 	// Wait for the VM to start and get it's DHCP address
 	var ip string
@@ -93,7 +107,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	bootLogger.Finish(true)
 
 	var hooks []remoteagent.WaitForAgentHook
-	if config.ProjectDir != "" {
+	if config.ProjectDir != "" && !config.DirtyMode {
 		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
 			syncLogger := config.Logger().Scoped("syncing working directory")
 			if err := tart.syncProjectDir(config.ProjectDir, sshClient); err != nil {
@@ -112,6 +126,10 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 }
 
 func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
+	if dirtyMode {
+		return path.Join(macOSAutomountDirectoryPath, macOSAutomountDirectoryItem)
+	}
+
 	return platform.NewUnix().GenericWorkingDir()
 }
 

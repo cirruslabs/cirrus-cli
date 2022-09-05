@@ -2,6 +2,7 @@ package tart
 
 import (
 	"context"
+	"fmt"
 	"github.com/cirruslabs/echelon"
 	"github.com/google/uuid"
 	"strconv"
@@ -12,12 +13,16 @@ import (
 type VM struct {
 	ident string
 
-	softnet bool
-
 	subCtx       context.Context
 	subCtxCancel context.CancelFunc
 	wg           sync.WaitGroup
 	errChan      chan error
+}
+
+type directoryMount struct {
+	Name     string
+	Path     string
+	ReadOnly bool
 }
 
 func NewVMClonedFrom(
@@ -26,15 +31,12 @@ func NewVMClonedFrom(
 	cpu uint32,
 	memory uint32,
 	lazyPull bool,
-	softnet bool,
 	logger *echelon.Logger,
 ) (*VM, error) {
 	subCtx, subCtxCancel := context.WithCancel(ctx)
 
 	vm := &VM{
 		ident: "cirrus-cli-" + uuid.New().String(),
-
-		softnet: softnet,
 
 		subCtx:       subCtx,
 		subCtxCancel: subCtxCancel,
@@ -86,7 +88,10 @@ func (vm *VM) Ident() string {
 	return vm.ident
 }
 
-func (vm *VM) Start() {
+func (vm *VM) Start(
+	softnet bool,
+	directoryMounts []directoryMount,
+) {
 	vm.wg.Add(1)
 
 	go func() {
@@ -94,8 +99,18 @@ func (vm *VM) Start() {
 
 		args := []string{"run", "--no-graphics"}
 
-		if vm.softnet {
+		if softnet {
 			args = append(args, "--with-softnet")
+		}
+
+		for _, directoryMount := range directoryMounts {
+			dirArgumentValue := fmt.Sprintf("%s:%s", directoryMount.Name, directoryMount.Path)
+
+			if directoryMount.ReadOnly {
+				dirArgumentValue += ":ro"
+			}
+
+			args = append(args, "--dir", dirArgumentValue)
 		}
 
 		args = append(args, vm.ident)
