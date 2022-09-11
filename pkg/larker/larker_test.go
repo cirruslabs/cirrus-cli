@@ -394,3 +394,21 @@ func TestTestMode(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, string(result.OutputLogs), "testing mode enabled")
 }
+
+// TestDynamicFSResolution ensures that load("cirrus", "fs") methods can dynamically
+// re-resolve FS if a non-relative path is detected (one that points to GitHub or
+// Git repository).
+func TestDynamicFSResolution(t *testing.T) {
+	dir := testutil.TempDirPopulatedWith(t, "testdata/dynamic-fs-resolution")
+
+	// Read the source code
+	source, err := os.ReadFile(filepath.Join(dir, ".cirrus.star"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Run the source code with testing mode disabled
+	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
+	_, err = lrk.Main(context.Background(), string(source))
+	require.NoError(t, err)
+}

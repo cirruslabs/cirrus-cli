@@ -1,4 +1,4 @@
-package loader
+package resolver
 
 import (
 	"context"
@@ -93,7 +93,7 @@ func parseLocation(module string) interface{} {
 	return localLocation{Path: module}
 }
 
-func findModuleFS(
+func FindModuleFS(
 	ctx context.Context,
 	currentFS fs.FileSystem,
 	env map[string]string,

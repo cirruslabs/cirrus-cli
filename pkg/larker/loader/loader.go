@@ -8,6 +8,7 @@ import (
 	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/builtin"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/resolver"
 	"github.com/qri-io/starlib/encoding/base64"
 	"github.com/qri-io/starlib/encoding/yaml"
 	"github.com/qri-io/starlib/hash"
@@ -58,6 +59,10 @@ func NewLoader(
 	}
 }
 
+func (loader *Loader) ResolveFS(currentFS fs.FileSystem, locator string) (fs.FileSystem, string, error) {
+	return resolver.FindModuleFS(loader.ctx, currentFS, loader.env, locator)
+}
+
 func (loader *Loader) LoadFunc(
 	frameFS fs.FileSystem,
 ) func(thread *starlark.Thread, module string) (starlark.StringDict, error) {
@@ -81,7 +86,7 @@ func (loader *Loader) LoadFunc(
 			return loader.loadCirrusModule()
 		}
 
-		moduleFS, path, err := findModuleFS(loader.ctx, frameFS, loader.env, module)
+		moduleFS, path, err := loader.ResolveFS(frameFS, module)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +99,7 @@ func (loader *Loader) LoadFunc(
 					hint = ", perhaps you've meant the .star extension instead of the .start?"
 				}
 
-				return nil, fmt.Errorf("%w: module '%s' not found%s", ErrRetrievalFailed, module, hint)
+				return nil, fmt.Errorf("%w: module '%s' not found%s", resolver.ErrRetrievalFailed, module, hint)
 			}
 
 			return nil, err
@@ -135,8 +140,10 @@ func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
 	result["changes_include_only"] = generateChangesIncludeOnlyBuiltin(loader.affectedFiles)
 
 	result["fs"] = &starlarkstruct.Module{
-		Name:    "fs",
-		Members: builtin.FS(loader.ctx, loader.fs),
+		Name: "fs",
+		Members: builtin.FS(loader.ctx, func(locator string) (fs.FileSystem, string, error) {
+			return loader.ResolveFS(loader.fs, locator)
+		}),
 	}
 
 	certPool, err := gocertifi.CACerts()
