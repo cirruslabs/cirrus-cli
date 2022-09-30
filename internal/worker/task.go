@@ -12,6 +12,11 @@ import (
 
 const perCallTimeout = 15 * time.Second
 
+type Task struct {
+	cancel         context.CancelFunc
+	resourcesToUse map[string]float64
+}
+
 func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollResponse_AgentAwareTask) {
 	if _, ok := worker.tasks[agentAwareTask.TaskId]; ok {
 		worker.logger.Warnf("attempted to run task %d which is already running", agentAwareTask.TaskId)
@@ -19,7 +24,10 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 	}
 
 	taskCtx, cancel := context.WithCancel(ctx)
-	worker.tasks[agentAwareTask.TaskId] = cancel
+	worker.tasks[agentAwareTask.TaskId] = &Task{
+		cancel:         cancel,
+		resourcesToUse: agentAwareTask.ResourcesToUse,
+	}
 
 	taskIdentification := &api.TaskIdentification{
 		TaskId: agentAwareTask.TaskId,
@@ -95,8 +103,8 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 }
 
 func (worker *Worker) stopTask(taskID int64) {
-	if cancel, ok := worker.tasks[taskID]; ok {
-		cancel()
+	if task, ok := worker.tasks[taskID]; ok {
+		task.cancel()
 	}
 
 	worker.logger.Infof("sent cancellation signal to task %d", taskID)
@@ -110,12 +118,24 @@ func (worker *Worker) runningTasks() (result []int64) {
 	return
 }
 
+func (worker *Worker) resourcesInUse() map[string]float64 {
+	result := map[string]float64{}
+
+	for _, task := range worker.tasks {
+		for key, value := range task.resourcesToUse {
+			result[key] += value
+		}
+	}
+
+	return result
+}
+
 func (worker *Worker) registerTaskCompletions() {
 	for {
 		select {
 		case taskID := <-worker.taskCompletions:
-			if cancel, ok := worker.tasks[taskID]; ok {
-				cancel()
+			if task, ok := worker.tasks[taskID]; ok {
+				task.cancel()
 				delete(worker.tasks, taskID)
 				worker.logger.Infof("task %d completed", taskID)
 			} else {

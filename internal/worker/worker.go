@@ -47,7 +47,7 @@ type Worker struct {
 	registrationToken string
 	sessionToken      string
 
-	tasks           map[int64]context.CancelFunc
+	tasks           map[int64]*Task
 	taskCompletions chan int64
 
 	logger logrus.FieldLogger
@@ -61,7 +61,7 @@ func New(opts ...Option) (*Worker, error) {
 		userSpecifiedLabels: make(map[string]string),
 		pollIntervalSeconds: defaultPollIntervalSeconds,
 
-		tasks:           make(map[int64]context.CancelFunc),
+		tasks:           make(map[int64]*Task),
 		taskCompletions: make(chan int64),
 
 		logger: logrus.New(),
@@ -251,8 +251,9 @@ func (worker *Worker) poll(ctx context.Context) error {
 	worker.logger.Debugf("polling %s", worker.rpcEndpoint)
 
 	request := &api.PollRequest{
-		WorkerInfo:   worker.info(),
-		RunningTasks: worker.runningTasks(),
+		WorkerInfo:     worker.info(),
+		RunningTasks:   worker.runningTasks(),
+		ResourcesInUse: worker.resourcesInUse(),
 	}
 
 	response, err := worker.rpcClient.Poll(ctx, request, grpc.PerRPCCredentials(worker))
