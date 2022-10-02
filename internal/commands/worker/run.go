@@ -24,7 +24,7 @@ func NewRunCmd() *cobra.Command {
 		},
 	}
 
-	attacheFlags(cmd)
+	attachFlags(cmd)
 
 	return cmd
 }
