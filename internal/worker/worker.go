@@ -154,7 +154,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 					return nil
 				}
 
-				return err
+				worker.logger.Errorf("failed to poll upstream %s: %v", upstream.Name(), err)
 			}
 		}
 
