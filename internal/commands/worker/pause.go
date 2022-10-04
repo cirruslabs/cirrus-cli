@@ -19,7 +19,7 @@ func NewPauseCmd() *cobra.Command {
 		},
 	}
 
-	attacheFlags(cmd)
+	attachFlags(cmd)
 
 	cmd.PersistentFlags().BoolVar(&waitForTasksToFinish, "wait", false, "wait for currently running tasks to finish")
 

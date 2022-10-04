@@ -7,7 +7,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -72,16 +74,7 @@ func workerTestHelper(t *testing.T, lis net.Listener, isolation *api.Isolation, 
 		}
 	}()
 
-	var rearrangedOpts []worker.Option
-
-	// Append lower-priority options first
-	rearrangedOpts = append(rearrangedOpts, worker.WithRegistrationToken(registrationToken))
-
-	// Only after lower-priority options
-	// append high-priority user-specified options
-	rearrangedOpts = append(rearrangedOpts, opts...)
-
-	worker, err := worker.New(rearrangedOpts...)
+	worker, err := worker.New(opts...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,9 +101,13 @@ func TestWorkerIsolationNone(t *testing.T) {
 	}
 
 	apiEndpoint := fmt.Sprintf("http://127.0.0.1:%d", lis.Addr().(*net.TCPAddr).Port)
+	upstream, err := upstream.New("test", registrationToken,
+		upstream.WithRPCEndpoint(apiEndpoint),
+		upstream.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)),
+	)
+	require.NoError(t, err)
 
-	workerTestHelper(t, lis, nil, worker.WithRPCEndpoint(apiEndpoint),
-		worker.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)))
+	workerTestHelper(t, lis, nil, worker.WithUpstream(upstream))
 }
 
 func TestWorkerIsolationParallels(t *testing.T) {
@@ -141,9 +138,13 @@ func TestWorkerIsolationParallels(t *testing.T) {
 	}
 
 	apiEndpoint := fmt.Sprintf("http://%s", lis.Addr().String())
+	upstream, err := upstream.New("test", registrationToken,
+		upstream.WithRPCEndpoint(apiEndpoint),
+		upstream.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)),
+	)
+	require.NoError(t, err)
 
-	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(apiEndpoint),
-		worker.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)))
+	workerTestHelper(t, lis, isolation, worker.WithUpstream(upstream))
 }
 
 func TestWorkerIsolationContainer(t *testing.T) {
@@ -175,8 +176,13 @@ func TestWorkerIsolationContainer(t *testing.T) {
 		t.Fatalf("unknown listener address type: %T", addr)
 	}
 
-	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(apiEndpoint),
-		worker.WithAgentEndpoint(endpoint.NewLocal(lis.ContainerEndpoint(), lis.ContainerEndpoint())))
+	upstream, err := upstream.New("test", registrationToken,
+		upstream.WithRPCEndpoint(apiEndpoint),
+		upstream.WithAgentEndpoint(endpoint.NewLocal(lis.ContainerEndpoint(), lis.ContainerEndpoint())),
+	)
+	require.NoError(t, err)
+
+	workerTestHelper(t, lis, isolation, worker.WithUpstream(upstream))
 }
 
 func TestWorkerIsolationTart(t *testing.T) {
@@ -209,7 +215,11 @@ func TestWorkerIsolationTart(t *testing.T) {
 
 	listenerPort := lis.Addr().(*net.TCPAddr).Port
 	rpcEndpoint := fmt.Sprintf("http://127.0.0.1:%d", listenerPort)
+	upstream, err := upstream.New("test", registrationToken,
+		upstream.WithRPCEndpoint(rpcEndpoint),
+		upstream.WithAgentEndpoint(endpoint.NewLocal(rpcEndpoint, rpcEndpoint)),
+	)
+	require.NoError(t, err)
 
-	workerTestHelper(t, lis, isolation, worker.WithRPCEndpoint(rpcEndpoint),
-		worker.WithAgentEndpoint(endpoint.NewLocal(rpcEndpoint, rpcEndpoint)))
+	workerTestHelper(t, lis, isolation, worker.WithUpstream(upstream))
 }

@@ -2,18 +2,13 @@ package worker
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
-	"github.com/cirruslabs/cirrus-ci-agent/pkg/grpchelper"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
+	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -21,33 +16,18 @@ import (
 	"time"
 )
 
-const (
-	DefaultRPCEndpoint         = "https://grpc.cirrus-ci.com:443"
-	defaultPollIntervalSeconds = 10
-)
-
 var (
-	ErrWorker   = errors.New("worker failed")
-	ErrShutdown = errors.New("worker is shutting down")
+	ErrInitializationFailed = errors.New("worker initialization failed")
+	ErrShutdown             = errors.New("worker is shutting down")
 )
 
 type Worker struct {
-	rpcEndpoint string
-	rpcTarget   string
-	rpcInsecure bool
-	rpcClient   api.CirrusWorkersServiceClient
+	upstreams []*upstreampkg.Upstream
 
-	agentEndpoint endpoint.Endpoint
-
-	name                   string
 	userSpecifiedLabels    map[string]string
 	userSpecifiedResources map[string]float64
-	pollIntervalSeconds    uint32
 
-	registrationToken string
-	sessionToken      string
-
-	tasks           map[int64]context.CancelFunc
+	tasks           map[int64]*Task
 	taskCompletions chan int64
 
 	logger logrus.FieldLogger
@@ -55,13 +35,11 @@ type Worker struct {
 
 func New(opts ...Option) (*Worker, error) {
 	worker := &Worker{
-		rpcEndpoint:   DefaultRPCEndpoint,
-		agentEndpoint: endpoint.NewRemote(DefaultRPCEndpoint),
+		upstreams: []*upstreampkg.Upstream{},
 
 		userSpecifiedLabels: make(map[string]string),
-		pollIntervalSeconds: defaultPollIntervalSeconds,
 
-		tasks:           make(map[int64]context.CancelFunc),
+		tasks:           make(map[int64]*Task),
 		taskCompletions: make(chan int64),
 
 		logger: logrus.New(),
@@ -72,17 +50,15 @@ func New(opts ...Option) (*Worker, error) {
 		opt(worker)
 	}
 
-	// Parse endpoint
-	worker.rpcTarget, worker.rpcInsecure = grpchelper.TransportSettings(worker.rpcEndpoint)
-
-	if worker.registrationToken == "" {
-		return nil, fmt.Errorf("%w: must provide a registration token", ErrWorker)
+	// Sanity check
+	if len(worker.upstreams) == 0 {
+		return nil, fmt.Errorf("%w: no upstreams were specified", ErrInitializationFailed)
 	}
 
 	return worker, nil
 }
 
-func (worker *Worker) info() *api.WorkerInfo {
+func (worker *Worker) info(workerName string) *api.WorkerInfo {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = ""
@@ -98,7 +74,7 @@ func (worker *Worker) info() *api.WorkerInfo {
 
 	// Create base labels
 	labels := map[string]string{
-		ReservedLabelName:         worker.name,
+		ReservedLabelName:         workerName,
 		ReservedLabelVersion:      version.FullVersion,
 		ReservedLabelHostname:     hostname,
 		ReservedLabelOS:           runtime.GOOS,
@@ -171,98 +147,46 @@ func (worker *Worker) Run(ctx context.Context) error {
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	connCancel, err := worker.initializeConnection(subCtx)
-	if err != nil {
-		worker.logger.Errorf("failed to dial %s: %v", worker.rpcEndpoint, err)
-		return err
-	}
-	defer connCancel()
-
 	for {
-		if worker.sessionToken == "" {
-			if err := worker.register(subCtx); err != nil {
-				worker.logger.Errorf("failed to register worker: %v", err)
-			}
-		} else {
-			err := worker.poll(subCtx)
+		for _, upstream := range worker.upstreams {
+			if err := worker.pollSingleUpstream(subCtx, upstream); err != nil {
+				if errors.Is(err, ErrShutdown) {
+					return nil
+				}
 
-			if errors.Is(err, ErrShutdown) {
-				return nil
-			}
-
-			if err != nil {
-				worker.logger.Errorf("failed to poll: %v", err)
+				worker.logger.Errorf("failed to poll upstream %s: %v", upstream.Name(), err)
 			}
 		}
 
 		select {
 		case <-subCtx.Done():
 			return nil
-		case <-time.After(time.Duration(worker.pollIntervalSeconds) * time.Second):
+		case <-time.After(time.Duration(worker.pollIntervalSeconds()) * time.Second):
 			// continue the loop
 		}
 	}
 }
 
-func (worker *Worker) initializeConnection(subCtx context.Context) (func(), error) {
-	var rpcSecurity grpc.DialOption
+func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstreampkg.Upstream) error {
+	if err := upstream.Register(ctx, worker.info(upstream.WorkerName())); err != nil {
+		worker.logger.Errorf("failed to register worker with the upstream %s: %v",
+			upstream.Name(), err)
 
-	if worker.rpcInsecure {
-		rpcSecurity = grpc.WithTransportCredentials(insecure.NewCredentials())
-	} else {
-		certPool, _ := gocertifi.CACerts()
-		tlsCredentials := credentials.NewTLS(&tls.Config{
-			MinVersion: tls.VersionTLS13,
-			RootCAs:    certPool,
-		})
-		rpcSecurity = grpc.WithTransportCredentials(tlsCredentials)
+		return nil
 	}
 
-	// https://github.com/grpc/grpc-go/blob/master/Documentation/concurrency.md
-	conn, err := grpc.DialContext(subCtx, worker.rpcTarget, rpcSecurity)
-	if err == nil {
-		worker.rpcClient = api.NewCirrusWorkersServiceClient(conn)
-	}
-	return func() {
-		_ = conn.Close()
-	}, err
-}
-
-func (worker *Worker) register(ctx context.Context) error {
-	response, err := worker.rpcClient.Register(ctx, &api.RegisterRequest{
-		WorkerInfo:        worker.info(),
-		RegistrationToken: worker.registrationToken,
-	})
-	if err != nil {
-		return err
-	}
-
-	worker.sessionToken = response.SessionToken
-
-	worker.logger.Infof("worker successfully registered")
-
-	return nil
-}
-
-func (worker *Worker) poll(ctx context.Context) error {
 	// De-register completed tasks
 	worker.registerTaskCompletions()
 
-	worker.logger.Debugf("polling %s", worker.rpcEndpoint)
-
 	request := &api.PollRequest{
-		WorkerInfo:   worker.info(),
-		RunningTasks: worker.runningTasks(),
+		WorkerInfo:     worker.info(upstream.WorkerName()),
+		RunningTasks:   worker.runningTasks(upstream),
+		ResourcesInUse: worker.resourcesInUse(),
 	}
 
-	response, err := worker.rpcClient.Poll(ctx, request, grpc.PerRPCCredentials(worker))
+	response, err := upstream.Poll(ctx, request)
 	if err != nil {
-		return err
-	}
-
-	if response.Shutdown {
-		worker.logger.Info("received shutdown signal from the server, terminating...")
-		return ErrShutdown
+		worker.logger.Errorf("failed to poll upstream %s: %v", upstream.Name(), err)
 	}
 
 	for _, taskToStop := range response.TasksToStop {
@@ -270,78 +194,76 @@ func (worker *Worker) poll(ctx context.Context) error {
 	}
 
 	for _, taskToStart := range response.TasksToStart {
-		worker.runTask(ctx, taskToStart)
+		worker.runTask(ctx, upstream, taskToStart)
 	}
 
-	if response.PollIntervalInSeconds != 0 && response.PollIntervalInSeconds <= uint32(time.Hour.Seconds()) {
-		worker.pollIntervalSeconds = response.PollIntervalInSeconds
+	if response.Shutdown {
+		worker.logger.Infof("received shutdown signal from the upstream %s, terminating...",
+			upstream.Name())
+
+		return ErrShutdown
 	}
 
 	return nil
 }
 
-// PerRPCCredentials interface implementation.
-func (worker *Worker) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{
-		"registration-token": worker.registrationToken,
-		"session-token":      worker.sessionToken,
-		"worker-name":        worker.name,
-	}, nil
-}
-
-// PerRPCCredentials interface implementation.
-func (worker *Worker) RequireTransportSecurity() bool {
-	return !worker.rpcInsecure
-}
-
 func (worker *Worker) Pause(ctx context.Context, wait bool) error {
-	// A sub-context to cancel out all Run() side-effects when it finishes
+	// A sub-context to cancel this function's side effects when it finishes
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	connCancel, err := worker.initializeConnection(subCtx)
-	if err != nil {
-		worker.logger.Errorf("failed to dial %s: %v", worker.rpcEndpoint, err)
-		return err
+	for _, upstream := range worker.upstreams {
+		if err := upstream.SetDisabled(subCtx, true); err != nil {
+			return err
+		}
 	}
-	defer connCancel()
 
-	_, err = worker.rpcClient.UpdateStatus(ctx, &api.UpdateStatusRequest{Disabled: true}, grpc.PerRPCCredentials(worker))
-	if err != nil {
-		return err
-	}
 	if !wait {
 		return nil
 	}
-	for {
-		response, err := worker.rpcClient.QueryRunningTasks(
-			ctx, &api.QueryRunningTasksRequest{}, grpc.PerRPCCredentials(worker),
-		)
-		if err != nil {
-			worker.logger.Errorf("Ignoring an API error while waiting: %w", err)
-		} else if len(response.RunningTasks) == 0 {
-			return nil
-		}
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-time.After(time.Duration(worker.pollIntervalSeconds) * time.Second):
-			// continue the loop
+
+	for _, upstream := range worker.upstreams {
+		for {
+			response, err := upstream.QueryRunningTasks(ctx, &api.QueryRunningTasksRequest{})
+			if err != nil {
+				worker.logger.Errorf("ignoring an API error from upstream %s while waiting: %w",
+					upstream.Name(), err)
+			} else if len(response.RunningTasks) == 0 {
+				return nil
+			}
+
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-time.After(time.Duration(worker.pollIntervalSeconds()) * time.Second):
+				// continue the loop
+			}
 		}
 	}
+
+	return nil
 }
 
-func (worker *Worker) Resume(ctx context.Context) error {
-	// A sub-context to cancel out all Run() side-effects when it finishes
+func (worker *Worker) Resume(ctx context.Context) (err error) {
+	// A sub-context to cancel this function's side effects when it finishes
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	connCancel, err := worker.initializeConnection(subCtx)
-	if err != nil {
-		worker.logger.Errorf("failed to dial %s: %v", worker.rpcEndpoint, err)
-		return err
+	for _, slot := range worker.upstreams {
+		err = slot.SetDisabled(subCtx, false)
 	}
-	defer connCancel()
-	_, err = worker.rpcClient.UpdateStatus(ctx, &api.UpdateStatusRequest{Disabled: false}, grpc.PerRPCCredentials(worker))
-	return err
+
+	return
+}
+
+func (worker *Worker) pollIntervalSeconds() uint32 {
+	result := uint32(math.MaxUint32)
+
+	for _, upstream := range worker.upstreams {
+		if upstream.PollIntervalSeconds() < result {
+			result = upstream.PollIntervalSeconds()
+		}
+	}
+
+	return result
 }

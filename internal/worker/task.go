@@ -6,20 +6,34 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
-	"google.golang.org/grpc"
+	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"time"
 )
 
 const perCallTimeout = 15 * time.Second
 
-func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollResponse_AgentAwareTask) {
+type Task struct {
+	upstream       *upstreampkg.Upstream
+	cancel         context.CancelFunc
+	resourcesToUse map[string]float64
+}
+
+func (worker *Worker) runTask(
+	ctx context.Context,
+	upstream *upstreampkg.Upstream,
+	agentAwareTask *api.PollResponse_AgentAwareTask,
+) {
 	if _, ok := worker.tasks[agentAwareTask.TaskId]; ok {
 		worker.logger.Warnf("attempted to run task %d which is already running", agentAwareTask.TaskId)
 		return
 	}
 
 	taskCtx, cancel := context.WithCancel(ctx)
-	worker.tasks[agentAwareTask.TaskId] = cancel
+	worker.tasks[agentAwareTask.TaskId] = &Task{
+		upstream:       upstream,
+		cancel:         cancel,
+		resourcesToUse: agentAwareTask.ResourcesToUse,
+	}
 
 	taskIdentification := &api.TaskIdentification{
 		TaskId: agentAwareTask.TaskId,
@@ -29,10 +43,11 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 	inst, err := persistentworker.New(agentAwareTask.Isolation, worker.logger)
 	if err != nil {
 		worker.logger.Errorf("failed to create an instance for the task %d: %v", agentAwareTask.TaskId, err)
-		_, _ = worker.rpcClient.TaskFailed(ctx, &api.TaskFailedRequest{
+		_ = upstream.TaskFailed(taskCtx, &api.TaskFailedRequest{
 			TaskIdentification: taskIdentification,
 			Message:            err.Error(),
-		}, grpc.PerRPCCredentials(worker))
+		})
+
 		return
 	}
 
@@ -45,16 +60,17 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 
 			worker.taskCompletions <- agentAwareTask.TaskId
 		}()
-		_, err = worker.rpcClient.TaskStarted(taskCtx, taskIdentification, grpc.PerRPCCredentials(worker))
-		if err != nil {
+
+		if err = upstream.TaskStarted(taskCtx, taskIdentification); err != nil {
 			worker.logger.Errorf("failed to notify the server about the started task %d: %v",
 				agentAwareTask.TaskId, err)
+
 			return
 		}
 
 		config := runconfig.RunConfig{
 			ProjectDir:   "",
-			Endpoint:     worker.agentEndpoint,
+			Endpoint:     upstream.AgentEndpoint(),
 			ServerSecret: agentAwareTask.ServerSecret,
 			ClientSecret: agentAwareTask.ClientSecret,
 			TaskID:       agentAwareTask.TaskId,
@@ -71,10 +87,11 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 
 			boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
 			defer cancel()
-			_, err := worker.rpcClient.TaskFailed(boundedCtx, &api.TaskFailedRequest{
+
+			err := upstream.TaskFailed(boundedCtx, &api.TaskFailedRequest{
 				TaskIdentification: taskIdentification,
 				Message:            err.Error(),
-			}, grpc.PerRPCCredentials(worker))
+			})
 			if err != nil {
 				worker.logger.Errorf("failed to notify the server about the failed task %d: %v",
 					agentAwareTask.TaskId, err)
@@ -83,10 +100,11 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 
 		boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
 		defer cancel()
-		_, err = worker.rpcClient.TaskStopped(boundedCtx, taskIdentification, grpc.PerRPCCredentials(worker))
-		if err != nil {
+
+		if err = upstream.TaskStopped(boundedCtx, taskIdentification); err != nil {
 			worker.logger.Errorf("failed to notify the server about the stopped task %d: %v",
 				agentAwareTask.TaskId, err)
+
 			return
 		}
 	}()
@@ -95,27 +113,43 @@ func (worker *Worker) runTask(ctx context.Context, agentAwareTask *api.PollRespo
 }
 
 func (worker *Worker) stopTask(taskID int64) {
-	if cancel, ok := worker.tasks[taskID]; ok {
-		cancel()
+	if task, ok := worker.tasks[taskID]; ok {
+		task.cancel()
 	}
 
 	worker.logger.Infof("sent cancellation signal to task %d", taskID)
 }
 
-func (worker *Worker) runningTasks() (result []int64) {
-	for taskID := range worker.tasks {
+func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int64) {
+	for taskID, task := range worker.tasks {
+		if task.upstream != upstream {
+			continue
+		}
+
 		result = append(result, taskID)
 	}
 
 	return
 }
 
+func (worker *Worker) resourcesInUse() map[string]float64 {
+	result := map[string]float64{}
+
+	for _, task := range worker.tasks {
+		for key, value := range task.resourcesToUse {
+			result[key] += value
+		}
+	}
+
+	return result
+}
+
 func (worker *Worker) registerTaskCompletions() {
 	for {
 		select {
 		case taskID := <-worker.taskCompletions:
-			if cancel, ok := worker.tasks[taskID]; ok {
-				cancel()
+			if task, ok := worker.tasks[taskID]; ok {
+				task.cancel()
 				delete(worker.tasks, taskID)
 				worker.logger.Infof("task %d completed", taskID)
 			} else {
