@@ -186,7 +186,7 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 
 	response, err := upstream.Poll(ctx, request)
 	if err != nil {
-		worker.logger.Errorf("failed to poll upstream %s: %v", upstream.Name(), err)
+		return err
 	}
 
 	for _, taskToStop := range response.TasksToStop {
