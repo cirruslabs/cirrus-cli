@@ -180,7 +180,7 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 
 	request := &api.PollRequest{
 		WorkerInfo:     worker.info(upstream.WorkerName()),
-		RunningTasks:   worker.runningTasks(),
+		RunningTasks:   worker.runningTasks(upstream),
 		ResourcesInUse: worker.resourcesInUse(),
 	}
 

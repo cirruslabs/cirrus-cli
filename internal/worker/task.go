@@ -13,6 +13,7 @@ import (
 const perCallTimeout = 15 * time.Second
 
 type Task struct {
+	upstream       *upstreampkg.Upstream
 	cancel         context.CancelFunc
 	resourcesToUse map[string]float64
 }
@@ -29,6 +30,7 @@ func (worker *Worker) runTask(
 
 	taskCtx, cancel := context.WithCancel(ctx)
 	worker.tasks[agentAwareTask.TaskId] = &Task{
+		upstream:       upstream,
 		cancel:         cancel,
 		resourcesToUse: agentAwareTask.ResourcesToUse,
 	}
@@ -118,8 +120,12 @@ func (worker *Worker) stopTask(taskID int64) {
 	worker.logger.Infof("sent cancellation signal to task %d", taskID)
 }
 
-func (worker *Worker) runningTasks() (result []int64) {
-	for taskID := range worker.tasks {
+func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int64) {
+	for taskID, task := range worker.tasks {
+		if task.upstream != upstream {
+			continue
+		}
+
 		result = append(result, taskID)
 	}
 
