@@ -24,7 +24,7 @@ const (
 	DefaultRPCEndpoint = "https://grpc.cirrus-ci.com:443"
 
 	defaultPollIntervalSeconds = 10
-	defaultDeadlineInSeconds   = 1
+	defaultDeadlineInSeconds   = 5
 )
 
 type Upstream struct {
