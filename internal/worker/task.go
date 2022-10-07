@@ -115,6 +115,7 @@ func (worker *Worker) runTask(
 func (worker *Worker) stopTask(taskID int64) {
 	if task, ok := worker.tasks[taskID]; ok {
 		task.cancel()
+		delete(worker.tasks, taskID)
 	}
 
 	worker.logger.Infof("sent cancellation signal to task %d", taskID)
