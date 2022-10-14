@@ -48,7 +48,7 @@ func NewVMClonedFrom(
 		pullLogger.Infof("Pulling virtual machine %s...", from)
 
 		if _, _, err := CmdWithLogger(ctx, pullLogger, "pull", from); err != nil {
-			pullLogger.Infof("Ignoring pull failure: %w", err)
+			pullLogger.Errorf("Ignoring pull failure: %w", err)
 			pullLogger.FinishWithType(echelon.FinishTypeFailed)
 		} else {
 			pullLogger.FinishWithType(echelon.FinishTypeSucceeded)
