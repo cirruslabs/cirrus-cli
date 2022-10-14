@@ -89,6 +89,8 @@ func buildWorker(cmd *cobra.Command) (*worker.Worker, error) {
 			Endpoint: rpcEndpoint,
 		},
 	}
+
+	config.Resources = map[string]float64{}
 	for key, value := range resources {
 		parsedValue, err := strconv.ParseFloat(value, 64)
 		if err != nil {
