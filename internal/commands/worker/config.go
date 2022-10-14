@@ -72,7 +72,7 @@ func attachFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(&token, "token", "", "pool registration token")
 	cmd.PersistentFlags().StringToStringVar(&labels, "labels", map[string]string{},
 		"additional labels to use (e.g. --labels distro=debian)")
-	// there is no script to float flag so let's just parse it afterwards
+	// there is no string to float flag so let's just parse it afterwards
 	cmd.PersistentFlags().StringToStringVar(&resources, "resources", map[string]string{},
 		"additional resources to use (e.g. --resources devices=2)")
 	cmd.PersistentFlags().StringVar(&rpcEndpoint, "rpc-endpoint", upstream.DefaultRPCEndpoint,
