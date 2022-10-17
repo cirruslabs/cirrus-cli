@@ -82,15 +82,15 @@ func attachFlags(cmd *cobra.Command) {
 func buildWorker(cmd *cobra.Command) (*worker.Worker, error) {
 	// Instantiate a default configuration
 	config := Config{
-		Name:   name,
-		Token:  token,
-		Labels: labels,
+		Name:      name,
+		Token:     token,
+		Labels:    labels,
+		Resources: map[string]float64{},
 		RPC: ConfigRPC{
 			Endpoint: rpcEndpoint,
 		},
 	}
 
-	config.Resources = map[string]float64{}
 	for key, value := range resources {
 		parsedValue, err := strconv.ParseFloat(value, 64)
 		if err != nil {
