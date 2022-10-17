@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -53,6 +54,7 @@ var (
 	name        string
 	token       string
 	labels      map[string]string
+	resources   map[string]string
 	rpcEndpoint string
 )
 
@@ -70,6 +72,9 @@ func attachFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVar(&token, "token", "", "pool registration token")
 	cmd.PersistentFlags().StringToStringVar(&labels, "labels", map[string]string{},
 		"additional labels to use (e.g. --labels distro=debian)")
+	// there is no string to float flag so let's just parse it afterwards
+	cmd.PersistentFlags().StringToStringVar(&resources, "resources", map[string]string{},
+		"additional resources to use (e.g. --resources devices=2)")
 	cmd.PersistentFlags().StringVar(&rpcEndpoint, "rpc-endpoint", upstream.DefaultRPCEndpoint,
 		"RPC endpoint address")
 }
@@ -77,12 +82,21 @@ func attachFlags(cmd *cobra.Command) {
 func buildWorker(cmd *cobra.Command) (*worker.Worker, error) {
 	// Instantiate a default configuration
 	config := Config{
-		Name:   name,
-		Token:  token,
-		Labels: labels,
+		Name:      name,
+		Token:     token,
+		Labels:    labels,
+		Resources: map[string]float64{},
 		RPC: ConfigRPC{
 			Endpoint: rpcEndpoint,
 		},
+	}
+
+	for key, value := range resources {
+		parsedValue, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return nil, err
+		}
+		config.Resources[key] = parsedValue
 	}
 
 	// Load the YAML configuration file
