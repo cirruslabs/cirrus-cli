@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/cirruslabs/echelon"
-	"github.com/google/uuid"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,6 +27,7 @@ type directoryMount struct {
 func NewVMClonedFrom(
 	ctx context.Context,
 	from string,
+	to string,
 	cpu uint32,
 	memory uint32,
 	lazyPull bool,
@@ -36,8 +36,7 @@ func NewVMClonedFrom(
 	subCtx, subCtxCancel := context.WithCancel(ctx)
 
 	vm := &VM{
-		ident: "cirrus-cli-" + uuid.New().String(),
-
+		ident:        to,
 		subCtx:       subCtx,
 		subCtxCancel: subCtxCancel,
 		errChan:      make(chan error, 1),
