@@ -62,7 +62,12 @@ func New(vmName string, sshUser string, sshPassword string, cpu uint32, memory u
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
 	tmpVMName := fmt.Sprintf("cirrus-cli-%d-", config.TaskID) + uuid.NewString()
-	vm, err := NewVMClonedFrom(ctx, tart.vmName, tmpVMName, tart.cpu, tart.memory, config.TartOptions.LazyPull, config.Logger())
+	vm, err := NewVMClonedFrom(ctx,
+		tart.vmName, tmpVMName,
+		tart.cpu, tart.memory,
+		config.TartOptions.LazyPull,
+		config.Logger(),
+	)
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
 	}
