@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/google/uuid"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"io"
@@ -60,7 +61,13 @@ func New(vmName string, sshUser string, sshPassword string, cpu uint32, memory u
 }
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
-	vm, err := NewVMClonedFrom(ctx, tart.vmName, tart.cpu, tart.memory, config.TartOptions.LazyPull, config.Logger())
+	tmpVMName := fmt.Sprintf("cirrus-cli-%d-", config.TaskID) + uuid.NewString()
+	vm, err := NewVMClonedFrom(ctx,
+		tart.vmName, tmpVMName,
+		tart.cpu, tart.memory,
+		config.TartOptions.LazyPull,
+		config.Logger(),
+	)
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
 	}
