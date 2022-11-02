@@ -15,6 +15,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -24,6 +25,7 @@ var (
 )
 
 const (
+	vmNamePrefix                = "cirrus-cli-"
 	macOSAutomountDirectoryPath = "/Volumes/My Shared Files"
 	macOSAutomountDirectoryItem = "working-dir"
 )
@@ -61,7 +63,7 @@ func New(vmName string, sshUser string, sshPassword string, cpu uint32, memory u
 }
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
-	tmpVMName := fmt.Sprintf("cirrus-cli-%d-", config.TaskID) + uuid.NewString()
+	tmpVMName := fmt.Sprintf("%s%d-", vmNamePrefix, config.TaskID) + uuid.NewString()
 	vm, err := NewVMClonedFrom(ctx,
 		tart.vmName, tmpVMName,
 		tart.cpu, tart.memory,
@@ -141,6 +143,25 @@ func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
 }
 
 func (tart *Tart) Close() error {
+	return nil
+}
+
+func Cleanup() error {
+	stdout, _, err := Cmd(context.Background(), "list", "--quiet")
+	if err != nil {
+		return err
+	}
+
+	for _, vmName := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if !strings.HasPrefix(vmName, vmNamePrefix) {
+			continue
+		}
+
+		if _, _, err := Cmd(context.Background(), "delete", vmName); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/sirupsen/logrus"
@@ -142,6 +143,11 @@ func (worker *Worker) oldWorkingDirectoryCleanup() {
 func (worker *Worker) Run(ctx context.Context) error {
 	// https://github.com/cirruslabs/cirrus-cli/issues/357
 	worker.oldWorkingDirectoryCleanup()
+
+	// https://github.com/cirruslabs/cirrus-cli/issues/571
+	if err := tart.Cleanup(); err != nil {
+		worker.logger.Warnf("failed to cleanup Tart VMs: %v", err)
+	}
 
 	// A sub-context to cancel out all Run() side-effects when it finishes
 	subCtx, cancel := context.WithCancel(ctx)
