@@ -63,14 +63,11 @@ This CLI command will find all directories with `.cirrus.expected.yml` file in t
 
 Some Starlark modules use the [`env` dict](https://cirrus-ci.org/guide/programming-tasks/#env) which contents depends on the environment.
 
-To mock the contents of this dict, create the following `.cirrus.testconfig.yml` in the test's directory:
+To mock the contents of this dict, you can either specify a `-e` flag to `cirrus internal test` (see [testing private repositories](#testing-private-repositories) below), or create the following `.cirrus.testconfig.yml` in the test's directory:
 
 ```yaml
 env:
   CIRRUS_TAG: "v0.1.0"
-
-affected_files:
-  - ci/build.sh
 ```
 
 Similarly, to mock the [`changes_include()`](https://cirrus-ci.org/guide/programming-tasks/#changes_include) or [`changes_include_only()`](https://cirrus-ci.org/guide/programming-tasks/#changes_include_only) functions behavior, specify the files that were affected:
@@ -80,7 +77,29 @@ affected_files:
   - ci/build.sh
 ```
 
+The resulting file will look like this:
+
+```yaml
+env:
+  CIRRUS_TAG: "v0.1.0"
+
+affected_files:
+  - ci/build.sh
+```
+
 These two additions combined will ensure that when the test runs:
 
 * `env.get("CIRRUS_TAG")` will return `v0.1.0`
 * `changes_include("**.sh")` will return `True`
+
+### Testing private repositories
+
+To aid in testing private repositories that require an authentication token, `cirrus internal test` supports specifying additional environment variables from command-line.
+
+All you need is a [personal access token](https://github.com/settings/tokens?type=beta) that has access to the repository that you're going to `load(...)`, and once you get one, specify it as a value to `CIRRUS_REPO_CLONE_TOKEN` environment variable:
+
+```
+cirrus internal test -e CIRRUS_REPO_CLONE_TOKEN=<GitHub personal access token>
+```
+
+You can also specify this environment variable in the `.cirrus.testconfig.yml` to achieve the same effect.

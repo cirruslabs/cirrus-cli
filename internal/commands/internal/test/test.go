@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/echelon"
@@ -23,6 +24,7 @@ var ErrTest = errors.New("test failed")
 var update bool
 var output string
 var reportFilename string
+var env map[string]string
 
 type Comparison struct {
 	FoundDifference bool
@@ -173,11 +175,11 @@ func test(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
 		larkerOpts = append(larkerOpts,
-			larker.WithEnvironment(testConfig.Environment),
+			larker.WithEnvironment(environment.Merge(testConfig.Environment, env)),
 			larker.WithAffectedFiles(testConfig.AffectedFiles),
 		)
-
 		lrk := larker.New(larkerOpts...)
 
 		sourceBytes, err := os.ReadFile(filepath.Join(testDir, ".cirrus.star"))
@@ -247,6 +249,9 @@ func NewTestCmd() *cobra.Command {
 		Short: "Discover and run Starlark tests",
 		RunE:  test,
 	}
+
+	cmd.PersistentFlags().StringToStringVarP(&env, "env", "e", map[string]string{},
+		"environment variable overrides to use")
 
 	cmd.PersistentFlags().BoolVar(&update, "update", false,
 		"update tests with differing .cirrus.expected.yml or .cirrus.expected.log, instead of failing them")
