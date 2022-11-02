@@ -94,7 +94,7 @@ These two additions combined will ensure that when the test runs:
 
 ### Testing private repositories
 
-To aid in testing private repositories that require an authentication token, `cirrus internal test` supports specifying additional environment variables from command-line.
+To aid in testing private repositories that require an authentication token, `cirrus internal test` supports specifying additional environment variables via command-line.
 
 All you need is a [personal access token](https://github.com/settings/tokens?type=beta) that has access to the repository that you're going to `load(...)`, and once you get one, specify it as a value to `CIRRUS_REPO_CLONE_TOKEN` environment variable:
 
