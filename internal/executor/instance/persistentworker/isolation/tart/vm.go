@@ -99,7 +99,7 @@ func (vm *VM) Start(
 		args := []string{"run", "--no-graphics"}
 
 		if softnet {
-			args = append(args, "--with-softnet")
+			args = append(args, "--net-softnet")
 		}
 
 		for _, directoryMount := range directoryMounts {
