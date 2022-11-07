@@ -11,7 +11,7 @@ import (
 	"regexp"
 )
 
-type localLocation struct {
+type relativeLocation struct {
 	Path string
 }
 
@@ -92,7 +92,7 @@ func parseLocation(module string) interface{} {
 		}
 	}
 
-	return localLocation{Path: module}
+	return relativeLocation{Path: module}
 }
 
 func FindModuleFS(
@@ -125,7 +125,7 @@ func findLocatorFS(
 			return nil, "", err
 		}
 		return gitFS, l.Path, nil
-	case localLocation:
+	case relativeLocation:
 		return scopedlayer.New(currentFS, path.Dir(l.Path)), path.Base(l.Path), nil
 	default:
 		return nil, "", ErrUnsupportedLocation
