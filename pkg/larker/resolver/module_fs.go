@@ -6,6 +6,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/scopedlayer"
+	"path"
 	"regexp"
 )
 
@@ -124,7 +126,7 @@ func findLocatorFS(
 		}
 		return gitFS, l.Path, nil
 	case localLocation:
-		return currentFS, l.Path, nil
+		return scopedlayer.New(currentFS, path.Dir(l.Path)), path.Base(l.Path), nil
 	default:
 		return nil, "", ErrUnsupportedLocation
 	}
