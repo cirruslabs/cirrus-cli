@@ -110,23 +110,23 @@ func findLocatorFS(
 	env map[string]string,
 	location interface{},
 ) (fs.FileSystem, string, error) {
-	switch l := location.(type) {
+	switch typedLocation := location.(type) {
 	case gitHubLocation:
 		token := env["CIRRUS_REPO_CLONE_TOKEN"]
 
-		ghFS, err := github.New(l.Owner, l.Name, l.Revision, token)
+		ghFS, err := github.New(typedLocation.Owner, typedLocation.Name, typedLocation.Revision, token)
 		if err != nil {
 			return nil, "", err
 		}
-		return ghFS, l.Path, nil
+		return ghFS, typedLocation.Path, nil
 	case gitLocation:
-		gitFS, err := git.New(ctx, l.URL, l.Revision)
+		gitFS, err := git.New(ctx, typedLocation.URL, typedLocation.Revision)
 		if err != nil {
 			return nil, "", err
 		}
-		return gitFS, l.Path, nil
+		return gitFS, typedLocation.Path, nil
 	case relativeLocation:
-		return scopedlayer.New(currentFS, path.Dir(l.Path)), path.Base(l.Path), nil
+		return scopedlayer.New(currentFS, path.Dir(typedLocation.Path)), path.Base(typedLocation.Path), nil
 	default:
 		return nil, "", ErrUnsupportedLocation
 	}
