@@ -6,10 +6,12 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/scopedlayer"
+	"path"
 	"regexp"
 )
 
-type localLocation struct {
+type relativeLocation struct {
 	Path string
 }
 
@@ -90,7 +92,7 @@ func parseLocation(module string) interface{} {
 		}
 	}
 
-	return localLocation{Path: module}
+	return relativeLocation{Path: module}
 }
 
 func FindModuleFS(
@@ -108,23 +110,23 @@ func findLocatorFS(
 	env map[string]string,
 	location interface{},
 ) (fs.FileSystem, string, error) {
-	switch l := location.(type) {
+	switch typedLocation := location.(type) {
 	case gitHubLocation:
 		token := env["CIRRUS_REPO_CLONE_TOKEN"]
 
-		ghFS, err := github.New(l.Owner, l.Name, l.Revision, token)
+		ghFS, err := github.New(typedLocation.Owner, typedLocation.Name, typedLocation.Revision, token)
 		if err != nil {
 			return nil, "", err
 		}
-		return ghFS, l.Path, nil
+		return ghFS, typedLocation.Path, nil
 	case gitLocation:
-		gitFS, err := git.New(ctx, l.URL, l.Revision)
+		gitFS, err := git.New(ctx, typedLocation.URL, typedLocation.Revision)
 		if err != nil {
 			return nil, "", err
 		}
-		return gitFS, l.Path, nil
-	case localLocation:
-		return currentFS, l.Path, nil
+		return gitFS, typedLocation.Path, nil
+	case relativeLocation:
+		return scopedlayer.New(currentFS, path.Dir(typedLocation.Path)), path.Base(typedLocation.Path), nil
 	default:
 		return nil, "", ErrUnsupportedLocation
 	}
