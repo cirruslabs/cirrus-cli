@@ -40,6 +40,15 @@ func TestSimple(t *testing.T) {
 	assert.Contains(t, output, fmt.Sprintf("'%s' succeeded", adaptedPath))
 }
 
+// TestComplexLoadChain ensures that things like https://github.com/cirruslabs/cirrus-cli/issues/579
+// work fine.
+func TestComplexLoadChain(t *testing.T) {
+	output := runTestCommandAndGetOutput(t, "testdata/complex-load-chain", []string{}, false)
+
+	adaptedPath := filepath.FromSlash("dir/subdir")
+	assert.Contains(t, output, fmt.Sprintf("'%s' succeeded", adaptedPath))
+}
+
 func TestReport(t *testing.T) {
 	_ = runTestCommandAndGetOutput(t, "testdata/report", []string{"--report", "report-actual.json"}, true)
 
