@@ -149,7 +149,7 @@ func (e *Executor) Run(ctx context.Context) error {
 	return firstErr
 }
 
-func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
+func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err error) {
 	rpcOpts := []rpc.Option{rpc.WithLogger(e.logger)}
 
 	if e.artifactsDir != "" && pathsafe.IsPathSafe(task.Name) {
@@ -190,6 +190,17 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 	ctx, cancel := context.WithTimeout(ctx, task.Timeout)
 
 	// Run task
+	defer func() {
+		if instanceCloseErr := task.Instance.Close(); instanceCloseErr != nil {
+			e.logger.Warnf("failed to cleanup task %s's instance: %v",
+				task.String(), instanceCloseErr)
+
+			if err == nil {
+				err = instanceCloseErr
+			}
+		}
+	}()
+
 	if err := task.Instance.Run(ctx, &instanceRunOpts); err != nil {
 		switch {
 		case errors.Is(ctx.Err(), context.DeadlineExceeded):
@@ -218,13 +229,13 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) error {
 		return fmt.Errorf("%w: instance terminated before the task %s had a chance to run", ErrBuildFailed, task.String())
 	case taskstatus.Skipped:
 		taskLogger.FinishWithType(echelon.FinishTypeSkipped)
-		return nil
+		return
 	default:
 		taskLogger.Finish(false)
 		return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
 	}
 
-	return nil
+	return
 }
 
 func (e *Executor) transformDockerfileImageIfNeeded(reference string, strict bool) (string, error) {
