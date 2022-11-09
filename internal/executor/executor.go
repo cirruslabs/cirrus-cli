@@ -229,13 +229,13 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		return fmt.Errorf("%w: instance terminated before the task %s had a chance to run", ErrBuildFailed, task.String())
 	case taskstatus.Skipped:
 		taskLogger.FinishWithType(echelon.FinishTypeSkipped)
-		return
+		return err
 	default:
 		taskLogger.Finish(false)
 		return fmt.Errorf("%w: task %s %s", ErrBuildFailed, task.String(), task.Status().String())
 	}
 
-	return
+	return err
 }
 
 func (e *Executor) transformDockerfileImageIfNeeded(reference string, strict bool) (string, error) {
