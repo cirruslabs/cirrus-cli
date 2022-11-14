@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"path/filepath"
+	"regexp"
+	"strings"
+
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
@@ -18,10 +23,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
-	"io"
-	"path/filepath"
-	"regexp"
-	"strings"
 )
 
 var ErrBuildFailed = errors.New("build failed")
@@ -36,6 +37,7 @@ type Executor struct {
 	baseEnvironment          map[string]string
 	userSpecifiedEnvironment map[string]string
 	dirtyMode                bool
+	tartDirs                 []string
 	containerBackendType     string
 	containerOptions         options.ContainerOptions
 	tartOptions              options.TartOptions
@@ -175,6 +177,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		ClientSecret:         e.rpc.ClientSecret(),
 		TaskID:               task.ID,
 		DirtyMode:            e.dirtyMode,
+		TartDirs:             e.tartDirs,
 		ContainerOptions:     e.containerOptions,
 		TartOptions:          e.tartOptions,
 	}

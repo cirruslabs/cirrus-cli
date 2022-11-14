@@ -4,6 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
@@ -11,12 +18,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
-	"io"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 var (
@@ -83,6 +84,41 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 			Path:     config.ProjectDir,
 			ReadOnly: false,
 		})
+	}
+
+	if len(config.TartDirs) != 0 {
+		for _, i := range config.TartDirs {
+			field := strings.Split(i, ":")
+			if len(field) < 2 {
+				os.Exit(1)
+			}
+			if len(field) == 2 {
+				directoryMounts = append(directoryMounts, directoryMount{
+					Name: field[0],
+					Path: field[1],
+				})
+			}
+			if len(field) == 2 {
+				if field[2] == "ro" {
+					directoryMounts = append(directoryMounts, directoryMount{
+						Name:     field[0],
+						Path:     field[1],
+						ReadOnly: true,
+					})
+					continue
+				}
+				if field[2] == "rw" {
+					directoryMounts = append(directoryMounts, directoryMount{
+						Name:     field[0],
+						Path:     field[1],
+						ReadOnly: false,
+					})
+					continue
+				}
+				fmt.Printf("Check the input read and write permissions for the mount directory")
+				os.Exit(1)
+			}
+		}
 	}
 
 	vm.Start(tart.softnet, directoryMounts)

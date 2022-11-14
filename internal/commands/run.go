@@ -6,6 +6,9 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
@@ -17,21 +20,23 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
 var ErrRun = errors.New("run failed")
 
 // General flags.
 var artifactsDir string
-var dirty bool
-var output string
-var environment []string
-var affectedFiles []string
-var affectedFilesGitRevision string
-var affectedFilesGitCachedRevision string
-var verbose bool
+
+var (
+	dirty                          bool
+	output                         string
+	environment                    []string
+	affectedFiles                  []string
+	tartdirs                       []string
+	affectedFilesGitRevision       string
+	affectedFilesGitCachedRevision string
+	verbose                        bool
+)
 
 // Common instance-related flags.
 var lazyPull bool
@@ -125,6 +130,10 @@ func run(cmd *cobra.Command, args []string) error {
 		executorOpts = append(executorOpts, executor.WithDirtyMode())
 	}
 
+	if len(tartdirs) != 0 {
+		executorOpts = append(executorOpts, executor.WithTartDirs(tartdirs))
+	}
+
 	// Container-related options
 	executorOpts = append(executorOpts, executor.WithContainerOptions(options.ContainerOptions{
 		LazyPull:  lazyPull || containerLazyPull,
@@ -170,6 +179,8 @@ func newRunCmd() *cobra.Command {
 		"directory in which to save the artifacts")
 	cmd.PersistentFlags().BoolVar(&dirty, "dirty", false, "if set the project directory will be mounted"+
 		"in read-write mode, otherwise the project directory files are copied, taking .gitignore into account")
+	cmd.PersistentFlags().StringSliceVar(&tartdirs, "tart-dirs", []string{},
+		`Additional directory shares with an optional read-only specifier (e.g. --dir="build:~/src/build" --dir="sources:~/src/sources:ro") Requires host to be macOS 13.0 (Ventura) or newer. All shared directories are automatically mounted to "/Volumes/My Shared Files" directory on macOS.For macOS guests, they must be running macOS 13.0 (Ventura) or newer.`)
 	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
 		"set (-e A=B) or pass-through (-e A) an environment variable")
 	cmd.PersistentFlags().StringSliceVar(&affectedFiles, "affected-files", []string{},

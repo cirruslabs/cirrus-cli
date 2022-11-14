@@ -18,6 +18,7 @@ type RunConfig struct {
 	TaskID                     int64
 	logger                     *echelon.Logger
 	DirtyMode                  bool
+	TartDirs                   []string
 	ContainerOptions           options.ContainerOptions
 	TartOptions                options.TartOptions
 	agentVersion               string

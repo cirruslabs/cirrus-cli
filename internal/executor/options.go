@@ -38,6 +38,12 @@ func WithDirtyMode() Option {
 	}
 }
 
+func WithTartDirs(dirs []string) Option {
+	return func(e *Executor) {
+		e.tartDirs = dirs
+	}
+}
+
 func WithContainerOptions(containerOptions options.ContainerOptions) Option {
 	return func(e *Executor) {
 		e.containerOptions = containerOptions
