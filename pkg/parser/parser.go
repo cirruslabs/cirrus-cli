@@ -352,7 +352,7 @@ func (p *Parser) searchForUnbalancedOnlyIfs(tasks []task.ParseableTaskLike) {
 				continue
 			}
 
-			if task.OnlyIfExpression() != dependent.OnlyIfExpression() {
+			if dependent.OnlyIfExpression() != "" && task.OnlyIfExpression() != dependent.OnlyIfExpression() {
 				p.registerUnbalancedOnlyIfIssue(task, dependent.Name())
 			}
 		}
