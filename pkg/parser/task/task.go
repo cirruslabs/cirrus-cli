@@ -209,7 +209,7 @@ func NewTask(
 					},
 				)
 			}
-			architecture := instance.GuessArchitectureOfProtoMessage(anyInstance, scopedDescriptor)
+			architecture := instance.GuessArchitecture(anyInstance, scopedDescriptor)
 			if architecture != "" {
 				task.proto.Environment = environment.Merge(
 					task.proto.Environment, map[string]string{
