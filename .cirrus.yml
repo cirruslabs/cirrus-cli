@@ -45,8 +45,7 @@ task:
   alias: Tests
   persistent_worker:
     labels:
-      os: darwin
-      tart: installed
+      name: scaleway-m1
   env:
     CIRRUS_INTERNAL_TART_VM: ghcr.io/cirruslabs/macos-monterey-vanilla:12.4
     CIRRUS_INTERNAL_TART_SSH_PASSWORD: admin

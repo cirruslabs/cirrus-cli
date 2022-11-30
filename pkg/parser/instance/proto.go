@@ -380,9 +380,18 @@ func GuessPlatformOfProtoMessage(message protoreflect.Message, descriptor protor
 	return ""
 }
 
-func GuessArchitectureOfProtoMessage(anyInstance *anypb.Any, descriptor protoreflect.MessageDescriptor) string {
-	message := dynamicpb.NewMessage(descriptor)
-	_ = proto.Unmarshal(anyInstance.GetValue(), message)
+func GuessArchitecture(anyInstance *anypb.Any, descriptor protoreflect.MessageDescriptor) string {
+	instanceType := anyInstance.TypeUrl
+	if strings.Contains(instanceType, "Arm") {
+		return "arm64"
+	}
+
+	dynamicMessage := dynamicpb.NewMessage(descriptor)
+	_ = proto.Unmarshal(anyInstance.GetValue(), dynamicMessage)
+	return GuessArchitectureOfProtoMessage(dynamicMessage, descriptor)
+}
+
+func GuessArchitectureOfProtoMessage(message protoreflect.Message, descriptor protoreflect.MessageDescriptor) string {
 	fields := descriptor.Fields()
 	architectureField := fields.ByJSONName("architecture")
 	if architectureField != nil && message.Has(architectureField) {
