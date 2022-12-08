@@ -24,7 +24,10 @@ const (
 	DefaultRPCEndpoint = "https://grpc.cirrus-ci.com:443"
 
 	defaultPollIntervalSeconds = 10
-	defaultDeadlineInSeconds   = 5
+
+	// Ridiculously large per-call timout in case some upstream hangs
+	// which might happen, but we've never experienced so far.
+	defaultDeadlineInSeconds = 900
 )
 
 type Upstream struct {
