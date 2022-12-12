@@ -30,12 +30,29 @@ func (l loggerAsWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func Cmd(ctx context.Context, args ...string) (string, string, error) {
-	return CmdWithLogger(ctx, nil, args...)
+func Cmd(
+	ctx context.Context,
+	additionalEnvironment map[string]string,
+	args ...string,
+) (string, string, error) {
+	return CmdWithLogger(ctx, additionalEnvironment, nil, args...)
 }
 
-func CmdWithLogger(ctx context.Context, logger *echelon.Logger, args ...string) (string, string, error) {
+func CmdWithLogger(
+	ctx context.Context,
+	additionalEnvironment map[string]string,
+	logger *echelon.Logger,
+	args ...string,
+) (string, string, error) {
 	cmd := exec.CommandContext(ctx, tartCommandName, args...)
+
+	// Default environment
+	cmd.Env = cmd.Environ()
+
+	// Additional environment
+	for key, value := range additionalEnvironment {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
+	}
 
 	var stdout, stderr bytes.Buffer
 

@@ -62,7 +62,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
-	gopkg.in/ini.v1 v1.62.0 // indirect
+	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -88,6 +88,7 @@ require (
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fvbommel/sortorder v1.0.2 // indirect
+	github.com/getsentry/sentry-go v0.16.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect

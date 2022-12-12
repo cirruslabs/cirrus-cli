@@ -68,6 +68,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		tart.vmName, tmpVMName,
 		tart.cpu, tart.memory,
 		config.TartOptions.LazyPull,
+		config.AdditionalEnvironment,
 		config.Logger(),
 	)
 	if err != nil {
@@ -147,7 +148,7 @@ func (tart *Tart) Close() error {
 }
 
 func Cleanup() error {
-	stdout, _, err := Cmd(context.Background(), "list", "--quiet")
+	stdout, _, err := Cmd(context.Background(), nil, "list", "--quiet")
 	if err != nil {
 		return err
 	}
@@ -157,7 +158,7 @@ func Cleanup() error {
 			continue
 		}
 
-		if _, _, err := Cmd(context.Background(), "delete", vmName); err != nil {
+		if _, _, err := Cmd(context.Background(), nil, "delete", vmName); err != nil {
 			return err
 		}
 	}

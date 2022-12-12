@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
@@ -74,6 +75,9 @@ func (worker *Worker) runTask(
 			ServerSecret: agentAwareTask.ServerSecret,
 			ClientSecret: agentAwareTask.ClientSecret,
 			TaskID:       agentAwareTask.TaskId,
+			AdditionalEnvironment: map[string]string{
+				"CIRRUS_SENTRY_TAGS": fmt.Sprintf("cirrus.task_id=%d", agentAwareTask.TaskId),
+			},
 		}
 
 		if err := config.SetAgentVersionWithoutDowngrade(agentAwareTask.AgentVersion); err != nil {

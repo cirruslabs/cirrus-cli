@@ -12,6 +12,8 @@ import (
 type VM struct {
 	ident string
 
+	env map[string]string
+
 	subCtx       context.Context
 	subCtxCancel context.CancelFunc
 	wg           sync.WaitGroup
@@ -31,12 +33,14 @@ func NewVMClonedFrom(
 	cpu uint32,
 	memory uint32,
 	lazyPull bool,
+	env map[string]string,
 	logger *echelon.Logger,
 ) (*VM, error) {
 	subCtx, subCtxCancel := context.WithCancel(ctx)
 
 	vm := &VM{
 		ident:        to,
+		env:          env,
 		subCtx:       subCtx,
 		subCtxCancel: subCtxCancel,
 		errChan:      make(chan error, 1),
@@ -46,7 +50,7 @@ func NewVMClonedFrom(
 	if !lazyPull {
 		pullLogger.Infof("Pulling virtual machine %s...", from)
 
-		if _, _, err := CmdWithLogger(ctx, pullLogger, "pull", from); err != nil {
+		if _, _, err := CmdWithLogger(ctx, vm.env, pullLogger, "pull", from); err != nil {
 			pullLogger.Errorf("Ignoring pull failure: %w", err)
 			pullLogger.FinishWithType(echelon.FinishTypeFailed)
 		} else {
@@ -59,21 +63,25 @@ func NewVMClonedFrom(
 	cloneLogger := logger.Scoped("clone virtual machine")
 	cloneLogger.Infof("Cloning virtual machine %s...", from)
 
-	if _, _, err := CmdWithLogger(ctx, cloneLogger, "clone", from, vm.ident); err != nil {
+	if _, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "clone", from, vm.ident); err != nil {
 		cloneLogger.Finish(false)
 		return nil, err
 	}
 
 	if cpu != 0 {
 		cpuStr := strconv.FormatUint(uint64(cpu), 10)
-		if _, _, err := CmdWithLogger(ctx, cloneLogger, "set", vm.ident, "--cpu", cpuStr); err != nil {
+
+		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--cpu", cpuStr)
+		if err != nil {
 			cloneLogger.Finish(false)
 			return nil, err
 		}
 	}
 	if memory != 0 {
 		memoryStr := strconv.FormatUint(uint64(memory), 10)
-		if _, _, err := CmdWithLogger(ctx, cloneLogger, "set", vm.ident, "--memory", memoryStr); err != nil {
+
+		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--memory", memoryStr)
+		if err != nil {
 			cloneLogger.Finish(false)
 			return nil, err
 		}
@@ -114,7 +122,7 @@ func (vm *VM) Start(
 
 		args = append(args, vm.ident)
 
-		_, _, err := Cmd(vm.subCtx, args...)
+		_, _, err := Cmd(vm.subCtx, vm.env, args...)
 		vm.errChan <- err
 	}()
 }
@@ -124,7 +132,7 @@ func (vm *VM) ErrChan() chan error {
 }
 
 func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
-	stdout, _, err := Cmd(ctx, "ip", vm.ident)
+	stdout, _, err := Cmd(ctx, vm.env, "ip", vm.ident)
 	if err != nil {
 		return "", err
 	}
@@ -136,7 +144,7 @@ func (vm *VM) Close() error {
 	vm.subCtxCancel()
 	vm.wg.Wait()
 
-	_, _, err := Cmd(context.Background(), "delete", vm.ident)
+	_, _, err := Cmd(context.Background(), vm.env, "delete", vm.ident)
 
 	return err
 }
