@@ -22,6 +22,7 @@ type RunConfig struct {
 	TartOptions                options.TartOptions
 	agentVersion               string
 	containerBackend           containerbackend.ContainerBackend
+	AdditionalEnvironment      map[string]string
 }
 
 func (rc *RunConfig) GetContainerBackend() (containerbackend.ContainerBackend, error) {
