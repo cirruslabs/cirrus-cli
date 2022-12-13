@@ -8,6 +8,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -69,6 +71,19 @@ func (worker *Worker) runTask(
 			return
 		}
 
+		// Provide tags for Sentry: task ID and upstream worker name
+		cirrusSentryTags := []string{
+			fmt.Sprintf("cirrus.task_id=%d", agentAwareTask.TaskId),
+			fmt.Sprintf("cirrus.upstream_worker_name=%s", upstream.WorkerName()),
+		}
+
+		// Provide tags for Sentry: upstream hostname
+		if url, err := url.Parse(upstream.Name()); err == nil {
+			cirrusSentryTags = append(cirrusSentryTags, fmt.Sprintf("cirrus.upstream_hostname=%s", url.Host))
+		} else {
+			cirrusSentryTags = append(cirrusSentryTags, fmt.Sprintf("cirrus.upstream_hostname=%s", upstream.Name()))
+		}
+
 		config := runconfig.RunConfig{
 			ProjectDir:   "",
 			Endpoint:     upstream.AgentEndpoint(),
@@ -76,7 +91,7 @@ func (worker *Worker) runTask(
 			ClientSecret: agentAwareTask.ClientSecret,
 			TaskID:       agentAwareTask.TaskId,
 			AdditionalEnvironment: map[string]string{
-				"CIRRUS_SENTRY_TAGS": fmt.Sprintf("cirrus.task_id=%d", agentAwareTask.TaskId),
+				"CIRRUS_SENTRY_TAGS": strings.Join(cirrusSentryTags, ","),
 			},
 		}
 
