@@ -144,6 +144,7 @@ func (vm *VM) Close() error {
 	ctx := context.Background()
 
 	// Try to gracefully terminate the VM
+	//nolint:dogsled // not interested in the output for now
 	_, _, _ = Cmd(ctx, vm.env, "stop", "--timeout", "5", vm.ident)
 
 	vm.subCtxCancel()
