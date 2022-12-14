@@ -141,10 +141,16 @@ func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
 }
 
 func (vm *VM) Close() error {
+	ctx := context.Background()
+
+	// Try to gracefully terminate the VM
+	//nolint:dogsled // not interested in the output for now
+	_, _, _ = Cmd(ctx, vm.env, "stop", "--timeout", "5", vm.ident)
+
 	vm.subCtxCancel()
 	vm.wg.Wait()
 
-	_, _, err := Cmd(context.Background(), vm.env, "delete", vm.ident)
+	_, _, err := Cmd(ctx, vm.env, "delete", vm.ident)
 
 	return err
 }
