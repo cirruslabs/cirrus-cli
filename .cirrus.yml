@@ -47,7 +47,7 @@ task:
     labels:
       name: scaleway-m1
   env:
-    CIRRUS_INTERNAL_TART_VM: ghcr.io/cirruslabs/macos-monterey-vanilla:12.4
+    CIRRUS_INTERNAL_TART_VM: ghcr.io/cirruslabs/macos-ventura-base:latest
     CIRRUS_INTERNAL_TART_SSH_PASSWORD: admin
     CIRRUS_INTERNAL_TART_SSH_USER: admin
   test_script:
