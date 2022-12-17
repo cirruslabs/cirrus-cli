@@ -232,17 +232,17 @@ func (worker *Worker) Pause(ctx context.Context, wait bool) error {
 		for {
 			response, err := upstream.QueryRunningTasks(ctx, &api.QueryRunningTasksRequest{})
 			if err != nil {
-				worker.logger.Errorf("ignoring an API error from upstream %s while waiting: %w",
-					upstream.Name(), err)
+				return fmt.Errorf("upstream %s failed while waiting: %w", upstream.Name(), err)
 			} else if len(response.RunningTasks) == 0 {
-				return nil
+				// done waiting for the current upstream
+				break
 			}
 
 			select {
 			case <-ctx.Done():
 				return nil
-			case <-time.After(time.Duration(worker.pollIntervalSeconds()) * time.Second):
-				// continue the loop
+			case <-time.After(time.Duration(upstream.PollIntervalSeconds()) * time.Second):
+				// continue waiting for the current upstream
 			}
 		}
 	}
