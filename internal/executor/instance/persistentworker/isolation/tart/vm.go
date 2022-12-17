@@ -132,7 +132,8 @@ func (vm *VM) ErrChan() chan error {
 }
 
 func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
-	stdout, _, err := Cmd(ctx, vm.env, "ip", vm.ident)
+	// wait 30 seconds since usually a VM boots in 15
+	stdout, _, err := Cmd(ctx, vm.env, "ip", "--wait", "30", vm.ident)
 	if err != nil {
 		return "", err
 	}
