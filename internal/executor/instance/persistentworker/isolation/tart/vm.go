@@ -14,10 +14,10 @@ type VM struct {
 
 	env map[string]string
 
-	subCtx       context.Context
-	subCtxCancel context.CancelFunc
-	wg           sync.WaitGroup
-	errChan      chan error
+	runningVMCtx       context.Context
+	runningVMCtxCancel context.CancelFunc
+	wg                 sync.WaitGroup
+	errChan            chan error
 }
 
 type directoryMount struct {
@@ -36,14 +36,14 @@ func NewVMClonedFrom(
 	env map[string]string,
 	logger *echelon.Logger,
 ) (*VM, error) {
-	subCtx, subCtxCancel := context.WithCancel(ctx)
+	runningVMCtx, runningVMCtxCancel := context.WithCancel(context.Background())
 
 	vm := &VM{
-		ident:        to,
-		env:          env,
-		subCtx:       subCtx,
-		subCtxCancel: subCtxCancel,
-		errChan:      make(chan error, 1),
+		ident:              to,
+		env:                env,
+		runningVMCtx:       runningVMCtx,
+		runningVMCtxCancel: runningVMCtxCancel,
+		errChan:            make(chan error, 1),
 	}
 
 	pullLogger := logger.Scoped("pull virtual machine")
@@ -122,7 +122,7 @@ func (vm *VM) Start(
 
 		args = append(args, vm.ident)
 
-		_, _, err := Cmd(vm.subCtx, vm.env, args...)
+		_, _, err := Cmd(vm.runningVMCtx, vm.env, args...)
 		vm.errChan <- err
 	}()
 }
@@ -148,7 +148,7 @@ func (vm *VM) Close() error {
 	//nolint:dogsled // not interested in the output for now
 	_, _, _ = Cmd(ctx, vm.env, "stop", "--timeout", "5", vm.ident)
 
-	vm.subCtxCancel()
+	vm.runningVMCtxCancel()
 	vm.wg.Wait()
 
 	_, _, err := Cmd(ctx, vm.env, "delete", vm.ident)
