@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
+	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/getsentry/sentry-go"
 	"log"
 	"os"
@@ -13,7 +15,14 @@ import (
 
 func main() {
 	// Initialize Sentry
+	var release string
+
+	if version.Version != "unknown" {
+		release = fmt.Sprintf("cirrus-cli@%s", version.Version)
+	}
+
 	err := sentry.Init(sentry.ClientOptions{
+		Release:          release,
 		AttachStacktrace: true,
 	})
 	if err != nil {
