@@ -77,6 +77,9 @@ task:
     - Tests
   env:
     GITHUB_TOKEN: ENCRYPTED[!98ace8259c6024da912c14d5a3c5c6aac186890a8d4819fad78f3e0c41a4e0cd3a2537dd6e91493952fb056fa434be7c!]
+    SENTRY_ORG: cirrus-labs
+    SENTRY_PROJECT: persistent-workers
+    SENTRY_AUTH_TOKEN: ENCRYPTED[!c16a5cf7da5f856b4bc2f21fe8cb7aa2a6c981f851c094ed4d3025fd02ea59a58a86cee8b193a69a1fc20fa217e56ac3!]
   container:
     image: golang:latest
     cpu: 4
@@ -86,3 +89,8 @@ task:
     - apt-get update
     - apt-get -y install goreleaser
   release_script: goreleaser
+  create_sentry_release_script:
+    - export SENTRY_RELEASE="cirrus-cli@$CIRRUS_TAG"
+    - sentry-cli releases new $SENTRY_RELEASE
+    - sentry-cli releases set-commits $SENTRY_RELEASE --auto
+    - sentry-cli releases finalize $SENTRY_RELEASE
