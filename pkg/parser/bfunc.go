@@ -71,7 +71,7 @@ func bfuncArgsToStrings(arguments []interface{}) ([]string, error) {
 }
 
 func CountMatchingAffectedFiles(affectedFiles []string, patterns []string) (int, error) {
-	var count int
+	matchedFilesMask := make([]bool, len(affectedFiles))
 
 	for _, pattern := range patterns {
 		re, err := glob.ToRegexPattern(pattern, false)
@@ -79,10 +79,17 @@ func CountMatchingAffectedFiles(affectedFiles []string, patterns []string) (int,
 			return 0, err
 		}
 
-		for _, affectedFile := range affectedFiles {
+		for index, affectedFile := range affectedFiles {
 			if re.MatchString(affectedFile) {
-				count++
+				matchedFilesMask[index] = true
 			}
+		}
+	}
+
+	var count int
+	for _, match := range matchedFilesMask {
+		if match {
+			count++
 		}
 	}
 
