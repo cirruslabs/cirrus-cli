@@ -47,7 +47,7 @@ func TestBfuncChangesIncludeOnly(t *testing.T) {
   image: debian:latest
 
 positive_match_task:
-  only_if: "changesIncludeOnly('**.go', '**.mod')"
+  only_if: "changesIncludeOnly('**.go', '**/*.go', '**.mod')"
   script: true
 
 negative_match_task:
