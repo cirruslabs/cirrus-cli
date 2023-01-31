@@ -62,7 +62,7 @@
         "name": "push",
         "scriptInstruction": {
           "scripts": [
-            "gcloud docker -- push gcr.io/cirrus-ci-community/e02d522efc69d3863e49972eb177dd6a:latest"
+            "docker push gcr.io/cirrus-ci-community/e02d522efc69d3863e49972eb177dd6a:latest"
           ]
         }
       }

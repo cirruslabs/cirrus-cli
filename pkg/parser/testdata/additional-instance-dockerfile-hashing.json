@@ -149,7 +149,7 @@
         "name": "push",
         "scriptInstruction": {
           "scripts": [
-            "gcloud docker -- push gcr.io/cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df:latest"
+            "docker push gcr.io/cirrus-ci-community/ef74f2c966fb4f2fb970bd14d79237df:latest"
           ]
         }
       }
@@ -194,7 +194,7 @@
         "name": "push",
         "scriptInstruction": {
           "scripts": [
-            "gcloud docker -- push gcr.io/cirrus-ci-community/de7830bffac8e089e6da768deffcf0ee:latest"
+            "docker push gcr.io/cirrus-ci-community/de7830bffac8e089e6da768deffcf0ee:latest"
           ]
         }
       }
@@ -243,7 +243,7 @@
         "name": "push",
         "scriptInstruction": {
           "scripts": [
-            "gcloud docker -- push gcr.io/cirrus-ci-community/c9e62f3db70646306bd60ede09ddefa408c0ee1996e118c1409a94e4a90db12b:latest"
+            "docker push gcr.io/cirrus-ci-community/c9e62f3db70646306bd60ede09ddefa408c0ee1996e118c1409a94e4a90db12b:latest"
           ]
         }
       }
@@ -292,7 +292,7 @@
         "name": "push",
         "scriptInstruction": {
           "scripts": [
-            "gcloud docker -- push gcr.io/cirrus-ci-community/c157d327d3a5f8f11b941d01d4a197b7b727ab040577ade86f2683fec0fed2b9:latest"
+            "docker push gcr.io/cirrus-ci-community/c157d327d3a5f8f11b941d01d4a197b7b727ab040577ade86f2683fec0fed2b9:latest"
           ]
         }
       }

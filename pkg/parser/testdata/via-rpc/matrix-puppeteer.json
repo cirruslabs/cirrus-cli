@@ -148,7 +148,7 @@
         "name": "push",
         "scriptInstruction": {
           "scripts": [
-            "gcloud docker -- push gcr.io/cirrus-ci-community/e55f410835991439e5ec0ab4830daf29:latest"
+            "docker push gcr.io/cirrus-ci-community/e55f410835991439e5ec0ab4830daf29:latest"
           ]
         }
       }
@@ -194,7 +194,7 @@
         "name": "push",
         "scriptInstruction": {
           "scripts": [
-            "gcloud docker -- push gcr.io/cirrus-ci-community/3687850f77ee15dd7dc5d1e5f025b885:latest"
+            "docker push gcr.io/cirrus-ci-community/3687850f77ee15dd7dc5d1e5f025b885:latest"
           ]
         }
       }

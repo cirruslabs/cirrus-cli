@@ -528,7 +528,7 @@ func (p *Parser) createServiceTask(
 				Name: "push",
 				Instruction: &api.Command_ScriptInstruction{
 					ScriptInstruction: &api.ScriptInstruction{
-						Scripts: []string{fmt.Sprintf("gcloud docker -- push gcr.io/cirrus-ci-community/%s:latest",
+						Scripts: []string{fmt.Sprintf("docker push gcr.io/cirrus-ci-community/%s:latest",
 							dockerfileHash)},
 					},
 				},
