@@ -148,15 +148,16 @@ func (tart *Tart) Close() error {
 }
 
 func Cleanup() error {
-	stdout, _, err := Cmd(context.Background(), nil, "list", "--quiet")
+	stdout, _, err := Cmd(context.Background(), nil, "list")
 	if err != nil {
 		return err
 	}
 
-	for _, vmName := range strings.Split(strings.TrimSpace(stdout), "\n") {
-		if !strings.HasPrefix(vmName, vmNamePrefix) {
+	for _, vmNameLine := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if !strings.HasPrefix(vmNameLine, vmNamePrefix) {
 			continue
 		}
+		vmName := strings.Fields(vmNameLine)[0]
 
 		if _, _, err := Cmd(context.Background(), nil, "delete", vmName); err != nil {
 			return err
