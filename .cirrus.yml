@@ -50,6 +50,8 @@ task:
     CIRRUS_INTERNAL_TART_VM: ghcr.io/cirruslabs/macos-ventura-base:latest
     CIRRUS_INTERNAL_TART_SSH_PASSWORD: admin
     CIRRUS_INTERNAL_TART_SSH_USER: admin
+  install_go_script:
+    - brew install go
   test_script:
     - go test -v -run TestWorkerIsolationTart ./...
     - go test -v -run TestExecutorTart ./...
