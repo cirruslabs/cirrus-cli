@@ -44,6 +44,15 @@ func (lfs *Local) Get(ctx context.Context, path string) ([]byte, error) {
 		return nil, err
 	}
 
+	// Check if this is a directory and provide a normalized error
+	stat, err := lfs.Stat(ctx, pivotedPath)
+	if err != nil {
+		return nil, err
+	}
+	if stat.IsDir {
+		return nil, fs.ErrNormalizedIsADirectory
+	}
+
 	return os.ReadFile(pivotedPath)
 }
 
