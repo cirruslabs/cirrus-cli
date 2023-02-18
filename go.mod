@@ -57,15 +57,16 @@ require (
 	go.starlark.net v0.0.0-20221020143700-22309ac47eac
 	golang.org/x/crypto v0.1.0
 	golang.org/x/oauth2 v0.1.0
-	golang.org/x/sys v0.1.0
-	golang.org/x/text v0.4.0
+	golang.org/x/sys v0.5.0
+	golang.org/x/text v0.7.0
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf v1.28.1
-	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.1
 )
+
+require github.com/getsentry/sentry-go v0.16.0
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
@@ -88,7 +89,6 @@ require (
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fvbommel/sortorder v1.0.2 // indirect
-	github.com/getsentry/sentry-go v0.16.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
@@ -124,9 +124,9 @@ require (
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
-	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-	golang.org/x/term v0.1.0 // indirect
+	golang.org/x/term v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20220720214146-176da50484ac // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
