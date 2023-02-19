@@ -8,10 +8,10 @@ const (
 	workingVolumeAgentBinary = "cirrus-ci-agent"
 
 	// agentImageBase is used as a prefix to the agent's version to craft the full agent image name.
-	agentImageBase = "gcr.io/cirrus-ci-community/cirrus-ci-agent:v"
+	agentImageBase = "ghcr.io/cirruslabs/cirrus-ci-agent:v"
 
 	// DefaultAgentVersion represents the default version of the https://github.com/cirruslabs/cirrus-ci-agent to use.
-	DefaultAgentVersion = "1.91.0"
+	DefaultAgentVersion = "1.100.0"
 )
 
 type CopyCommand struct {
