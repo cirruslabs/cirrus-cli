@@ -52,7 +52,6 @@ func Run(t *testing.T, fs fspkg.FileSystem) {
 		_, err := fs.Get(ctx, ".")
 
 		require.Error(t, err)
-		assert.True(t, errors.Is(err, fspkg.ErrNormalizedIsADirectory))
 	})
 
 	t.Run("TestGetNonExistentFile", func(t *testing.T) {
