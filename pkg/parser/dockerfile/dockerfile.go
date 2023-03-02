@@ -28,7 +28,7 @@ func LocalContextSourcePaths(
 
 	const localContextName = "context"
 
-	state, _, err := dockerfile2llb.Dockerfile2LLB(context.Background(), dockerfileContents, dockerfile2llb.ConvertOpt{
+	state, _, _, err := dockerfile2llb.Dockerfile2LLB(context.Background(), dockerfileContents, dockerfile2llb.ConvertOpt{
 		MetaResolver:     &DummyResolver{},
 		BuildArgs:        dockerArguments,
 		ContextLocalName: localContextName,

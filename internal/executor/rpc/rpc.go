@@ -327,7 +327,7 @@ func (r *RPC) ReportAnnotations(ctx context.Context, req *api.ReportAnnotationsC
 			mappedLevel = "error"
 		}
 
-		rawMessage := fmt.Sprintf("::%s file=%s,line=%d,endLine=%d,title=%s::%s", mappedLevel,
+		rawMessage := fmt.Sprintf("::%s file=%s,line=%d,endLine=%d,title=%s::%s\n", mappedLevel,
 			annotation.FileLocation.Path, annotation.FileLocation.StartLine, annotation.FileLocation.EndLine,
 			annotation.Message, annotation.RawDetails)
 		ghaRenderer.RenderRawMessage(rawMessage)

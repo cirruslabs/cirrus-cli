@@ -33,7 +33,7 @@ func NewDocker() (ContainerBackend, error) {
 		return nil, err
 	}
 
-	cli, err := command.NewAPIClientFromFlags(flags.NewCommonOptions(), config)
+	cli, err := command.NewAPIClientFromFlags(flags.NewClientOptions(), config)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func (backend *Docker) ImageDelete(ctx context.Context, reference string) error 
 }
 
 func (backend *Docker) VolumeCreate(ctx context.Context, name string) error {
-	_, err := backend.cli.VolumeCreate(ctx, volume.VolumeCreateBody{Name: name})
+	_, err := backend.cli.VolumeCreate(ctx, volume.CreateOptions{Name: name})
 	return err
 }
 

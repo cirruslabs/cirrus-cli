@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+  planet: moon
+
+task:
+  script: date
+  env:
+    A: B
+  unknown: field

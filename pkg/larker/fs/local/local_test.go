@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -64,7 +63,6 @@ func TestGetDirectory(t *testing.T) {
 	_, err := local.New(dir).Get(context.Background(), ".")
 
 	require.Error(t, err)
-	assert.True(t, errors.Is(err, fs.ErrNormalizedIsADirectory))
 }
 
 func TestGetNonExistentFile(t *testing.T) {

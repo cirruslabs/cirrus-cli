@@ -17,14 +17,14 @@ type FoldableLogsRenderer struct {
 
 func (r FoldableLogsRenderer) RenderScopeStarted(entry *echelon.LogScopeStarted) {
 	if !r.delegate.ScopeHasStarted(entry.GetScopes()) {
-		r.printFoldMessage(entry.GetScopes(), r.startFoldTemplate)
+		r.printFoldMessage(entry.GetScopes(), r.startFoldTemplate, true)
 	}
 	r.delegate.RenderScopeStarted(entry)
 }
 
 func (r FoldableLogsRenderer) RenderScopeFinished(entry *echelon.LogScopeFinished) {
 	r.delegate.RenderScopeFinished(entry)
-	r.printFoldMessage(entry.GetScopes(), r.endFoldTemplate)
+	r.printFoldMessage(entry.GetScopes(), r.endFoldTemplate, false)
 }
 
 func (r FoldableLogsRenderer) RenderMessage(entry *echelon.LogEntryMessage) {
@@ -35,7 +35,7 @@ func (r FoldableLogsRenderer) RenderRawMessage(message string) {
 	r.delegate.RenderRawMessage(message)
 }
 
-func (r FoldableLogsRenderer) printFoldMessage(scopes []string, template string) {
+func (r FoldableLogsRenderer) printFoldMessage(scopes []string, template string, needsLastScope bool) {
 	if scopesCount := len(scopes); scopesCount > 0 {
 		lastScope := scopes[scopesCount-1]
 
@@ -43,7 +43,13 @@ func (r FoldableLogsRenderer) printFoldMessage(scopes []string, template string)
 			lastScope = r.escapeFunc(lastScope)
 		}
 
-		foldingMessage := echelon.NewLogEntryMessage(scopes, echelon.InfoLevel, template, lastScope)
+		var args []interface{}
+
+		if needsLastScope {
+			args = append(args, lastScope)
+		}
+
+		foldingMessage := echelon.NewLogEntryMessage(scopes, echelon.InfoLevel, template, args...)
 		r.delegate.RenderMessage(foldingMessage)
 	}
 }
