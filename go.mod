@@ -35,7 +35,7 @@ require (
 	github.com/lestrrat-go/pdebug v0.0.0-20210111095411-35b07dbf089b // indirect
 	github.com/lestrrat-go/structinfo v0.0.0-20210312050401-7f8bd69d6acb // indirect
 	github.com/mitchellh/go-ps v1.0.0
-	github.com/moby/buildkit v0.11.3
+	github.com/moby/buildkit v0.11.4
 	github.com/moby/term v0.0.0-20221205130635-1aeaba878587 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0
