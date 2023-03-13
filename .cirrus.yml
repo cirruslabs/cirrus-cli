@@ -95,3 +95,32 @@ task:
     - sentry-cli releases new $SENTRY_RELEASE
     - sentry-cli releases set-commits $SENTRY_RELEASE --auto
     - sentry-cli releases finalize $SENTRY_RELEASE
+
+docker_builder:
+  name: Release Docker Image (Dry Run)
+  only_if: $CIRRUS_TAG == ''
+  depends_on: Tests
+  setup_script:
+    - docker buildx create --name multibuilder
+    - docker buildx use multibuilder
+    - docker buildx inspect --bootstrap
+  build_script: |
+    docker buildx build --platform linux/amd64,linux/arm64 .
+
+docker_builder:
+  name: Release Docker Image
+  only_if: $CIRRUS_TAG != ''
+  depends_on: Tests
+  env:
+    GITHUB_TOKEN: ENCRYPTED[!82ed873afdf627284305afef4958c85a8f73127b09978a9786ac521559630ea6c9a5ab6e7f8315abf9ead09b6eff6eae!]
+  login_script:
+    - echo $GITHUB_TOKEN | docker login ghcr.io -u fkorotkov --password-stdin
+  setup_script:
+    - docker buildx create --name multibuilder
+    - docker buildx use multibuilder
+    - docker buildx inspect --bootstrap
+  deploy_script: |
+    docker buildx build --push --platform linux/amd64,linux/arm64 \
+      --tag ghcr.io/cirruslabs/cirrus-cli:$CIRRUS_TAG \
+      --tag ghcr.io/cirruslabs/cirrus-cli:latest \
+      .
