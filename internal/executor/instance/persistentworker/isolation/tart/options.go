@@ -15,3 +15,9 @@ func WithSoftnet() Option {
 		tart.softnet = true
 	}
 }
+
+func WithMountTemporaryWorkingDirectoryFromHost() Option {
+	return func(tart *Tart) {
+		tart.mountTemporaryWorkingDirectoryFromHost = true
+	}
+}

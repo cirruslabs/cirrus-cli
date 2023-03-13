@@ -38,6 +38,8 @@ type Tart struct {
 	cpu         uint32
 	memory      uint32
 	softnet     bool
+
+	mountTemporaryWorkingDirectoryFromHost bool
 }
 
 func New(vmName string, sshUser string, sshPassword string, cpu uint32, memory uint32, opts ...Option) (*Tart, error) {
@@ -77,6 +79,20 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	defer vm.Close()
 
 	// Start the VM (asynchronously)
+	var preCreatedWorkingDir string
+
+	if tart.mountTemporaryWorkingDirectoryFromHost {
+		tmpDir, err := os.MkdirTemp("", "")
+		if err != nil {
+			return fmt.Errorf("%w: failed to create temporary directory: %v",
+				ErrFailed, err)
+		}
+
+		config.ProjectDir = tmpDir
+		config.DirtyMode = true
+		preCreatedWorkingDir = tart.WorkingDirectory(config.ProjectDir, config.DirtyMode)
+	}
+
 	var directoryMounts []directoryMount
 	if config.DirtyMode {
 		directoryMounts = append(directoryMounts, directoryMount{
@@ -132,7 +148,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	return remoteagent.WaitForAgent(ctx, tart.logger, ip,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64",
-		config, true, hooks)
+		config, true, hooks, preCreatedWorkingDir)
 }
 
 func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {

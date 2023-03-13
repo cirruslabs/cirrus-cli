@@ -45,6 +45,10 @@ func New(isolation *api.Isolation, logger logger.Lightweight) (abstract.Instance
 			opts = append(opts, tart.WithSoftnet())
 		}
 
+		if iso.Tart.MountTemporaryWorkingDirectoryFromHost {
+			opts = append(opts, tart.WithMountTemporaryWorkingDirectoryFromHost())
+		}
+
 		return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, iso.Tart.Cpu, iso.Tart.Memory,
 			opts...)
 	default:
