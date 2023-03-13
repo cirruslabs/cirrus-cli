@@ -104,8 +104,9 @@ docker_builder:
     - docker buildx create --name multibuilder
     - docker buildx use multibuilder
     - docker buildx inspect --bootstrap
-  build_script: |
-    docker buildx build --platform linux/amd64,linux/arm64 .
+  build_script:
+    - git tag v0.1.0-SNAPSHOT
+    - docker buildx build --platform linux/amd64,linux/arm64 .
 
 docker_builder:
   name: Release Docker Image
