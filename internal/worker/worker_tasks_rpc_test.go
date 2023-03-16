@@ -8,22 +8,33 @@ import (
 )
 
 type TasksRPC struct {
+	checkScripts      []string
 	SucceededCommands []string
 
 	api.UnimplementedCirrusCIServiceServer
+}
+
+func NewTasksRPC(checkScripts []string) *TasksRPC {
+	if len(checkScripts) == 0 {
+		var checkScript string
+		if runtime.GOOS == "windows" {
+			checkScript = "type go.mod"
+		} else {
+			checkScript = "test -e go.mod"
+		}
+
+		checkScripts = []string{checkScript}
+	}
+
+	return &TasksRPC{
+		checkScripts: checkScripts,
+	}
 }
 
 func (tasksRPC *TasksRPC) InitialCommands(
 	ctx context.Context,
 	request *api.InitialCommandsRequest,
 ) (*api.CommandsResponse, error) {
-	var checkScript string
-	if runtime.GOOS == "windows" {
-		checkScript = "type go.mod"
-	} else {
-		checkScript = "test -e go.mod"
-	}
-
 	return &api.CommandsResponse{
 		Environment: map[string]string{
 			"CIRRUS_REPO_CLONE_URL": "http://github.com/cirruslabs/cirrus-cli.git",
@@ -40,7 +51,7 @@ func (tasksRPC *TasksRPC) InitialCommands(
 				Name: "check",
 				Instruction: &api.Command_ScriptInstruction{
 					ScriptInstruction: &api.ScriptInstruction{
-						Scripts: []string{checkScript},
+						Scripts: tasksRPC.checkScripts,
 					},
 				},
 			},

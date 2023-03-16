@@ -32,6 +32,7 @@ func WaitForAgent(
 	config *runconfig.RunConfig,
 	synchronizeTime bool,
 	hooks []WaitForAgentHook,
+	preCreatedWorkingDir string,
 ) error {
 	// Connect to the VM and upload the agent
 	var netConn net.Conn
@@ -157,6 +158,10 @@ func WaitForAgent(
 		"\"" + config.ClientSecret + "\"",
 		"-task-id",
 		strconv.FormatInt(config.TaskID, 10),
+	}
+
+	if preCreatedWorkingDir != "" {
+		command = append(command, "-pre-created-working-dir", "\""+preCreatedWorkingDir+"\"")
 	}
 
 	// Start the agent and wait for it to terminate
