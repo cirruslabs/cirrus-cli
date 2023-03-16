@@ -87,6 +87,9 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 			return fmt.Errorf("%w: failed to create temporary directory: %v",
 				ErrFailed, err)
 		}
+		defer func() {
+			_ = os.RemoveAll(tmpDir)
+		}()
 
 		config.ProjectDir = tmpDir
 		config.DirtyMode = true
