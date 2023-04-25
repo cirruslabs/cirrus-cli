@@ -84,7 +84,14 @@ func TestRetrieve(t *testing.T) {
 				Revision: "v0.1.0",
 			},
 		},
-		{"hash",
+		{"default branch (git)",
+			gitLocation{
+				URL:      "https://github.com/cirrus-modules/helpers",
+				Path:     "lib.star",
+				Revision: "main",
+			},
+		},
+		{"hash (git)",
 			gitLocation{
 				URL:      "https://github.com/cirrus-modules/helpers",
 				Path:     "lib.star",
