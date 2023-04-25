@@ -57,7 +57,7 @@ func New(ctx context.Context, url string, revision string) (*Git, error) {
 	// Without this ResolveRevision() would only work for default branch (e.g. master)
 	if err := repo.Fetch(&git.FetchOptions{
 		RefSpecs: []config.RefSpec{"refs/*:refs/*"},
-	}); err != nil {
+	}); err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
 		return nil, fmt.Errorf("%w: %v", ErrRetrievalFailed, err)
 	}
 
