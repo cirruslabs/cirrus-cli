@@ -45,6 +45,10 @@ func New(isolation *api.Isolation, logger logger.Lightweight) (abstract.Instance
 			opts = append(opts, tart.WithSoftnet())
 		}
 
+		if iso.Tart.Display != "" {
+			opts = append(opts, tart.WithDisplay(iso.Tart.Display))
+		}
+
 		if iso.Tart.MountTemporaryWorkingDirectoryFromHost {
 			opts = append(opts, tart.WithMountTemporaryWorkingDirectoryFromHost())
 		}
