@@ -84,8 +84,8 @@ github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWR
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/cilium/ebpf v0.7.0/go.mod h1:/oI2+1shJiTGAMgl6/RgJr36Eo1jzrRcAWbcXO2usCA=
-github.com/cirruslabs/cirrus-ci-agent v1.103.0 h1:8BCKvWor161YhfYyx2+0HObBVHO4xnqKAtTjhBPR68w=
-github.com/cirruslabs/cirrus-ci-agent v1.103.0/go.mod h1:qP+hsNEZUOYlyPpgqbacr1F/R3Gzu2VDLk4ViDD95UU=
+github.com/cirruslabs/cirrus-ci-agent v1.105.0 h1:loTDE393ouAqmS1yFNxV+eoVFpI3gg8jWJjRHA4yS3g=
+github.com/cirruslabs/cirrus-ci-agent v1.105.0/go.mod h1:wXwXeQknxQhVgr96wFL/m1WWeoDIItSfUM6osyuNk/c=
 github.com/cirruslabs/echelon v1.8.0 h1:OMRHtQwi53wxRGoSomEPLvEEx98b7FhJXRNJsyvPXEo=
 github.com/cirruslabs/echelon v1.8.0/go.mod h1:Zk4IGe8upeefcwPGE143JCM7iwOkJnZ2ZFCbDWwoadA=
 github.com/cirruslabs/go-java-glob v0.1.0 h1:qC4Fzrq2sXKTLLsBb7ih7BNdCjCR6ZJAAK4nOZ6d/Ak=

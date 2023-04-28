@@ -32,6 +32,7 @@ func NewVMClonedFrom(
 	to string,
 	cpu uint32,
 	memory uint32,
+	display string,
 	lazyPull bool,
 	env map[string]string,
 	logger *echelon.Logger,
@@ -81,6 +82,13 @@ func NewVMClonedFrom(
 		memoryStr := strconv.FormatUint(uint64(memory), 10)
 
 		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--memory", memoryStr)
+		if err != nil {
+			cloneLogger.Finish(false)
+			return nil, err
+		}
+	}
+	if display != "" {
+		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--display", display)
 		if err != nil {
 			cloneLogger.Finish(false)
 			return nil, err

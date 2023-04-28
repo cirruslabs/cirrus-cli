@@ -38,6 +38,7 @@ type Tart struct {
 	cpu         uint32
 	memory      uint32
 	softnet     bool
+	display     string
 
 	mountTemporaryWorkingDirectoryFromHost bool
 }
@@ -69,6 +70,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	vm, err := NewVMClonedFrom(ctx,
 		tart.vmName, tmpVMName,
 		tart.cpu, tart.memory,
+		tart.display,
 		config.TartOptions.LazyPull,
 		config.AdditionalEnvironment,
 		config.Logger(),

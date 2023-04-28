@@ -16,6 +16,12 @@ func WithSoftnet() Option {
 	}
 }
 
+func WithDisplay(display string) Option {
+	return func(tart *Tart) {
+		tart.display = display
+	}
+}
+
 func WithMountTemporaryWorkingDirectoryFromHost() Option {
 	return func(tart *Tart) {
 		tart.mountTemporaryWorkingDirectoryFromHost = true
