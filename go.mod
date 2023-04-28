@@ -15,7 +15,7 @@ require (
 	github.com/containers/storage v1.45.4 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/docker/cli v23.0.1+incompatible
-	github.com/docker/docker v23.0.1+incompatible
+	github.com/docker/docker v23.0.3+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-git/go-billy/v5 v5.4.1
