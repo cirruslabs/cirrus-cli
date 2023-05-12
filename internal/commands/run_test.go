@@ -107,6 +107,25 @@ func TestRunEnvironmentSet(t *testing.T) {
 	require.Nil(t, err)
 }
 
+// TestRunEnvironmentSetViaFile ensures that the user can set environment variables via file.
+func TestRunEnvironmentSetViaFile(t *testing.T) {
+	testutil.TempChdirPopulatedWith(t, "testdata/run-environment")
+
+	tempFile, err := os.CreateTemp("", "")
+	require.NoError(t, err)
+	defer os.Remove(tempFile.Name())
+
+	_, err = fmt.Fprintln(tempFile, "SOMEKEY=good value")
+	require.NoError(t, err)
+	require.NoError(t, tempFile.Close())
+
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "--container-lazy-pull", "-v", "-o simple", "--env-file", tempFile.Name()})
+	err = command.Execute()
+
+	require.Nil(t, err)
+}
+
 // TestRunEnvironmentPassThrough ensures that the user can pass-through environment variables
 // from the environment where CLI runs.
 func TestRunEnvironmentPassThrough(t *testing.T) {
