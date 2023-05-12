@@ -2,16 +2,21 @@ package larker_test
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
+	"text/template"
 	"time"
 )
 
@@ -336,6 +341,37 @@ func TestBuiltinChangesIncludeOnly(t *testing.T) {
 func TestBuiltinStarlib(t *testing.T) {
 	dir := testutil.TempDirPopulatedWith(t, "testdata/builtin-starlib")
 
+	// Start a local HTTP server for testing the "http" module
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method == http.MethodOptions {
+			writer.Header().Set("Allow", "OPTIONS")
+			writer.WriteHeader(http.StatusOK)
+		}
+	})
+	mux.HandleFunc("/json", func(writer http.ResponseWriter, request *http.Request) {
+		jsonObject := struct {
+			Slideshow string `json:"slideshow"`
+		}{
+			Slideshow: "doesn't matter",
+		}
+
+		jsonBytes, err := json.Marshal(&jsonObject)
+		if err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+
+			return
+		}
+
+		if _, err := writer.Write(jsonBytes); err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+		}
+	})
+	mux.HandleFunc("/status/418", func(writer http.ResponseWriter, request *http.Request) {
+		writer.WriteHeader(http.StatusTeapot)
+	})
+	httpServer := httptest.NewServer(mux)
+
 	// Prepare a ZIP file for test_zipfile()
 	zipFile, err := os.Create(filepath.Join(dir, "test.zip"))
 	if err != nil {
@@ -365,9 +401,22 @@ func TestBuiltinStarlib(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Starlark script is templated w.r.t. HTTP server URL, so expand it
+	vars := struct {
+		HTTPBinURL string
+	}{
+		HTTPBinURL: httpServer.URL,
+	}
+
+	template, err := template.New("").Parse(string(source))
+	require.NoError(t, err)
+
+	var expandedTemplate bytes.Buffer
+	require.NoError(t, template.Execute(&expandedTemplate, &vars))
+
 	// Run the source code
 	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
-	_, err = lrk.Main(context.Background(), string(source))
+	_, err = lrk.Main(context.Background(), expandedTemplate.String())
 	if err != nil {
 		t.Fatal(err)
 	}
