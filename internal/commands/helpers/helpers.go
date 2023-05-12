@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -30,6 +31,40 @@ func ConsumeSubCommands(cmd *cobra.Command, subCommands []*cobra.Command) *cobra
 	}
 
 	return nil
+}
+
+func EnvFileToMap(envFilePath string) (map[string]string, error) {
+	result := map[string]string{}
+
+	envFile, err := os.Open(envFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	scanner := bufio.NewScanner(envFile)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		parts := strings.SplitN(line, "=", 2)
+
+		if len(parts) == 1 {
+			// pass-through a variable
+			value, ok := os.LookupEnv(parts[0])
+			if ok {
+				result[parts[0]] = value
+			}
+		} else if len(parts) == 2 {
+			// explicit variable specification
+			result[parts[0]] = parts[1]
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // envArgsToMap parses and expands environment arguments like "A=B" (set operation)

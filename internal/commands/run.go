@@ -27,7 +27,8 @@ var ErrRun = errors.New("run failed")
 var artifactsDir string
 var dirty bool
 var output string
-var environment []string
+var env []string
+var envFile string
 var affectedFiles []string
 var affectedFilesGitRevision string
 var affectedFilesGitCachedRevision string
@@ -55,13 +56,19 @@ func run(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
+	// Standard environment
 	projectDir := "."
 	baseEnvironment := eenvironment.Merge(
 		eenvironment.Static(),
 		eenvironment.BuildID(),
 		eenvironment.ProjectSpecific(projectDir),
 	)
-	userSpecifiedEnvironment := helpers.EnvArgsToMap(environment)
+
+	// User-specified environment
+	userSpecifiedEnvironment, err := userSpecifiedEnvironment()
+	if err != nil {
+		return fmt.Errorf("%w: %v", ErrRun, err)
+	}
 
 	// Retrieve the combined YAML configuration
 	combinedYAML, err := helpers.ReadCombinedConfig(cmd.Context(),
@@ -168,10 +175,14 @@ func newRunCmd() *cobra.Command {
 	// General flags
 	cmd.PersistentFlags().StringVar(&artifactsDir, "artifacts-dir", "",
 		"directory in which to save the artifacts")
-	cmd.PersistentFlags().BoolVar(&dirty, "dirty", false, "if set the project directory will be mounted"+
-		"in read-write mode, otherwise the project directory files are copied, taking .gitignore into account")
-	cmd.PersistentFlags().StringArrayVarP(&environment, "environment", "e", []string{},
-		"set (-e A=B) or pass-through (-e A) an environment variable")
+	cmd.PersistentFlags().BoolVar(&dirty, "dirty", false, "if set the project directory will "+
+		"be mounted in read-write mode, otherwise the project directory files are copied, taking .gitignore "+
+		"into account")
+	cmd.PersistentFlags().StringArrayVarP(&env, "env", "e", []string{},
+		"set (-e NAME=VALUE) or pass-through (-e NAME) an environment variable")
+	cmd.PersistentFlags().StringVar(&envFile, "env-file", "",
+		"set (NAME=VALUE on a separate line) or pass-through (NAME on a separate line) "+
+			"environment variables from the specified file")
 	cmd.PersistentFlags().StringSliceVar(&affectedFiles, "affected-files", []string{},
 		"comma-separated list of files to add to the list of affected files (used in changesInclude and "+
 			"changesIncludeOnly functions)")
@@ -212,5 +223,28 @@ func newRunCmd() *cobra.Command {
 		"don't remove containers and volumes after execution")
 	_ = cmd.PersistentFlags().MarkHidden("debug-no-cleanup")
 
+	// Deprecated flags
+	cmd.PersistentFlags().StringArrayVar(&env, "environment", []string{},
+		"deprecated, please use --env instead")
+	_ = cmd.PersistentFlags().MarkHidden("environment")
+
 	return cmd
+}
+
+func userSpecifiedEnvironment() (map[string]string, error) {
+	var result map[string]string
+	var err error
+
+	// --env-file
+	if envFile != "" {
+		result, err = helpers.EnvFileToMap(envFile)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// --env
+	result = eenvironment.Merge(result, helpers.EnvArgsToMap(env))
+
+	return result, nil
 }

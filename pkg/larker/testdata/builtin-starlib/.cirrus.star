@@ -13,27 +13,27 @@ def main(ctx):
     return []
 
 def test_http():
-    resp = http.get("https://httpbin.org/json")
+    resp = http.get("{{ .HTTPBinURL }}/json")
     if resp.status_code != 200 or resp.json().get("slideshow") == None:
         fail("failed to parse JSON")
 
-    resp = http.post("https://httpbin.org/status/418")
+    resp = http.post("{{ .HTTPBinURL }}/status/418")
     if resp.status_code != 418:
-        fail("HTTP POST returned status code %s instead of 418" % http.status_code)
+        fail("HTTP POST returned status code %s instead of 418" % resp.status_code)
 
-    resp = http.put("https://httpbin.org/status/418")
+    resp = http.put("{{ .HTTPBinURL }}/status/418")
     if resp.status_code != 418:
-        fail("HTTP PUT returned status code %s instead of 418" % http.status_code)
+        fail("HTTP PUT returned status code %s instead of 418" % resp.status_code)
 
-    resp = http.patch("https://httpbin.org/status/418")
+    resp = http.patch("{{ .HTTPBinURL }}/status/418")
     if resp.status_code != 418:
-        fail("HTTP PATCH returned status code %s instead of 418" % http.status_code)
+        fail("HTTP PATCH returned status code %s instead of 418" % resp.status_code)
 
-    resp = http.delete("https://httpbin.org/status/418")
+    resp = http.delete("{{ .HTTPBinURL }}/status/418")
     if resp.status_code != 418:
-        fail("HTTP DELETE returned status code %s instead of 418" % http.status_code)
+        fail("HTTP DELETE returned status code %s instead of 418" % resp.status_code)
 
-    resp = http.options("https://httpbin.org/")
+    resp = http.options("{{ .HTTPBinURL }}")
     allow_header = resp.headers.get("Allow")
     if allow_header == None or "OPTIONS" not in allow_header:
         fail("Allow header does not contain OPTIONS method: %s" % allow_header)
