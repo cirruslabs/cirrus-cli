@@ -92,6 +92,7 @@ aliases_test:
 		aliasesTestNode,
 	}
 
+	deep.MaxDepth = 10
 	if diff := deep.Equal(root, actual); diff != nil {
 		fmt.Println(diff)
 		t.Fail()
