@@ -20,7 +20,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-git/go-billy/v5 v5.4.1
 	github.com/go-git/go-git/v5 v5.6.1
-	github.com/go-test/deep v1.0.1
+	github.com/go-test/deep v1.1.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
