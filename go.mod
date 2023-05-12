@@ -35,7 +35,7 @@ require (
 	github.com/lestrrat-go/pdebug v0.0.0-20210111095411-35b07dbf089b // indirect
 	github.com/lestrrat-go/structinfo v0.0.0-20210312050401-7f8bd69d6acb // indirect
 	github.com/mitchellh/go-ps v1.0.0
-	github.com/moby/buildkit v0.11.6
+	github.com/moby/buildkit v0.11.5
 	github.com/moby/term v0.5.0 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0
@@ -67,7 +67,6 @@ require (
 require github.com/getsentry/sentry-go v0.21.0
 
 require (
-	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230106234847-43070de90fa1 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
@@ -78,7 +77,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
-	github.com/containerd/containerd v1.7.1 // indirect
+	github.com/containerd/containerd v1.6.19 // indirect
 	github.com/containerd/continuity v0.3.1-0.20230206214859-2a963a2f56e8 // indirect
 	github.com/containerd/ttrpc v1.2.2 // indirect
 	github.com/containerd/typeurl v1.0.2 // indirect
@@ -114,7 +113,7 @@ require (
 	github.com/moby/sys/signal v0.7.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc3 // indirect
+	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.7 // indirect
 	github.com/opencontainers/runtime-spec v1.1.0-rc.2 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
