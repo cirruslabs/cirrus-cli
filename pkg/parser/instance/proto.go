@@ -143,6 +143,9 @@ func NewProtoParser(
 					return err
 				}
 				enumValueDescriptor := field.Enum().Values().ByName(protoreflect.Name(strings.ToUpper(value)))
+				if enumValueDescriptor == nil {
+					return node.ParserError("failed to find enum value by '%s' name", value)
+				}
 				instance.proto.Set(field, protoreflect.ValueOfEnum(enumValueDescriptor.Number()))
 				return nil
 			})

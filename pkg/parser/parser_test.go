@@ -156,6 +156,16 @@ func TestAdditionalInstances(t *testing.T) {
 	assertExpectedTasks(t, absolutize("proto-instance.json"), result)
 }
 
+func TestAdditionalInstancesInvalidProto(t *testing.T) {
+	containerInstanceReflect := (&api.ContainerInstance{}).ProtoReflect()
+	p := parser.New(parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
+		"proto_container": containerInstanceReflect.Descriptor(),
+	}))
+	_, err := p.ParseFromFile(context.Background(), absolutize("proto-instance-invalid.yml"))
+
+	require.ErrorContains(t, err, "parsing error: 4:5: failed to find enum value by 'LinusOS' name")
+}
+
 func TestAdditionalInstanceDockerfileHashing(t *testing.T) {
 	fs, err := memory.New(map[string][]byte{
 		"Dockerfile":                            []byte("FROM debian:latest"),
