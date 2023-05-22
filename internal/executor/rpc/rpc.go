@@ -273,7 +273,7 @@ func (r *RPC) ReportAgentError(ctx context.Context, req *api.ReportAgentProblemR
 		return nil, err
 	}
 
-	r.logger.Scoped(task.UniqueDescription()).Debugf("agent error: %s", req.Message)
+	r.logger.Scoped(task.UniqueDescription()).Errorf("agent error: %s", req.Message)
 
 	return &empty.Empty{}, nil
 }
@@ -284,7 +284,7 @@ func (r *RPC) ReportAgentWarning(ctx context.Context, req *api.ReportAgentProble
 		return nil, err
 	}
 
-	r.logger.Scoped(task.UniqueDescription()).Debugf("agent warning: %s", req.Message)
+	r.logger.Scoped(task.UniqueDescription()).Warnf("agent warning: %s", req.Message)
 
 	return &empty.Empty{}, nil
 }
