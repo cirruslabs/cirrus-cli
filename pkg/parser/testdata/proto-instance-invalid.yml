@@ -1,0 +1,4 @@
+proto_task:
+  proto_container:
+    image: alpine:latest
+    platform: LinusOS
