@@ -99,7 +99,8 @@ func (loader *Loader) LoadFunc(
 					hint = ", perhaps you've meant the .star extension instead of the .start?"
 				}
 
-				return nil, fmt.Errorf("%w: module '%s' not found%s", resolver.ErrRetrievalFailed, module, hint)
+				return nil, fmt.Errorf("%w: module '%s' at path '%s' not found%s",
+					resolver.ErrRetrievalFailed, module, path, hint)
 			}
 
 			return nil, err
