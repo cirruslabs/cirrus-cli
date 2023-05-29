@@ -8,7 +8,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
+	"github.com/getsentry/sentry-go"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -72,16 +74,21 @@ func (worker *Worker) runTask(
 		}
 
 		// Provide tags for Sentry: task ID and upstream worker name
-		cirrusSentryTags := []string{
-			fmt.Sprintf("cirrus.task_id=%d", agentAwareTask.TaskId),
-			fmt.Sprintf("cirrus.upstream_worker_name=%s", upstream.WorkerName()),
+		cirrusSentryTags := map[string]string{
+			"cirrus.task_id":              strconv.FormatInt(agentAwareTask.TaskId, 10),
+			"cirrus.upstream_worker_name": upstream.WorkerName(),
 		}
 
 		// Provide tags for Sentry: upstream hostname
 		if url, err := url.Parse(upstream.Name()); err == nil {
-			cirrusSentryTags = append(cirrusSentryTags, fmt.Sprintf("cirrus.upstream_hostname=%s", url.Host))
+			cirrusSentryTags["cirrus.upstream_hostname"] = url.Host
 		} else {
-			cirrusSentryTags = append(cirrusSentryTags, fmt.Sprintf("cirrus.upstream_hostname=%s", upstream.Name()))
+			cirrusSentryTags["cirrus.upstream_hostname"] = upstream.Name()
+		}
+
+		var cirrusSentryTagsFormatted []string
+		for k, v := range cirrusSentryTags {
+			cirrusSentryTagsFormatted = append(cirrusSentryTagsFormatted, fmt.Sprintf("%s=%s", k, v))
 		}
 
 		config := runconfig.RunConfig{
@@ -91,7 +98,7 @@ func (worker *Worker) runTask(
 			ClientSecret: agentAwareTask.ClientSecret,
 			TaskID:       agentAwareTask.TaskId,
 			AdditionalEnvironment: map[string]string{
-				"CIRRUS_SENTRY_TAGS": strings.Join(cirrusSentryTags, ","),
+				"CIRRUS_SENTRY_TAGS": strings.Join(cirrusSentryTagsFormatted, ","),
 			},
 		}
 
@@ -107,6 +114,11 @@ func (worker *Worker) runTask(
 			boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
 			defer cancel()
 
+			sentry.WithScope(func(scope *sentry.Scope) {
+				scope.SetTags(cirrusSentryTags)
+				sentry.CaptureException(err)
+			})
+
 			err := upstream.TaskFailed(boundedCtx, &api.TaskFailedRequest{
 				TaskIdentification: taskIdentification,
 				Message:            err.Error(),
@@ -114,6 +126,11 @@ func (worker *Worker) runTask(
 			if err != nil {
 				worker.logger.Errorf("failed to notify the server about the failed task %d: %v",
 					agentAwareTask.TaskId, err)
+				sentry.WithScope(func(scope *sentry.Scope) {
+					scope.SetTags(cirrusSentryTags)
+					scope.SetLevel(sentry.LevelFatal)
+					sentry.CaptureMessage(fmt.Sprintf("failed to notify the server about the failed task: %v", err))
+				})
 			}
 		}
 
@@ -123,7 +140,11 @@ func (worker *Worker) runTask(
 		if err = upstream.TaskStopped(boundedCtx, taskIdentification); err != nil {
 			worker.logger.Errorf("failed to notify the server about the stopped task %d: %v",
 				agentAwareTask.TaskId, err)
-
+			sentry.WithScope(func(scope *sentry.Scope) {
+				scope.SetTags(cirrusSentryTags)
+				scope.SetLevel(sentry.LevelFatal)
+				sentry.CaptureMessage(fmt.Sprintf("failed to notify the server about the stopped task: %v", err))
+			})
 			return
 		}
 	}()
