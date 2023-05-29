@@ -86,7 +86,7 @@ func (worker *Worker) runTask(
 			cirrusSentryTags["cirrus.upstream_hostname"] = upstream.Name()
 		}
 
-		cirrusSentryTagsFormatted := make([]string, len(cirrusSentryTags))
+		cirrusSentryTagsFormatted := make([]string, 0)
 		for k, v := range cirrusSentryTags {
 			cirrusSentryTagsFormatted = append(cirrusSentryTagsFormatted, fmt.Sprintf("%s=%s", k, v))
 		}
