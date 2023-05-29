@@ -129,7 +129,7 @@ func (worker *Worker) runTask(
 				sentry.WithScope(func(scope *sentry.Scope) {
 					scope.SetTags(cirrusSentryTags)
 					scope.SetLevel(sentry.LevelFatal)
-					sentry.CaptureException(err)
+					sentry.CaptureMessage(fmt.Sprintf("failed to notify the server about the failed task: %v", err))
 				})
 			}
 		}
@@ -143,7 +143,7 @@ func (worker *Worker) runTask(
 			sentry.WithScope(func(scope *sentry.Scope) {
 				scope.SetTags(cirrusSentryTags)
 				scope.SetLevel(sentry.LevelFatal)
-				sentry.CaptureException(err)
+				sentry.CaptureMessage(fmt.Sprintf("failed to notify the server about the stopped task: %v", err))
 			})
 			return
 		}
