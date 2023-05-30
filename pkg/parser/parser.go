@@ -400,6 +400,10 @@ func (p *Parser) Schema() *schema.Schema {
 	}
 
 	for parserName, parser := range p.parsers {
+		if parser.Schema() == nil {
+			continue
+		}
+
 		switch nameable := parserName.(type) {
 		case *nameable.SimpleNameable:
 			schema.Properties[nameable.Name()] = parser.Schema()
@@ -410,6 +414,10 @@ func (p *Parser) Schema() *schema.Schema {
 		// Note: this is a simplification that doesn't return collectible fields recursively,
 		// because it assumes that we're only defining collectibles on the first depth level.
 		for _, collectibleFields := range parser.CollectibleFields() {
+			if collectibleFields.Schema == nil {
+				continue
+			}
+
 			schema.Properties[collectibleFields.Name] = collectibleFields.Schema
 		}
 	}

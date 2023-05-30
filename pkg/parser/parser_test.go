@@ -51,6 +51,7 @@ var validCases = []string{
 	"yaml-merge-collectible",
 	"depends-on-expansion",
 	"persistent-worker-resource-management",
+	"arm-container",
 }
 
 func absolutize(file string) string {

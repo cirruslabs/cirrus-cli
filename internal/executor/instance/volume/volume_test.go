@@ -33,6 +33,7 @@ func TestWorkingVolumeSmoke(t *testing.T) {
 		false,
 		platform.DefaultAgentVersion,
 		platform.Auto(),
+		nil,
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -65,6 +66,7 @@ func TestCleanupOnFailure(t *testing.T) {
 		false,
 		platform.DefaultAgentVersion,
 		platform.Auto(),
+		nil,
 	)
 	require.Error(t, err)
 

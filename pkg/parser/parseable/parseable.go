@@ -149,6 +149,10 @@ func (parser *DefaultParser) Schema() *schema.Schema {
 	}
 
 	for _, field := range parser.fields {
+		if field.schema == nil {
+			continue
+		}
+
 		switch nameable := field.name.(type) {
 		case *nameable.SimpleNameable:
 			schema.Properties[nameable.Name()] = field.schema
@@ -162,6 +166,10 @@ func (parser *DefaultParser) Schema() *schema.Schema {
 	}
 
 	for _, collectibleField := range parser.collectibleFields {
+		if collectibleField.Schema == nil {
+			continue
+		}
+
 		schema.Properties[collectibleField.Name] = collectibleField.Schema
 	}
 

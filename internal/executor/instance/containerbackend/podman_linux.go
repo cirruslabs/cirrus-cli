@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/antihax/optional"
 	"github.com/avast/retry-go"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/podman"
 	"github.com/cirruslabs/podmanapi/pkg/swagger"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -171,7 +172,7 @@ func (backend *Podman) VolumeDelete(ctx context.Context, name string) error {
 	return err
 }
 
-func (backend *Podman) ImagePull(ctx context.Context, reference string) error {
+func (backend *Podman) ImagePull(ctx context.Context, reference string, _ *api.Architecture) error {
 	//nolint:bodyclose // already closed by Swagger-generated code
 	_, _, err := backend.cli.ImagesApi.LibpodImagesPull(ctx, &swagger.ImagesApiLibpodImagesPullOpts{
 		Reference: optional.NewString(reference),

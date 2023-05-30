@@ -47,10 +47,12 @@ func NewFromProto(
 	switch instance := dynamicInstance.(type) {
 	case *api.ContainerInstance:
 		var containerPlatform platform.Platform
+		var architecture *api.Architecture
 
 		switch instance.Platform {
 		case api.Platform_LINUX:
 			containerPlatform = platform.NewUnix()
+			architecture = &instance.Architecture
 		case api.Platform_WINDOWS:
 			containerPlatform = platform.NewWindows(instance.OsVersion)
 		default:
@@ -64,6 +66,7 @@ func NewFromProto(
 			Memory:               instance.Memory,
 			AdditionalContainers: instance.AdditionalContainers,
 			Platform:             containerPlatform,
+			Architecture:         architecture,
 			CustomWorkingDir:     customWorkingDir,
 		}, nil
 	case *api.PipeInstance:

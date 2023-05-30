@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/docker"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/config"
@@ -19,6 +20,7 @@ import (
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"io"
 )
 
@@ -52,8 +54,19 @@ func (backend *Docker) Close() error {
 	return backend.cli.Close()
 }
 
-func (backend *Docker) ImagePull(ctx context.Context, reference string) error {
-	stream, err := backend.cli.ImagePull(ctx, reference, types.ImagePullOptions{})
+func (backend *Docker) ImagePull(ctx context.Context, reference string, architecture *api.Architecture) error {
+	options := &types.ImagePullOptions{}
+
+	if architecture != nil {
+		switch *architecture {
+		case api.Architecture_AMD64:
+			options.Platform = "linux/amd64"
+		case api.Architecture_ARM64:
+			options.Platform = "linux/arm64"
+		}
+	}
+
+	stream, err := backend.cli.ImagePull(ctx, reference, *options)
 	if err != nil {
 		return err
 	}
@@ -236,7 +249,22 @@ func (backend *Docker) ContainerCreate(
 		hostConfig.SecurityOpt = []string{"label=disable"}
 	}
 
-	cont, err := backend.cli.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, nil, name)
+	var platform *v1.Platform
+
+	if input.Architecture != nil {
+		switch *input.Architecture {
+		case api.Architecture_AMD64:
+			platform = &v1.Platform{
+				Architecture: "amd64",
+			}
+		case api.Architecture_ARM64:
+			platform = &v1.Platform{
+				Architecture: "arm64",
+			}
+		}
+	}
+
+	cont, err := backend.cli.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, platform, name)
 	if err != nil {
 		return nil, err
 	}

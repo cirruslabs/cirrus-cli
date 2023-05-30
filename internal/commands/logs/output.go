@@ -58,14 +58,20 @@ func GetLogger(format string, verbose bool, logWriter io.Writer, logFile *os.Fil
 
 	switch format {
 	case OutputInteractive:
-		interactiveRenderer := renderers.NewInteractiveRenderer(logFile, nil)
+		rendererConfig := config.NewDefaultRenderingConfig()
+		rendererConfig.DescriptionLinesWhenSkipped = rendererConfig.DescriptionLinesWhenFailed
+
+		interactiveRenderer := renderers.NewInteractiveRenderer(logFile, rendererConfig)
 		go interactiveRenderer.StartDrawing()
 		cancelFunc = func() {
 			interactiveRenderer.StopDrawing()
 		}
 		renderer = interactiveRenderer
 	case OutputNoEmoji:
-		interactiveRenderer := renderers.NewInteractiveRenderer(logFile, config.NewDefaultSymbolsOnlyRenderingConfig())
+		rendererConfig := config.NewDefaultSymbolsOnlyRenderingConfig()
+		rendererConfig.DescriptionLinesWhenSkipped = rendererConfig.DescriptionLinesWhenFailed
+
+		interactiveRenderer := renderers.NewInteractiveRenderer(logFile, rendererConfig)
 		go interactiveRenderer.StartDrawing()
 		cancelFunc = func() {
 			interactiveRenderer.StopDrawing()

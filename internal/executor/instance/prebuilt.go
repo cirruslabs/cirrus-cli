@@ -97,7 +97,7 @@ func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *runconfig.Run
 
 	// The image is not available locally, try to pull it
 	logger.Infof("Pulling image %s...", prebuilt.Image)
-	if err := backend.ImagePull(ctx, prebuilt.Image); err == nil {
+	if err := backend.ImagePull(ctx, prebuilt.Image, nil); err == nil {
 		logger.Infof("Using pulled image %s...", prebuilt.Image)
 		return nil
 	}

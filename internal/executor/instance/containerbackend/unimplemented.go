@@ -2,6 +2,7 @@ package containerbackend
 
 import (
 	"context"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"io"
 )
 
@@ -9,7 +10,7 @@ type Unimplemented struct{}
 
 func (*Unimplemented) Close() error { return nil }
 
-func (*Unimplemented) ImagePull(ctx context.Context, reference string) error {
+func (*Unimplemented) ImagePull(ctx context.Context, reference string, architecture *api.Architecture) error {
 	return ErrNotImplemented
 }
 
