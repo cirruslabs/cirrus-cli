@@ -26,7 +26,7 @@ func TestForcePull(t *testing.T) {
 	// Should be pulled because lazy pull is disabled by default
 	image := canaryImage()
 
-	if err := backend.ImagePull(ctx, image); err != nil {
+	if err := backend.ImagePull(ctx, image, nil); err != nil {
 		t.Fatal(err)
 	}
 
@@ -54,7 +54,7 @@ func TestLazyPull(t *testing.T) {
 	// Shouldn't be pulled because it does exist
 	image := canaryImage()
 
-	if err := backend.ImagePull(ctx, image); err != nil {
+	if err := backend.ImagePull(ctx, image, nil); err != nil {
 		t.Fatal(err)
 	}
 

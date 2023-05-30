@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
@@ -27,6 +28,7 @@ func CreateWorkingVolumeFromConfig(
 	ctx context.Context,
 	config *runconfig.RunConfig,
 	platform platform.Platform,
+	architecture *api.Architecture,
 ) (*Volume, *Volume, error) {
 	initLogger := config.Logger().Scoped("Preparing execution environment...")
 	initLogger.Infof("Preparing volume to work with...")
@@ -41,7 +43,8 @@ func CreateWorkingVolumeFromConfig(
 	}
 
 	agentVolume, workingVolume, err := CreateWorkingVolume(ctx, backend, config.ContainerOptions,
-		agentVolumeName, workingVolumeName, config.ProjectDir, config.DirtyMode, config.GetAgentVersion(), platform)
+		agentVolumeName, workingVolumeName, config.ProjectDir, config.DirtyMode, config.GetAgentVersion(),
+		platform, architecture)
 	if err != nil {
 		initLogger.Warnf("Failed to create a volume from working directory: %v", err)
 		initLogger.Finish(false)
@@ -65,10 +68,11 @@ func CreateWorkingVolume(
 	dontPopulate bool,
 	agentVersion string,
 	platform platform.Platform,
+	architecture *api.Architecture,
 ) (agentVolume *Volume, vol *Volume, err error) {
 	agentImage := platform.ContainerAgentImage(agentVersion)
 
-	if err := pullhelper.PullHelper(ctx, agentImage, backend, containerOptions, nil); err != nil {
+	if err := pullhelper.PullHelper(ctx, agentImage, architecture, backend, containerOptions, nil); err != nil {
 		return nil, nil, fmt.Errorf("%w: when pulling agent image %s: %v",
 			ErrVolumeCreationFailed, agentImage, err)
 	}
@@ -91,8 +95,9 @@ func CreateWorkingVolume(
 	// Create and start a helper container that will copy the project directory (if needed) and the agent
 	// into the working volume
 	input := &containerbackend.ContainerCreateInput{
-		Image:   agentImage,
-		Command: copyCommand.Command,
+		Image:        agentImage,
+		Architecture: architecture,
+		Command:      copyCommand.Command,
 		Mounts: []containerbackend.ContainerMount{
 			{
 				Type:   containerbackend.MountTypeVolume,

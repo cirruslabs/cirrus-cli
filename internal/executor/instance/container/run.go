@@ -53,13 +53,15 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 		additionalContainer.Memory = clampMemory(additionalContainer.Memory, availableMemory)
 	}
 
-	if err := pullhelper.PullHelper(ctx, params.Image, backend, config.ContainerOptions, logger); err != nil {
+	if err := pullhelper.PullHelper(ctx, params.Image, params.Architecture, backend, config.ContainerOptions,
+		logger); err != nil {
 		return err
 	}
 
 	logger.Debugf("creating container using working volume %s", params.WorkingVolumeName)
 	input := containerbackend.ContainerCreateInput{
-		Image: params.Image,
+		Image:        params.Image,
+		Architecture: params.Architecture,
 		Entrypoint: []string{
 			params.Platform.ContainerAgentPath(),
 			"-api-endpoint",
@@ -214,6 +216,7 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 				additionalContainersCtx,
 				logger,
 				additionalContainer,
+				params.Architecture,
 				backend,
 				cont.ID,
 				config.ContainerOptions,
@@ -258,19 +261,22 @@ func runAdditionalContainer(
 	ctx context.Context,
 	logger *echelon.Logger,
 	additionalContainer *api.AdditionalContainer,
+	architecture *api.Architecture,
 	backend containerbackend.ContainerBackend,
 	connectToContainer string,
 	containerOptions options.ContainerOptions,
 ) error {
-	if err := pullhelper.PullHelper(ctx, additionalContainer.Image, backend, containerOptions, logger); err != nil {
+	if err := pullhelper.PullHelper(ctx, additionalContainer.Image, architecture, backend,
+		containerOptions, logger); err != nil {
 		return fmt.Errorf("%w: %v", ErrAdditionalContainerFailed, err)
 	}
 
 	logger.Debugf("creating additional container")
 	input := &containerbackend.ContainerCreateInput{
-		Image:   additionalContainer.Image,
-		Command: additionalContainer.Command,
-		Env:     additionalContainer.Environment,
+		Image:        additionalContainer.Image,
+		Architecture: architecture,
+		Command:      additionalContainer.Command,
+		Env:          additionalContainer.Environment,
 		Resources: containerbackend.ContainerResources{
 			NanoCPUs: int64(additionalContainer.Cpu * nano),
 			Memory:   int64(additionalContainer.Memory * mebi),

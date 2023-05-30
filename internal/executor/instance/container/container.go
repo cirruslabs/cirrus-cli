@@ -13,6 +13,7 @@ type Instance struct {
 	CPU                  float32
 	Memory               uint32
 	AdditionalContainers []*api.AdditionalContainer
+	Architecture         *api.Architecture
 	Platform             platform.Platform
 	CustomWorkingDir     string
 	Volumes              []*api.Volume
@@ -25,6 +26,7 @@ type Params struct {
 	AdditionalContainers   []*api.AdditionalContainer
 	CommandFrom, CommandTo string
 	Platform               platform.Platform
+	Architecture           *api.Architecture
 	AgentVolumeName        string
 	WorkingVolumeName      string
 	WorkingDirectory       string
@@ -39,7 +41,8 @@ func (inst *Instance) Run(ctx context.Context, config *runconfig.RunConfig) (err
 		return err
 	}
 
-	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, inst.Platform)
+	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, inst.Platform,
+		inst.Architecture)
 	if err != nil {
 		return err
 	}
@@ -70,6 +73,7 @@ func (inst *Instance) Run(ctx context.Context, config *runconfig.RunConfig) (err
 		Memory:               inst.Memory,
 		AdditionalContainers: inst.AdditionalContainers,
 		Platform:             inst.Platform,
+		Architecture:         inst.Architecture,
 		AgentVolumeName:      agentVolume.Name(),
 		WorkingVolumeName:    workingVolume.Name(),
 		WorkingDirectory:     inst.WorkingDirectory(config.ProjectDir, config.DirtyMode),

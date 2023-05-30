@@ -63,7 +63,7 @@ func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (e
 		return err
 	}
 
-	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, platform)
+	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, platform, nil)
 	if err != nil {
 		return err
 	}

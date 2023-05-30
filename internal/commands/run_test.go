@@ -247,7 +247,7 @@ func TestRunContainerPull(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := backend.ImagePull(context.Background(), "debian:latest"); err != nil {
+	if err := backend.ImagePull(context.Background(), "debian:latest", nil); err != nil {
 		t.Fatal(err)
 	}
 
