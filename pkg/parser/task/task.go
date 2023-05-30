@@ -93,31 +93,29 @@ func NewTask(
 	if _, ok := additionalInstances["arm_container"]; !ok {
 		arch := api.Architecture_ARM64
 
-		task.CollectibleInstanceField("arm_container",
-			instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), arch, parserKit).Schema(),
-			func(node *node.Node) error {
-				task.instanceNode = node
+		task.CollectibleInstanceField("arm_container", nil, func(node *node.Node) error {
+			task.instanceNode = node
 
-				inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), arch, parserKit)
-				containerInstance, err := inst.Parse(node, parserKit)
-				if err != nil {
-					return err
-				}
+			inst := instance.NewCommunityContainer(environment.Merge(task.proto.Environment, env), arch, parserKit)
+			containerInstance, err := inst.Parse(node, parserKit)
+			if err != nil {
+				return err
+			}
 
-				// Retrieve the platform to update the environment
-				task.proto.Environment = environment.Merge(
-					task.proto.Environment,
-					map[string]string{"CIRRUS_OS": strings.ToLower(containerInstance.Platform.String())},
-				)
+			// Retrieve the platform to update the environment
+			task.proto.Environment = environment.Merge(
+				task.proto.Environment,
+				map[string]string{"CIRRUS_OS": strings.ToLower(containerInstance.Platform.String())},
+			)
 
-				anyInstance, err := anypb.New(containerInstance)
-				if err != nil {
-					return err
-				}
-				task.proto.Instance = anyInstance
+			anyInstance, err := anypb.New(containerInstance)
+			if err != nil {
+				return err
+			}
+			task.proto.Instance = anyInstance
 
-				return nil
-			})
+			return nil
+		})
 	}
 	if _, ok := additionalInstances["windows_container"]; !ok {
 		task.CollectibleInstanceField("windows_container",
