@@ -23,9 +23,15 @@ type Container struct {
 	parseable.DefaultParser
 }
 
-func NewCommunityContainer(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Container {
+func NewCommunityContainer(
+	mergedEnv map[string]string,
+	architecture api.Architecture,
+	parserKit *parserkit.ParserKit,
+) *Container {
 	container := &Container{
-		proto: &api.ContainerInstance{},
+		proto: &api.ContainerInstance{
+			Architecture: architecture,
+		},
 	}
 
 	imageSchema := schema.String("Docker Image to use.")

@@ -1,0 +1,5 @@
+arm_container:
+  image: debian:latest
+
+task:
+  script: true

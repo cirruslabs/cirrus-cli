@@ -206,6 +206,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		case errors.Is(ctx.Err(), context.DeadlineExceeded):
 			task.SetStatus(taskstatus.TimedOut)
 		case errors.Is(err, instance.ErrUnsupportedInstance):
+			taskLogger.Warnf(err.Error())
 			task.SetStatus(taskstatus.Skipped)
 		default:
 			cancel()

@@ -82,10 +82,10 @@ github.com/cespare/xxhash/v2 v2.2.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XL
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
-github.com/cirruslabs/cirrus-ci-agent v1.105.0 h1:loTDE393ouAqmS1yFNxV+eoVFpI3gg8jWJjRHA4yS3g=
-github.com/cirruslabs/cirrus-ci-agent v1.105.0/go.mod h1:wXwXeQknxQhVgr96wFL/m1WWeoDIItSfUM6osyuNk/c=
-github.com/cirruslabs/echelon v1.8.0 h1:OMRHtQwi53wxRGoSomEPLvEEx98b7FhJXRNJsyvPXEo=
-github.com/cirruslabs/echelon v1.8.0/go.mod h1:Zk4IGe8upeefcwPGE143JCM7iwOkJnZ2ZFCbDWwoadA=
+github.com/cirruslabs/cirrus-ci-agent v1.108.0 h1:/G4gZaHHjC13LY1EmOJBuOq2C1t7CnnMvwc2jFIbx5Q=
+github.com/cirruslabs/cirrus-ci-agent v1.108.0/go.mod h1:wXwXeQknxQhVgr96wFL/m1WWeoDIItSfUM6osyuNk/c=
+github.com/cirruslabs/echelon v1.9.0 h1:UtHAtoc+C7KZoYtbMCOL8JYA1Ndi6/4u0+gWxw9sB8I=
+github.com/cirruslabs/echelon v1.9.0/go.mod h1:Zk4IGe8upeefcwPGE143JCM7iwOkJnZ2ZFCbDWwoadA=
 github.com/cirruslabs/go-java-glob v0.1.0 h1:qC4Fzrq2sXKTLLsBb7ih7BNdCjCR6ZJAAK4nOZ6d/Ak=
 github.com/cirruslabs/go-java-glob v0.1.0/go.mod h1:+4vLmYqEnKtVAdeYsP5GCcPBcTuWsqi6P9bO6HraGFE=
 github.com/cirruslabs/podmanapi v0.3.0 h1:WfpDXXWhBOvZ1cUxiOsOTRB7g2liMgXHt4ZFYT2wB4I=

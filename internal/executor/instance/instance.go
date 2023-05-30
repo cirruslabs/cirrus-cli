@@ -48,6 +48,35 @@ func NewFromProto(
 	case *api.ContainerInstance:
 		var containerPlatform platform.Platform
 
+		switch instance.Architecture {
+		case api.Architecture_AMD64:
+			if runtime.GOARCH != "amd64" {
+				var hint string
+
+				if runtime.GOARCH == "arm64" {
+					hint = ", please switch to \"arm_container\""
+				}
+
+				return &UnsupportedInstance{
+					err: fmt.Errorf("%w: cannot build \"container\" instance on a non-amd64 machine%s",
+						ErrUnsupportedInstance, hint),
+				}, nil
+			}
+		case api.Architecture_ARM64:
+			if runtime.GOARCH != "arm64" {
+				var hint string
+
+				if runtime.GOARCH == "amd64" {
+					hint = ", please switch to \"container\""
+				}
+
+				return &UnsupportedInstance{
+					err: fmt.Errorf("%w: cannot build \"arm_container\" instance on a non-arm64 machine%s",
+						ErrUnsupportedInstance, hint),
+				}, nil
+			}
+		}
+
 		switch instance.Platform {
 		case api.Platform_LINUX:
 			containerPlatform = platform.NewUnix()
