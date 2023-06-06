@@ -33,6 +33,12 @@ func TestParse(t *testing.T) {
 			Path:     "lib.star",
 			Revision: "da39a3ee5e6b4b0d3255bfef95601890afd80709",
 		}},
+		{"parses tag", "github.com/CirrusLabs/cirrus-modules@v2", gitHubLocation{
+			Owner:    "CirrusLabs",
+			Name:     "cirrus-modules",
+			Path:     "lib.star",
+			Revision: "v2",
+		}},
 		{"parses path and revision", "github.com/some-org/some-repo/dir/some.star@da39a3ee", gitHubLocation{
 			Owner:    "some-org",
 			Name:     "some-repo",
