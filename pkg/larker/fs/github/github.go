@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v53/github"
 	lru "github.com/hashicorp/golang-lru"
 	"golang.org/x/oauth2"
 	"net/http"

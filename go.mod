@@ -22,7 +22,7 @@ require (
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/go-test/deep v1.1.0
 	github.com/golang/protobuf v1.5.3
-	github.com/google/go-github/v32 v32.1.0
+	github.com/google/go-github/v53 v53.0.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
