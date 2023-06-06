@@ -64,7 +64,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require github.com/getsentry/sentry-go v0.21.0
+require (
+	github.com/getsentry/sentry-go v0.21.0
+	github.com/opencontainers/image-spec v1.1.0-rc2
+)
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
@@ -113,7 +116,6 @@ require (
 	github.com/moby/sys/signal v0.7.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/opencontainers/runc v1.1.7 // indirect
 	github.com/opencontainers/runtime-spec v1.1.0-rc.2 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
