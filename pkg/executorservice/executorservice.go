@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	grpcretry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"google.golang.org/grpc"
@@ -35,10 +34,8 @@ func (p *ExecutorService) SupportedInstances() (*api.AdditionalInstancesInfo, er
 	defer cancel()
 
 	// Setup Cirrus CI RPC connection
-	certPool, _ := gocertifi.CACerts()
 	tlsCredentials := credentials.NewTLS(&tls.Config{
 		MinVersion: tls.VersionTLS13,
-		RootCAs:    certPool,
 	})
 	conn, err := grpc.DialContext(
 		ctx,
