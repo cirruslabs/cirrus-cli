@@ -1,12 +1,13 @@
 module github.com/cirruslabs/cirrus-cli
 
-go 1.19
+go 1.20
 
 require (
 	github.com/PaesslerAG/gval v1.2.2
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d
+	github.com/breml/rootcerts v0.2.11
+	github.com/certifi/gocertifi v0.0.0-20210507211836-431795d63e8d // indirect
 	github.com/cirruslabs/cirrus-ci-agent v1.108.0
 	github.com/cirruslabs/echelon v1.9.0
 	github.com/cirruslabs/go-java-glob v0.1.0

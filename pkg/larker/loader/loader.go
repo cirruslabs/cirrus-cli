@@ -2,10 +2,8 @@ package loader
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/builtin"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/resolver"
@@ -18,7 +16,6 @@ import (
 	starlarkjson "go.starlark.net/lib/json"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
-	gohttp "net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -145,18 +142,6 @@ func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
 		Members: builtin.FS(loader.ctx, func(locator string) (fs.FileSystem, string, error) {
 			return loader.ResolveFS(loader.fs, locator)
 		}),
-	}
-
-	certPool, err := gocertifi.CACerts()
-	if err != nil {
-		http.Client = &gohttp.Client{
-			Transport: &gohttp.Transport{
-				TLSClientConfig: &tls.Config{
-					RootCAs:    certPool,
-					MinVersion: tls.VersionTLS12,
-				},
-			},
-		}
 	}
 
 	httpModule, err := http.LoadModule()

@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
+	"github.com/breml/rootcerts/embedded"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/getsentry/sentry-go"
@@ -14,6 +16,11 @@ import (
 )
 
 func main() {
+	// Provide fallback root CA certificates
+	mozillaRoots := x509.NewCertPool()
+	mozillaRoots.AppendCertsFromPEM([]byte(embedded.MozillaCACertificatesPEM()))
+	x509.SetFallbackRoots(mozillaRoots)
+
 	// Initialize Sentry
 	var release string
 

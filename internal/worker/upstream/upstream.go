@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/certifi/gocertifi"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-ci-agent/pkg/grpchelper"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
@@ -112,10 +111,8 @@ func (upstream *Upstream) Connect(ctx context.Context) error {
 	if upstream.rpcInsecure {
 		rpcSecurity = grpc.WithTransportCredentials(insecure.NewCredentials())
 	} else {
-		certPool, _ := gocertifi.CACerts()
 		tlsCredentials := credentials.NewTLS(&tls.Config{
 			MinVersion: tls.VersionTLS13,
-			RootCAs:    certPool,
 		})
 		rpcSecurity = grpc.WithTransportCredentials(tlsCredentials)
 	}
