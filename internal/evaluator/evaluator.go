@@ -28,8 +28,7 @@ import (
 const pathYAML = ".cirrus.yml"
 const pathStarlark = ".cirrus.star"
 
-var ErrGitHubFromEnvFailed = errors.New("got cirrus.fs call, but GitHub filesystem failed " +
-	"to initialize from environment")
+var ErrNoFS = errors.New("no filesystem available")
 
 type ConfigurationEvaluatorServiceServer struct {
 	// must be embedded to have forward compatible implementations
@@ -78,32 +77,6 @@ func Serve(ctx context.Context, lis net.Listener) error {
 	}
 }
 
-func fsFromEnvironment(env map[string]string) (fs fs.FileSystem, err error) {
-	// Fallback to failing filesystem implementation that will fail the evaluation only
-	// if cirrus.fs is used
-	fs = failing.New(ErrGitHubFromEnvFailed)
-
-	// Use GitHub filesystem if all the required variables are present
-	owner, ok := env["CIRRUS_REPO_OWNER"]
-	if !ok {
-		return
-	}
-	repo, ok := env["CIRRUS_REPO_NAME"]
-	if !ok {
-		return
-	}
-	reference, ok := env["CIRRUS_CHANGE_IN_REPO"]
-	if !ok {
-		return
-	}
-	token, ok := env["CIRRUS_REPO_CLONE_TOKEN"]
-	if !ok {
-		return
-	}
-
-	return github.New(owner, repo, reference, token)
-}
-
 func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 	ctx context.Context,
 	request *api.EvaluateConfigRequest,
@@ -117,21 +90,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		yamlConfigs = append(yamlConfigs, request.YamlConfig)
 	}
 
-	var fs fs.FileSystem
-	var err error
-
-	if len(request.FilesContents) != 0 {
-		// memory.New() expects a map with []byte
-		// values instead of string values
-		filesContents := map[string][]byte{}
-		for key, value := range request.FilesContents {
-			filesContents[key] = []byte(value)
-		}
-
-		fs, err = memory.New(filesContents)
-	} else {
-		fs, err = fsFromEnvironment(request.Environment)
-	}
+	fs, err := convertFS(request.Fs)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to initialize file system: %v", err)
 	}
@@ -305,4 +264,21 @@ func TransformAdditionalInstances(
 	}
 
 	return additionalInstances, nil
+}
+
+func convertFS(apiFS *api.FileSystem) (fs fs.FileSystem, err error) {
+	fs = failing.New(ErrNoFS)
+
+	if apiFS == nil {
+		return fs, err
+	}
+
+	switch impl := apiFS.Impl.(type) {
+	case *api.FileSystem_Memory_:
+		fs, err = memory.New(impl.Memory.FilesContents)
+	case *api.FileSystem_Github_:
+		fs, err = github.New(impl.Github.Owner, impl.Github.Repo, impl.Github.Reference, impl.Github.Token)
+	}
+
+	return fs, err
 }
