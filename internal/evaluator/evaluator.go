@@ -90,17 +90,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		yamlConfigs = append(yamlConfigs, request.YamlConfig)
 	}
 
-	var fs fs.FileSystem
-	var err error
-
-	switch impl := request.Fs.Impl.(type) {
-	case *api.FileSystem_Memory_:
-		fs, err = memory.New(impl.Memory.FilesContents)
-	case *api.FileSystem_Github_:
-		fs, err = github.New(impl.Github.Owner, impl.Github.Repo, impl.Github.Reference, impl.Github.Token)
-	default:
-		fs = failing.New(ErrNoFS)
-	}
+	fs, err := convertFS(request.Fs)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to initialize file system: %v", err)
 	}
@@ -274,4 +264,21 @@ func TransformAdditionalInstances(
 	}
 
 	return additionalInstances, nil
+}
+
+func convertFS(apiFS *api.FileSystem) (fs fs.FileSystem, err error) {
+	fs = failing.New(ErrNoFS)
+
+	if apiFS == nil {
+		return fs, err
+	}
+
+	switch impl := apiFS.Impl.(type) {
+	case *api.FileSystem_Memory_:
+		fs, err = memory.New(impl.Memory.FilesContents)
+	case *api.FileSystem_Github_:
+		fs, err = github.New(impl.Github.Owner, impl.Github.Repo, impl.Github.Reference, impl.Github.Token)
+	}
+
+	return fs, err
 }
