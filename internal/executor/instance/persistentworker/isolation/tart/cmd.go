@@ -25,7 +25,7 @@ type loggerAsWriter struct {
 
 func (l loggerAsWriter) Write(p []byte) (n int, err error) {
 	if l.delegate != nil {
-		l.delegate.Logf(l.level, string(p))
+		l.delegate.Logf(l.level, "%s", strings.TrimSpace(string(p)))
 	}
 	return len(p), nil
 }
