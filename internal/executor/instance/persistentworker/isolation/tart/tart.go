@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -151,9 +152,20 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		})
 	}
 
-	return remoteagent.WaitForAgent(ctx, tart.logger, ip,
+	addTartListBreadcrumb()
+	addDHCPDLeasesBreadcrumb()
+
+	err = remoteagent.WaitForAgent(ctx, tart.logger, ip,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64",
 		config, true, hooks, preCreatedWorkingDir)
+	if err != nil {
+		addTartListBreadcrumb()
+		addDHCPDLeasesBreadcrumb()
+
+		return err
+	}
+
+	return nil
 }
 
 func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
@@ -227,5 +239,30 @@ func (tart *Tart) syncProjectDir(dir string, sshClient *ssh.Client) error {
 		}
 
 		return nil
+	})
+}
+
+func addTartListBreadcrumb() {
+	stdout, stderr, err := Cmd(context.Background(), nil, "list", "--format=json")
+
+	sentry.AddBreadcrumb(&sentry.Breadcrumb{
+		Message: "Tart VM list",
+		Data: map[string]interface{}{
+			"err":    err,
+			"stdout": stdout,
+			"stderr": stderr,
+		},
+	})
+}
+
+func addDHCPDLeasesBreadcrumb() {
+	dhcpdLeasesBytes, err := os.ReadFile("/var/db/dhcpd_leases")
+
+	sentry.AddBreadcrumb(&sentry.Breadcrumb{
+		Message: "DHCPD server leases",
+		Data: map[string]interface{}{
+			"err":                  err,
+			"/var/db/dhcpd_leases": string(dhcpdLeasesBytes),
+		},
 	})
 }

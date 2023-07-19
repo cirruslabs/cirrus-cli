@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cirruslabs/echelon"
+	"github.com/getsentry/sentry-go"
 	"strconv"
 	"strings"
 	"sync"
@@ -130,7 +131,15 @@ func (vm *VM) Start(
 
 		args = append(args, vm.ident)
 
-		_, _, err := Cmd(vm.runningVMCtx, vm.env, args...)
+		stdout, stderr, err := Cmd(vm.runningVMCtx, vm.env, args...)
+		sentry.AddBreadcrumb(&sentry.Breadcrumb{
+			Message: fmt.Sprintf("\"tart run\" finished"),
+			Data: map[string]interface{}{
+				"err":    err,
+				"stdout": stdout,
+				"stderr": stderr,
+			},
+		})
 		vm.errChan <- err
 	}()
 }
@@ -151,6 +160,10 @@ func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
 
 func (vm *VM) Close() error {
 	ctx := context.Background()
+
+	sentry.AddBreadcrumb(&sentry.Breadcrumb{
+		Message: fmt.Sprintf("stopping and deleting the VM %s", vm.ident),
+	})
 
 	// Try to gracefully terminate the VM
 	//nolint:dogsled // not interested in the output for now
