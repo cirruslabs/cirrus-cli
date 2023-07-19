@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -78,7 +79,15 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
 	}
-	defer vm.Close()
+	defer func() {
+		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
+			localHub.AddBreadcrumb(&sentry.Breadcrumb{
+				Message: fmt.Sprintf("stopping and deleting the VM %s", vm.ident),
+			}, nil)
+		}
+
+		_ = vm.Close()
+	}()
 
 	// Start the VM (asynchronously)
 	var preCreatedWorkingDir string
@@ -107,7 +116,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		})
 	}
 
-	vm.Start(tart.softnet, directoryMounts)
+	vm.Start(ctx, tart.softnet, directoryMounts)
 
 	// Wait for the VM to start and get it's DHCP address
 	var ip string
@@ -151,9 +160,20 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		})
 	}
 
-	return remoteagent.WaitForAgent(ctx, tart.logger, ip,
+	addTartListBreadcrumb(ctx)
+	addDHCPDLeasesBreadcrumb(ctx)
+
+	err = remoteagent.WaitForAgent(ctx, tart.logger, ip,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64",
 		config, true, hooks, preCreatedWorkingDir)
+	if err != nil {
+		addTartListBreadcrumb(ctx)
+		addDHCPDLeasesBreadcrumb(ctx)
+
+		return err
+	}
+
+	return nil
 }
 
 func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
@@ -228,4 +248,39 @@ func (tart *Tart) syncProjectDir(dir string, sshClient *ssh.Client) error {
 
 		return nil
 	})
+}
+
+func addTartListBreadcrumb(ctx context.Context) {
+	localHub := sentry.GetHubFromContext(ctx)
+	if localHub == nil {
+		return
+	}
+
+	stdout, stderr, err := Cmd(context.Background(), nil, "list", "--format=json")
+
+	localHub.AddBreadcrumb(&sentry.Breadcrumb{
+		Message: "Tart VM list",
+		Data: map[string]interface{}{
+			"err":    err,
+			"stdout": stdout,
+			"stderr": stderr,
+		},
+	}, nil)
+}
+
+func addDHCPDLeasesBreadcrumb(ctx context.Context) {
+	localHub := sentry.GetHubFromContext(ctx)
+	if localHub == nil {
+		return
+	}
+
+	dhcpdLeasesBytes, err := os.ReadFile("/var/db/dhcpd_leases")
+
+	localHub.AddBreadcrumb(&sentry.Breadcrumb{
+		Message: "DHCPD server leases",
+		Data: map[string]interface{}{
+			"err":                  err,
+			"/var/db/dhcpd_leases": string(dhcpdLeasesBytes),
+		},
+	}, nil)
 }

@@ -57,6 +57,9 @@ func (worker *Worker) runTask(
 	}
 
 	go func() {
+		localHub := sentry.CurrentHub().Clone()
+		taskCtx = sentry.SetHubOnContext(taskCtx, localHub)
+
 		defer func() {
 			if err := inst.Close(); err != nil {
 				worker.logger.Errorf("failed to close persistent worker instance for task %d: %v",
@@ -114,9 +117,9 @@ func (worker *Worker) runTask(
 			boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
 			defer cancel()
 
-			sentry.WithScope(func(scope *sentry.Scope) {
+			localHub.WithScope(func(scope *sentry.Scope) {
 				scope.SetTags(cirrusSentryTags)
-				sentry.CaptureException(err)
+				localHub.CaptureException(err)
 			})
 
 			err := upstream.TaskFailed(boundedCtx, &api.TaskFailedRequest{
@@ -126,10 +129,10 @@ func (worker *Worker) runTask(
 			if err != nil {
 				worker.logger.Errorf("failed to notify the server about the failed task %d: %v",
 					agentAwareTask.TaskId, err)
-				sentry.WithScope(func(scope *sentry.Scope) {
+				localHub.WithScope(func(scope *sentry.Scope) {
 					scope.SetTags(cirrusSentryTags)
 					scope.SetLevel(sentry.LevelFatal)
-					sentry.CaptureMessage(fmt.Sprintf("failed to notify the server about the failed task: %v", err))
+					localHub.CaptureMessage(fmt.Sprintf("failed to notify the server about the failed task: %v", err))
 				})
 			}
 		}
@@ -140,10 +143,10 @@ func (worker *Worker) runTask(
 		if err = upstream.TaskStopped(boundedCtx, taskIdentification); err != nil {
 			worker.logger.Errorf("failed to notify the server about the stopped task %d: %v",
 				agentAwareTask.TaskId, err)
-			sentry.WithScope(func(scope *sentry.Scope) {
+			localHub.WithScope(func(scope *sentry.Scope) {
 				scope.SetTags(cirrusSentryTags)
 				scope.SetLevel(sentry.LevelFatal)
-				sentry.CaptureMessage(fmt.Sprintf("failed to notify the server about the stopped task: %v", err))
+				localHub.CaptureMessage(fmt.Sprintf("failed to notify the server about the stopped task: %v", err))
 			})
 			return
 		}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cirruslabs/echelon"
+	"github.com/getsentry/sentry-go"
 	"strconv"
 	"strings"
 	"sync"
@@ -104,6 +105,7 @@ func (vm *VM) Ident() string {
 }
 
 func (vm *VM) Start(
+	ctx context.Context,
 	softnet bool,
 	directoryMounts []directoryMount,
 ) {
@@ -130,7 +132,17 @@ func (vm *VM) Start(
 
 		args = append(args, vm.ident)
 
-		_, _, err := Cmd(vm.runningVMCtx, vm.env, args...)
+		stdout, stderr, err := Cmd(vm.runningVMCtx, vm.env, args...)
+		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
+			localHub.AddBreadcrumb(&sentry.Breadcrumb{
+				Message: "\"tart run\" finished",
+				Data: map[string]interface{}{
+					"err":    err,
+					"stdout": stdout,
+					"stderr": stderr,
+				},
+			}, nil)
+		}
 		vm.errChan <- err
 	}()
 }
