@@ -133,7 +133,7 @@ func (vm *VM) Start(
 
 		stdout, stderr, err := Cmd(vm.runningVMCtx, vm.env, args...)
 		sentry.AddBreadcrumb(&sentry.Breadcrumb{
-			Message: fmt.Sprintf("\"tart run\" finished"),
+			Message: "\"tart run\" finished",
 			Data: map[string]interface{}{
 				"err":    err,
 				"stdout": stdout,
