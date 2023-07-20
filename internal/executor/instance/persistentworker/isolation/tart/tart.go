@@ -67,6 +67,12 @@ func New(vmName string, sshUser string, sshPassword string, cpu uint32, memory u
 }
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
+	if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
+		localHub.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetExtra("Softnet enabled", tart.softnet)
+		})
+	}
+
 	tmpVMName := fmt.Sprintf("%s%d-", vmNamePrefix, config.TaskID) + uuid.NewString()
 	vm, err := NewVMClonedFrom(ctx,
 		tart.vmName, tmpVMName,

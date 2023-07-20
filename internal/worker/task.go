@@ -10,6 +10,7 @@ import (
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/getsentry/sentry-go"
 	"net/url"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -119,6 +120,11 @@ func (worker *Worker) runTask(
 
 			localHub.WithScope(func(scope *sentry.Scope) {
 				scope.SetTags(cirrusSentryTags)
+
+				buf := make([]byte, 1*1024*1024)
+				n := runtime.Stack(buf, true)
+				scope.SetExtra("Stack trace for all goroutines", string(buf[:n]))
+
 				localHub.CaptureException(err)
 			})
 
