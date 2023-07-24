@@ -243,7 +243,7 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			logLines := strings.Split(log, "\n")
 
 			for _, logLine := range logLines {
-				streamLogger.Infof(logLine)
+				streamLogger.Infof("%s", logLine)
 			}
 		}
 	}
