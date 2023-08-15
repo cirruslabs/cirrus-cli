@@ -2,6 +2,7 @@
 package worker
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"path/filepath"
 	"testing"
@@ -55,8 +56,13 @@ func TestRestrictOnlySpecificTartImages(t *testing.T) {
 	const goodImage = "ghcr.io/cirruslabs/macos-ventura-base:latest"
 	require.True(t, config.Security.Isolation.Tart.ImageAllowed(goodImage))
 
-	const badImage = "example.com/cirruslabs/macos-ventura-base:latest"
-	require.False(t, config.Security.Isolation.Tart.ImageAllowed(badImage))
+	badImages := []string{
+		"example.com/cirruslabs/macos-ventura-base:latest",
+		"example.org/ghcr.io/cirruslabs/whatnot",
+	}
+	for _, badImage := range badImages {
+		assert.False(t, config.Security.Isolation.Tart.ImageAllowed(badImage))
+	}
 }
 
 func TestRestrictForceSoftnet(t *testing.T) {
