@@ -29,21 +29,21 @@ func TestRestrictOnlyNoneAndContainerIsolation(t *testing.T) {
 	config, err := parseConfig(filepath.Join("testdata", "security-only-none-and-container-isolation.yml"))
 	require.NoError(t, err)
 
-	require.NotNil(t, config.Security.Isolation.None)
-	require.NotNil(t, config.Security.Isolation.Container)
-	require.Nil(t, config.Security.Isolation.Tart)
+	require.NotNil(t, config.Security.AllowedIsolations.None)
+	require.NotNil(t, config.Security.AllowedIsolations.Container)
+	require.Nil(t, config.Security.AllowedIsolations.Tart)
 }
 
 func TestRestrictOnlyTartIsolation(t *testing.T) {
 	config, err := parseConfig(filepath.Join("testdata", "security-only-tart-isolation.yml"))
 	require.NoError(t, err)
 
-	require.Nil(t, config.Security.Isolation.None)
-	require.Nil(t, config.Security.Isolation.Container)
-	require.NotNil(t, config.Security.Isolation.Tart)
+	require.Nil(t, config.Security.AllowedIsolations.None)
+	require.Nil(t, config.Security.AllowedIsolations.Container)
+	require.NotNil(t, config.Security.AllowedIsolations.Tart)
 
-	require.Empty(t, config.Security.Isolation.Tart.AllowedImages)
-	require.False(t, config.Security.Isolation.Tart.ForceSoftnet)
+	require.Empty(t, config.Security.AllowedIsolations.Tart.AllowedImages)
+	require.False(t, config.Security.AllowedIsolations.Tart.ForceSoftnet)
 }
 
 func TestRestrictOnlySpecificTartImages(t *testing.T) {
@@ -51,17 +51,17 @@ func TestRestrictOnlySpecificTartImages(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, []string{"ghcr.io/cirruslabs/*"},
-		config.Security.Isolation.Tart.AllowedImages)
+		config.Security.AllowedIsolations.Tart.AllowedImages)
 
 	const goodImage = "ghcr.io/cirruslabs/macos-ventura-base:latest"
-	require.True(t, config.Security.Isolation.Tart.ImageAllowed(goodImage))
+	require.True(t, config.Security.AllowedIsolations.Tart.ImageAllowed(goodImage))
 
 	badImages := []string{
 		"example.com/cirruslabs/macos-ventura-base:latest",
 		"example.org/ghcr.io/cirruslabs/whatnot",
 	}
 	for _, badImage := range badImages {
-		assert.False(t, config.Security.Isolation.Tart.ImageAllowed(badImage))
+		assert.False(t, config.Security.AllowedIsolations.Tart.ImageAllowed(badImage))
 	}
 }
 
@@ -69,5 +69,5 @@ func TestRestrictForceSoftnet(t *testing.T) {
 	config, err := parseConfig(filepath.Join("testdata", "security-force-softnet.yml"))
 	require.NoError(t, err)
 
-	require.True(t, config.Security.Isolation.Tart.ForceSoftnet)
+	require.True(t, config.Security.AllowedIsolations.Tart.ForceSoftnet)
 }

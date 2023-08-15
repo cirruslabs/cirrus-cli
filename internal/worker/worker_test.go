@@ -303,7 +303,7 @@ func TestWorkerSecurity(t *testing.T) {
 
 	// Start the worker
 	worker, err := worker.New(worker.WithUpstream(upstream), worker.WithSecurity(&security.Security{
-		Isolation: &security.IsolationPolicy{
+		AllowedIsolations: &security.AllowedIsolations{
 			// allows nothing
 		},
 	}))

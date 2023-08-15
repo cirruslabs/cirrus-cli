@@ -1,10 +1,10 @@
 package security
 
 type Security struct {
-	Isolation *IsolationPolicy `yaml:"isolation"`
+	AllowedIsolations *AllowedIsolations `yaml:"allowed-isolations"`
 }
 
-type IsolationPolicy struct {
+type AllowedIsolations struct {
 	None      *IsolationPolicyNone      `yaml:"none"`
 	Container *IsolationPolicyContainer `yaml:"container"`
 	Parallels *IsolationPolicyParallels `yaml:"parallels"`
@@ -16,7 +16,7 @@ func NoSecurity() *Security {
 }
 
 func (security *Security) NonePolicy() *IsolationPolicyNone {
-	if isolation := security.Isolation; isolation != nil {
+	if isolation := security.AllowedIsolations; isolation != nil {
 		return isolation.None
 	}
 
@@ -24,7 +24,7 @@ func (security *Security) NonePolicy() *IsolationPolicyNone {
 }
 
 func (security *Security) ContainerPolicy() *IsolationPolicyContainer {
-	if isolation := security.Isolation; isolation != nil {
+	if isolation := security.AllowedIsolations; isolation != nil {
 		return isolation.Container
 	}
 
@@ -32,7 +32,7 @@ func (security *Security) ContainerPolicy() *IsolationPolicyContainer {
 }
 
 func (security *Security) ParallelsPolicy() *IsolationPolicyParallels {
-	if isolation := security.Isolation; isolation != nil {
+	if isolation := security.AllowedIsolations; isolation != nil {
 		return isolation.Parallels
 	}
 
@@ -40,7 +40,7 @@ func (security *Security) ParallelsPolicy() *IsolationPolicyParallels {
 }
 
 func (security *Security) TartPolicy() *IsolationPolicyTart {
-	if isolation := security.Isolation; isolation != nil {
+	if isolation := security.AllowedIsolations; isolation != nil {
 		return isolation.Tart
 	}
 
