@@ -20,7 +20,7 @@ func (security *Security) NonePolicy() *IsolationPolicyNone {
 		return isolation.None
 	}
 
-	return nil
+	return &IsolationPolicyNone{}
 }
 
 func (security *Security) ContainerPolicy() *IsolationPolicyContainer {
@@ -28,7 +28,7 @@ func (security *Security) ContainerPolicy() *IsolationPolicyContainer {
 		return isolation.Container
 	}
 
-	return nil
+	return &IsolationPolicyContainer{}
 }
 
 func (security *Security) ParallelsPolicy() *IsolationPolicyParallels {
@@ -36,7 +36,7 @@ func (security *Security) ParallelsPolicy() *IsolationPolicyParallels {
 		return isolation.Parallels
 	}
 
-	return nil
+	return &IsolationPolicyParallels{}
 }
 
 func (security *Security) TartPolicy() *IsolationPolicyTart {
@@ -44,5 +44,5 @@ func (security *Security) TartPolicy() *IsolationPolicyTart {
 		return isolation.Tart
 	}
 
-	return nil
+	return &IsolationPolicyTart{}
 }
