@@ -71,7 +71,7 @@ func New(isolation *api.Isolation, security *security.Security, logger logger.Li
 		}
 
 		if !tartPolicy.ImageAllowed(iso.Tart.Image) {
-			return nil, fmt.Errorf("%w: Tart VM image %q is not allowed by this Persistent Worker's "+
+			return nil, fmt.Errorf("%w: \"tart\" VM image %q is not allowed by this Persistent Worker's "+
 				"security settings", ErrInvalidIsolation, iso.Tart.Image)
 		}
 
