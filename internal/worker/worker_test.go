@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,6 +18,7 @@ import (
 	"net"
 	"os"
 	"testing"
+	"time"
 )
 
 const (
@@ -271,4 +273,64 @@ func TestWorkerIsolationTartMountTemporaryWorkingDirectoryFromHost(t *testing.T)
 		"pwd",
 		"test \"$(pwd)\" = \"/Volumes/My Shared Files/working-dir\"",
 	}, worker.WithUpstream(upstream))
+}
+
+func TestWorkerSecurity(t *testing.T) {
+	//nolint:gosec // this is a test, so it's fine to bind on 0.0.0.0
+	lis, err := net.Listen("tcp", "0.0.0.0:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	apiEndpoint := fmt.Sprintf("http://127.0.0.1:%d", lis.Addr().(*net.TCPAddr).Port)
+	upstream, err := upstream.New("test", registrationToken,
+		upstream.WithRPCEndpoint(apiEndpoint),
+		upstream.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)),
+	)
+	require.NoError(t, err)
+
+	// Start the RPC server
+	server := grpc.NewServer(grpc.UnaryInterceptor(unaryInterceptor))
+
+	workersRPC := &WorkersRPC{Isolation: nil}
+	api.RegisterCirrusWorkersServiceServer(server, workersRPC)
+
+	go func() {
+		if err := server.Serve(lis); err != nil {
+			t.Error(err)
+		}
+	}()
+
+	// Start the worker
+	worker, err := worker.New(worker.WithUpstream(upstream), worker.WithSecurity(&security.Security{
+		Isolation: &security.IsolationPolicy{
+			// allows nothing
+		},
+	}))
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		if err := worker.Run(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	// Wait for the worker to fail
+	for {
+		if workersRPC.TaskWasFailed {
+			break
+		}
+
+		time.Sleep(time.Second)
+	}
+
+	// Stop the RPC server
+	server.GracefulStop()
+
+	// Make sure that the worker had failed because of the security policy
+	require.Contains(t, workersRPC.TaskFailureMesage,
+		"\"none\" isolation is not allowed by this Persistent Worker's security settings")
 }

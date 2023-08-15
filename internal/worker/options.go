@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/sirupsen/logrus"
 )
@@ -28,5 +29,11 @@ func WithResources(resources map[string]float64) Option {
 func WithUpstream(upstream *upstream.Upstream) Option {
 	return func(e *Worker) {
 		e.upstreams = append(e.upstreams, upstream)
+	}
+}
+
+func WithSecurity(security *security.Security) Option {
+	return func(e *Worker) {
+		e.security = security
 	}
 }

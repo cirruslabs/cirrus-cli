@@ -13,7 +13,7 @@ func NewRunCmd() *cobra.Command {
 		Use:   "run",
 		Short: "Run persistent worker",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			worker, err := buildWorker(cmd)
+			worker, err := buildWorker(cmd.ErrOrStderr())
 			if err != nil {
 				return err
 			}

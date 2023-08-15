@@ -17,6 +17,8 @@ type WorkersRPC struct {
 	TaskWasAssigned     bool
 	TaskWasStarted      bool
 	TaskWasStopped      bool
+	TaskWasFailed       bool
+	TaskFailureMesage   string
 
 	api.UnimplementedCirrusWorkersServiceServer
 }
@@ -70,6 +72,15 @@ func (workersRPC *WorkersRPC) TaskStarted(ctx context.Context, request *api.Task
 func (workersRPC *WorkersRPC) TaskStopped(ctx context.Context, request *api.TaskIdentification) (*empty.Empty, error) {
 	if request.TaskId == taskID {
 		workersRPC.TaskWasStopped = true
+	}
+
+	return &empty.Empty{}, nil
+}
+
+func (workersRPC *WorkersRPC) TaskFailed(ctx context.Context, request *api.TaskFailedRequest) (*empty.Empty, error) {
+	if request.TaskIdentification.TaskId == taskID {
+		workersRPC.TaskWasFailed = true
+		workersRPC.TaskFailureMesage = request.Message
 	}
 
 	return &empty.Empty{}, nil
