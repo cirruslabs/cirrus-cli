@@ -20,6 +20,10 @@ type IsolationPolicyTart struct {
 }
 
 func (tart IsolationPolicyTart) ImageAllowed(name string) bool {
+	if len(tart.AllowedImages) == 0 {
+		return true
+	}
+
 	for _, allowedImage := range tart.AllowedImages {
 		if wildcard.MatchSimple(allowedImage, name) {
 			return true
