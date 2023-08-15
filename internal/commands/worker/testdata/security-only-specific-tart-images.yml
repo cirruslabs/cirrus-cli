@@ -5,5 +5,5 @@ name: "MacMini-Rack-1-Slot-2"
 security:
   allowed-isolations:
     tart:
-      images:
+      allowed-images:
         - "ghcr.io/cirruslabs/*"

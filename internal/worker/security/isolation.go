@@ -15,7 +15,7 @@ type IsolationPolicyParallels struct {
 }
 
 type IsolationPolicyTart struct {
-	AllowedImages []string `yaml:"images"`
+	AllowedImages []string `yaml:"allowed-images"`
 	ForceSoftnet  bool     `yaml:"force-softnet"`
 }
 
