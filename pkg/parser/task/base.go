@@ -38,7 +38,6 @@ func AttachEnvironmentFields(
 	})
 }
 
-//nolint:gocognit // it's a parser helper, there is a lot of boilerplate
 func AttachBaseTaskFields(
 	parser *parseable.DefaultParser,
 	task *api.Task,
