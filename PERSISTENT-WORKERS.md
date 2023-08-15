@@ -124,7 +124,7 @@ task:
 
 #### Restricting possible isolation environments
 
-By default, Persistent Workers allows running tasks with any isolations, which is roughly equivalent to the following configuration:
+By default, Persistent Worker allows running tasks with [any isolations](#isolation), which is roughly equivalent to the following configuration:
 
 ```yaml
 security:
