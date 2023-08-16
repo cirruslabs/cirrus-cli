@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/golang/protobuf/ptypes/any"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -95,7 +96,7 @@ func NewFromProto(
 			Arguments:  instance.Arguments,
 		}, nil
 	case *api.PersistentWorkerInstance:
-		return persistentworker.New(instance.Isolation, logger)
+		return persistentworker.New(instance.Isolation, security.NoSecurity(), logger)
 	case *api.DockerBuilder:
 		// Ensures that we're not trying to run e.g. Windows-specific scripts on macOS
 		instanceOS := strings.ToLower(instance.Platform.String())
@@ -108,7 +109,7 @@ func NewFromProto(
 			Type: &api.Isolation_None_{
 				None: &api.Isolation_None{},
 			},
-		}, logger)
+		}, security.NoSecurity(), logger)
 	case *api.MacOSInstance:
 		return tart.New(instance.Image, instance.User, instance.Password, instance.Cpu, instance.Memory,
 			tart.WithLogger(logger))

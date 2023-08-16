@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/sirupsen/logrus"
 	"math"
@@ -25,6 +26,8 @@ var (
 type Worker struct {
 	upstreams []*upstreampkg.Upstream
 
+	security *security.Security
+
 	userSpecifiedLabels    map[string]string
 	userSpecifiedResources map[string]float64
 
@@ -37,6 +40,8 @@ type Worker struct {
 func New(opts ...Option) (*Worker, error) {
 	worker := &Worker{
 		upstreams: []*upstreampkg.Upstream{},
+
+		security: security.NoSecurity(),
 
 		userSpecifiedLabels: make(map[string]string),
 

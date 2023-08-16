@@ -46,7 +46,7 @@ func (worker *Worker) runTask(
 		Secret: agentAwareTask.ClientSecret,
 	}
 
-	inst, err := persistentworker.New(agentAwareTask.Isolation, worker.logger)
+	inst, err := persistentworker.New(agentAwareTask.Isolation, worker.security, worker.logger)
 	if err != nil {
 		worker.logger.Errorf("failed to create an instance for the task %d: %v", agentAwareTask.TaskId, err)
 		_ = upstream.TaskFailed(taskCtx, &api.TaskFailedRequest{

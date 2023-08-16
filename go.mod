@@ -58,7 +58,7 @@ require (
 	go.starlark.net v0.0.0-20230302034142-4b1e35fe2254
 	golang.org/x/crypto v0.9.0
 	golang.org/x/oauth2 v0.8.0
-	golang.org/x/sys v0.8.0
+	golang.org/x/sys v0.11.0
 	golang.org/x/text v0.9.0
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/grpc v1.55.0
@@ -67,9 +67,12 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+require github.com/goccy/go-yaml v1.11.0
+
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/BurntSushi/toml v1.2.1 // indirect
+	github.com/IGLOU-EU/go-wildcard v1.0.3 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230426101702-58e86b294756 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d // indirect
@@ -89,6 +92,7 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
+	github.com/fatih/color v1.15.0 // indirect
 	github.com/fvbommel/sortorder v1.1.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
@@ -106,6 +110,8 @@ require (
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
@@ -142,6 +148,7 @@ require (
 	golang.org/x/sync v0.2.0 // indirect
 	golang.org/x/term v0.8.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
+	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/dustin/go-humanize"
+	"github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"strconv"
@@ -31,6 +32,8 @@ type Config struct {
 	RPC ConfigRPC `yaml:"rpc"`
 
 	Upstreams []ConfigUpstream `yaml:"upstreams"`
+
+	Security *security.Security `yaml:"security"`
 }
 
 type ConfigLog struct {
@@ -79,7 +82,7 @@ func attachFlags(cmd *cobra.Command) {
 		"RPC endpoint address")
 }
 
-func buildWorker(cmd *cobra.Command) (*worker.Worker, error) {
+func parseConfig(path string) (*Config, error) {
 	// Instantiate a default configuration
 	config := Config{
 		Name:      name,
@@ -100,15 +103,24 @@ func buildWorker(cmd *cobra.Command) (*worker.Worker, error) {
 	}
 
 	// Load the YAML configuration file
-	if configPath != "" {
-		configBytes, err := os.ReadFile(configPath)
+	if path != "" {
+		configBytes, err := os.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}
 
-		if err := yaml.Unmarshal(configBytes, &config); err != nil {
+		if err := yaml.UnmarshalWithOptions(configBytes, &config, yaml.DisallowUnknownField()); err != nil {
 			return nil, err
 		}
+	}
+
+	return &config, nil
+}
+
+func buildWorker(output io.Writer) (*worker.Worker, error) {
+	config, err := parseConfig(configPath)
+	if err != nil {
+		return nil, err
 	}
 
 	// Configure worker
@@ -129,9 +141,6 @@ func buildWorker(cmd *cobra.Command) (*worker.Worker, error) {
 		logger.SetLevel(level)
 	}
 
-	var err error
-	var output io.Writer
-
 	if config.Log.File != "" {
 		logRotateSizeBytes := uint64(0)
 		if config.Log.RotateSize != "" {
@@ -146,8 +155,6 @@ func buildWorker(cmd *cobra.Command) (*worker.Worker, error) {
 			MaxSize:    int(logRotateSizeBytes / humanize.MByte),
 			MaxBackups: int(config.Log.MaxRotations),
 		}
-	} else {
-		output = cmd.ErrOrStderr()
 	}
 	logger.SetOutput(output)
 
@@ -187,6 +194,11 @@ func buildWorker(cmd *cobra.Command) (*worker.Worker, error) {
 		}
 
 		opts = append(opts, worker.WithUpstream(upstream))
+	}
+
+	// Configure security
+	if security := config.Security; security != nil {
+		opts = append(opts, worker.WithSecurity(security))
 	}
 
 	// Instantiate worker

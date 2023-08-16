@@ -120,6 +120,39 @@ task:
   script: make release
 ```
 
+### Security
+
+#### Restricting possible isolation environments
+
+By default, Persistent Worker allows running tasks with [any isolations](#isolation), which is roughly equivalent to the following configuration:
+
+```yaml
+security:
+  allowed-isolations:
+    none: {}
+    container: {}
+    tart: {}
+```
+
+To only allow running tasks inside of [Tart VMs](https://github.com/cirruslabs/tart), for example, specify the following in your Persistent Worker configuration:
+
+```yaml
+security:
+  allowed-isolations:
+    tart: {}
+```
+
+Further, you can also restrict which Tart VM images can be used (wildcard character `*` is supported), and force Softnet to enable [better network isolation](https://github.com/cirruslabs/softnet#working-model):
+
+```yaml
+security:
+  allowed-isolations:
+    tart:
+      allowed-images:
+        - "ghcr.io/cirruslabs/*"
+      force-softnet: true
+```
+
 ## Writing tasks
 
 Here's an example of how to run a task on one of the persistent workers [registered in the dashboard](https://cirrus-ci.com/):

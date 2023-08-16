@@ -9,7 +9,7 @@ func NewResumeCmd() *cobra.Command {
 		Use:   "resume",
 		Short: "Resume task scheduling",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			worker, err := buildWorker(cmd)
+			worker, err := buildWorker(cmd.ErrOrStderr())
 			if err != nil {
 				return err
 			}
