@@ -29,11 +29,14 @@ docker_builder:
     HOME: /root
     CIRRUS_CONTAINER_BACKEND: podman
 
-docker_builder:
+task:
+  use_compute_credits: true
   name: Test (Windows)
   alias: Tests
-  platform: windows
-  os_version: 2019
+  gce_instance:
+    image_project: windows-cloud
+    image_family: windows-2022-core
+    platform: windows
   test_script:
     - choco install -y golang git
     - refreshenv
