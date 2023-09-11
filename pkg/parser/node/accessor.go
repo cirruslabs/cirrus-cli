@@ -94,7 +94,17 @@ func (node *Node) GetSliceOfExpandedStrings(env map[string]string) ([]string, er
 	var result []string
 
 	for _, sliceString := range sliceStrings {
-		result = append(result, expander.ExpandEnvironmentVariables(sliceString, env))
+		expandedString := expander.ExpandEnvironmentVariables(sliceString, env)
+		didExpand := sliceString != expandedString
+		if didExpand && strings.HasPrefix(expandedString, "[") && strings.HasSuffix(expandedString, "]") {
+			// flow syntax after expanding, let's manually parse it
+			parsedParts := strings.Split(strings.TrimSuffix(strings.TrimPrefix(expandedString, "["), "]"), ",")
+			for _, parsedPart := range parsedParts {
+				result = append(result, strings.TrimSpace(parsedPart))
+			}
+		} else {
+			result = append(result, expandedString)
+		}
 	}
 
 	return result, nil
