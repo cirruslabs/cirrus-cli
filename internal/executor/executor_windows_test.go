@@ -17,8 +17,6 @@ import (
 
 // TestExecutorClone ensures that Executor handles clone instruction properly.
 func TestExecutorClone(t *testing.T) {
-	t.SkipNow()
-
 	dir := testutil.TempDir(t)
 
 	// Create a canary file
