@@ -33,7 +33,7 @@ task:
   use_compute_credits: true
   name: Test (Windows)
   alias: Tests
-  gce_instance:
+  compute_engine_instance:
     image_project: windows-cloud
     image_family: windows-2022-core
     platform: windows
