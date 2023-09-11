@@ -34,6 +34,8 @@ docker_builder:
   alias: Tests
   platform: windows
   os_version: 2019
+  pre_pull_windows_container_image_script:
+    - docker pull mcr.microsoft.com/windows/servercore:ltsc2019
   test_script:
     - choco install -y golang git
     - refreshenv
