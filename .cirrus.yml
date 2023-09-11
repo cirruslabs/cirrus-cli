@@ -35,7 +35,7 @@ task:
   alias: Tests
   compute_engine_instance:
     image_project: windows-cloud
-    image_family: windows-2022-core
+    image: family/windows-2022-core
     platform: windows
   test_script:
     - choco install -y golang git
