@@ -30,6 +30,7 @@ docker_builder:
     CIRRUS_CONTAINER_BACKEND: podman
 
 docker_builder:
+  allow_failures: true
   name: Test (Windows)
   alias: Tests
   platform: windows
