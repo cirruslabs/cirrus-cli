@@ -123,7 +123,11 @@ func (worker *Worker) runTask(
 
 				buf := make([]byte, 1*1024*1024)
 				n := runtime.Stack(buf, true)
-				scope.SetExtra("Stack trace for all goroutines", string(buf[:n]))
+				scope.AddAttachment(&sentry.Attachment{
+					Filename:    "goroutines-stacktrace.txt",
+					ContentType: "text/plain",
+					Payload:     buf[:n],
+				})
 
 				localHub.CaptureException(err)
 			})
@@ -137,6 +141,15 @@ func (worker *Worker) runTask(
 					agentAwareTask.TaskId, err)
 				localHub.WithScope(func(scope *sentry.Scope) {
 					scope.SetTags(cirrusSentryTags)
+
+					buf := make([]byte, 1*1024*1024)
+					n := runtime.Stack(buf, true)
+					scope.AddAttachment(&sentry.Attachment{
+						Filename:    "goroutines-stacktrace.txt",
+						ContentType: "text/plain",
+						Payload:     buf[:n],
+					})
+
 					scope.SetLevel(sentry.LevelFatal)
 					localHub.CaptureMessage(fmt.Sprintf("failed to notify the server about the failed task: %v", err))
 				})

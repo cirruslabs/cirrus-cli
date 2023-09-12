@@ -19,7 +19,7 @@ require (
 	github.com/docker/docker v23.0.6+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/getsentry/sentry-go v0.21.0
+	github.com/getsentry/sentry-go v0.23.0
 	github.com/go-git/go-billy/v5 v5.4.1
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/go-test/deep v1.1.0
@@ -59,7 +59,7 @@ require (
 	golang.org/x/crypto v0.9.0
 	golang.org/x/oauth2 v0.8.0
 	golang.org/x/sys v0.11.0
-	golang.org/x/text v0.9.0
+	golang.org/x/text v0.12.0
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
