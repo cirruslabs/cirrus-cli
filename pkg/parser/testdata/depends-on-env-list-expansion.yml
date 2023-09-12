@@ -1,0 +1,16 @@
+container:
+  image: debian:latest
+
+task:
+  name: foo
+  script: make build
+
+task:
+  name: bar
+  script: make build
+
+task:
+  depends_on: $DEPENDENCIES
+  script: make test
+  env:
+    DEPENDENCIES: "[foo, bar]"
