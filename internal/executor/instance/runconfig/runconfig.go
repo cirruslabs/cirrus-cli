@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
+var stubLogger = echelon.NewLogger(echelon.ErrorLevel, &renderers.StubRenderer{})
+
 type RunConfig struct {
 	ContainerBackendType       string
 	ProjectDir                 string
@@ -45,7 +47,7 @@ func (rc *RunConfig) GetContainerBackend() (containerbackend.ContainerBackend, e
 
 func (rc *RunConfig) Logger() *echelon.Logger {
 	if rc.logger == nil {
-		rc.logger = echelon.NewLogger(echelon.ErrorLevel, &renderers.StubRenderer{})
+		return stubLogger
 	}
 
 	return rc.logger
