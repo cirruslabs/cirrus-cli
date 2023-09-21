@@ -19,6 +19,7 @@ import (
 	"io"
 	"strings"
 	"sync"
+	"time"
 
 	// Registers a gzip compressor needed for streaming logs from the agent.
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -263,6 +264,10 @@ func (r *RPC) Heartbeat(ctx context.Context, req *api.HeartbeatRequest) (*api.He
 	}
 
 	r.logger.Scoped(task.UniqueDescription()).Debugf("received heartbeat")
+
+	// Update last heartbeat time
+	currentTime := time.Now()
+	task.LastHeartbeatReceivedAt.Store(&currentTime)
 
 	return &api.HeartbeatResponse{}, nil
 }

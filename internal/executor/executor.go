@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 )
 
 var ErrBuildFailed = errors.New("build failed")
@@ -201,9 +202,38 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		}
 	}()
 
-	if err := task.Instance.Run(ctx, &instanceRunOpts); err != nil {
+	// Monitor heartbeats and cancel the task if we don't receive
+	// them for more than maxNoHeartbeatsDuration
+	const maxNoHeartbeatsDuration = 2 * time.Minute
+
+	currentTime := time.Now()
+	task.LastHeartbeatReceivedAt.Store(&currentTime)
+
+	go func() {
+		for {
+			if time.Since(*task.LastHeartbeatReceivedAt.Load()) > maxNoHeartbeatsDuration {
+				cancel()
+			}
+
+			select {
+			case <-time.After(time.Second):
+				continue
+			case <-ctx.Done():
+				break
+			}
+		}
+	}()
+
+	// Run the task
+	if err = task.Instance.Run(ctx, &instanceRunOpts); err != nil {
 		switch {
+		case errors.Is(ctx.Err(), context.Canceled):
+			taskLogger.Warnf("task timed out: no heartbeats were received in the last %v",
+				maxNoHeartbeatsDuration)
+			task.SetStatus(taskstatus.TimedOut)
 		case errors.Is(ctx.Err(), context.DeadlineExceeded):
+			taskLogger.Warnf("task timed out: %v elapsed, but the task is still running",
+				task.Timeout)
 			task.SetStatus(taskstatus.TimedOut)
 		case errors.Is(err, instance.ErrUnsupportedInstance):
 			taskLogger.Warnf(err.Error())
