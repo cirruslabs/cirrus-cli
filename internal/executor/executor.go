@@ -225,7 +225,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 	}()
 
 	// Run the task
-	if err = task.Instance.Run(ctx, &instanceRunOpts); err != nil {
+	if err := task.Instance.Run(ctx, &instanceRunOpts); err != nil {
 		switch {
 		case errors.Is(ctx.Err(), context.Canceled):
 			taskLogger.Warnf("task timed out: no heartbeats were received in the last %v",
