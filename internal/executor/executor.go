@@ -188,7 +188,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 	}
 
 	// Wrap the context to enforce a timeout for this task
-	ctx, cancel := context.WithTimeout(ctx, task.Timeout)
+	ctx, cancel := contextWithTimeoutAndCancelCause(ctx, task.Timeout)
 
 	// Run task
 	defer func() {
@@ -205,6 +205,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 	// Monitor heartbeats and cancel the task if we don't receive
 	// them for more than maxNoHeartbeatsDuration
 	const maxNoHeartbeatsDuration = 2 * time.Minute
+	var ErrNoHeartbeats = errors.New("no heartbeats were received for the pre-defined duration")
 
 	currentTime := time.Now()
 	task.LastHeartbeatReceivedAt.Store(&currentTime)
@@ -212,7 +213,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 	go func() {
 		for {
 			if time.Since(*task.LastHeartbeatReceivedAt.Load()) > maxNoHeartbeatsDuration {
-				cancel()
+				cancel(ErrNoHeartbeats)
 			}
 
 			select {
@@ -227,7 +228,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 	// Run the task
 	if err := task.Instance.Run(ctx, &instanceRunOpts); err != nil {
 		switch {
-		case errors.Is(ctx.Err(), context.Canceled):
+		case errors.Is(context.Cause(ctx), ErrNoHeartbeats):
 			taskLogger.Warnf("task timed out: no heartbeats were received in the last %v",
 				maxNoHeartbeatsDuration)
 			task.SetStatus(taskstatus.TimedOut)
@@ -239,11 +240,11 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 			taskLogger.Warnf(err.Error())
 			task.SetStatus(taskstatus.Skipped)
 		default:
-			cancel()
+			cancel(context.Canceled)
 			return err
 		}
 	}
-	cancel()
+	cancel(context.Canceled)
 
 	// Handle prebuilt instance which doesn't require any tasks to be run to be considered successful
 	_, isPrebuilt := task.Instance.(*instance.PrebuiltInstance)
@@ -290,4 +291,14 @@ func (e *Executor) transformDockerfileImageIfNeeded(reference string, strict boo
 
 	// Render the template
 	return strings.ReplaceAll(e.containerOptions.DockerfileImageTemplate, "%s", hash), nil
+}
+
+func contextWithTimeoutAndCancelCause(parent context.Context, timeout time.Duration) (context.Context, context.CancelCauseFunc) {
+	ctxWithTimeout, ctxWithTimeoutCancel := context.WithTimeout(parent, timeout)
+	resultCtx, resultCancel := context.WithCancelCause(ctxWithTimeout)
+
+	return resultCtx, func(cause error) {
+		resultCancel(cause)
+		ctxWithTimeoutCancel()
+	}
 }
