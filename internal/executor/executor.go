@@ -22,9 +22,13 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 )
 
-var ErrBuildFailed = errors.New("build failed")
+var (
+	ErrBuildFailed  = errors.New("build failed")
+	ErrNoHeartbeats = errors.New("no heartbeats were received for the pre-defined duration")
+)
 
 type Executor struct {
 	build *build.Build
@@ -187,7 +191,10 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 	}
 
 	// Wrap the context to enforce a timeout for this task
-	ctx, cancel := context.WithTimeout(ctx, task.Timeout)
+	ctxWithTimeout, ctxWithTimeoutCancel := context.WithTimeout(ctx, task.Timeout)
+	defer ctxWithTimeoutCancel()
+
+	ctx, cancel := context.WithCancelCause(ctxWithTimeout)
 
 	// Run task
 	defer func() {
@@ -201,19 +208,48 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		}
 	}()
 
+	// Monitor heartbeats and cancel the task if we don't receive
+	// them for more than maxNoHeartbeatsDuration
+	const maxNoHeartbeatsDuration = 2 * time.Minute
+
+	currentTime := time.Now()
+	task.LastHeartbeatReceivedAt.Store(&currentTime)
+
+	go func() {
+		for {
+			if time.Since(*task.LastHeartbeatReceivedAt.Load()) > maxNoHeartbeatsDuration {
+				cancel(ErrNoHeartbeats)
+			}
+
+			select {
+			case <-time.After(time.Second):
+				continue
+			case <-ctx.Done():
+				break
+			}
+		}
+	}()
+
+	// Run the task
 	if err := task.Instance.Run(ctx, &instanceRunOpts); err != nil {
 		switch {
+		case errors.Is(context.Cause(ctx), ErrNoHeartbeats):
+			taskLogger.Warnf("task timed out: no heartbeats were received in the last %v",
+				maxNoHeartbeatsDuration)
+			task.SetStatus(taskstatus.TimedOut)
 		case errors.Is(ctx.Err(), context.DeadlineExceeded):
+			taskLogger.Warnf("task timed out: %v elapsed, but the task is still running",
+				task.Timeout)
 			task.SetStatus(taskstatus.TimedOut)
 		case errors.Is(err, instance.ErrUnsupportedInstance):
 			taskLogger.Warnf(err.Error())
 			task.SetStatus(taskstatus.Skipped)
 		default:
-			cancel()
+			cancel(context.Canceled)
 			return err
 		}
 	}
-	cancel()
+	cancel(context.Canceled)
 
 	// Handle prebuilt instance which doesn't require any tasks to be run to be considered successful
 	_, isPrebuilt := task.Instance.(*instance.PrebuiltInstance)

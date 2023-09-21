@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -32,6 +33,8 @@ type Task struct {
 	Timeout     time.Duration
 	Environment map[string]string
 	Commands    []*Command
+
+	LastHeartbeatReceivedAt atomic.Pointer[time.Time]
 
 	// A mutex to guarantee safe accesses from both the main loop and gRPC server handlers
 	Mutex sync.RWMutex
