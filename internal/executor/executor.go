@@ -191,7 +191,10 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 	}
 
 	// Wrap the context to enforce a timeout for this task
-	ctx, cancel := contextWithTimeoutAndCancelCause(ctx, task.Timeout)
+	ctxWithTimeout, ctxWithTimeoutCancel := context.WithTimeout(ctx, task.Timeout)
+	defer ctxWithTimeoutCancel()
+
+	ctx, cancel := context.WithCancelCause(ctxWithTimeout)
 
 	// Run task
 	defer func() {
@@ -293,17 +296,4 @@ func (e *Executor) transformDockerfileImageIfNeeded(reference string, strict boo
 
 	// Render the template
 	return strings.ReplaceAll(e.containerOptions.DockerfileImageTemplate, "%s", hash), nil
-}
-
-func contextWithTimeoutAndCancelCause(
-	parent context.Context,
-	timeout time.Duration,
-) (context.Context, context.CancelCauseFunc) {
-	ctxWithTimeout, ctxWithTimeoutCancel := context.WithTimeout(parent, timeout)
-	resultCtx, resultCancel := context.WithCancelCause(ctxWithTimeout)
-
-	return resultCtx, func(cause error) {
-		resultCancel(cause)
-		ctxWithTimeoutCancel()
-	}
 }
