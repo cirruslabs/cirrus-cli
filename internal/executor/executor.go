@@ -25,7 +25,10 @@ import (
 	"time"
 )
 
-var ErrBuildFailed = errors.New("build failed")
+var (
+	ErrBuildFailed  = errors.New("build failed")
+	ErrNoHeartbeats = errors.New("no heartbeats were received for the pre-defined duration")
+)
 
 type Executor struct {
 	build *build.Build
@@ -205,7 +208,6 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 	// Monitor heartbeats and cancel the task if we don't receive
 	// them for more than maxNoHeartbeatsDuration
 	const maxNoHeartbeatsDuration = 2 * time.Minute
-	var ErrNoHeartbeats = errors.New("no heartbeats were received for the pre-defined duration")
 
 	currentTime := time.Now()
 	task.LastHeartbeatReceivedAt.Store(&currentTime)
@@ -293,7 +295,10 @@ func (e *Executor) transformDockerfileImageIfNeeded(reference string, strict boo
 	return strings.ReplaceAll(e.containerOptions.DockerfileImageTemplate, "%s", hash), nil
 }
 
-func contextWithTimeoutAndCancelCause(parent context.Context, timeout time.Duration) (context.Context, context.CancelCauseFunc) {
+func contextWithTimeoutAndCancelCause(
+	parent context.Context,
+	timeout time.Duration,
+) (context.Context, context.CancelCauseFunc) {
 	ctxWithTimeout, ctxWithTimeoutCancel := context.WithTimeout(parent, timeout)
 	resultCtx, resultCancel := context.WithCancelCause(ctxWithTimeout)
 
