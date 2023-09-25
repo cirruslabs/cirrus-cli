@@ -173,7 +173,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
 
-	hooks := tart.initalizeHooks(config)
+	hooks := tart.initializeHooks(config)
 
 	addTartListBreadcrumb(ctx)
 	addDHCPDLeasesBreadcrumb(ctx)
@@ -222,7 +222,7 @@ func Cleanup() error {
 	return nil
 }
 
-func (tart *Tart) initalizeHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
+func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
 	var hooks []remoteagent.WaitForAgentHook
 
 	if config.ProjectDir != "" && !config.DirtyMode {
