@@ -15,6 +15,23 @@ func NoSecurity() *Security {
 	return &Security{}
 }
 
+func NoSecurityAllowAllVolumes() *Security {
+	return &Security{
+		AllowedIsolations: &AllowedIsolations{
+			None:      &IsolationPolicyNone{},
+			Container: &IsolationPolicyContainer{},
+			Parallels: &IsolationPolicyParallels{},
+			Tart: &IsolationPolicyTart{
+				AllowedVolumes: []AllowedVolumeTart{
+					{
+						Source: "/*",
+					},
+				},
+			},
+		},
+	}
+}
+
 func (security *Security) NonePolicy() *IsolationPolicyNone {
 	if isolation := security.AllowedIsolations; isolation != nil {
 		return isolation.None
