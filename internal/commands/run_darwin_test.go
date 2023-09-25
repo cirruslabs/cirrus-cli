@@ -82,8 +82,8 @@ persistent_worker:
       password: %s
       volumes:
         # Read-only volume without a name
-        - source: "/etc"
-          target: "/Users/%s/mounted-etc"
+        - source: "/tmp"
+          target: "/Users/%s/mounted-tmp"
           readonly: true
         # Volume with a name, but without a target
         - name: mounted-var
@@ -91,10 +91,11 @@ persistent_worker:
 
 task:
   script:
-    - test -d "/Users/%s/mounted-etc"
+    - test -d "/Users/%s/mounted-tmp"
+    - touch "/Users/%s/mounted-tmp/test.txt" || true
     - test -d "/Volumes/My Shared Files/mounted-var"
 
-`, image, user, password, user, user)
+`, image, user, password, user, user, user)
 
 	testutil.TempChdir(t)
 
@@ -115,4 +116,5 @@ task:
 
 	// Ensure that we've timed out because of no heartbeats
 	require.NoError(t, err)
+	require.Contains(t, buf.String(), "test.txt: Operation not permitted")
 }
