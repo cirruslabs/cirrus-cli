@@ -2,6 +2,7 @@ package isolation
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -44,9 +45,9 @@ func NewIsolation(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *
 		return nil
 	})
 
-	tartSchema := NewTart(mergedEnv).Schema()
+	tartSchema := tart.NewTart(mergedEnv, parserKit).Schema()
 	isolation.OptionalField(nameable.NewSimpleNameable("tart"), tartSchema, func(node *node.Node) error {
-		tart := NewTart(mergedEnv)
+		tart := tart.NewTart(mergedEnv, parserKit)
 
 		if err := tart.Parse(node, parserKit); err != nil {
 			return err

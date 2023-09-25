@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
@@ -40,11 +41,19 @@ type Tart struct {
 	memory      uint32
 	softnet     bool
 	display     string
+	volumes     []*api.Isolation_Tart_Volume
 
 	mountTemporaryWorkingDirectoryFromHost bool
 }
 
-func New(vmName string, sshUser string, sshPassword string, cpu uint32, memory uint32, opts ...Option) (*Tart, error) {
+func New(
+	vmName string,
+	sshUser string,
+	sshPassword string,
+	cpu uint32,
+	memory uint32,
+	opts ...Option,
+) (*Tart, error) {
 	tart := &Tart{
 		vmName:      vmName,
 		sshUser:     sshUser,
@@ -122,6 +131,18 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		})
 	}
 
+	for _, volume := range tart.volumes {
+		if volume.Name == "" {
+			volume.Name = uuid.NewString()
+		}
+
+		directoryMounts = append(directoryMounts, directoryMount{
+			Name:     volume.Name,
+			Path:     volume.Source,
+			ReadOnly: volume.ReadOnly,
+		})
+	}
+
 	vm.Start(ctx, tart.softnet, directoryMounts)
 
 	// Wait for the VM to start and get it's DHCP address
@@ -152,19 +173,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
 
-	var hooks []remoteagent.WaitForAgentHook
-	if config.ProjectDir != "" && !config.DirtyMode {
-		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
-			syncLogger := config.Logger().Scoped("syncing working directory")
-			if err := tart.syncProjectDir(config.ProjectDir, sshClient); err != nil {
-				syncLogger.Finish(false)
-				return fmt.Errorf("%w: %v", ErrSyncFailed, err)
-			}
-
-			syncLogger.Finish(true)
-			return nil
-		})
-	}
+	hooks := tart.initalizeHooks(config)
 
 	addTartListBreadcrumb(ctx)
 	addDHCPDLeasesBreadcrumb(ctx)
@@ -211,6 +220,55 @@ func Cleanup() error {
 	}
 
 	return nil
+}
+
+func (tart *Tart) initalizeHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
+	var hooks []remoteagent.WaitForAgentHook
+
+	if config.ProjectDir != "" && !config.DirtyMode {
+		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
+			syncLogger := config.Logger().Scoped("syncing working directory")
+			if err := tart.syncProjectDir(config.ProjectDir, sshClient); err != nil {
+				syncLogger.Finish(false)
+				return fmt.Errorf("%w: %v", ErrSyncFailed, err)
+			}
+
+			syncLogger.Finish(true)
+			return nil
+		})
+	}
+
+	if len(tart.volumes) != 0 {
+		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
+			syncLogger := config.Logger().Scoped("symlinking volume mounts")
+
+			sshSess, err := sshClient.NewSession()
+			if err != nil {
+				return err
+			}
+			defer sshSess.Close()
+
+			for _, volume := range tart.volumes {
+				if volume.Target == "" {
+					continue
+				}
+
+				command := fmt.Sprintf("ln -s \"/Volumes/My Shared Files/%s\" \"%s\"",
+					volume.Name, volume.Target)
+
+				syncLogger.Infof("running command: %s", command)
+
+				if err := sshSess.Run(command); err != nil {
+					return err
+				}
+			}
+
+			syncLogger.Finish(true)
+			return nil
+		})
+	}
+
+	return hooks
 }
 
 func (tart *Tart) syncProjectDir(dir string, sshClient *ssh.Client) error {

@@ -60,3 +60,59 @@ task:
 	require.Error(t, err)
 	require.Contains(t, buf.String(), "no heartbeats were received in the last ")
 }
+
+func TestRunVolumes(t *testing.T) {
+	// Support Tart isolation testing configured via environment variables
+	image, vmOk := os.LookupEnv("CIRRUS_INTERNAL_TART_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_PASSWORD")
+	if !vmOk || !userOk || !passwordOk {
+		t.Skip("no Tart credentials configured")
+	}
+
+	t.Logf("Using Tart VM %s for testing...", image)
+
+	// Craft Cirrus CI configuration
+	config := fmt.Sprintf(`
+persistent_worker:
+  isolation:
+    tart:
+      image: %s
+      user: %s
+      password: %s
+      volumes:
+        # Read-only volume without a name
+        - source: "/etc"
+          target: "/Users/%s/mounted-etc"
+          readonly: true
+        # Volume with a name, but without a target
+        - name: mounted-var
+          source: "/var"
+
+task:
+  script:
+    - test -d "/Users/%s/mounted-etc"
+    - test -d "/Volumes/My Shared Files/mounted-var"
+
+`, image, user, password, user, user)
+
+	testutil.TempChdir(t)
+
+	if err := os.WriteFile(".cirrus.yml", []byte(config), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create os.Stderr writer that duplicates it's output to buf
+	buf := bytes.NewBufferString("")
+	writer := io.MultiWriter(os.Stderr, buf)
+
+	// Run the test
+	command := commands.NewRootCmd()
+	command.SetArgs([]string{"run", "--tart-lazy-pull", "-v", "-o simple"})
+	command.SetOut(writer)
+	command.SetErr(writer)
+	err := command.Execute()
+
+	// Ensure that we've timed out because of no heartbeats
+	require.NoError(t, err)
+}

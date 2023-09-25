@@ -334,3 +334,88 @@ func TestWorkerSecurity(t *testing.T) {
 	require.Contains(t, workersRPC.TaskFailureMesage,
 		"\"none\" isolation is not allowed by this Persistent Worker's security settings")
 }
+
+func TestWorkerSecurityVolumes(t *testing.T) {
+	// Support Tart isolation testing configured via environment variables
+	image, vmOk := os.LookupEnv("CIRRUS_INTERNAL_TART_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_PASSWORD")
+	if !vmOk || !userOk || !passwordOk {
+		t.Skip("no Tart credentials configured")
+	}
+
+	t.Logf("Using Tart VM %s for testing...", image)
+
+	//nolint:gosec // this is a test, so it's fine to bind on 0.0.0.0
+	lis, err := net.Listen("tcp", "0.0.0.0:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	apiEndpoint := fmt.Sprintf("http://127.0.0.1:%d", lis.Addr().(*net.TCPAddr).Port)
+	upstream, err := upstream.New("test", registrationToken,
+		upstream.WithRPCEndpoint(apiEndpoint),
+		upstream.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)),
+	)
+	require.NoError(t, err)
+
+	// Start the RPC server
+	server := grpc.NewServer(grpc.UnaryInterceptor(unaryInterceptor))
+
+	workersRPC := &WorkersRPC{Isolation: &api.Isolation{
+		Type: &api.Isolation_Tart_{
+			Tart: &api.Isolation_Tart{
+				Image:    image,
+				User:     user,
+				Password: password,
+				Volumes: []*api.Isolation_Tart_Volume{
+					{
+						Source: "/etc",
+					},
+				},
+			},
+		},
+	}}
+	api.RegisterCirrusWorkersServiceServer(server, workersRPC)
+
+	go func() {
+		if err := server.Serve(lis); err != nil {
+			t.Error(err)
+		}
+	}()
+
+	// Start the worker
+	worker, err := worker.New(worker.WithUpstream(upstream), worker.WithSecurity(&security.Security{
+		AllowedIsolations: &security.AllowedIsolations{
+			Tart: &security.IsolationPolicyTart{
+				// allows no volumes
+			},
+		},
+	}))
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		if err := worker.Run(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	// Wait for the worker to fail
+	for {
+		if workersRPC.TaskWasFailed {
+			break
+		}
+
+		time.Sleep(time.Second)
+	}
+
+	// Stop the RPC server
+	server.GracefulStop()
+
+	// Make sure that the worker had failed because of the security policy
+	require.Contains(t, workersRPC.TaskFailureMesage,
+		"volume \"/etc\" is not allowed by this Persistent Worker's security settings")
+}

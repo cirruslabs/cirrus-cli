@@ -1,0 +1,25 @@
+read_only_without_cleanup_task:
+  persistent_worker:
+    isolation:
+      tart:
+        image: ghcr.io/cirruslabs/macos-ventura-base:latest
+        volumes:
+          - name: agent-volume
+            source: /var/agent-dir
+            target: /tmp/agent-dir
+            readonly: true
+
+  script: true
+
+read_write_with_cleanup_task:
+  persistent_worker:
+    isolation:
+      tart:
+        image: ghcr.io/cirruslabs/macos-ventura-base:latest
+        volumes:
+          - name: scratch-volume
+            source: /tmp/scratch-dir
+            target: /tmp/scratch-dir
+            cleanup: true
+
+  script: true

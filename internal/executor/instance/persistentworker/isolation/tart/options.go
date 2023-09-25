@@ -1,6 +1,9 @@
 package tart
 
-import "github.com/cirruslabs/cirrus-cli/internal/logger"
+import (
+	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/logger"
+)
 
 type Option func(*Tart)
 
@@ -25,5 +28,11 @@ func WithDisplay(display string) Option {
 func WithMountTemporaryWorkingDirectoryFromHost() Option {
 	return func(tart *Tart) {
 		tart.mountTemporaryWorkingDirectoryFromHost = true
+	}
+}
+
+func WithVolumes(volumes []*api.Isolation_Tart_Volume) Option {
+	return func(tart *Tart) {
+		tart.volumes = volumes
 	}
 }
