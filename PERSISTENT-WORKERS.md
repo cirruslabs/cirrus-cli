@@ -164,7 +164,9 @@ security:
   allowed-isolations:
     tart:
       allowed-volumes:
+        # Allow mounting /Volumes/SSD and all directories inside of it
         - source: "/Volumes/SSD/*"
+        # Allow mounting /var/src in read-only mode, but not directories inside of it
         - source: "/var/src"
           force-readonly: true
 ```
