@@ -24,6 +24,10 @@ import (
 
 // TestRun ensures that the run command can handle the simplest possible configuration without problems.
 func TestRun(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdir(t)
 
 	if err := os.WriteFile(".cirrus.yml", validConfig, 0600); err != nil {
@@ -39,6 +43,10 @@ func TestRun(t *testing.T) {
 
 // TestRunTaskFiltering ensures that the task filtering mechanism only runs the task specified by the user.
 func TestRunTaskFiltering(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-task-filtering")
 
 	var examples = map[string]struct {
@@ -87,6 +95,10 @@ func TestRunTaskFiltering(t *testing.T) {
 // TestRunTaskDependencyRemoval ensures that dependencies for the task
 // selected by the task filtering mechanism are removed properly.
 func TestRunTaskDependencyRemoval(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-task-dependency-removal")
 
 	command := commands.NewRootCmd()
@@ -98,6 +110,10 @@ func TestRunTaskDependencyRemoval(t *testing.T) {
 
 // TestRunEnvironmentSet ensures that the user can set environment variables.
 func TestRunEnvironmentSet(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment")
 
 	command := commands.NewRootCmd()
@@ -109,6 +125,10 @@ func TestRunEnvironmentSet(t *testing.T) {
 
 // TestRunEnvironmentSetViaFile ensures that the user can set environment variables via file.
 func TestRunEnvironmentSetViaFile(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment")
 
 	tempFile, err := os.CreateTemp("", "")
@@ -129,6 +149,10 @@ func TestRunEnvironmentSetViaFile(t *testing.T) {
 // TestRunEnvironmentPassThrough ensures that the user can pass-through environment variables
 // from the environment where CLI runs.
 func TestRunEnvironmentPassThrough(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment")
 
 	// Set a variable to be picked up and passed through
@@ -146,6 +170,10 @@ func TestRunEnvironmentPassThrough(t *testing.T) {
 // TestRunEnvironmentPrecedence ensures that user-specified environment variables
 // take precedence over variables defined in the configuration.
 func TestRunEnvironmentPrecedence(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-precedence")
 
 	command := commands.NewRootCmd()
@@ -158,6 +186,10 @@ func TestRunEnvironmentPrecedence(t *testing.T) {
 // TestRunEnvironmentOnlyIf ensures that user-specified environment variables
 // are propagated to the configuration parser.
 func TestRunEnvironmentOnlyIf(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-only-if")
 
 	command := commands.NewRootCmd()
@@ -170,6 +202,10 @@ func TestRunEnvironmentOnlyIf(t *testing.T) {
 // TestRunEnvironmentOnlyIf ensures that base and user environment variables
 // are passed to the Starlark execution environment.
 func TestRunEnvironmentStarlark(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-environment-starlark")
 
 	// Initialize Git and create a tag for CIRRUS_TAG to be available
@@ -212,6 +248,10 @@ func TestRunEnvironmentStarlark(t *testing.T) {
 
 // TestRunYAMLAndStarlarkMerged ensures that CLI merges multiple configurations.
 func TestRunYAMLAndStarlarkMerged(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-yaml-and-starlark")
 
 	// Create os.Stderr writer that duplicates it's output to buf
@@ -231,6 +271,10 @@ func TestRunYAMLAndStarlarkMerged(t *testing.T) {
 
 // TestRunYAMLAndStarlarkHooks ensures that CLI allows Starlark file without main.
 func TestRunYAMLAndStarlarkHooks(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-yaml-and-starlark-hooks")
 
 	command := commands.NewRootCmd()
@@ -270,6 +314,10 @@ func TestRunContainerPull(t *testing.T) {
 
 // TestRunTaskFilteringByLabel ensures that task filtering logic is label-aware.
 func TestRunTaskFilteringByLabel(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-task-filtering-by-label")
 
 	// Create os.Stderr writer that duplicates it's output to buf
@@ -290,6 +338,10 @@ func TestRunTaskFilteringByLabel(t *testing.T) {
 // TestRunNoCleanup ensures that containers and volumes are kept intact
 // after execution ends and --debug-no-cleanup is used.
 func TestRunNoCleanup(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-no-cleanup")
 
 	// Create os.Stderr writer that duplicates it's output to buf
@@ -334,6 +386,10 @@ func TestRunNoCleanup(t *testing.T) {
 
 // TestRunNonStandardExtension ensures that we support .cirrus.yaml files.
 func TestRunNonStandardExtension(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdir(t)
 
 	if err := os.WriteFile(".cirrus.yaml", validConfig, 0600); err != nil {
@@ -351,6 +407,10 @@ func TestRunNonStandardExtension(t *testing.T) {
 // that gets built as a part of Dockerfile as CI environment feature[1].
 // [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
 func TestRunPrebuiltImageTemplate(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-prebuilt")
 
 	image := fmt.Sprintf("testing.invalid/%s:latest", uuid.New().String())
