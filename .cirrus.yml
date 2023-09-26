@@ -54,7 +54,7 @@ task:
     CIRRUS_INTERNAL_TART_SSH_PASSWORD: admin
     CIRRUS_INTERNAL_TART_SSH_USER: admin
   test_script:
-    - go test -v -parallel 1 ./...
+    - go test -v -p 1 ./...
 
 task:
   name: Release (Dry Run)
