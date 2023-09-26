@@ -20,6 +20,5 @@ read_write_with_cleanup_task:
           - name: scratch-volume
             source: /tmp/scratch-dir
             target: /tmp/scratch-dir
-            cleanup: true
 
   script: true

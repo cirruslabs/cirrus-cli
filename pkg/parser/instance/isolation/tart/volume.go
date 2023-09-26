@@ -69,18 +69,6 @@ func NewVolume(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Vol
 		return nil
 	})
 
-	cleanupSchema := schema.String("Whether to cleanup the volume contents at the end of the task run.")
-	volume.OptionalField(nameable.NewSimpleNameable("cleanup"), cleanupSchema, func(node *node.Node) error {
-		cleanup, err := node.GetBoolValue(mergedEnv, parserKit.Boolevator)
-		if err != nil {
-			return err
-		}
-
-		volume.proto.Cleanup = cleanup
-
-		return nil
-	})
-
 	return volume
 }
 

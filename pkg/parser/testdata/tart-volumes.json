@@ -69,7 +69,6 @@
           "image": "ghcr.io/cirruslabs/macos-ventura-base:latest",
           "volumes": [
             {
-              "cleanup": true,
               "name": "scratch-volume",
               "source": "/tmp/scratch-dir",
               "target": "/tmp/scratch-dir"
