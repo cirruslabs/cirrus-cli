@@ -47,6 +47,10 @@ func TestExecutorEmpty(t *testing.T) {
 
 // TestExecutorClone ensures that Executor handles clone instruction properly.
 func TestExecutorClone(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDir(t)
 
 	// Create a canary file
@@ -93,6 +97,10 @@ func TestExecutorClone(t *testing.T) {
 
 // TestExecutorScript ensures that Executor can run a few simple commands.
 func TestExecutorScript(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDir(t)
 
 	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
@@ -139,6 +147,10 @@ func TestExecutorScript(t *testing.T) {
 // TestExecutorFails ensures that we get an ErrBuildFailed when running
 // a build with a deliberately failing command.
 func TestExecutorFails(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDir(t)
 
 	e, err := executor.New(dir, []*api.Task{
@@ -171,9 +183,12 @@ func TestExecutorFails(t *testing.T) {
 
 // TestResourceLimits ensures that the desired CPU and memory limits are enforced for instances.
 func TestResourceLimits(t *testing.T) {
-	// Skip this test on Podman due to https://github.com/containers/podman/issues/7959
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	if _, ok := testutil.ContainerBackendFromEnv(t).(*containerbackend.Podman); ok {
-		return
+		t.Skip("skipping test on Podman due to https://github.com/containers/podman/issues/7959")
 	}
 
 	dir := testutil.TempDirPopulatedWith(t, "testdata/resource-limits")
@@ -184,9 +199,12 @@ func TestResourceLimits(t *testing.T) {
 // TestAdditionalContainers ensures that the services created in the additional containers
 // are reachable from the main container.
 func TestAdditionalContainers(t *testing.T) {
-	// Skip this test on Podman
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	if _, ok := testutil.ContainerBackendFromEnv(t).(*containerbackend.Podman); ok {
-		return
+		t.Skip("skipping test on Podman due to https://github.com/containers/podman/issues/7959")
 	}
 
 	dir := testutil.TempDirPopulatedWith(t, "testdata/additional-containers")
@@ -195,6 +213,10 @@ func TestAdditionalContainers(t *testing.T) {
 }
 
 func TestCache(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/cache")
 	err := testutil.Execute(t, dir)
 	assert.NoError(t, err)
@@ -202,12 +224,20 @@ func TestCache(t *testing.T) {
 
 // Check that override ENTRYPOINT.
 func TestEntrypoint(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/entrypoint")
 	err := testutil.Execute(t, dir)
 	assert.NoError(t, err)
 }
 
 func TestGitignore(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/gitignore")
 
 	// Activate .gitignore
@@ -222,6 +252,10 @@ func TestGitignore(t *testing.T) {
 // TestEnvironmentPropagation ensures that the environment variables declared in the
 // configuration are propagated to the execution environment.
 func TestEnvironmentPropagation(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/environment-propagation")
 	err := testutil.Execute(t, dir)
 	assert.NoError(t, err)
@@ -229,6 +263,10 @@ func TestEnvironmentPropagation(t *testing.T) {
 
 // TestEnvironment ensures that environment variables emitted by the CLI are set.
 func TestEnvironmentAutomaticVariables(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/environment-automatic-variables")
 	err := testutil.Execute(t, dir)
 	assert.NoError(t, err)
@@ -236,6 +274,10 @@ func TestEnvironmentAutomaticVariables(t *testing.T) {
 
 // TestDockerPipe ensures that the Docker Pipe commands can communicate through the shared volume.
 func TestDockerPipe(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/docker-pipe")
 	err := testutil.Execute(t, dir)
 	assert.NoError(t, err)
@@ -244,6 +286,10 @@ func TestDockerPipe(t *testing.T) {
 // TestDockerPipeTermination ensures that the failure in some stage
 // of the Docker Pipe is propagated to the next stages.
 func TestDockerPipeTermination(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	// Create os.Stderr writer that duplicates it's output to buf
 	buf := bytes.NewBufferString("")
 	writer := io.MultiWriter(os.Stderr, buf)
@@ -266,6 +312,10 @@ func TestDockerPipeTermination(t *testing.T) {
 
 // TestExecutionBehavior ensures that individual command's execution behavior is respected.
 func TestExecutionBehavior(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	// Create os.Stderr writer that duplicates it's output to buf
 	buf := bytes.NewBufferString("")
 	writer := io.MultiWriter(os.Stderr, buf)
@@ -284,6 +334,10 @@ func TestExecutionBehavior(t *testing.T) {
 
 // TestDirtyMode ensures that files created in dirty mode exist on the host.
 func TestDirtyMode(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/dirty-mode")
 
 	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
@@ -301,6 +355,10 @@ func TestDirtyMode(t *testing.T) {
 //
 // [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
 func TestPrebuiltDockerfile(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/prebuilt-dockerfile")
 	err := testutil.Execute(t, dir)
 	assert.NoError(t, err)
@@ -382,6 +440,10 @@ func TestPersistentWorker(t *testing.T) {
 }
 
 func TestPersistentWorkerContainerIsolationVolumes(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	// Make up a name for the directory that we're going to mount inside of the container
 	// (it will be created automatically by the executor)
 	dirToBeMounted := filepath.Join(os.TempDir(), "cirrus-cli-volume-dir-"+uuid.New().String())
@@ -426,6 +488,10 @@ unix_task:
 }
 
 func TestPersistentWorkerDockerfileAsCIEnvironment(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	// Create a logger and attach it to writer
 	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
 	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
@@ -463,6 +529,10 @@ func TestPersistentWorkerNoneIsolationGracefulTermination(t *testing.T) {
 
 // TestCirrusWorkingDir ensures that CIRRUS_WORKING_DIR environment variable is respected.
 func TestCirrusWorkingDir(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	// Create a logger and attach it to writer
 	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
 	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
@@ -475,6 +545,10 @@ func TestCirrusWorkingDir(t *testing.T) {
 // TestDirtyCirrusWorkingDir ensures that CIRRUS_WORKING_DIR environment variable is respected
 // when running in --dirty mode.
 func TestCirrusWorkingDirDirty(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	// Create a logger and attach it to writer
 	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
 	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
@@ -487,6 +561,10 @@ func TestCirrusWorkingDirDirty(t *testing.T) {
 // TestLoggingNoExtraNewlines ensures that we don't insert unnecessary
 // empty newlines when printing log stream from the agent.
 func TestLoggingNoExtraNewlines(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	// Create os.Stderr writer that duplicates it's output to buf
 	buf := bytes.NewBufferString("")
 	writer := io.MultiWriter(os.Stderr, buf)
@@ -506,6 +584,10 @@ func TestLoggingNoExtraNewlines(t *testing.T) {
 
 // TestContainerLogs ensures that we receive logs from the agent running inside a container.
 func TestContainerLogs(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	// Create os.Stderr writer that duplicates it's output to buf
 	buf := bytes.NewBufferString("")
 	writer := io.MultiWriter(os.Stderr, buf)
