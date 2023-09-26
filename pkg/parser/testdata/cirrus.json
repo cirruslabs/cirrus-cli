@@ -2586,10 +2586,6 @@
                         {
                           "description": "Tart volume definition.",
                           "properties": {
-                            "cleanup": {
-                              "description": "Whether to cleanup the volume contents at the end of the task run.",
-                              "type": "string"
-                            },
                             "name": {
                               "description": "Volume name that will be mounted into /Volumes/My Shared Files/\u003cname\u003e.",
                               "type": "string"
@@ -3001,10 +2997,6 @@
                     {
                       "description": "Tart volume definition.",
                       "properties": {
-                        "cleanup": {
-                          "description": "Whether to cleanup the volume contents at the end of the task run.",
-                          "type": "string"
-                        },
                         "name": {
                           "description": "Volume name that will be mounted into /Volumes/My Shared Files/\u003cname\u003e.",
                           "type": "string"
