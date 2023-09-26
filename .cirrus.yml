@@ -7,6 +7,7 @@ docker_builder:
     - go test ./...
   env:
     HOME: /root
+    CIRRUS_INTERNAL_RUN_GITHUB_API_TESTS: true
 
 docker_builder:
   name: Test (Linux with Podman)

@@ -20,6 +20,12 @@ import (
 	"time"
 )
 
+func possiblySkip(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_INTERNAL_RUN_GITHUB_API_TESTS"); !ok {
+		t.Skip("not running a test that might consume GitHub API rate limit")
+	}
+}
+
 // TestSimpleTask ensures that .cirrus.star is able to generate the simplest possible configuration.
 func TestSimpleTask(t *testing.T) {
 	validateExpected(t, "testdata/simple-task")
@@ -184,6 +190,8 @@ func TestCycle(t *testing.T) {
 //
 // Note that we lock the revision in the .cirrus.star's load statement to prevent failures in the future.
 func TestLoadGitHelpers(t *testing.T) {
+	possiblySkip(t)
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/load-git-helpers")
 
 	// Read the source code
@@ -208,6 +216,8 @@ func TestLoadGitHelpers(t *testing.T) {
 }
 
 func TestLoadSeveralFiles(t *testing.T) {
+	possiblySkip(t)
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/load-several-files")
 
 	// Read the source code
@@ -229,6 +239,8 @@ func TestLoadSeveralFiles(t *testing.T) {
 // TestLoadTypoStarVsStart ensures that we return a user-friendly hint when loading of the module
 // that ends with ".start" fails.
 func TestLoadTypoStarVsStart(t *testing.T) {
+	possiblySkip(t)
+
 	dir := testutil.TempDir(t)
 
 	lrk := larker.New(larker.WithFileSystem(local.New(dir)))
@@ -448,6 +460,8 @@ func TestTestMode(t *testing.T) {
 // re-resolve FS if a non-relative path is detected (one that points to GitHub or
 // Git repository).
 func TestDynamicFSResolution(t *testing.T) {
+	possiblySkip(t)
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/dynamic-fs-resolution")
 
 	// Read the source code
