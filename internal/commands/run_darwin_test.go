@@ -109,7 +109,7 @@ task:
 
 	// Run the test
 	command := commands.NewRootCmd()
-	command.SetArgs([]string{"run", "--tart-lazy-pull", "-v", "-o simple"})
+	command.SetArgs([]string{"run", "--tart-lazy-pull", "-o simple"})
 	command.SetOut(writer)
 	command.SetErr(writer)
 	err := command.Execute()
