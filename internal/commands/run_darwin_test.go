@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"io"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -72,6 +74,10 @@ func TestRunVolumes(t *testing.T) {
 
 	t.Logf("Using Tart VM %s for testing...", image)
 
+	nonExistentVolumeSourcePath := filepath.Join("/tmp", uuid.NewString())
+	require.True(t, pathDoesNotExist(nonExistentVolumeSourcePath),
+		"non-existent volume should not exist at the beginning of the test")
+
 	// Craft Cirrus CI configuration
 	config := fmt.Sprintf(`
 persistent_worker:
@@ -81,6 +87,9 @@ persistent_worker:
       user: %s
       password: %s
       volumes:
+        # Non-existent volume source should be created and cleaned-up
+        - name: mounted-non-existent
+          source: "%s"
         # Read-only volume without a name
         - source: "/tmp"
           target: "/Users/%s/mounted-tmp"
@@ -91,11 +100,12 @@ persistent_worker:
 
 task:
   script:
+    - test -d "/Volumes/My Shared Files/mounted-non-existent"
     - test -d "/Users/%s/mounted-tmp"
     - touch "/Users/%s/mounted-tmp/test.txt" || true
     - test -d "/Volumes/My Shared Files/mounted-var"
 
-`, image, user, password, user, user, user)
+`, image, user, password, nonExistentVolumeSourcePath, user, user, user)
 
 	testutil.TempChdir(t)
 
@@ -117,4 +127,13 @@ task:
 	// Ensure that we've timed out because of no heartbeats
 	require.NoError(t, err)
 	require.Contains(t, buf.String(), "test.txt: Operation not permitted")
+
+	require.True(t, pathDoesNotExist(nonExistentVolumeSourcePath),
+		"non-existent volume should be cleaned up at the end of the test")
+}
+
+func pathDoesNotExist(path string) bool {
+	_, err := os.Stat(path)
+
+	return os.IsNotExist(err)
 }

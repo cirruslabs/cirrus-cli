@@ -132,9 +132,25 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		})
 	}
 
+	// Convert volumes to directory mounts
 	for _, volume := range tart.volumes {
 		if volume.Name == "" {
 			volume.Name = uuid.NewString()
+		}
+
+		_, err = os.Stat(volume.Source)
+		if err != nil {
+			if os.IsNotExist(err) {
+				if err := os.Mkdir(volume.Source, 0755); err != nil {
+					return fmt.Errorf("%w: volume source %q doesn't exist, failed to pre-create it: %v",
+						ErrFailed, volume.Source, err)
+				}
+
+				volume.Cleanup = true
+			} else {
+				return fmt.Errorf("%w: volume source %q cannot be accessed: %v",
+					ErrFailed, volume.Source, err)
+			}
 		}
 
 		directoryMounts = append(directoryMounts, directoryMount{
@@ -202,6 +218,23 @@ func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
 }
 
 func (tart *Tart) Close() error {
+	// Cleanup volumes created by us
+	for _, volume := range tart.volumes {
+		if !volume.Cleanup {
+			continue
+		}
+
+		volumeIdent := volume.Name
+
+		if volumeIdent == "" {
+			volumeIdent = volume.Source
+		}
+
+		if err := os.RemoveAll(volume.Source); err != nil {
+			return fmt.Errorf("%w: failed to cleanup volume %q: %v", ErrFailed, volumeIdent, err)
+		}
+	}
+
 	return nil
 }
 
