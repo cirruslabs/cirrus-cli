@@ -12,6 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/pkg/sftp"
+	"github.com/samber/lo"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"os"
@@ -173,14 +174,15 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
 
-	hooks := tart.initializeHooks(config)
+	initializeHooks := tart.initializeHooks(config)
+	terminateHooks := tart.terminateHooks(config)
 
 	addTartListBreadcrumb(ctx)
 	addDHCPDLeasesBreadcrumb(ctx)
 
 	err = remoteagent.WaitForAgent(ctx, tart.logger, ip,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64",
-		config, true, hooks, preCreatedWorkingDir)
+		config, true, initializeHooks, terminateHooks, preCreatedWorkingDir)
 	if err != nil {
 		addTartListBreadcrumb(ctx)
 		addDHCPDLeasesBreadcrumb(ctx)
@@ -255,6 +257,41 @@ func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.Wai
 
 				command := fmt.Sprintf("ln -s \"/Volumes/My Shared Files/%s\" \"%s\"",
 					volume.Name, volume.Target)
+
+				syncLogger.Infof("running command: %s", command)
+
+				if err := sshSess.Run(command); err != nil {
+					return err
+				}
+			}
+
+			syncLogger.Finish(true)
+			return nil
+		})
+	}
+
+	return hooks
+}
+
+func (tart *Tart) terminateHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
+	var hooks []remoteagent.WaitForAgentHook
+
+	targetfulVolumes := lo.Filter(tart.volumes, func(volume *api.Isolation_Tart_Volume, index int) bool {
+		return volume.Target != ""
+	})
+
+	if len(targetfulVolumes) != 0 {
+		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
+			syncLogger := config.Logger().Scoped("removing volume mount symlinks")
+
+			sshSess, err := sshClient.NewSession()
+			if err != nil {
+				return err
+			}
+			defer sshSess.Close()
+
+			for _, volume := range targetfulVolumes {
+				command := fmt.Sprintf("rm -f \"%s\"", volume.Target)
 
 				syncLogger.Infof("running command: %s", command)
 

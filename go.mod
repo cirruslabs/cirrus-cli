@@ -69,6 +69,7 @@ require (
 require (
 	github.com/IGLOU-EU/go-wildcard v1.0.3
 	github.com/goccy/go-yaml v1.11.0
+	github.com/samber/lo v1.38.1
 )
 
 replace github.com/opencontainers/image-spec v1.1.0-rc4 => github.com/opencontainers/image-spec v1.1.0-rc2
