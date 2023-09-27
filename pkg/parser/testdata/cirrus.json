@@ -2580,6 +2580,36 @@
                     "user": {
                       "description": "SSH username",
                       "type": "string"
+                    },
+                    "volumes": {
+                      "items": [
+                        {
+                          "description": "Tart volume definition.",
+                          "properties": {
+                            "name": {
+                              "description": "Volume name that will be mounted into /Volumes/My Shared Files/\u003cname\u003e.",
+                              "type": "string"
+                            },
+                            "readonly": {
+                              "description": "Whether this volume should be mounted in readonly mode.",
+                              "type": "string"
+                            },
+                            "source": {
+                              "description": "Volume source, a path to a directory on the host.",
+                              "type": "string"
+                            },
+                            "target": {
+                              "description": "Volume target, a path to a directory in the guest.",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "source"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "type": "array"
                     }
                   },
                   "type": "object"
@@ -2961,6 +2991,36 @@
                 "user": {
                   "description": "SSH username",
                   "type": "string"
+                },
+                "volumes": {
+                  "items": [
+                    {
+                      "description": "Tart volume definition.",
+                      "properties": {
+                        "name": {
+                          "description": "Volume name that will be mounted into /Volumes/My Shared Files/\u003cname\u003e.",
+                          "type": "string"
+                        },
+                        "readonly": {
+                          "description": "Whether this volume should be mounted in readonly mode.",
+                          "type": "string"
+                        },
+                        "source": {
+                          "description": "Volume source, a path to a directory on the host.",
+                          "type": "string"
+                        },
+                        "target": {
+                          "description": "Volume target, a path to a directory in the guest.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "source"
+                      ],
+                      "type": "object"
+                    }
+                  ],
+                  "type": "array"
                 }
               },
               "type": "object"

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
@@ -11,6 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/pkg/sftp"
+	"github.com/samber/lo"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"os"
@@ -40,11 +42,19 @@ type Tart struct {
 	memory      uint32
 	softnet     bool
 	display     string
+	volumes     []*api.Isolation_Tart_Volume
 
 	mountTemporaryWorkingDirectoryFromHost bool
 }
 
-func New(vmName string, sshUser string, sshPassword string, cpu uint32, memory uint32, opts ...Option) (*Tart, error) {
+func New(
+	vmName string,
+	sshUser string,
+	sshPassword string,
+	cpu uint32,
+	memory uint32,
+	opts ...Option,
+) (*Tart, error) {
 	tart := &Tart{
 		vmName:      vmName,
 		sshUser:     sshUser,
@@ -122,6 +132,34 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		})
 	}
 
+	// Convert volumes to directory mounts
+	for _, volume := range tart.volumes {
+		if volume.Name == "" {
+			volume.Name = uuid.NewString()
+		}
+
+		_, err = os.Stat(volume.Source)
+		if err != nil {
+			if os.IsNotExist(err) {
+				if err := os.Mkdir(volume.Source, 0755); err != nil {
+					return fmt.Errorf("%w: volume source %q doesn't exist, failed to pre-create it: %v",
+						ErrFailed, volume.Source, err)
+				}
+
+				volume.Cleanup = true
+			} else {
+				return fmt.Errorf("%w: volume source %q cannot be accessed: %v",
+					ErrFailed, volume.Source, err)
+			}
+		}
+
+		directoryMounts = append(directoryMounts, directoryMount{
+			Name:     volume.Name,
+			Path:     volume.Source,
+			ReadOnly: volume.ReadOnly,
+		})
+	}
+
 	vm.Start(ctx, tart.softnet, directoryMounts)
 
 	// Wait for the VM to start and get it's DHCP address
@@ -152,26 +190,15 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
 
-	var hooks []remoteagent.WaitForAgentHook
-	if config.ProjectDir != "" && !config.DirtyMode {
-		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
-			syncLogger := config.Logger().Scoped("syncing working directory")
-			if err := tart.syncProjectDir(config.ProjectDir, sshClient); err != nil {
-				syncLogger.Finish(false)
-				return fmt.Errorf("%w: %v", ErrSyncFailed, err)
-			}
-
-			syncLogger.Finish(true)
-			return nil
-		})
-	}
+	initializeHooks := tart.initializeHooks(config)
+	terminateHooks := tart.terminateHooks(config)
 
 	addTartListBreadcrumb(ctx)
 	addDHCPDLeasesBreadcrumb(ctx)
 
 	err = remoteagent.WaitForAgent(ctx, tart.logger, ip,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64",
-		config, true, hooks, preCreatedWorkingDir)
+		config, true, initializeHooks, terminateHooks, preCreatedWorkingDir)
 	if err != nil {
 		addTartListBreadcrumb(ctx)
 		addDHCPDLeasesBreadcrumb(ctx)
@@ -191,6 +218,23 @@ func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
 }
 
 func (tart *Tart) Close() error {
+	// Cleanup volumes created by us
+	for _, volume := range tart.volumes {
+		if !volume.Cleanup {
+			continue
+		}
+
+		volumeIdent := volume.Name
+
+		if volumeIdent == "" {
+			volumeIdent = volume.Source
+		}
+
+		if err := os.RemoveAll(volume.Source); err != nil {
+			return fmt.Errorf("%w: failed to cleanup volume %q: %v", ErrFailed, volumeIdent, err)
+		}
+	}
+
 	return nil
 }
 
@@ -211,6 +255,90 @@ func Cleanup() error {
 	}
 
 	return nil
+}
+
+func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
+	var hooks []remoteagent.WaitForAgentHook
+
+	if config.ProjectDir != "" && !config.DirtyMode {
+		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
+			syncLogger := config.Logger().Scoped("syncing working directory")
+			if err := tart.syncProjectDir(config.ProjectDir, sshClient); err != nil {
+				syncLogger.Finish(false)
+				return fmt.Errorf("%w: %v", ErrSyncFailed, err)
+			}
+
+			syncLogger.Finish(true)
+			return nil
+		})
+	}
+
+	if len(tart.volumes) != 0 {
+		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
+			syncLogger := config.Logger().Scoped("symlinking volume mounts")
+
+			sshSess, err := sshClient.NewSession()
+			if err != nil {
+				return err
+			}
+			defer sshSess.Close()
+
+			for _, volume := range tart.volumes {
+				if volume.Target == "" {
+					continue
+				}
+
+				command := fmt.Sprintf("ln -s \"/Volumes/My Shared Files/%s\" \"%s\"",
+					volume.Name, volume.Target)
+
+				syncLogger.Infof("running command: %s", command)
+
+				if err := sshSess.Run(command); err != nil {
+					return err
+				}
+			}
+
+			syncLogger.Finish(true)
+			return nil
+		})
+	}
+
+	return hooks
+}
+
+func (tart *Tart) terminateHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
+	var hooks []remoteagent.WaitForAgentHook
+
+	targetfulVolumes := lo.Filter(tart.volumes, func(volume *api.Isolation_Tart_Volume, index int) bool {
+		return volume.Target != ""
+	})
+
+	if len(targetfulVolumes) != 0 {
+		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
+			syncLogger := config.Logger().Scoped("removing volume mount symlinks")
+
+			sshSess, err := sshClient.NewSession()
+			if err != nil {
+				return err
+			}
+			defer sshSess.Close()
+
+			for _, volume := range targetfulVolumes {
+				command := fmt.Sprintf("rm -f \"%s\"", volume.Target)
+
+				syncLogger.Infof("running command: %s", command)
+
+				if err := sshSess.Run(command); err != nil {
+					return err
+				}
+			}
+
+			syncLogger.Finish(true)
+			return nil
+		})
+	}
+
+	return hooks
 }
 
 func (tart *Tart) syncProjectDir(dir string, sshClient *ssh.Client) error {

@@ -96,7 +96,7 @@ func NewFromProto(
 			Arguments:  instance.Arguments,
 		}, nil
 	case *api.PersistentWorkerInstance:
-		return persistentworker.New(instance.Isolation, security.NoSecurity(), logger)
+		return persistentworker.New(instance.Isolation, security.NoSecurityAllowAllVolumes(), logger)
 	case *api.DockerBuilder:
 		// Ensures that we're not trying to run e.g. Windows-specific scripts on macOS
 		instanceOS := strings.ToLower(instance.Platform.String())

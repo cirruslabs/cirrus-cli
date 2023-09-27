@@ -142,6 +142,8 @@ security:
     tart: {}
 ```
 
+#### Restricting Tart images
+
 Further, you can also restrict which Tart VM images can be used (wildcard character `*` is supported), and force Softnet to enable [better network isolation](https://github.com/cirruslabs/softnet#working-model):
 
 ```yaml
@@ -151,6 +153,22 @@ security:
       allowed-images:
         - "ghcr.io/cirruslabs/*"
       force-softnet: true
+```
+
+#### Restricting Tart volumes
+
+To restrict which volume paths can be mounted and in which mode, use `allowed-volumes`:
+
+```yaml
+security:
+  allowed-isolations:
+    tart:
+      allowed-volumes:
+        # Allow mounting /Volumes/SSD and all directories inside of it
+        - source: "/Volumes/SSD/*"
+        # Allow mounting /var/src in read-only mode, but not directories inside of it
+        - source: "/var/src"
+          force-readonly: true
 ```
 
 ## Writing tasks

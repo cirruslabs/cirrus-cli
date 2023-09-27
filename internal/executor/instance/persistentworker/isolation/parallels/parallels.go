@@ -69,7 +69,7 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 
 	return remoteagent.WaitForAgent(ctx, parallels.logger, ip,
 		parallels.sshUser, parallels.sshPassword, parallels.agentOS, "amd64",
-		config, vm.ClonedFromSuspended(), nil, "")
+		config, vm.ClonedFromSuspended(), nil, nil, "")
 }
 
 func (parallels *Parallels) WorkingDirectory(projectDir string, dirtyMode bool) string {

@@ -53,6 +53,7 @@ var validCases = []string{
 	"depends-on-env-list-expansion",
 	"persistent-worker-resource-management",
 	"arm-container",
+	"tart-volumes",
 }
 
 func absolutize(file string) string {

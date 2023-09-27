@@ -31,7 +31,8 @@ func WaitForAgent(
 	agentArchitecture string,
 	config *runconfig.RunConfig,
 	synchronizeTime bool,
-	hooks []WaitForAgentHook,
+	initializeHooks []WaitForAgentHook,
+	terminateHooks []WaitForAgentHook,
 	preCreatedWorkingDir string,
 ) error {
 	// Connect to the VM and upload the agent
@@ -75,7 +76,7 @@ func WaitForAgent(
 	}()
 	defer monitorCancel()
 
-	for _, hook := range hooks {
+	for _, hook := range initializeHooks {
 		if err := hook(ctx, cli); err != nil {
 			return err
 		}
@@ -177,6 +178,12 @@ func WaitForAgent(
 		}
 
 		return fmt.Errorf("%w: failed to run agent: %v", ErrFailed, err)
+	}
+
+	for _, hook := range terminateHooks {
+		if err := hook(ctx, cli); err != nil {
+			return err
+		}
 	}
 
 	return nil

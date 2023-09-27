@@ -10,8 +10,8 @@ import (
 )
 
 func possiblySkip(t *testing.T) {
-	if _, ok := os.LookupEnv("CIRRUS_INTERNAL_NO_GITHUB_API_TESTS"); ok {
-		t.SkipNow()
+	if _, ok := os.LookupEnv("CIRRUS_INTERNAL_RUN_GITHUB_API_TESTS"); !ok {
+		t.Skip("not running a test that might consume GitHub API rate limit")
 	}
 }
 

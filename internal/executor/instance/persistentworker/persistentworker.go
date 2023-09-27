@@ -64,34 +64,53 @@ func New(isolation *api.Isolation, security *security.Security, logger logger.Li
 
 		return container.New(iso.Container.Image, iso.Container.Cpu, iso.Container.Memory, iso.Container.Volumes)
 	case *api.Isolation_Tart_:
-		tartPolicy := security.TartPolicy()
-		if tartPolicy == nil {
-			return nil, fmt.Errorf("%w: \"tart\" isolation is not allowed by this Persistent Worker's "+
-				"security settings", ErrInvalidIsolation)
-		}
-
-		if !tartPolicy.ImageAllowed(iso.Tart.Image) {
-			return nil, fmt.Errorf("%w: \"tart\" VM image %q is not allowed by this Persistent Worker's "+
-				"security settings", ErrInvalidIsolation, iso.Tart.Image)
-		}
-
-		opts := []tart.Option{tart.WithLogger(logger)}
-
-		if iso.Tart.Softnet || tartPolicy.ForceSoftnet {
-			opts = append(opts, tart.WithSoftnet())
-		}
-
-		if iso.Tart.Display != "" {
-			opts = append(opts, tart.WithDisplay(iso.Tart.Display))
-		}
-
-		if iso.Tart.MountTemporaryWorkingDirectoryFromHost {
-			opts = append(opts, tart.WithMountTemporaryWorkingDirectoryFromHost())
-		}
-
-		return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, iso.Tart.Cpu, iso.Tart.Memory,
-			opts...)
+		return newTart(iso, security, logger)
 	default:
 		return nil, fmt.Errorf("%w: unsupported isolation type %T", ErrInvalidIsolation, iso)
 	}
+}
+
+func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logger.Lightweight) (*tart.Tart, error) {
+	tartPolicy := security.TartPolicy()
+	if tartPolicy == nil {
+		return nil, fmt.Errorf("%w: \"tart\" isolation is not allowed by this Persistent Worker's "+
+			"security settings", ErrInvalidIsolation)
+	}
+
+	if !tartPolicy.ImageAllowed(iso.Tart.Image) {
+		return nil, fmt.Errorf("%w: \"tart\" VM image %q is not allowed by this Persistent Worker's "+
+			"security settings", ErrInvalidIsolation, iso.Tart.Image)
+	}
+
+	for _, volume := range iso.Tart.Volumes {
+		if !tartPolicy.VolumeAllowed(volume) {
+			var volumeIdent string
+
+			if volume.Name != "" {
+				volumeIdent = volume.Name
+			} else {
+				volumeIdent = volume.Source
+			}
+
+			return nil, fmt.Errorf("%w: volume %q is not allowed by this Persistent Worker's "+
+				"security settings", ErrInvalidIsolation, volumeIdent)
+		}
+	}
+
+	opts := []tart.Option{tart.WithVolumes(iso.Tart.Volumes), tart.WithLogger(logger)}
+
+	if iso.Tart.Softnet || tartPolicy.ForceSoftnet {
+		opts = append(opts, tart.WithSoftnet())
+	}
+
+	if iso.Tart.Display != "" {
+		opts = append(opts, tart.WithDisplay(iso.Tart.Display))
+	}
+
+	if iso.Tart.MountTemporaryWorkingDirectoryFromHost {
+		opts = append(opts, tart.WithMountTemporaryWorkingDirectoryFromHost())
+	}
+
+	return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, iso.Tart.Cpu, iso.Tart.Memory,
+		opts...)
 }

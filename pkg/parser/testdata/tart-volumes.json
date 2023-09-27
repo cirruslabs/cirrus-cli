@@ -1,0 +1,92 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "true"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "darwin"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
+      "isolation": {
+        "tart": {
+          "image": "ghcr.io/cirruslabs/macos-ventura-base:latest",
+          "volumes": [
+            {
+              "name": "agent-volume",
+              "readOnly": true,
+              "source": "/var/agent-dir",
+              "target": "/tmp/agent-dir"
+            }
+          ]
+        }
+      }
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "read_only_without_cleanup"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "true"
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "darwin"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
+      "isolation": {
+        "tart": {
+          "image": "ghcr.io/cirruslabs/macos-ventura-base:latest",
+          "volumes": [
+            {
+              "name": "scratch-volume",
+              "source": "/tmp/scratch-dir",
+              "target": "/tmp/scratch-dir"
+            }
+          ]
+        }
+      }
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "1",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "read_write_with_cleanup"
+  }
+]

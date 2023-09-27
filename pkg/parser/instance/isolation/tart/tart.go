@@ -1,4 +1,4 @@
-package isolation
+package tart
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
@@ -18,7 +18,7 @@ type Tart struct {
 	parseable.DefaultParser
 }
 
-func NewTart(mergedEnv map[string]string) *Tart {
+func NewTart(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Tart {
 	tart := &Tart{
 		proto: &api.Isolation_Tart_{
 			Tart: &api.Isolation_Tart{},
@@ -87,6 +87,20 @@ func NewTart(mergedEnv map[string]string) *Tart {
 			return node.ParserError("%s", err.Error())
 		}
 		tart.proto.Tart.Memory = uint32(memoryParsed)
+		return nil
+	})
+
+	volumeSchema := schema.ArrayOf(NewVolume(mergedEnv, parserKit).Schema())
+	tart.OptionalField(nameable.NewSimpleNameable("volumes"), volumeSchema, func(node *node.Node) error {
+		for _, child := range node.Children {
+			volume, err := NewVolume(mergedEnv, parserKit).Parse(child, parserKit)
+			if err != nil {
+				return err
+			}
+
+			tart.proto.Tart.Volumes = append(tart.proto.Tart.Volumes, volume)
+		}
+
 		return nil
 	})
 
