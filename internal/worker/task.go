@@ -112,7 +112,7 @@ func (worker *Worker) runTask(
 
 		err := inst.Run(taskCtx, &config)
 
-		if err != nil && !errors.Is(err, context.Canceled) {
+		if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(taskCtx.Err(), context.Canceled) {
 			worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
 
 			boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
