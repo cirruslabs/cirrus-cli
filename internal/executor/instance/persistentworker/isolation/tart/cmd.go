@@ -30,6 +30,12 @@ func (l loggerAsWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+func Installed() bool {
+	_, err := exec.LookPath(tartCommandName)
+
+	return err == nil
+}
+
 func Cmd(
 	ctx context.Context,
 	additionalEnvironment map[string]string,

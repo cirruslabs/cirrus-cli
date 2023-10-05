@@ -150,8 +150,10 @@ func (worker *Worker) Run(ctx context.Context) error {
 	worker.oldWorkingDirectoryCleanup()
 
 	// https://github.com/cirruslabs/cirrus-cli/issues/571
-	if err := tart.Cleanup(); err != nil {
-		worker.logger.Warnf("failed to cleanup Tart VMs: %v", err)
+	if tart.Installed() {
+		if err := tart.Cleanup(); err != nil {
+			worker.logger.Warnf("failed to cleanup Tart VMs: %v", err)
+		}
 	}
 
 	// A sub-context to cancel out all Run() side-effects when it finishes
