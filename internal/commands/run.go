@@ -19,6 +19,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"strings"
+	"time"
 )
 
 var ErrRun = errors.New("run failed")
@@ -26,6 +27,7 @@ var ErrRun = errors.New("run failed")
 // General flags.
 var artifactsDir string
 var dirty bool
+var heartbeatTimeoutRaw string
 var output string
 var env []string
 var envFile string
@@ -132,6 +134,17 @@ func run(cmd *cobra.Command, args []string) error {
 		executorOpts = append(executorOpts, executor.WithDirtyMode())
 	}
 
+	// Heartbeat timeout
+	if heartbeatTimeoutRaw != "" {
+		heartbeatTimeout, err := time.ParseDuration(heartbeatTimeoutRaw)
+		if err != nil {
+			return fmt.Errorf("%w: failed to parse --heartbeat-timeout value %q: %v",
+				ErrRun, heartbeatTimeoutRaw, err)
+		}
+
+		executorOpts = append(executorOpts, executor.WithHeartbeatTimeout(heartbeatTimeout))
+	}
+
 	// Container-related options
 	executorOpts = append(executorOpts, executor.WithContainerOptions(options.ContainerOptions{
 		LazyPull:  lazyPull || containerLazyPull,
@@ -200,6 +213,10 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&lazyPull, "lazy-pull", false,
 		"attempt to pull container and VM images only if they are missing locally "+
 			"(helpful in case of registry rate limits; enables --container-lazy-pull and --tart-lazy-pull)")
+	cmd.PersistentFlags().StringVar(&heartbeatTimeoutRaw, "heartbeat-timeout", "",
+		"duration after which the task will be canceled if no heartbeats were received from the agent "+
+			"running as a part of that task (the agent sends a heartbeat every minute, so "+
+			"--heartbeat-timeout=\"2m\" will effectively cancel the task after two missed heartbeats)")
 
 	// Container-related flags
 	cmd.PersistentFlags().StringVar(&containerBackendType, "container-backend", containerbackend.BackendTypeAuto,
