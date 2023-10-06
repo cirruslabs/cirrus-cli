@@ -4,6 +4,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/echelon"
+	"time"
 )
 
 type Option func(*Executor)
@@ -35,6 +36,12 @@ func WithUserSpecifiedEnvironment(environment map[string]string) Option {
 func WithDirtyMode() Option {
 	return func(e *Executor) {
 		e.dirtyMode = true
+	}
+}
+
+func WithHeartbeatTimeout(heartbeatTimeout time.Duration) Option {
+	return func(e *Executor) {
+		e.heartbeatTimeout = heartbeatTimeout
 	}
 }
 

@@ -40,6 +40,7 @@ type Executor struct {
 	baseEnvironment          map[string]string
 	userSpecifiedEnvironment map[string]string
 	dirtyMode                bool
+	heartbeatTimeout         time.Duration
 	containerBackendType     string
 	containerOptions         options.ContainerOptions
 	tartOptions              options.TartOptions
@@ -208,34 +209,34 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		}
 	}()
 
-	// Monitor heartbeats and cancel the task if we don't receive
-	// them for more than maxNoHeartbeatsDuration
-	const maxNoHeartbeatsDuration = 2 * time.Minute
+	// If enabled, monitor and cancel the task if we don't receive
+	// heartbeats from the agent for more than e.heartbeatTimeout
+	if e.heartbeatTimeout != 0 {
+		currentTime := time.Now()
+		task.LastHeartbeatReceivedAt.Store(&currentTime)
 
-	currentTime := time.Now()
-	task.LastHeartbeatReceivedAt.Store(&currentTime)
+		go func() {
+			for {
+				if time.Since(*task.LastHeartbeatReceivedAt.Load()) > e.heartbeatTimeout {
+					cancel(ErrNoHeartbeats)
+				}
 
-	go func() {
-		for {
-			if time.Since(*task.LastHeartbeatReceivedAt.Load()) > maxNoHeartbeatsDuration {
-				cancel(ErrNoHeartbeats)
+				select {
+				case <-time.After(time.Second):
+					continue
+				case <-ctx.Done():
+					break
+				}
 			}
-
-			select {
-			case <-time.After(time.Second):
-				continue
-			case <-ctx.Done():
-				break
-			}
-		}
-	}()
+		}()
+	}
 
 	// Run the task
 	if err := task.Instance.Run(ctx, &instanceRunOpts); err != nil {
 		switch {
 		case errors.Is(context.Cause(ctx), ErrNoHeartbeats):
 			taskLogger.Warnf("task timed out: no heartbeats were received in the last %v",
-				maxNoHeartbeatsDuration)
+				e.heartbeatTimeout)
 			task.SetStatus(taskstatus.TimedOut)
 		case errors.Is(ctx.Err(), context.DeadlineExceeded):
 			taskLogger.Warnf("task timed out: %v elapsed, but the task is still running",
