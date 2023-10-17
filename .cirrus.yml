@@ -67,7 +67,7 @@ task:
   install_script:
     - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/sources.list.d/goreleaser.list
     - apt-get update
-    - apt-get -y install goreleaser
+    - apt-get -y install goreleaser-pro
   release_script: goreleaser build --snapshot
   binaries_artifacts:
     path: "dist/cirrus_*/cirrus*"
@@ -92,7 +92,7 @@ task:
     - curl -sL https://sentry.io/get-cli/ | bash
     - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/sources.list.d/goreleaser.list
     - apt-get update
-    - apt-get -y install goreleaser
+    - apt-get -y install goreleaser-pro
   release_script: goreleaser
   create_sentry_release_script:
     - export SENTRY_RELEASE="cirrus-cli@$CIRRUS_TAG"
