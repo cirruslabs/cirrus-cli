@@ -1,6 +1,8 @@
 # Index
 
 * [Homebrew](#homebrew)
+* [Debian-based distributions](#debian-based-distributions) (Debian, Ubuntu, etc.)
+* [RPM-based distributions](#rpm-based-distributions) (Fedora, CentOS, etc.)
 * [Prebuilt Binary](#prebuilt-binary)
 * [Golang](#golang)
 * CI integrations
@@ -47,6 +49,44 @@ Once this is done, you can use the Podman backend as you'd normally do, without 
 
 ```bash
 brew install cirruslabs/cli/cirrus
+```
+
+## Debian-based distributions
+
+Firstly, make sure that the APT transport for downloading packages via HTTPS is installed:
+
+```shell
+sudo apt-get update && sudo apt-get -y install apt-transport-https
+```
+
+Then, add the Cirrus Labs repository:
+
+```shell
+echo "deb [trusted=yes] https://apt.fury.io/cirruslabs/ /" | sudo tee /etc/apt/sources.list.d/cirruslabs.list
+```
+
+Finally, update the package index files and install the Cirrus CLI:
+
+```shell
+sudo apt-get update && sudo apt-get -y install cirrus-cli
+```
+
+## RPM-based distributions
+
+First, create a `/etc/yum.repos.d/cirruslabs.repo` file with the following contents:
+
+```
+[fury]
+name=Cirrus Labs Repo
+baseurl=https://yum.fury.io/cirruslabs/
+enabled=1
+gpgcheck=0
+```
+
+Then, install the Cirrus CLI:
+
+```shell
+sudo yum -y install cirrus-cli
 ```
 
 ## Prebuilt Binary

@@ -36,14 +36,17 @@ archives:
 release:
   prerelease: auto
 
-brews:
-  - name: cirrus
-    ids:
-      - regular
-    tap:
-      owner: cirruslabs
-      name: homebrew-cli
-    caveats: See the Github repository for more information
+nfpms:
+  - package_name: cirrus-cli
+    vendor: Cirrus Labs, Inc.
     homepage: https://github.com/cirruslabs/cirrus-cli
-    description: CLI for running Cirrus Tasks locally in Docker containers
-    skip_upload: auto
+    maintainer: support@cirruslabs.org
+    description: CLI for executing Cirrus tasks locally and in any CI
+    license: AGPL-3.0-only
+    section: devel
+    formats:
+      - deb
+      - rpm
+
+furies:
+  - account: cirruslabs
