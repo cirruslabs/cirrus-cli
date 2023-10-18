@@ -12,6 +12,8 @@ the tasks will be executed the same way years from now regardless what versions 
 ## Installation
 
 * [Homebrew](INSTALL.md#homebrew)
+* [Debian-based distributions](INSTALL.md#debian-based-distributions) (Debian, Ubuntu, etc.)
+* [RPM-based distributions](INSTALL.md#rpm-based-distributions) (Fedora, CentOS, etc.)
 * [Prebuilt Binary](INSTALL.md#prebuilt-binary)
 * [Golang](INSTALL.md#golang)
 * CI integrations

@@ -53,10 +53,10 @@ brew install cirruslabs/cli/cirrus
 
 ## Debian-based distributions
 
-Firstly, make sure that the APT transport for downloading packages via HTTPS is installed:
+Firstly, make sure that the APT transport for downloading packages via HTTPS and common X.509 certificates are installed:
 
 ```shell
-sudo apt-get update && sudo apt-get -y install apt-transport-https
+sudo apt-get update && sudo apt-get -y install apt-transport-https ca-certificates
 ```
 
 Then, add the Cirrus Labs repository:
@@ -76,7 +76,7 @@ sudo apt-get update && sudo apt-get -y install cirrus-cli
 First, create a `/etc/yum.repos.d/cirruslabs.repo` file with the following contents:
 
 ```
-[fury]
+[cirruslabs]
 name=Cirrus Labs Repo
 baseurl=https://yum.fury.io/cirruslabs/
 enabled=1
