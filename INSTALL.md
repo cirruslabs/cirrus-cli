@@ -76,7 +76,7 @@ sudo apt-get update && sudo apt-get -y install cirrus-cli
 First, create a `/etc/yum.repos.d/cirruslabs.repo` file with the following contents:
 
 ```
-[fury]
+[cirruslabs]
 name=Cirrus Labs Repo
 baseurl=https://yum.fury.io/cirruslabs/
 enabled=1
