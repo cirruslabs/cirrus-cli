@@ -198,36 +198,43 @@ Note that the user that starts the Persistent Worker is the user under which the
 sudo cirrus worker run --token <poll registration token>
 ```
 
-### Parallels Desktop for Mac
+### Container
 
-If your host has [Parallels Desktop](https://www.parallels.com/products/desktop/) installed, then a persistent worker
-can execute tasks in available Parallels VMs (worker will clone a VM, run the task and then remove the temporary cloned
-VM).
+To use this isolation type, install and configure a container engine like [Docker](https://github.com/cirruslabs/cirrus-cli/blob/master/INSTALL.md#docker) or [Podman](https://github.com/cirruslabs/cirrus-cli/blob/master/INSTALL.md#podman) (essentially the ones supported by the [Cirrus CLI](https://github.com/cirruslabs/cirrus-cli)).
 
-Here is an example of how to instruct a persistent worker to use Parallels isolation:
+Here's an example that runs a task in a separate container with a couple directories from the host machine being accessible:
 
 ```yaml
+persistent_worker:
+  isolation:
+    container:
+      image: debian:latest
+      cpu: 24
+      memory: 128G
+      volumes:
+        - /path/on/host:/path/in/container
+        - /tmp/persistent-cache:/tmp/cache:ro
+
 task:
-  persistent_worker:
-    labels:
-      os: darwin
-    isolation:
-      paralllels:
-        image: big-sur-xcode # locally registered VM
-        # username and password for SSHing into the VM to start a task
-        user: admin
-        password: admin
-        platform: darwin # VM platform. Only darwin is supported at the moment.
-  script: echo "running on-premise in a Parallels VM"
+  script: uname -a
 ```
 
-**Note**: Persistent worker supports packed Parallels VMs (it will unpack such VMs first before cloning). This can help
-with the process of updating VMs on persistent workers. If one need to update a VM named `VM_NAME` which is already unpacked
-on the host at `~/Parallels/VM_NAME.pvm`, then you can simply distribute a packed `VM_NAME.pvmp` file to `~/Parallels/VM_NAME.pvmp`
-and run a script similar to the one below to update the VM almost atomically:
+### Tart
 
-```bash
-prlctl unregister VM_NAME
-rm -rf ~/Parallels/VM_NAME.pvm
-prlctl register ~/Parallels/VM_NAME.pvmp
+To use this isolation type, install the [Tart](https://github.com/cirruslabs/tart) on the persistent worker's host machine.
+
+Here's an example of a configuration that will run the task inside of a fresh macOS virtual machine created from a remote [`ghcr.io/cirruslabs/macos-ventura-base:latest`](https://github.com/cirruslabs/macos-image-templates/pkgs/container/macos-ventura-base) VM image:
+
+```yaml
+persistent_worker:
+  isolation:
+    tart:
+      image: ghcr.io/cirruslabs/macos-ventura-base:latest
+      user: admin
+      password: admin
+
+task:
+  script: system_profiler
 ```
+
+Once the VM spins up, persistent worker will connect to the VM's IP-address over SSH using `user` and `password` credentials and run the latest agent version.
