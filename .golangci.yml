@@ -19,7 +19,6 @@ linters:
   - exportloopref
   - gochecknoinits
   - gocognit
-  - goconst
   - gocritic
   - gocyclo
   - godot
@@ -120,6 +119,10 @@ linters:
 
     # Needs package whitelists
     - depguard
+
+    # Generates absolutely useless errors, e.g.
+    # "string `.yml` has 3 occurrences, make it a constant"
+    - goconst
 
 issues:
   # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.
