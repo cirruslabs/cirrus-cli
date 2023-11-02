@@ -131,6 +131,10 @@
         },
         "^(.*)file$": {
           "properties": {
+            "from_contents": {
+              "description": "Provide the file contents directly instead of using an environment variable.",
+              "type": "string"
+            },
             "name": {
               "type": "string"
             },
@@ -139,13 +143,12 @@
               "type": "string"
             },
             "variable_name": {
-              "description": "Environment variable name.",
+              "description": "Environment variable name to get the file contents from.",
               "type": "string"
             }
           },
           "required": [
-            "path",
-            "variable_name"
+            "path"
           ],
           "type": "object"
         },
@@ -303,6 +306,10 @@
             },
             "^(.*)file$": {
               "properties": {
+                "from_contents": {
+                  "description": "Provide the file contents directly instead of using an environment variable.",
+                  "type": "string"
+                },
                 "name": {
                   "type": "string"
                 },
@@ -311,13 +318,12 @@
                   "type": "string"
                 },
                 "variable_name": {
-                  "description": "Environment variable name.",
+                  "description": "Environment variable name to get the file contents from.",
                   "type": "string"
                 }
               },
               "required": [
-                "path",
-                "variable_name"
+                "path"
               ],
               "type": "object"
             },
@@ -517,6 +523,10 @@
             },
             "^(.*)file$": {
               "properties": {
+                "from_contents": {
+                  "description": "Provide the file contents directly instead of using an environment variable.",
+                  "type": "string"
+                },
                 "name": {
                   "type": "string"
                 },
@@ -525,13 +535,12 @@
                   "type": "string"
                 },
                 "variable_name": {
-                  "description": "Environment variable name.",
+                  "description": "Environment variable name to get the file contents from.",
                   "type": "string"
                 }
               },
               "required": [
-                "path",
-                "variable_name"
+                "path"
               ],
               "type": "object"
             },
@@ -694,6 +703,10 @@
             },
             "^(.*)file$": {
               "properties": {
+                "from_contents": {
+                  "description": "Provide the file contents directly instead of using an environment variable.",
+                  "type": "string"
+                },
                 "name": {
                   "type": "string"
                 },
@@ -702,13 +715,192 @@
                   "type": "string"
                 },
                 "variable_name": {
-                  "description": "Environment variable name.",
+                  "description": "Environment variable name to get the file contents from.",
                   "type": "string"
                 }
               },
               "required": [
-                "path",
-                "variable_name"
+                "path"
+              ],
+              "type": "object"
+            },
+            "^(.*)script$": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": [
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                }
+              ]
+            }
+          },
+          "properties": {
+            "upload_caches": {
+              "items": [
+                {
+                  "description": "Cache name to upload.",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "on_timeout": {
+          "description": "ON_TIMEOUT commands.",
+          "patternProperties": {
+            "^(.*)artifacts$": {
+              "properties": {
+                "format": {
+                  "description": "Content Format.",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "path": {
+                  "description": "Path or pattern of artifacts.",
+                  "type": "string"
+                },
+                "paths": {
+                  "items": [
+                    {
+                      "description": "Path or pattern of artifacts.",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                },
+                "type": {
+                  "description": "Content Type.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "^(.*)background_script$": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": [
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                }
+              ]
+            },
+            "^(.*)cache$": {
+              "description": "Folder Cache Definition.",
+              "oneOf": [
+                {
+                  "required": [
+                    "folder"
+                  ]
+                },
+                {
+                  "required": [
+                    "folders"
+                  ]
+                }
+              ],
+              "properties": {
+                "fingerprint_key": {
+                  "description": "Cache key in it's raw form.",
+                  "type": "string"
+                },
+                "fingerprint_script": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "Script that is used to calculate cache key."
+                },
+                "folder": {
+                  "description": "Path of a folder to cache.",
+                  "type": "string"
+                },
+                "folders": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "A list of folders to cache."
+                },
+                "name": {
+                  "type": "string"
+                },
+                "populate_script": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "In case of a cache miss this script will be executed."
+                },
+                "reupload_on_changes": {
+                  "description": "Boolean expression. A flag to check if contents of folder has changed after a cache hit.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "^(.*)file$": {
+              "properties": {
+                "from_contents": {
+                  "description": "Provide the file contents directly instead of using an environment variable.",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "path": {
+                  "description": "Destination path.",
+                  "type": "string"
+                },
+                "variable_name": {
+                  "description": "Environment variable name to get the file contents from.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
               ],
               "type": "object"
             },
@@ -968,6 +1160,10 @@
                 },
                 "^(.*)file$": {
                   "properties": {
+                    "from_contents": {
+                      "description": "Provide the file contents directly instead of using an environment variable.",
+                      "type": "string"
+                    },
                     "name": {
                       "type": "string"
                     },
@@ -976,13 +1172,12 @@
                       "type": "string"
                     },
                     "variable_name": {
-                      "description": "Environment variable name.",
+                      "description": "Environment variable name to get the file contents from.",
                       "type": "string"
                     }
                   },
                   "required": [
-                    "path",
-                    "variable_name"
+                    "path"
                   ],
                   "type": "object"
                 },
@@ -1133,6 +1328,10 @@
                     },
                     "^(.*)file$": {
                       "properties": {
+                        "from_contents": {
+                          "description": "Provide the file contents directly instead of using an environment variable.",
+                          "type": "string"
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -1141,13 +1340,12 @@
                           "type": "string"
                         },
                         "variable_name": {
-                          "description": "Environment variable name.",
+                          "description": "Environment variable name to get the file contents from.",
                           "type": "string"
                         }
                       },
                       "required": [
-                        "path",
-                        "variable_name"
+                        "path"
                       ],
                       "type": "object"
                     },
@@ -1314,6 +1512,10 @@
                     },
                     "^(.*)file$": {
                       "properties": {
+                        "from_contents": {
+                          "description": "Provide the file contents directly instead of using an environment variable.",
+                          "type": "string"
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -1322,13 +1524,12 @@
                           "type": "string"
                         },
                         "variable_name": {
-                          "description": "Environment variable name.",
+                          "description": "Environment variable name to get the file contents from.",
                           "type": "string"
                         }
                       },
                       "required": [
-                        "path",
-                        "variable_name"
+                        "path"
                       ],
                       "type": "object"
                     },
@@ -1491,6 +1692,10 @@
                     },
                     "^(.*)file$": {
                       "properties": {
+                        "from_contents": {
+                          "description": "Provide the file contents directly instead of using an environment variable.",
+                          "type": "string"
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -1499,13 +1704,192 @@
                           "type": "string"
                         },
                         "variable_name": {
-                          "description": "Environment variable name.",
+                          "description": "Environment variable name to get the file contents from.",
                           "type": "string"
                         }
                       },
                       "required": [
-                        "path",
-                        "variable_name"
+                        "path"
+                      ],
+                      "type": "object"
+                    },
+                    "^(.*)script$": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "items": [
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "type": "array"
+                        }
+                      ]
+                    }
+                  },
+                  "properties": {
+                    "upload_caches": {
+                      "items": [
+                        {
+                          "description": "Cache name to upload.",
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                },
+                "on_timeout": {
+                  "description": "ON_TIMEOUT commands.",
+                  "patternProperties": {
+                    "^(.*)artifacts$": {
+                      "properties": {
+                        "format": {
+                          "description": "Content Format.",
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "description": "Path or pattern of artifacts.",
+                          "type": "string"
+                        },
+                        "paths": {
+                          "items": [
+                            {
+                              "description": "Path or pattern of artifacts.",
+                              "type": "string"
+                            }
+                          ],
+                          "type": "array"
+                        },
+                        "type": {
+                          "description": "Content Type.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "^(.*)background_script$": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "items": [
+                            {
+                              "type": "string"
+                            }
+                          ],
+                          "type": "array"
+                        }
+                      ]
+                    },
+                    "^(.*)cache$": {
+                      "description": "Folder Cache Definition.",
+                      "oneOf": [
+                        {
+                          "required": [
+                            "folder"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "folders"
+                          ]
+                        }
+                      ],
+                      "properties": {
+                        "fingerprint_key": {
+                          "description": "Cache key in it's raw form.",
+                          "type": "string"
+                        },
+                        "fingerprint_script": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "Script that is used to calculate cache key."
+                        },
+                        "folder": {
+                          "description": "Path of a folder to cache.",
+                          "type": "string"
+                        },
+                        "folders": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "A list of folders to cache."
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "populate_script": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "type": "string"
+                                }
+                              ],
+                              "type": "array"
+                            }
+                          ],
+                          "description": "In case of a cache miss this script will be executed."
+                        },
+                        "reupload_on_changes": {
+                          "description": "Boolean expression. A flag to check if contents of folder has changed after a cache hit.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "^(.*)file$": {
+                      "properties": {
+                        "from_contents": {
+                          "description": "Provide the file contents directly instead of using an environment variable.",
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "description": "Destination path.",
+                          "type": "string"
+                        },
+                        "variable_name": {
+                          "description": "Environment variable name to get the file contents from.",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "path"
                       ],
                       "type": "object"
                     },
@@ -1693,6 +2077,10 @@
         },
         "^(.*)file$": {
           "properties": {
+            "from_contents": {
+              "description": "Provide the file contents directly instead of using an environment variable.",
+              "type": "string"
+            },
             "name": {
               "type": "string"
             },
@@ -1701,13 +2089,12 @@
               "type": "string"
             },
             "variable_name": {
-              "description": "Environment variable name.",
+              "description": "Environment variable name to get the file contents from.",
               "type": "string"
             }
           },
           "required": [
-            "path",
-            "variable_name"
+            "path"
           ],
           "type": "object"
         },
@@ -1865,6 +2252,10 @@
             },
             "^(.*)file$": {
               "properties": {
+                "from_contents": {
+                  "description": "Provide the file contents directly instead of using an environment variable.",
+                  "type": "string"
+                },
                 "name": {
                   "type": "string"
                 },
@@ -1873,13 +2264,12 @@
                   "type": "string"
                 },
                 "variable_name": {
-                  "description": "Environment variable name.",
+                  "description": "Environment variable name to get the file contents from.",
                   "type": "string"
                 }
               },
               "required": [
-                "path",
-                "variable_name"
+                "path"
               ],
               "type": "object"
             },
@@ -2247,6 +2637,10 @@
             },
             "^(.*)file$": {
               "properties": {
+                "from_contents": {
+                  "description": "Provide the file contents directly instead of using an environment variable.",
+                  "type": "string"
+                },
                 "name": {
                   "type": "string"
                 },
@@ -2255,13 +2649,12 @@
                   "type": "string"
                 },
                 "variable_name": {
-                  "description": "Environment variable name.",
+                  "description": "Environment variable name to get the file contents from.",
                   "type": "string"
                 }
               },
               "required": [
-                "path",
-                "variable_name"
+                "path"
               ],
               "type": "object"
             },
@@ -2424,6 +2817,10 @@
             },
             "^(.*)file$": {
               "properties": {
+                "from_contents": {
+                  "description": "Provide the file contents directly instead of using an environment variable.",
+                  "type": "string"
+                },
                 "name": {
                   "type": "string"
                 },
@@ -2432,13 +2829,192 @@
                   "type": "string"
                 },
                 "variable_name": {
-                  "description": "Environment variable name.",
+                  "description": "Environment variable name to get the file contents from.",
                   "type": "string"
                 }
               },
               "required": [
-                "path",
-                "variable_name"
+                "path"
+              ],
+              "type": "object"
+            },
+            "^(.*)script$": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": [
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                }
+              ]
+            }
+          },
+          "properties": {
+            "upload_caches": {
+              "items": [
+                {
+                  "description": "Cache name to upload.",
+                  "type": "string"
+                }
+              ],
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "on_timeout": {
+          "description": "ON_TIMEOUT commands.",
+          "patternProperties": {
+            "^(.*)artifacts$": {
+              "properties": {
+                "format": {
+                  "description": "Content Format.",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "path": {
+                  "description": "Path or pattern of artifacts.",
+                  "type": "string"
+                },
+                "paths": {
+                  "items": [
+                    {
+                      "description": "Path or pattern of artifacts.",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                },
+                "type": {
+                  "description": "Content Type.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "^(.*)background_script$": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "items": [
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "type": "array"
+                }
+              ]
+            },
+            "^(.*)cache$": {
+              "description": "Folder Cache Definition.",
+              "oneOf": [
+                {
+                  "required": [
+                    "folder"
+                  ]
+                },
+                {
+                  "required": [
+                    "folders"
+                  ]
+                }
+              ],
+              "properties": {
+                "fingerprint_key": {
+                  "description": "Cache key in it's raw form.",
+                  "type": "string"
+                },
+                "fingerprint_script": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "Script that is used to calculate cache key."
+                },
+                "folder": {
+                  "description": "Path of a folder to cache.",
+                  "type": "string"
+                },
+                "folders": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "A list of folders to cache."
+                },
+                "name": {
+                  "type": "string"
+                },
+                "populate_script": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "type": "array"
+                    }
+                  ],
+                  "description": "In case of a cache miss this script will be executed."
+                },
+                "reupload_on_changes": {
+                  "description": "Boolean expression. A flag to check if contents of folder has changed after a cache hit.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "^(.*)file$": {
+              "properties": {
+                "from_contents": {
+                  "description": "Provide the file contents directly instead of using an environment variable.",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "path": {
+                  "description": "Destination path.",
+                  "type": "string"
+                },
+                "variable_name": {
+                  "description": "Environment variable name to get the file contents from.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path"
               ],
               "type": "object"
             },
