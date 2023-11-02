@@ -7,7 +7,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/breml/rootcerts v0.2.11
-	github.com/cirruslabs/cirrus-ci-agent v1.119.0
+	github.com/cirruslabs/cirrus-ci-agent v1.123.1
 	github.com/cirruslabs/echelon v1.9.0
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.3.0
@@ -15,7 +15,7 @@ require (
 	github.com/containers/storage v1.46.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3
 	github.com/docker/cli v23.0.6+incompatible
-	github.com/docker/docker v24.0.5+incompatible
+	github.com/docker/docker v24.0.7+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/getsentry/sentry-go v0.23.0
@@ -55,12 +55,12 @@ require (
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20230302034142-4b1e35fe2254
-	golang.org/x/crypto v0.13.0
+	golang.org/x/crypto v0.14.0
 	golang.org/x/oauth2 v0.8.0
-	golang.org/x/sys v0.12.0
+	golang.org/x/sys v0.13.0
 	golang.org/x/text v0.13.0
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/grpc v1.57.0
+	google.golang.org/grpc v1.57.1
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -74,7 +74,7 @@ require (
 
 replace github.com/opencontainers/image-spec v1.1.0-rc4 => github.com/opencontainers/image-spec v1.1.0-rc2
 
-replace github.com/docker/docker v24.0.5+incompatible => github.com/docker/docker v23.0.6+incompatible
+replace github.com/docker/docker v24.0.7+incompatible => github.com/docker/docker v23.0.6+incompatible
 
 require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
@@ -152,9 +152,9 @@ require (
 	go.opentelemetry.io/otel/trace v1.15.1 // indirect
 	golang.org/x/exp v0.0.0-20230510235704-dd950f8aeaea // indirect
 	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect

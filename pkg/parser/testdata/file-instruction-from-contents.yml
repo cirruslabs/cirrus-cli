@@ -1,0 +1,10 @@
+container:
+  image: debian:latest
+
+task:
+  some_file:
+    path: some.txt
+    from_contents: |
+      what
+      ever
+      goes

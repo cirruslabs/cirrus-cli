@@ -54,6 +54,7 @@ var validCases = []string{
 	"persistent-worker-resource-management",
 	"arm-container",
 	"tart-volumes",
+	"file-instruction-from-contents",
 }
 
 func absolutize(file string) string {

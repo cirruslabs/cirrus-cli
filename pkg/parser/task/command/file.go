@@ -43,8 +43,8 @@ func NewFileCommand(mergedEnv map[string]string) *FileCommand {
 		return nil
 	})
 
-	variableSchema := schema.String("Environment variable name.")
-	fileCommand.RequiredField(nameable.NewSimpleNameable("variable_name"), variableSchema, func(node *node.Node) error {
+	variableSchema := schema.String("Environment variable name to get the file contents from.")
+	fileCommand.OptionalField(nameable.NewSimpleNameable("variable_name"), variableSchema, func(node *node.Node) error {
 		variableName, err := node.GetStringValue()
 		if err != nil {
 			return err
@@ -54,6 +54,20 @@ func NewFileCommand(mergedEnv map[string]string) *FileCommand {
 
 		fileCommand.instruction.Source = &api.FileInstruction_FromEnvironmentVariable{
 			FromEnvironmentVariable: variableName,
+		}
+
+		return nil
+	})
+
+	contentsSchema := schema.String("Provide the file contents directly instead of using an environment variable.")
+	fileCommand.OptionalField(nameable.NewSimpleNameable("from_contents"), contentsSchema, func(node *node.Node) error {
+		value, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		fileCommand.instruction.Source = &api.FileInstruction_FromContents{
+			FromContents: value,
 		}
 
 		return nil
@@ -70,6 +84,10 @@ func (fileCommand *FileCommand) Parse(node *node.Node, parserKit *parserkit.Pars
 	if fileCommand.proto.Name == "" {
 		cacheNameable := nameable.NewRegexNameable("^(.*)file$")
 		fileCommand.proto.Name = cacheNameable.FirstGroupOrDefault(node.Name, "file")
+	}
+
+	if fileCommand.instruction.Source == nil {
+		return node.ParserError("either \"variable_name\" or \"from_contents\" field should be set")
 	}
 
 	return nil
