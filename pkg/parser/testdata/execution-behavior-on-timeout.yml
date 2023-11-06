@@ -1,0 +1,10 @@
+container:
+  image: debian:latest
+
+task:
+  timeout_in: 1m
+  long_script:
+    - sleep 86400
+  on_timeout:
+    clean_up_script:
+      - echo "cleaning up"
