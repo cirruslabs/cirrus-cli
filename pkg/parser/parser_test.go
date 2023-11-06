@@ -55,6 +55,7 @@ var validCases = []string{
 	"arm-container",
 	"tart-volumes",
 	"file-instruction-from-contents",
+	"execution-behavior-on-timeout",
 }
 
 func absolutize(file string) string {

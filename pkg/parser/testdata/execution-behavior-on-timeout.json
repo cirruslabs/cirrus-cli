@@ -1,0 +1,46 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "long",
+        "scriptInstruction": {
+          "scripts": [
+            "sleep 86400"
+          ]
+        }
+      },
+      {
+        "executionBehaviour": "ON_TIMEOUT",
+        "name": "clean_up",
+        "scriptInstruction": {
+          "scripts": [
+            "echo \"cleaning up\""
+          ]
+        }
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
+      "cpu": 2,
+      "image": "debian:latest",
+      "memory": 4096
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "60",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "main"
+  }
+]
