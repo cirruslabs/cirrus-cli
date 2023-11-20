@@ -277,12 +277,6 @@ func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.Wai
 		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
 			syncLogger := config.Logger().Scoped("symlinking volume mounts")
 
-			sshSess, err := sshClient.NewSession()
-			if err != nil {
-				return err
-			}
-			defer sshSess.Close()
-
 			for _, volume := range tart.volumes {
 				if volume.Target == "" {
 					continue
@@ -293,9 +287,18 @@ func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.Wai
 
 				syncLogger.Infof("running command: %s", command)
 
-				if err := sshSess.Run(command); err != nil {
+				sshSess, err := sshClient.NewSession()
+				if err != nil {
 					return err
 				}
+
+				if err := sshSess.Run(command); err != nil {
+					_ = sshSess.Close()
+
+					return err
+				}
+
+				_ = sshSess.Close()
 			}
 
 			syncLogger.Finish(true)
@@ -317,20 +320,23 @@ func (tart *Tart) terminateHooks(config *runconfig.RunConfig) []remoteagent.Wait
 		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
 			syncLogger := config.Logger().Scoped("removing volume mount symlinks")
 
-			sshSess, err := sshClient.NewSession()
-			if err != nil {
-				return err
-			}
-			defer sshSess.Close()
-
 			for _, volume := range targetfulVolumes {
 				command := fmt.Sprintf("rm -f \"%s\"", volume.Target)
 
 				syncLogger.Infof("running command: %s", command)
 
-				if err := sshSess.Run(command); err != nil {
+				sshSess, err := sshClient.NewSession()
+				if err != nil {
 					return err
 				}
+
+				if err := sshSess.Run(command); err != nil {
+					_ = sshSess.Close()
+
+					return err
+				}
+
+				_ = sshSess.Close()
 			}
 
 			syncLogger.Finish(true)
