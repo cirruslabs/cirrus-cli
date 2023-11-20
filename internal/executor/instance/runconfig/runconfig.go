@@ -22,6 +22,7 @@ type RunConfig struct {
 	DirtyMode                  bool
 	ContainerOptions           options.ContainerOptions
 	TartOptions                options.TartOptions
+	VetuOptions                options.VetuOptions
 	agentVersion               string
 	containerBackend           containerbackend.ContainerBackend
 	AdditionalEnvironment      map[string]string

@@ -9,6 +9,7 @@ type AllowedIsolations struct {
 	Container *IsolationPolicyContainer `yaml:"container"`
 	Parallels *IsolationPolicyParallels `yaml:"parallels"`
 	Tart      *IsolationPolicyTart      `yaml:"tart"`
+	Vetu      *IsolationPolicyVetu      `yaml:"vetu"`
 }
 
 func NoSecurity() *Security {
@@ -28,6 +29,7 @@ func NoSecurityAllowAllVolumes() *Security {
 					},
 				},
 			},
+			Vetu: &IsolationPolicyVetu{},
 		},
 	}
 }
@@ -62,4 +64,12 @@ func (security *Security) TartPolicy() *IsolationPolicyTart {
 	}
 
 	return &IsolationPolicyTart{}
+}
+
+func (security *Security) VetuPolicy() *IsolationPolicyVetu {
+	if isolation := security.AllowedIsolations; isolation != nil {
+		return isolation.Vetu
+	}
+
+	return &IsolationPolicyVetu{}
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/pathsafe"
@@ -44,6 +45,7 @@ type Executor struct {
 	containerBackendType     string
 	containerOptions         options.ContainerOptions
 	tartOptions              options.TartOptions
+	vetuOptions              options.VetuOptions
 	artifactsDir             string
 }
 
@@ -162,8 +164,12 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		rpcOpts = append(rpcOpts, rpc.WithArtifactsDir(taskSpecificArtifactsDir))
 	}
 
+	// Provide more information for RPC address heuristics
+	// when running Virtual Machines on Linux
+	_, virtualMachine := task.Instance.(*vetu.Vetu)
+
 	e.rpc = rpc.New(e.build, rpcOpts...)
-	if err := e.rpc.Start(ctx, "localhost:0"); err != nil {
+	if err := e.rpc.Start(ctx, "localhost:0", virtualMachine); err != nil {
 		return err
 	}
 	defer e.rpc.Stop()
@@ -182,6 +188,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		DirtyMode:            e.dirtyMode,
 		ContainerOptions:     e.containerOptions,
 		TartOptions:          e.tartOptions,
+		VetuOptions:          e.vetuOptions,
 	}
 
 	instanceRunOpts.SetLogger(taskLogger)

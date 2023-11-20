@@ -5,9 +5,9 @@ go 1.20
 require (
 	github.com/PaesslerAG/gval v1.2.2
 	github.com/antihax/optional v1.0.0
-	github.com/avast/retry-go v3.0.0+incompatible
+	github.com/avast/retry-go/v4 v4.5.1
 	github.com/breml/rootcerts v0.2.11
-	github.com/cirruslabs/cirrus-ci-agent v1.123.1
+	github.com/cirruslabs/cirrus-ci-agent v1.125.0
 	github.com/cirruslabs/echelon v1.9.0
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.3.0

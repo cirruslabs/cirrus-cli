@@ -50,18 +50,18 @@ func TestRestrictOnlySpecificTartImages(t *testing.T) {
 	config, err := parseConfig(filepath.Join("testdata", "security-only-specific-tart-images.yml"))
 	require.NoError(t, err)
 
-	require.Equal(t, []string{"ghcr.io/cirruslabs/*"},
+	require.EqualValues(t, []string{"ghcr.io/cirruslabs/*"},
 		config.Security.AllowedIsolations.Tart.AllowedImages)
 
 	const goodImage = "ghcr.io/cirruslabs/macos-ventura-base:latest"
-	require.True(t, config.Security.AllowedIsolations.Tart.ImageAllowed(goodImage))
+	require.True(t, config.Security.AllowedIsolations.Tart.AllowedImages.ImageAllowed(goodImage))
 
 	badImages := []string{
 		"example.com/cirruslabs/macos-ventura-base:latest",
 		"example.org/ghcr.io/cirruslabs/whatnot",
 	}
 	for _, badImage := range badImages {
-		assert.False(t, config.Security.AllowedIsolations.Tart.ImageAllowed(badImage))
+		assert.False(t, config.Security.AllowedIsolations.Tart.AllowedImages.ImageAllowed(badImage))
 	}
 }
 

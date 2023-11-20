@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v4"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"

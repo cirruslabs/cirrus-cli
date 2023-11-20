@@ -5,19 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/projectdirsyncer"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
-	"github.com/pkg/sftp"
 	"github.com/samber/lo"
 	"golang.org/x/crypto/ssh"
-	"io"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -263,7 +261,7 @@ func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.Wai
 	if config.ProjectDir != "" && !config.DirtyMode {
 		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
 			syncLogger := config.Logger().Scoped("syncing working directory")
-			if err := tart.syncProjectDir(config.ProjectDir, sshClient); err != nil {
+			if err := projectdirsyncer.SyncProjectDir(config.ProjectDir, sshClient); err != nil {
 				syncLogger.Finish(false)
 				return fmt.Errorf("%w: %v", ErrSyncFailed, err)
 			}
@@ -339,49 +337,6 @@ func (tart *Tart) terminateHooks(config *runconfig.RunConfig) []remoteagent.Wait
 	}
 
 	return hooks
-}
-
-func (tart *Tart) syncProjectDir(dir string, sshClient *ssh.Client) error {
-	sftpClient, err := sftp.NewClient(sshClient)
-	if err != nil {
-		return err
-	}
-	defer sftpClient.Close()
-
-	return filepath.Walk(dir, func(path string, fileInfo os.FileInfo, err error) error {
-		// Handle possible error that occurred when reading this directory entry information
-		if err != nil {
-			return err
-		}
-
-		relativePath, err := filepath.Rel(dir, path)
-		if err != nil {
-			return err
-		}
-		remotePath := sftp.Join(platform.NewUnix().GenericWorkingDir(), relativePath)
-
-		if fileInfo.Mode().IsDir() {
-			return sftpClient.MkdirAll(remotePath)
-		} else if fileInfo.Mode().IsRegular() {
-			localFile, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			defer localFile.Close()
-
-			remoteFile, err := sftpClient.Create(remotePath)
-			if err != nil {
-				return err
-			}
-			defer remoteFile.Close()
-
-			if _, err := io.Copy(remoteFile, localFile); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	})
 }
 
 func addTartListBreadcrumb(ctx context.Context) {

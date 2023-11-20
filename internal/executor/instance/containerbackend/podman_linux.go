@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/antihax/optional"
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v4"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/podman"
 	"github.com/cirruslabs/podmanapi/pkg/swagger"

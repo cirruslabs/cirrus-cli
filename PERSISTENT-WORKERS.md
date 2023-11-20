@@ -132,6 +132,7 @@ security:
     none: {}
     container: {}
     tart: {}
+    vetu: {}
 ```
 
 To only allow running tasks inside of [Tart VMs](https://github.com/cirruslabs/tart), for example, specify the following in your Persistent Worker configuration:
@@ -169,6 +170,18 @@ security:
         # Allow mounting /var/src in read-only mode, but not directories inside of it
         - source: "/var/src"
           force-readonly: true
+```
+
+#### Restricting Vetu images
+
+Similarly to Tart, you can also restrict which Vetu VM images can be used (wildcard character `*` is supported):
+
+```yaml
+security:
+  allowed-isolations:
+    vetu:
+      allowed-images:
+        - "ghcr.io/cirruslabs/*"
 ```
 
 ## Writing tasks

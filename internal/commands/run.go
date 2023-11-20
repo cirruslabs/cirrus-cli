@@ -51,6 +51,9 @@ var dockerfileImagePush bool
 // Tart-related flags.
 var tartLazyPull bool
 
+// Vetu-related flags.
+var vetuLazyPull bool
+
 // Flags useful for debugging.
 var debugNoCleanup bool
 
@@ -159,6 +162,11 @@ func run(cmd *cobra.Command, args []string) error {
 		LazyPull: lazyPull || tartLazyPull,
 	}))
 
+	// Vetu-related options
+	executorOpts = append(executorOpts, executor.WithVetuOptions(options.VetuOptions{
+		LazyPull: lazyPull || vetuLazyPull,
+	}))
+
 	// Environment
 	executorOpts = append(executorOpts,
 		executor.WithBaseEnvironmentOverride(baseEnvironment),
@@ -234,6 +242,10 @@ func newRunCmd() *cobra.Command {
 	// Tart-related flags
 	cmd.PersistentFlags().BoolVar(&tartLazyPull, "tart-lazy-pull", false,
 		"attempt to pull Tart VM images only if they are missing locally (helpful in case of registry rate limits)")
+
+	// Vetu-related flags
+	cmd.PersistentFlags().BoolVar(&vetuLazyPull, "vetu-lazy-pull", false,
+		"attempt to pull Vetu VM images only if they are missing locally (helpful in case of registry rate limits)")
 
 	// Flags useful for debugging
 	cmd.PersistentFlags().BoolVar(&debugNoCleanup, "debug-no-cleanup", false,

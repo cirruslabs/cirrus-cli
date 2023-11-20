@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
@@ -153,6 +154,12 @@ func (worker *Worker) Run(ctx context.Context) error {
 	if tart.Installed() {
 		if err := tart.Cleanup(); err != nil {
 			worker.logger.Warnf("failed to cleanup Tart VMs: %v", err)
+		}
+	}
+
+	if vetu.Installed() {
+		if err := vetu.Cleanup(); err != nil {
+			worker.logger.Warnf("failed to cleanup Vetu VMs: %v", err)
 		}
 	}
 

@@ -16,7 +16,7 @@ type Listener struct {
 	listener net.Listener
 }
 
-func NewListener(ctx context.Context, address string) (*Listener, error) {
+func NewListener(ctx context.Context, address string, virtualMachine bool) (*Listener, error) {
 	network := "tcp"
 	var socketDir string
 
@@ -29,7 +29,7 @@ func NewListener(ctx context.Context, address string) (*Listener, error) {
 		if cloudBuildIP := GetCloudBuildIP(ctx); cloudBuildIP != "" {
 			network = "tcp"
 			address = fmt.Sprintf("%s:0", cloudBuildIP)
-		} else {
+		} else if !virtualMachine {
 			socketDir = fmt.Sprintf("/tmp/cli-%s", uuid.New().String())
 		}
 	} else if runtime.GOOS == "windows" && IsRunningWindowsContainers(ctx) {

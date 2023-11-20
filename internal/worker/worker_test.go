@@ -160,7 +160,7 @@ func TestWorkerIsolationContainer(t *testing.T) {
 		t.Skip("no container backend configured")
 	}
 
-	lis, err := heuristic.NewListener(context.Background(), "localhost:0")
+	lis, err := heuristic.NewListener(context.Background(), "localhost:0", false)
 	if err != nil {
 		t.Fatal(err)
 	}

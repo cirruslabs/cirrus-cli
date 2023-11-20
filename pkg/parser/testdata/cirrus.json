@@ -3141,7 +3141,7 @@
                       "type": "number"
                     },
                     "image": {
-                      "description": "VM name.",
+                      "description": "Source VM image (or name) to clone the new VM from.",
                       "type": "string"
                     },
                     "memory": {
@@ -3150,11 +3150,11 @@
                       "type": "string"
                     },
                     "password": {
-                      "description": "SSH password",
+                      "description": "SSH password.",
                       "type": "string"
                     },
                     "user": {
-                      "description": "SSH username",
+                      "description": "SSH username.",
                       "type": "string"
                     },
                     "volumes": {
@@ -3186,6 +3186,33 @@
                         }
                       ],
                       "type": "array"
+                    }
+                  },
+                  "type": "object"
+                },
+                "vetu": {
+                  "description": "Vetu VM isolation.",
+                  "properties": {
+                    "cpu": {
+                      "description": "Number of VM CPUs.",
+                      "type": "number"
+                    },
+                    "image": {
+                      "description": "Source VM image (or name) to clone the new VM from.",
+                      "type": "string"
+                    },
+                    "memory": {
+                      "description": "VM memory size in megabytes.",
+                      "pattern": "\\d+(G|Mb)?",
+                      "type": "string"
+                    },
+                    "password": {
+                      "description": "SSH password.",
+                      "type": "string"
+                    },
+                    "user": {
+                      "description": "SSH username.",
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -3552,7 +3579,7 @@
                   "type": "number"
                 },
                 "image": {
-                  "description": "VM name.",
+                  "description": "Source VM image (or name) to clone the new VM from.",
                   "type": "string"
                 },
                 "memory": {
@@ -3561,11 +3588,11 @@
                   "type": "string"
                 },
                 "password": {
-                  "description": "SSH password",
+                  "description": "SSH password.",
                   "type": "string"
                 },
                 "user": {
-                  "description": "SSH username",
+                  "description": "SSH username.",
                   "type": "string"
                 },
                 "volumes": {
@@ -3597,6 +3624,33 @@
                     }
                   ],
                   "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "vetu": {
+              "description": "Vetu VM isolation.",
+              "properties": {
+                "cpu": {
+                  "description": "Number of VM CPUs.",
+                  "type": "number"
+                },
+                "image": {
+                  "description": "Source VM image (or name) to clone the new VM from.",
+                  "type": "string"
+                },
+                "memory": {
+                  "description": "VM memory size in megabytes.",
+                  "pattern": "\\d+(G|Mb)?",
+                  "type": "string"
+                },
+                "password": {
+                  "description": "SSH password.",
+                  "type": "string"
+                },
+                "user": {
+                  "description": "SSH username.",
+                  "type": "string"
                 }
               },
               "type": "object"

@@ -1,4 +1,4 @@
-package tart
+package vetu
 
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
@@ -12,57 +12,57 @@ import (
 	"strconv"
 )
 
-type Tart struct {
-	proto *api.Isolation_Tart_
+type Vetu struct {
+	proto *api.Isolation_Vetu_
 
 	parseable.DefaultParser
 }
 
-func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Tart {
-	tart := &Tart{
-		proto: &api.Isolation_Tart_{
-			Tart: &api.Isolation_Tart{},
+func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Vetu {
+	vetu := &Vetu{
+		proto: &api.Isolation_Vetu_{
+			Vetu: &api.Isolation_Vetu{},
 		},
 	}
 
 	vmSchema := schema.String("Source VM image (or name) to clone the new VM from.")
-	tart.OptionalField(nameable.NewSimpleNameable("image"), vmSchema, func(node *node.Node) error {
+	vetu.OptionalField(nameable.NewSimpleNameable("image"), vmSchema, func(node *node.Node) error {
 		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
 
-		tart.proto.Tart.Image = image
+		vetu.proto.Vetu.Image = image
 
 		return nil
 	})
 
 	userSchema := schema.String("SSH username.")
-	tart.OptionalField(nameable.NewSimpleNameable("user"), userSchema, func(node *node.Node) error {
+	vetu.OptionalField(nameable.NewSimpleNameable("user"), userSchema, func(node *node.Node) error {
 		user, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
 
-		tart.proto.Tart.User = user
+		vetu.proto.Vetu.User = user
 
 		return nil
 	})
 
 	passwordSchema := schema.String("SSH password.")
-	tart.OptionalField(nameable.NewSimpleNameable("password"), passwordSchema, func(node *node.Node) error {
+	vetu.OptionalField(nameable.NewSimpleNameable("password"), passwordSchema, func(node *node.Node) error {
 		password, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
 		}
 
-		tart.proto.Tart.Password = password
+		vetu.proto.Vetu.Password = password
 
 		return nil
 	})
 
 	cpuSchema := schema.Number("Number of VM CPUs.")
-	tart.OptionalField(nameable.NewSimpleNameable("cpu"), cpuSchema, func(node *node.Node) error {
+	vetu.OptionalField(nameable.NewSimpleNameable("cpu"), cpuSchema, func(node *node.Node) error {
 		cpu, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -71,13 +71,13 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Tart {
 		if err != nil {
 			return node.ParserError("%s", err.Error())
 		}
-		tart.proto.Tart.Cpu = uint32(cpuParsed)
+		vetu.proto.Vetu.Cpu = uint32(cpuParsed)
 		return nil
 	})
 
 	memorySchema := schema.Memory()
 	memorySchema.Description = "VM memory size in megabytes."
-	tart.OptionalField(nameable.NewSimpleNameable("memory"), memorySchema, func(node *node.Node) error {
+	vetu.OptionalField(nameable.NewSimpleNameable("memory"), memorySchema, func(node *node.Node) error {
 		memory, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -86,40 +86,26 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Tart {
 		if err != nil {
 			return node.ParserError("%s", err.Error())
 		}
-		tart.proto.Tart.Memory = uint32(memoryParsed)
+		vetu.proto.Vetu.Memory = uint32(memoryParsed)
 		return nil
 	})
 
-	volumeSchema := schema.ArrayOf(NewVolume(mergedEnv, parserKit).Schema())
-	tart.OptionalField(nameable.NewSimpleNameable("volumes"), volumeSchema, func(node *node.Node) error {
-		for _, child := range node.Children {
-			volume, err := NewVolume(mergedEnv, parserKit).Parse(child, parserKit)
-			if err != nil {
-				return err
-			}
-
-			tart.proto.Tart.Volumes = append(tart.proto.Tart.Volumes, volume)
-		}
-
-		return nil
-	})
-
-	return tart
+	return vetu
 }
 
-func (tart *Tart) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
-	return tart.DefaultParser.Parse(node, parserKit)
+func (vetu *Vetu) Parse(node *node.Node, parserKit *parserkit.ParserKit) error {
+	return vetu.DefaultParser.Parse(node, parserKit)
 }
 
-func (tart *Tart) Proto() *api.Isolation_Tart_ {
-	return tart.proto
+func (vetu *Vetu) Proto() *api.Isolation_Vetu_ {
+	return vetu.proto
 }
 
-func (tart *Tart) Schema() *jsschema.Schema {
-	modifiedSchema := tart.DefaultParser.Schema()
+func (vetu *Vetu) Schema() *jsschema.Schema {
+	modifiedSchema := vetu.DefaultParser.Schema()
 
 	modifiedSchema.Type = jsschema.PrimitiveTypes{jsschema.ObjectType}
-	modifiedSchema.Description = "Tart VM isolation."
+	modifiedSchema.Description = "Vetu VM isolation."
 
 	return modifiedSchema
 }
