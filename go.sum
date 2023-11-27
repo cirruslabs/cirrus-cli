@@ -59,8 +59,8 @@ github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmV
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPdPJAN/hZIm0C4OItdklCFmMRWYpio=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
-github.com/avast/retry-go v3.0.0+incompatible h1:4SOWQ7Qs+oroOTQOYnAHqelpCO0biHSxpiH9JdtuBj0=
-github.com/avast/retry-go v3.0.0+incompatible/go.mod h1:XtSnn+n/sHqQIpZ10K1qAevBhOOCWBLXXy3hyiqqBrY=
+github.com/avast/retry-go/v4 v4.5.1 h1:AxIx0HGi4VZ3I02jr78j5lZ3M6x1E0Ivxa6b0pUUh7o=
+github.com/avast/retry-go/v4 v4.5.1/go.mod h1:/sipNsvNB3RRuT5iNcb6h73nw3IBmXJ/H3XrCQYSOpc=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/beorn7/perks v0.0.0-20150223135152-b965b613227f/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
@@ -88,8 +88,8 @@ github.com/cespare/xxhash/v2 v2.2.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XL
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
-github.com/cirruslabs/cirrus-ci-agent v1.123.1 h1:nZDi+OlJ/rvzZTw6ec2ZKKV+Gw5BLcRUAbPkZeLRc10=
-github.com/cirruslabs/cirrus-ci-agent v1.123.1/go.mod h1:AK4yb4yo3ofyHGCu5L9OQc3JKhC7s2D7iD2dU1eGO9I=
+github.com/cirruslabs/cirrus-ci-agent v1.125.0 h1:PLt+XFt7UpTJB1k9CKSQ/R/YJAasWVgfHZ/mb5fBJ3o=
+github.com/cirruslabs/cirrus-ci-agent v1.125.0/go.mod h1:AK4yb4yo3ofyHGCu5L9OQc3JKhC7s2D7iD2dU1eGO9I=
 github.com/cirruslabs/echelon v1.9.0 h1:UtHAtoc+C7KZoYtbMCOL8JYA1Ndi6/4u0+gWxw9sB8I=
 github.com/cirruslabs/echelon v1.9.0/go.mod h1:Zk4IGe8upeefcwPGE143JCM7iwOkJnZ2ZFCbDWwoadA=
 github.com/cirruslabs/go-java-glob v0.1.0 h1:qC4Fzrq2sXKTLLsBb7ih7BNdCjCR6ZJAAK4nOZ6d/Ak=

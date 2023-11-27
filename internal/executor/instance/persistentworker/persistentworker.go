@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/none"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"runtime"
@@ -65,6 +66,8 @@ func New(isolation *api.Isolation, security *security.Security, logger logger.Li
 		return container.New(iso.Container.Image, iso.Container.Cpu, iso.Container.Memory, iso.Container.Volumes)
 	case *api.Isolation_Tart_:
 		return newTart(iso, security, logger)
+	case *api.Isolation_Vetu_:
+		return newVetu(iso, security, logger)
 	default:
 		return nil, fmt.Errorf("%w: unsupported isolation type %T", ErrInvalidIsolation, iso)
 	}
@@ -77,7 +80,7 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 			"security settings", ErrInvalidIsolation)
 	}
 
-	if !tartPolicy.ImageAllowed(iso.Tart.Image) {
+	if !tartPolicy.AllowedImages.ImageAllowed(iso.Tart.Image) {
 		return nil, fmt.Errorf("%w: \"tart\" VM image %q is not allowed by this Persistent Worker's "+
 			"security settings", ErrInvalidIsolation, iso.Tart.Image)
 	}
@@ -112,5 +115,30 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 	}
 
 	return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, iso.Tart.Cpu, iso.Tart.Memory,
+		opts...)
+}
+
+func newVetu(iso *api.Isolation_Vetu_, security *security.Security, logger logger.Lightweight) (*vetu.Vetu, error) {
+	vetuPolicy := security.VetuPolicy()
+	if vetuPolicy == nil {
+		return nil, fmt.Errorf("%w: \"vetu\" isolation is not allowed by this Persistent Worker's "+
+			"security settings", ErrInvalidIsolation)
+	}
+
+	if !vetuPolicy.AllowedImages.ImageAllowed(iso.Vetu.Image) {
+		return nil, fmt.Errorf("%w: \"vetu\" VM image %q is not allowed by this Persistent Worker's "+
+			"security settings", ErrInvalidIsolation, iso.Vetu.Image)
+	}
+
+	opts := []vetu.Option{vetu.WithLogger(logger)}
+
+	switch networking := iso.Vetu.Networking.(type) {
+	case *api.Isolation_Vetu_Bridged_:
+		opts = append(opts, vetu.WithBridgedInterface(networking.Bridged.Interface))
+	default:
+		// use default gVisor-backed networking
+	}
+
+	return vetu.New(iso.Vetu.Image, iso.Vetu.User, iso.Vetu.Password, iso.Vetu.Cpu, iso.Vetu.Memory,
 		opts...)
 }

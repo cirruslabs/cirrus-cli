@@ -1,0 +1,11 @@
+persistent_worker:
+  isolation:
+    vetu:
+      image: ghcr.io/cirruslabs/ubuntu:latest
+      user: admin
+      password: admin
+      cpu: 4
+      memory: 4G
+
+task:
+  script: uname -a

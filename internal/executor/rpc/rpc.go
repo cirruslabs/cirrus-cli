@@ -76,8 +76,8 @@ func (r *RPC) ClientSecret() string {
 }
 
 // Start creates the listener and starts RPC server in a separate goroutine.
-func (r *RPC) Start(ctx context.Context, address string) error {
-	listener, err := heuristic.NewListener(ctx, address)
+func (r *RPC) Start(ctx context.Context, address string, virtualMachine bool) error {
+	listener, err := heuristic.NewListener(ctx, address, virtualMachine)
 	if err != nil {
 		return fmt.Errorf("%w: failed to start RPC service on %s: %v", ErrRPCFailed, address, err)
 	}

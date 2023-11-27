@@ -3,6 +3,7 @@ package isolation
 import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation/tart"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -45,15 +46,28 @@ func NewIsolation(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *
 		return nil
 	})
 
-	tartSchema := tart.NewTart(mergedEnv, parserKit).Schema()
+	tartSchema := tart.New(mergedEnv, parserKit).Schema()
 	isolation.OptionalField(nameable.NewSimpleNameable("tart"), tartSchema, func(node *node.Node) error {
-		tart := tart.NewTart(mergedEnv, parserKit)
+		tart := tart.New(mergedEnv, parserKit)
 
 		if err := tart.Parse(node, parserKit); err != nil {
 			return err
 		}
 
 		isolation.proto.Type = tart.Proto()
+
+		return nil
+	})
+
+	vetuSchema := vetu.New(mergedEnv, parserKit).Schema()
+	isolation.OptionalField(nameable.NewSimpleNameable("vetu"), vetuSchema, func(node *node.Node) error {
+		vetu := vetu.New(mergedEnv, parserKit)
+
+		if err := vetu.Parse(node, parserKit); err != nil {
+			return err
+		}
+
+		isolation.proto.Type = vetu.Proto()
 
 		return nil
 	})

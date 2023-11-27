@@ -20,7 +20,7 @@ type IsolationPolicyParallels struct {
 }
 
 type IsolationPolicyTart struct {
-	AllowedImages  []string            `yaml:"allowed-images"`
+	AllowedImages  AllowedImages       `yaml:"allowed-images"`
 	AllowedVolumes []AllowedVolumeTart `yaml:"allowed-volumes"`
 	ForceSoftnet   bool                `yaml:"force-softnet"`
 }
@@ -30,18 +30,8 @@ type AllowedVolumeTart struct {
 	ForceReadOnly bool   `yaml:"force-readonly"`
 }
 
-func (tart IsolationPolicyTart) ImageAllowed(name string) bool {
-	if len(tart.AllowedImages) == 0 {
-		return true
-	}
-
-	for _, allowedImage := range tart.AllowedImages {
-		if wildcard.MatchSimple(allowedImage, name) {
-			return true
-		}
-	}
-
-	return false
+type IsolationPolicyVetu struct {
+	AllowedImages AllowedImages `yaml:"allowed-images"`
 }
 
 func (tart IsolationPolicyTart) VolumeAllowed(volume *api.Isolation_Tart_Volume) bool {

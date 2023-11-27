@@ -63,6 +63,12 @@ func WithTartOptions(tartOptions options.TartOptions) Option {
 	}
 }
 
+func WithVetuOptions(vetuOptions options.VetuOptions) Option {
+	return func(e *Executor) {
+		e.vetuOptions = vetuOptions
+	}
+}
+
 func WithArtifactsDir(artifactsDir string) Option {
 	return func(e *Executor) {
 		e.artifactsDir = artifactsDir
