@@ -12,6 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/ssh"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -117,7 +118,7 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 	bootLogger.Finish(true)
 
 	err = remoteagent.WaitForAgent(ctx, vetu.logger, ip,
-		vetu.sshUser, vetu.sshPassword, "linux", "arm64",
+		vetu.sshUser, vetu.sshPassword, "linux", runtime.GOARCH,
 		config, true, vetu.initializeHooks(config), nil, "")
 	if err != nil {
 		return err
