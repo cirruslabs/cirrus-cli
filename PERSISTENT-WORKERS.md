@@ -247,7 +247,25 @@ persistent_worker:
       password: admin
 
 task:
-  script: system_profiler
+  script: uname -a
+```
+
+Once the VM spins up, persistent worker will connect to the VM's IP-address over SSH using `user` and `password` credentials and run the latest agent version.
+
+### Vetu
+
+To use this isolation type, install the [Vetu](https://github.com/cirruslabs/vetu) on the persistent worker's host machine.
+
+```yaml
+persistent_worker:
+  isolation:
+    vetu:
+      image: ghcr.io/cirruslabs/ubuntu:latest
+      user: admin
+      password: admin
+
+task:
+  script: uname -a
 ```
 
 Once the VM spins up, persistent worker will connect to the VM's IP-address over SSH using `user` and `password` credentials and run the latest agent version.
