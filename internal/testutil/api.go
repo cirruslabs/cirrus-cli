@@ -13,9 +13,6 @@ func TasksToJSON(t *testing.T, tasks []*api.Task) []byte {
 	for _, task := range tasks {
 		var unmarshalledTask interface{}
 
-		// Shun obsolete fields
-		task.DeprecatedInstance = nil
-
 		marshalled, err := protojson.MarshalOptions{Indent: "  "}.Marshal(task)
 		if err != nil {
 			t.Fatal(err)
