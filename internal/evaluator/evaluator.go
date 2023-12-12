@@ -200,7 +200,15 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 	ctx context.Context,
 	request *api.EvaluateFunctionRequest,
 ) (*api.EvaluateFunctionResponse, error) {
-	lrk := larker.New(larker.WithEnvironment(request.Environment))
+	fs, err := convertFS(request.Fs)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to initialize file system: %v", err)
+	}
+
+	lrk := larker.New(
+		larker.WithFileSystem(fs),
+		larker.WithEnvironment(request.Environment),
+	)
 
 	// Run Starlark hook
 	result, err := lrk.Hook(ctx, request.StarlarkConfig, request.FunctionName, request.Arguments.AsSlice())
