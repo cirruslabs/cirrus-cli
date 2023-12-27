@@ -92,6 +92,7 @@ func (vm *VM) Ident() string {
 func (vm *VM) Start(
 	ctx context.Context,
 	bridgedInterface string,
+	hostNetworking bool,
 ) {
 	vm.wg.Add(1)
 
@@ -102,6 +103,8 @@ func (vm *VM) Start(
 
 		if bridgedInterface != "" {
 			args = append(args, "--net-bridged", bridgedInterface)
+		} else if hostNetworking {
+			args = append(args, "--net-host")
 		}
 
 		args = append(args, vm.ident)

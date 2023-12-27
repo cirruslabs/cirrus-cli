@@ -1,13 +1,15 @@
 module github.com/cirruslabs/cirrus-cli
 
-go 1.20
+go 1.21
+
+toolchain go1.21.5
 
 require (
 	github.com/PaesslerAG/gval v1.2.2
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go/v4 v4.5.1
 	github.com/breml/rootcerts v0.2.11
-	github.com/cirruslabs/cirrus-ci-agent v1.128.1
+	github.com/cirruslabs/cirrus-ci-agent v1.130.1
 	github.com/cirruslabs/echelon v1.9.0
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.3.0
@@ -55,10 +57,10 @@ require (
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20230302034142-4b1e35fe2254
-	golang.org/x/crypto v0.14.0
+	golang.org/x/crypto v0.17.0
 	golang.org/x/oauth2 v0.8.0
-	golang.org/x/sys v0.13.0
-	golang.org/x/text v0.13.0
+	golang.org/x/sys v0.15.0
+	golang.org/x/text v0.14.0
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/grpc v1.57.1
 	google.golang.org/protobuf v1.30.0
@@ -154,7 +156,7 @@ require (
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
-	golang.org/x/term v0.13.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect

@@ -1,11 +1,25 @@
-persistent_worker:
-  isolation:
-    vetu:
-      image: ghcr.io/cirruslabs/ubuntu:latest
-      user: admin
-      password: admin
-      cpu: 4
-      memory: 4G
+simple_task:
+  persistent_worker:
+    isolation:
+      vetu:
+        image: ghcr.io/cirruslabs/ubuntu:latest
+        user: admin
+        password: admin
+        cpu: 4
+        memory: 4G
 
-task:
+  script: uname -a
+
+
+
+host_networking_task:
+  persistent_worker:
+    isolation:
+      vetu:
+        image: ghcr.io/cirruslabs/ubuntu:latest
+        user: admin
+        password: admin
+        networking:
+          host: {}
+
   script: uname -a
