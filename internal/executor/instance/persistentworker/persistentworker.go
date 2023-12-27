@@ -135,6 +135,8 @@ func newVetu(iso *api.Isolation_Vetu_, security *security.Security, logger logge
 	switch networking := iso.Vetu.Networking.(type) {
 	case *api.Isolation_Vetu_Bridged_:
 		opts = append(opts, vetu.WithBridgedInterface(networking.Bridged.Interface))
+	case *api.Isolation_Vetu_Host_:
+		opts = append(opts, vetu.WithHostNetworking())
 	default:
 		// use default gVisor-backed networking
 	}

@@ -90,6 +90,18 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Vetu {
 		return nil
 	})
 
+	vetu.OptionalField(nameable.NewRegexNameable("networking"), nil, func(node *node.Node) error {
+		if node.HasChild("host") {
+			vetu.proto.Vetu.Networking = &api.Isolation_Vetu_Host_{
+				Host: &api.Isolation_Vetu_Host{},
+			}
+		} else {
+			return node.ParserError("please specify the networking to use")
+		}
+
+		return nil
+	})
+
 	return vetu
 }
 

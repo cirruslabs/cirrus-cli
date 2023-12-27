@@ -17,3 +17,9 @@ func WithBridgedInterface(bridgedInterface string) Option {
 		tart.bridgedInterface = bridgedInterface
 	}
 }
+
+func WithHostNetworking() Option {
+	return func(tart *Vetu) {
+		tart.hostNetworking = true
+	}
+}

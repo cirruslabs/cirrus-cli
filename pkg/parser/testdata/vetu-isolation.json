@@ -35,6 +35,44 @@
         "trigger_type": "AUTOMATIC"
       }
     },
-    "name": "main"
+    "name": "simple"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {},
+        "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "uname -a"
+          ]
+        }
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
+      "isolation": {
+        "vetu": {
+          "host": {},
+          "image": "ghcr.io/cirruslabs/ubuntu:latest",
+          "password": "admin",
+          "user": "admin"
+        }
+      }
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "1",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "host_networking"
   }
 ]

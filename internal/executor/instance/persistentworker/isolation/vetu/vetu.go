@@ -32,6 +32,7 @@ type Vetu struct {
 	cpu              uint32
 	memory           uint32
 	bridgedInterface string
+	hostNetworking   bool
 }
 
 func New(
@@ -86,7 +87,7 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 	}()
 
 	// Start the VM (asynchronously)
-	vm.Start(ctx, vetu.bridgedInterface)
+	vm.Start(ctx, vetu.bridgedInterface, vetu.hostNetworking)
 
 	// Wait for the VM to start and get its IP address
 	bootLogger := config.Logger().Scoped("boot virtual machine")
