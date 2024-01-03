@@ -33,6 +33,7 @@ func NewVMClonedFrom(
 	to string,
 	cpu uint32,
 	memory uint32,
+	diskSize uint32,
 	display string,
 	lazyPull bool,
 	env map[string]string,
@@ -83,6 +84,15 @@ func NewVMClonedFrom(
 		memoryStr := strconv.FormatUint(uint64(memory), 10)
 
 		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--memory", memoryStr)
+		if err != nil {
+			cloneLogger.Finish(false)
+			return nil, err
+		}
+	}
+	if diskSize != 0 {
+		diskSizeStr := strconv.FormatUint(uint64(diskSize), 10)
+
+		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--disk-size", diskSizeStr)
 		if err != nil {
 			cloneLogger.Finish(false)
 			return nil, err
