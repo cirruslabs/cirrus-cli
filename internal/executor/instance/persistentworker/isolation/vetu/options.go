@@ -23,3 +23,9 @@ func WithHostNetworking() Option {
 		tart.hostNetworking = true
 	}
 }
+
+func WithDiskSize(diskSize uint32) Option {
+	return func(vetu *Vetu) {
+		vetu.diskSize = diskSize
+	}
+}

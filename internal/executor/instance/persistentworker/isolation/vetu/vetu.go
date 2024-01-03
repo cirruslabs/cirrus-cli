@@ -31,6 +31,7 @@ type Vetu struct {
 	sshPassword      string
 	cpu              uint32
 	memory           uint32
+	diskSize         uint32
 	bridgedInterface string
 	hostNetworking   bool
 }
@@ -69,6 +70,7 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 	vm, err := NewVMClonedFrom(ctx,
 		vetu.vmName, tmpVMName,
 		vetu.cpu, vetu.memory,
+		vetu.diskSize,
 		config.VetuOptions.LazyPull,
 		config.AdditionalEnvironment,
 		config.Logger(),

@@ -114,6 +114,10 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 		opts = append(opts, tart.WithMountTemporaryWorkingDirectoryFromHost())
 	}
 
+	if iso.Tart.DiskSize != 0 {
+		opts = append(opts, tart.WithDiskSize(iso.Tart.DiskSize))
+	}
+
 	return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, iso.Tart.Cpu, iso.Tart.Memory,
 		opts...)
 }
@@ -139,6 +143,10 @@ func newVetu(iso *api.Isolation_Vetu_, security *security.Security, logger logge
 		opts = append(opts, vetu.WithHostNetworking())
 	default:
 		// use default gVisor-backed networking
+	}
+
+	if iso.Vetu.DiskSize != 0 {
+		opts = append(opts, vetu.WithDiskSize(iso.Vetu.DiskSize))
 	}
 
 	return vetu.New(iso.Vetu.Image, iso.Vetu.User, iso.Vetu.Password, iso.Vetu.Cpu, iso.Vetu.Memory,

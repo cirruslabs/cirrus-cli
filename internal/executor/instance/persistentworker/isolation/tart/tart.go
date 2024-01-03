@@ -38,6 +38,7 @@ type Tart struct {
 	sshPassword string
 	cpu         uint32
 	memory      uint32
+	diskSize    uint32
 	softnet     bool
 	display     string
 	volumes     []*api.Isolation_Tart_Volume
@@ -85,7 +86,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	vm, err := NewVMClonedFrom(ctx,
 		tart.vmName, tmpVMName,
 		tart.cpu, tart.memory,
-		tart.display,
+		tart.diskSize, tart.display,
 		config.TartOptions.LazyPull,
 		config.AdditionalEnvironment,
 		config.Logger(),

@@ -36,3 +36,9 @@ func WithVolumes(volumes []*api.Isolation_Tart_Volume) Option {
 		tart.volumes = volumes
 	}
 }
+
+func WithDiskSize(diskSize uint32) Option {
+	return func(tart *Tart) {
+		tart.diskSize = diskSize
+	}
+}
