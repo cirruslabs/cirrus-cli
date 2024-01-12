@@ -87,6 +87,7 @@ func (vm *VM) Configure(
 			return err
 		}
 	}
+
 	if memory != 0 {
 		memoryStr := strconv.FormatUint(uint64(memory), 10)
 
@@ -96,6 +97,7 @@ func (vm *VM) Configure(
 			return err
 		}
 	}
+
 	if diskSize != 0 {
 		diskSizeStr := strconv.FormatUint(uint64(diskSize), 10)
 
@@ -107,6 +109,7 @@ func (vm *VM) Configure(
 	}
 
 	configureLogger.Finish(true)
+
 	return nil
 }
 
