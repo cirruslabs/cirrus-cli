@@ -31,10 +31,6 @@ func NewVMClonedFrom(
 	ctx context.Context,
 	from string,
 	to string,
-	cpu uint32,
-	memory uint32,
-	diskSize uint32,
-	display string,
 	lazyPull bool,
 	env map[string]string,
 	logger *echelon.Logger,
@@ -71,47 +67,66 @@ func NewVMClonedFrom(
 		return nil, err
 	}
 
-	if cpu != 0 {
-		cpuStr := strconv.FormatUint(uint64(cpu), 10)
-
-		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--cpu", cpuStr)
-		if err != nil {
-			cloneLogger.Finish(false)
-			return nil, err
-		}
-	}
-	if memory != 0 {
-		memoryStr := strconv.FormatUint(uint64(memory), 10)
-
-		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--memory", memoryStr)
-		if err != nil {
-			cloneLogger.Finish(false)
-			return nil, err
-		}
-	}
-	if diskSize != 0 {
-		diskSizeStr := strconv.FormatUint(uint64(diskSize), 10)
-
-		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--disk-size", diskSizeStr)
-		if err != nil {
-			cloneLogger.Finish(false)
-			return nil, err
-		}
-	}
-	if display != "" {
-		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--display", display)
-		if err != nil {
-			cloneLogger.Finish(false)
-			return nil, err
-		}
-	}
-
 	cloneLogger.Finish(true)
 	return vm, nil
 }
 
 func (vm *VM) Ident() string {
 	return vm.ident
+}
+
+func (vm *VM) Configure(
+	ctx context.Context,
+	cpu uint32,
+	memory uint32,
+	diskSize uint32,
+	display string,
+	logger *echelon.Logger,
+) error {
+	configureLogger := logger.Scoped("configure virtual machine")
+	configureLogger.Infof("Configuring virtual machine %s...", vm.ident)
+
+	if cpu != 0 {
+		cpuStr := strconv.FormatUint(uint64(cpu), 10)
+
+		_, _, err := CmdWithLogger(ctx, vm.env, configureLogger, "set", vm.ident, "--cpu", cpuStr)
+		if err != nil {
+			configureLogger.Finish(false)
+			return err
+		}
+	}
+
+	if memory != 0 {
+		memoryStr := strconv.FormatUint(uint64(memory), 10)
+
+		_, _, err := CmdWithLogger(ctx, vm.env, configureLogger, "set", vm.ident, "--memory", memoryStr)
+		if err != nil {
+			configureLogger.Finish(false)
+			return err
+		}
+	}
+
+	if diskSize != 0 {
+		diskSizeStr := strconv.FormatUint(uint64(diskSize), 10)
+
+		_, _, err := CmdWithLogger(ctx, vm.env, configureLogger, "set", vm.ident, "--disk-size", diskSizeStr)
+		if err != nil {
+			configureLogger.Finish(false)
+			return err
+		}
+	}
+
+	if display != "" {
+		_, _, err := CmdWithLogger(ctx, vm.env, configureLogger, "set", vm.ident, "--display", display)
+		if err != nil {
+			configureLogger.Finish(false)
+			return err
+		}
+	}
+
+	configureLogger.Finish(true)
+
+	return nil
 }
 
 func (vm *VM) Start(

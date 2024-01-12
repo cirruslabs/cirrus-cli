@@ -85,8 +85,6 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	tmpVMName := fmt.Sprintf("%s%d-", vmNamePrefix, config.TaskID) + uuid.NewString()
 	vm, err := NewVMClonedFrom(ctx,
 		tart.vmName, tmpVMName,
-		tart.cpu, tart.memory,
-		tart.diskSize, tart.display,
 		config.TartOptions.LazyPull,
 		config.AdditionalEnvironment,
 		config.Logger(),
@@ -103,6 +101,10 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 		_ = vm.Close()
 	}()
+
+	if err := vm.Configure(ctx, tart.cpu, tart.memory, tart.diskSize, tart.display, config.Logger()); err != nil {
+		return fmt.Errorf("%w: failed to configure VM %q: %v", ErrFailed, vm.Ident(), err)
+	}
 
 	// Start the VM (asynchronously)
 	var preCreatedWorkingDir string
