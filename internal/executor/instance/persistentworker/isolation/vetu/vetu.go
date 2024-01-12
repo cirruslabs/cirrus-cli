@@ -69,8 +69,6 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 	tmpVMName := fmt.Sprintf("%s%d-", vmNamePrefix, config.TaskID) + uuid.NewString()
 	vm, err := NewVMClonedFrom(ctx,
 		vetu.vmName, tmpVMName,
-		vetu.cpu, vetu.memory,
-		vetu.diskSize,
 		config.VetuOptions.LazyPull,
 		config.AdditionalEnvironment,
 		config.Logger(),
@@ -87,6 +85,10 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 
 		_ = vm.Close()
 	}()
+
+	if err := vm.Configure(ctx, vetu.cpu, vetu.memory, vetu.diskSize, config.Logger()); err != nil {
+		return fmt.Errorf("%w: failed to configure VM %q: %v", ErrFailed, vm.Ident(), err)
+	}
 
 	// Start the VM (asynchronously)
 	vm.Start(ctx, vetu.bridgedInterface, vetu.hostNetworking)
