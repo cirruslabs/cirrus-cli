@@ -82,7 +82,7 @@ func NewVMClonedFrom(
 		}
 	}
 	if diskSize != 0 {
-		diskSizeStr := strconv.FormatUint(uint64(memory), 10)
+		diskSizeStr := strconv.FormatUint(uint64(diskSize), 10)
 
 		_, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "set", vm.ident, "--disk-size", diskSizeStr)
 		if err != nil {
