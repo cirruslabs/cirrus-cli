@@ -13,9 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"math"
 	"os"
-	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
 )
 
@@ -101,55 +99,7 @@ func (worker *Worker) info(workerName string) *api.WorkerInfo {
 	}
 }
 
-// https://github.com/cirruslabs/cirrus-cli/issues/357
-func (worker *Worker) oldWorkingDirectoryCleanup() {
-	// Fix tests failing due to /tmp/cirrus-ci-build removal
-	if _, runningInCi := os.LookupEnv("CIRRUS_CI"); runningInCi {
-		return
-	}
-
-	tmpDir := os.TempDir()
-
-	// Clean-up static directory[1]
-	//
-	//nolint:lll
-	// [1]: https://github.com/cirruslabs/cirrus-ci-agent/blob/f88afe342106a6691d9e5b2d2e9187080c69fd2d/internal/executor/executor.go#L190
-	staticWorkingDir := filepath.Join(tmpDir, "cirrus-ci-build")
-	if err := os.RemoveAll(staticWorkingDir); err != nil {
-		worker.logger.Infof("failed to clean up old cirrus-ci-build static working directory %s: %v",
-			staticWorkingDir, err)
-	}
-
-	// Clean-up dynamic directories[1]
-	//
-	//nolint:lll
-	// [1]: https://github.com/cirruslabs/cirrus-ci-agent/blob/f88afe342106a6691d9e5b2d2e9187080c69fd2d/internal/executor/executor.go#L197
-	entries, err := os.ReadDir(tmpDir)
-	if err != nil {
-		worker.logger.Infof("failed to clean up old cirrus-task-* dynamic working directories: %v", err)
-		return
-	}
-
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-
-		if strings.HasPrefix(entry.Name(), "cirrus-task-") {
-			dynamicWorkingDir := filepath.Join(tmpDir, entry.Name())
-
-			if err := os.RemoveAll(dynamicWorkingDir); err != nil {
-				worker.logger.Infof("failed to clean up old cirrus-task-* dynamic working directory %s: %v",
-					dynamicWorkingDir, err)
-			}
-		}
-	}
-}
-
 func (worker *Worker) Run(ctx context.Context) error {
-	// https://github.com/cirruslabs/cirrus-cli/issues/357
-	worker.oldWorkingDirectoryCleanup()
-
 	// https://github.com/cirruslabs/cirrus-cli/issues/571
 	if tart.Installed() {
 		if err := tart.Cleanup(); err != nil {
