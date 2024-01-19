@@ -139,7 +139,7 @@ func (vm *VM) Start(
 	go func() {
 		defer vm.wg.Done()
 
-		args := []string{"run", "--no-graphics"}
+		args := []string{"--no-graphics"}
 
 		if softnet {
 			args = append(args, "--net-softnet")
@@ -157,7 +157,7 @@ func (vm *VM) Start(
 
 		args = append(args, vm.ident)
 
-		stdout, stderr, err := Cmd(vm.runningVMCtx, vm.env, args...)
+		stdout, stderr, err := Cmd(vm.runningVMCtx, vm.env, "run", args...)
 		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
 			localHub.AddBreadcrumb(&sentry.Breadcrumb{
 				Message: "\"tart run\" finished",

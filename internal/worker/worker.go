@@ -11,6 +11,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"math"
 	"os"
 	"runtime"
@@ -20,6 +23,8 @@ import (
 var (
 	ErrInitializationFailed = errors.New("worker initialization failed")
 	ErrShutdown             = errors.New("worker is shutting down")
+
+	meter = otel.Meter("worker")
 )
 
 type Worker struct {
@@ -100,6 +105,48 @@ func (worker *Worker) info(workerName string) *api.WorkerInfo {
 }
 
 func (worker *Worker) Run(ctx context.Context) error {
+	// Task-related metrics
+	_, err := meter.Int64ObservableGauge("org.cirruslabs.persistent_worker.tasks.running_count",
+		metric.WithDescription("Number of tasks running on the Persistent Worker."),
+		metric.WithInt64Callback(func(ctx context.Context, observer metric.Int64Observer) error {
+			observer.Observe(int64(len(worker.tasks)))
+
+			return nil
+		}),
+	)
+	if err != nil {
+		return err
+	}
+
+	// Resource-related metrics
+	_, err = meter.Float64ObservableGauge("org.cirruslabs.persistent_worker.resources.unused_count",
+		metric.WithDescription("Amount of resources available for use on the Persistent Worker."),
+		metric.WithFloat64Callback(func(ctx context.Context, observer metric.Float64Observer) error {
+			for key, value := range worker.resourcesNotInUse() {
+				observer.Observe(value, metric.WithAttributes(attribute.String("name", key)))
+			}
+
+			return nil
+		}),
+	)
+	if err != nil {
+		return err
+	}
+
+	_, err = meter.Float64ObservableGauge("org.cirruslabs.persistent_worker.resources.used_count",
+		metric.WithDescription("Amount of resources used on the Persistent Worker."),
+		metric.WithFloat64Callback(func(ctx context.Context, observer metric.Float64Observer) error {
+			for key, value := range worker.resourcesInUse() {
+				observer.Observe(value, metric.WithAttributes(attribute.String("name", key)))
+			}
+
+			return nil
+		}),
+	)
+	if err != nil {
+		return err
+	}
+
 	// https://github.com/cirruslabs/cirrus-cli/issues/571
 	if tart.Installed() {
 		if err := tart.Cleanup(); err != nil {

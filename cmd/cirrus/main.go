@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/breml/rootcerts/embedded"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
+	"github.com/cirruslabs/cirrus-cli/internal/opentelemetry"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/getsentry/sentry-go"
 	"log"
@@ -66,8 +67,7 @@ func main() {
 		}
 	}()
 
-	// Run the command
-	if err := commands.NewRootCmd().ExecuteContext(ctx); err != nil {
+	if err := mainImpl(ctx); err != nil {
 		// Capture the error into Sentry
 		sentry.CaptureException(err)
 		sentry.Flush(2 * time.Second)
@@ -77,4 +77,16 @@ func main() {
 		// since we're already capturing the error above
 		log.Fatal(err)
 	}
+}
+
+func mainImpl(ctx context.Context) error {
+	// Initialize OpenTelemetry
+	opentelemetryDeinit, err := opentelemetry.Init(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
+	}
+	defer opentelemetryDeinit()
+
+	// Run the command
+	return commands.NewRootCmd().ExecuteContext(ctx)
 }

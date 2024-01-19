@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/getsentry/sentry-go"
+	"maps"
 	"net/url"
 	"runtime"
 	"strconv"
@@ -192,6 +193,18 @@ func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int
 	}
 
 	return
+}
+
+func (worker *Worker) resourcesNotInUse() map[string]float64 {
+	result := maps.Clone(worker.userSpecifiedResources)
+
+	for _, task := range worker.tasks {
+		for key, value := range task.resourcesToUse {
+			result[key] -= value
+		}
+	}
+
+	return result
 }
 
 func (worker *Worker) resourcesInUse() map[string]float64 {
