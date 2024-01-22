@@ -123,7 +123,7 @@ func (vm *VM) Start(
 	go func() {
 		defer vm.wg.Done()
 
-		args := []string{"run"}
+		var args []string
 
 		if bridgedInterface != "" {
 			args = append(args, "--net-bridged", bridgedInterface)
@@ -133,7 +133,7 @@ func (vm *VM) Start(
 
 		args = append(args, vm.ident)
 
-		stdout, stderr, err := Cmd(vm.runningVMCtx, vm.env, args...)
+		stdout, stderr, err := Cmd(vm.runningVMCtx, vm.env, "run", args...)
 		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
 			localHub.AddBreadcrumb(&sentry.Breadcrumb{
 				Message: "\"vetu run\" finished",

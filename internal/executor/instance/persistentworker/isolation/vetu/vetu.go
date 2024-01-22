@@ -11,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
 	"golang.org/x/crypto/ssh"
 	"runtime"
 	"strings"
@@ -20,6 +21,8 @@ import (
 var (
 	ErrFailed     = errors.New("vetu isolation failed")
 	ErrSyncFailed = errors.New("failed to sync project directory")
+
+	tracer = otel.Tracer("vetu")
 )
 
 const vmNamePrefix = "cirrus-cli-"

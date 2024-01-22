@@ -13,6 +13,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
+	"go.opentelemetry.io/otel"
 	"golang.org/x/crypto/ssh"
 	"os"
 	"path"
@@ -23,6 +24,8 @@ import (
 var (
 	ErrFailed     = errors.New("tart isolation failed")
 	ErrSyncFailed = errors.New("failed to sync project directory")
+
+	tracer = otel.Tracer("tart")
 )
 
 const (

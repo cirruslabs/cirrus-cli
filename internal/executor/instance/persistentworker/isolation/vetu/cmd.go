@@ -39,17 +39,24 @@ func Installed() bool {
 func Cmd(
 	ctx context.Context,
 	additionalEnvironment map[string]string,
+	name string,
 	args ...string,
 ) (string, string, error) {
-	return CmdWithLogger(ctx, additionalEnvironment, nil, args...)
+	return CmdWithLogger(ctx, additionalEnvironment, nil, name, args...)
 }
 
 func CmdWithLogger(
 	ctx context.Context,
 	additionalEnvironment map[string]string,
 	logger *echelon.Logger,
+	name string,
 	args ...string,
 ) (string, string, error) {
+	ctx, span := tracer.Start(ctx, fmt.Sprintf("exec-command/%s-%s", vetuCommandName, name))
+	defer span.End()
+
+	args = append([]string{name}, args...)
+
 	cmd := exec.CommandContext(ctx, vetuCommandName, args...)
 
 	// Default environment

@@ -18,6 +18,9 @@ func uploadAgent(
 	agentVersion string,
 	agentArchitecture string,
 ) (string, error) {
+	ctx, span := tracer.Start(ctx, "upload-agent")
+	defer span.End()
+
 	sftpCli, err := sftp.NewClient(cli)
 	if err != nil {
 		return "", err

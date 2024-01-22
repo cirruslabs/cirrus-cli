@@ -9,6 +9,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/getsentry/sentry-go"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+	"maps"
 	"net/url"
 	"runtime"
 	"strconv"
@@ -58,6 +61,31 @@ func (worker *Worker) runTask(
 	}
 
 	go func() {
+		// Provide tags for Sentry: task ID and upstream worker name
+		cirrusSentryTags := map[string]string{
+			"cirrus.task_id":              strconv.FormatInt(agentAwareTask.TaskId, 10),
+			"cirrus.upstream_worker_name": upstream.WorkerName(),
+		}
+
+		// Provide tags for Sentry: upstream hostname
+		if url, err := url.Parse(upstream.Name()); err == nil {
+			cirrusSentryTags["cirrus.upstream_hostname"] = url.Host
+		} else {
+			cirrusSentryTags["cirrus.upstream_hostname"] = upstream.Name()
+		}
+
+		// Start an OpenTelemetry span with the same attributes
+		// we propagate through Sentry
+		var otelAttributes []attribute.KeyValue
+
+		for key, value := range cirrusSentryTags {
+			otelAttributes = append(otelAttributes, attribute.String(key, value))
+		}
+
+		taskCtx, span := tracer.Start(ctx, "persistent-worker-task",
+			trace.WithAttributes(otelAttributes...))
+		defer span.End()
+
 		localHub := sentry.CurrentHub().Clone()
 		taskCtx = sentry.SetHubOnContext(taskCtx, localHub)
 
@@ -75,19 +103,6 @@ func (worker *Worker) runTask(
 				agentAwareTask.TaskId, err)
 
 			return
-		}
-
-		// Provide tags for Sentry: task ID and upstream worker name
-		cirrusSentryTags := map[string]string{
-			"cirrus.task_id":              strconv.FormatInt(agentAwareTask.TaskId, 10),
-			"cirrus.upstream_worker_name": upstream.WorkerName(),
-		}
-
-		// Provide tags for Sentry: upstream hostname
-		if url, err := url.Parse(upstream.Name()); err == nil {
-			cirrusSentryTags["cirrus.upstream_hostname"] = url.Host
-		} else {
-			cirrusSentryTags["cirrus.upstream_hostname"] = upstream.Name()
 		}
 
 		var cirrusSentryTagsFormatted []string
@@ -192,6 +207,18 @@ func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int
 	}
 
 	return
+}
+
+func (worker *Worker) resourcesNotInUse() map[string]float64 {
+	result := maps.Clone(worker.userSpecifiedResources)
+
+	for _, task := range worker.tasks {
+		for key, value := range task.resourcesToUse {
+			result[key] -= value
+		}
+	}
+
+	return result
 }
 
 func (worker *Worker) resourcesInUse() map[string]float64 {
