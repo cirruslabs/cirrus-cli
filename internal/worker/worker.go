@@ -24,7 +24,8 @@ var (
 	ErrInitializationFailed = errors.New("worker initialization failed")
 	ErrShutdown             = errors.New("worker is shutting down")
 
-	meter = otel.Meter("worker")
+	tracer = otel.Tracer("worker")
+	meter  = otel.Meter("worker")
 )
 
 type Worker struct {
