@@ -22,7 +22,7 @@ func NewPersistentWorker(mergedEnv map[string]string, parserKit *parserkit.Parse
 
 	labelsSchema := schema.String("Labels for selection.")
 	pworker.OptionalField(nameable.NewSimpleNameable("labels"), labelsSchema, func(node *node.Node) error {
-		labels, err := node.GetStringMapping()
+		labels, err := node.GetMapOrListOfMapsWithExpansion(mergedEnv)
 		if err != nil {
 			return err
 		}
