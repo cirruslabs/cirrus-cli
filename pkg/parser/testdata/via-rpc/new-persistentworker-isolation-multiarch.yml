@@ -1,0 +1,14 @@
+task:
+  env:
+    matrix:
+      VM_ARCH: arm64
+      VM_ARCH: amd64
+  persistent_worker:
+    isolation:
+      tart:
+        image: linux-$VM_ARCH
+        user: admin
+        password: secret
+    labels:
+      arch: $VM_ARCH
+  script: true
