@@ -39,6 +39,8 @@ type Worker struct {
 	tasks           map[int64]*Task
 	taskCompletions chan int64
 
+	imagesCounter metric.Int64Counter
+
 	logger logrus.FieldLogger
 }
 
@@ -65,6 +67,13 @@ func New(opts ...Option) (*Worker, error) {
 	if len(worker.upstreams) == 0 {
 		return nil, fmt.Errorf("%w: no upstreams were specified", ErrInitializationFailed)
 	}
+
+	// Image-related metrics
+	imagesCounter, err := meter.Int64Counter("org.cirruslabs.persistent_worker.images.total")
+	if err != nil {
+		panic(err)
+	}
+	worker.imagesCounter = imagesCounter
 
 	return worker, nil
 }

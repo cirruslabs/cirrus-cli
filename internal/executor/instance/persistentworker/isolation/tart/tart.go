@@ -213,6 +213,10 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	return nil
 }
 
+func (tart *Tart) Image() string {
+	return tart.vmName
+}
+
 func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
 	if dirtyMode {
 		return path.Join(macOSAutomountDirectoryPath, macOSAutomountDirectoryItem)
