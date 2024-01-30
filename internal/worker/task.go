@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/getsentry/sentry-go"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 	"maps"
 	"net/url"
@@ -58,6 +61,19 @@ func (worker *Worker) runTask(
 		})
 
 		return
+	}
+
+	switch typedInst := inst.(type) {
+	case *tart.Tart:
+		worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(
+			attribute.String("image", typedInst.Image()),
+			attribute.String("instance_type", "tart"),
+		))
+	case *vetu.Vetu:
+		worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(
+			attribute.String("image", typedInst.Image()),
+			attribute.String("instance_type", "vetu"),
+		))
 	}
 
 	go func() {

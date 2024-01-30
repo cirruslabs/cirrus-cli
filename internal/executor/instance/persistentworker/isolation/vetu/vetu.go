@@ -135,6 +135,10 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 	return nil
 }
 
+func (vetu *Vetu) Image() string {
+	return vetu.vmName
+}
+
 func (vetu *Vetu) WorkingDirectory(projectDir string, dirtyMode bool) string {
 	return platform.NewUnix().GenericWorkingDir()
 }
