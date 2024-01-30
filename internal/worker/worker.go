@@ -71,7 +71,8 @@ func New(opts ...Option) (*Worker, error) {
 	// Image-related metrics
 	imagesCounter, err := meter.Int64Counter("org.cirruslabs.persistent_worker.images.total")
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("%w: failed to initialize images counter: %v",
+			ErrInitializationFailed, err)
 	}
 	worker.imagesCounter = imagesCounter
 
