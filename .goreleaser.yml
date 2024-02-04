@@ -36,6 +36,15 @@ archives:
 release:
   prerelease: auto
 
+brews:
+  - name: cirrus
+    ids:
+      - regular
+    repository:
+      owner: cirruslabs
+      name: homebrew-cli
+    caveats: See the Github repository for more information
+
 nfpms:
   - package_name: cirrus-cli
     vendor: Cirrus Labs, Inc.
