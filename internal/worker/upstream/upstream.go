@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel/metric/noop"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -121,7 +122,9 @@ func (upstream *Upstream) Connect(ctx context.Context) error {
 	// https://github.com/grpc/grpc-go/blob/master/Documentation/concurrency.md
 	conn, err := grpc.DialContext(ctx, upstream.rpcTarget, rpcSecurity,
 		grpc.WithUnaryInterceptor(deadlineUnaryInterceptor(defaultDeadlineInSeconds*time.Second)),
-		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler(
+			otelgrpc.WithMeterProvider(noop.NewMeterProvider()),
+		)),
 	)
 	if err != nil {
 		return fmt.Errorf("%w: failed to dial upstream %s: %v",
