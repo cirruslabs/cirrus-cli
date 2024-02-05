@@ -15,6 +15,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel/metric/noop"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -56,7 +57,9 @@ func addVersion(
 func Serve(ctx context.Context, lis net.Listener) error {
 	server := grpc.NewServer(
 		grpc.UnaryInterceptor(addVersion),
-		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+		grpc.StatsHandler(otelgrpc.NewServerHandler(
+			otelgrpc.WithMeterProvider(noop.NewMeterProvider()),
+		)),
 	)
 
 	api.RegisterCirrusConfigurationEvaluatorServiceServer(server, &ConfigurationEvaluatorServiceServer{})
