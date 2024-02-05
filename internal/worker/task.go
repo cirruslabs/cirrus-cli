@@ -98,7 +98,7 @@ func (worker *Worker) runTask(
 			otelAttributes = append(otelAttributes, attribute.String(key, value))
 		}
 
-		taskCtx, span := tracer.Start(ctx, "persistent-worker-task",
+		taskCtx, span := tracer.Start(taskCtx, "persistent-worker-task",
 			trace.WithAttributes(otelAttributes...))
 		defer span.End()
 
