@@ -222,7 +222,7 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 	}
 
 	for _, taskToStart := range response.TasksToStart {
-		worker.runTask(ctx, upstream, taskToStart)
+		worker.startTask(ctx, upstream, taskToStart)
 	}
 
 	if response.Shutdown {
