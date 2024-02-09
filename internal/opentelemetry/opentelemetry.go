@@ -15,6 +15,12 @@ import (
 )
 
 func Init(ctx context.Context) (func(), error) {
+	// Avoid logging errors when local OpenTelemetry Collector is not available, for example:
+	// "failed to upload metrics: [...]: dial tcp 127.0.0.1:4318: connect: connection refused"
+	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(err error) {
+		// do nothing
+	}))
+
 	// Work around https://github.com/open-telemetry/opentelemetry-go/issues/4834
 	if _, ok := os.LookupEnv("OTEL_EXPORTER_OTLP_ENDPOINT"); !ok {
 		if err := os.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318"); err != nil {
