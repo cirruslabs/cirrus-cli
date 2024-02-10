@@ -12,7 +12,6 @@ linters:
   enable:
   - asciicheck
   - bodyclose
-  - deadcode
   - dupl
   - errcheck
   - exhaustive
@@ -26,15 +25,12 @@ linters:
   - goerr113
   - gofmt
   - goheader
-  - golint
   - gomodguard
   - goprintffuncname
   - gosec
   - gosimple
   - govet
-  - ifshort
   - ineffassign
-  - interfacer
   - lll
   - makezero
   - misspell
@@ -44,10 +40,8 @@ linters:
   - nolintlint
   - predeclared
   - rowserrcheck
-  - scopelint
   - sqlclosecheck
   - staticcheck
-  - structcheck
   - stylecheck
   - testpackage
   - tparallel
@@ -55,7 +49,6 @@ linters:
   - unconvert
   - unparam
   - unused
-  - varcheck
   - whitespace
 
   disable:

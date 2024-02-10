@@ -9,12 +9,16 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
+	"github.com/samber/lo"
+	gopsutilprocess "github.com/shirou/gopsutil/v3/process"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"math"
+	"math/rand"
 	"net"
 	"os"
 	"testing"
@@ -418,4 +422,130 @@ func TestWorkerSecurityVolumes(t *testing.T) {
 	// Make sure that the worker had failed because of the security policy
 	require.Contains(t, workersRPC.TaskFailureMesage,
 		"volume \"/etc\" is not allowed by this Persistent Worker's security settings")
+}
+
+func TestTaskCancellation(t *testing.T) {
+	//nolint:gosec // this is a test, so it's fine to bind on 0.0.0.0
+	lis, err := net.Listen("tcp", "0.0.0.0:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	apiEndpoint := fmt.Sprintf("http://127.0.0.1:%d", lis.Addr().(*net.TCPAddr).Port)
+	upstream, err := upstream.New("test", registrationToken,
+		upstream.WithRPCEndpoint(apiEndpoint),
+		upstream.WithAgentEndpoint(endpoint.NewLocal(apiEndpoint, apiEndpoint)),
+	)
+	require.NoError(t, err)
+
+	// Start the RPC server
+	server := grpc.NewServer(grpc.UnaryInterceptor(unaryInterceptor))
+
+	workersRPC := &WorkersRPC{
+		Isolation: &api.Isolation{
+			Type: &api.Isolation_None_{
+				None: &api.Isolation_None{},
+			},
+		},
+		NoAutomaticShutdown: true,
+	}
+	api.RegisterCirrusWorkersServiceServer(server, workersRPC)
+
+	//nolint:gosec // no need for a cryptographic random
+	sleepCmdline := fmt.Sprintf("sleep %d", 600+rand.Int63n(math.MaxUint16))
+
+	tasksRPC := NewTasksRPC([]string{sleepCmdline})
+	api.RegisterCirrusCIServiceServer(server, tasksRPC)
+
+	go func() {
+		if err := server.Serve(lis); err != nil {
+			t.Error(err)
+		}
+	}()
+
+	// Start the worker
+	worker, err := worker.New(worker.WithUpstream(upstream), worker.WithSecurity(&security.Security{
+		AllowedIsolations: &security.AllowedIsolations{
+			None: &security.IsolationPolicyNone{},
+		},
+	}))
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		if err := worker.Run(ctx); err != nil {
+			panic(err)
+		}
+	}()
+
+	// Wait for the worker to start the task
+	for {
+		if workersRPC.TaskWasStarted {
+			break
+		}
+
+		time.Sleep(time.Second)
+	}
+
+	// Ensure that the task had indeed started
+	var process *gopsutilprocess.Process
+
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	for {
+		processes, err := gopsutilprocess.Processes()
+		require.NoError(t, err)
+
+		var ok bool
+
+		process, ok = lo.Find(processes, func(process *gopsutilprocess.Process) bool {
+			cmdline, err := process.Cmdline()
+			if err != nil {
+				return false
+			}
+
+			return cmdline == sleepCmdline
+		})
+		if ok {
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			t.Fatalf("%q process was not started in 5 seconds", sleepCmdline)
+		default:
+			continue
+		}
+	}
+
+	// Send task cancellation request
+	workersRPC.ShouldStopTasks = true
+
+	// Wait for the worker to stop the task
+	ctx, cancel = context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	for {
+		if workersRPC.TaskWasStopped {
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			t.Fatalf("worker task was not terminated in 15 seconds")
+		case <-time.After(time.Second):
+			continue
+		}
+	}
+
+	// Make sure that the "sleep" process is not running anymore
+	isRunning, err := process.IsRunning()
+	require.NoError(t, err)
+	require.False(t, isRunning)
+
+	// Stop the RPC server
+	server.GracefulStop()
 }

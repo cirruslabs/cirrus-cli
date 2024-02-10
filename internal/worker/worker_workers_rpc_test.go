@@ -20,6 +20,9 @@ type WorkersRPC struct {
 	TaskWasFailed       bool
 	TaskFailureMesage   string
 
+	ShouldStopTasks     bool
+	NoAutomaticShutdown bool
+
 	api.UnimplementedCirrusWorkersServiceServer
 }
 
@@ -52,10 +55,20 @@ func (workersRPC *WorkersRPC) Poll(ctx context.Context, request *api.PollRequest
 		}, nil
 	}
 
-	if workersRPC.TaskWasStopped {
+	if workersRPC.TaskWasStopped && !workersRPC.NoAutomaticShutdown {
 		return &api.PollResponse{
 			Shutdown: true,
 		}, nil
+	}
+
+	if workersRPC.ShouldStopTasks {
+		pollResponse := &api.PollResponse{
+			TasksToStop: []int64{taskID},
+		}
+
+		workersRPC.ShouldStopTasks = false
+
+		return pollResponse, nil
 	}
 
 	return &api.PollResponse{}, nil
