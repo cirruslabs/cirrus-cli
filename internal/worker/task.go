@@ -214,6 +214,8 @@ func (worker *Worker) stopTask(taskID int64) {
 }
 
 func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int64) {
+	worker.Mutex.RLock()
+	defer worker.Mutex.RUnlock()
 	for taskID, task := range worker.tasks {
 		if task.upstream != upstream {
 			continue
@@ -226,6 +228,9 @@ func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int
 }
 
 func (worker *Worker) resourcesNotInUse() map[string]float64 {
+	worker.Mutex.RLock()
+	defer worker.Mutex.RUnlock()
+
 	result := maps.Clone(worker.userSpecifiedResources)
 
 	for _, task := range worker.tasks {
@@ -238,6 +243,9 @@ func (worker *Worker) resourcesNotInUse() map[string]float64 {
 }
 
 func (worker *Worker) resourcesInUse() map[string]float64 {
+	worker.Mutex.RLock()
+	defer worker.Mutex.RUnlock()
+
 	result := map[string]float64{}
 
 	for _, task := range worker.tasks {
@@ -255,7 +263,9 @@ func (worker *Worker) registerTaskCompletions() {
 		case taskID := <-worker.taskCompletions:
 			if task, ok := worker.tasks[taskID]; ok {
 				task.cancel()
+				worker.Mutex.Lock()
 				delete(worker.tasks, taskID)
+				worker.Mutex.Unlock()
 				worker.logger.Infof("task %d completed", taskID)
 			} else {
 				worker.logger.Warnf("spurious task %d completed", taskID)

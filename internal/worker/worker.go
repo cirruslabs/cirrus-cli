@@ -17,6 +17,7 @@ import (
 	"math"
 	"os"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -42,6 +43,7 @@ type Worker struct {
 	imagesCounter metric.Int64Counter
 
 	logger logrus.FieldLogger
+	Mutex  sync.RWMutex
 }
 
 func New(opts ...Option) (*Worker, error) {
