@@ -79,6 +79,9 @@ func New(
 }
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
+	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
+	defer prepareInstanceSpan.End()
+
 	if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
 		localHub.ConfigureScope(func(scope *sentry.Scope) {
 			scope.SetExtra("Softnet enabled", tart.softnet)
@@ -199,6 +202,8 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	addTartListBreadcrumb(ctx)
 	addDHCPDLeasesBreadcrumb(ctx)
+
+	prepareInstanceSpan.End()
 
 	err = remoteagent.WaitForAgent(ctx, tart.logger, ip,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64",

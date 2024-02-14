@@ -69,6 +69,9 @@ func New(
 }
 
 func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
+	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
+	defer prepareInstanceSpan.End()
+
 	tmpVMName := fmt.Sprintf("%s%d-", vmNamePrefix, config.TaskID) + uuid.NewString()
 	vm, err := NewVMClonedFrom(ctx,
 		vetu.vmName, tmpVMName,
@@ -124,6 +127,8 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
+
+	prepareInstanceSpan.End()
 
 	err = remoteagent.WaitForAgent(ctx, vetu.logger, ip,
 		vetu.sshUser, vetu.sshPassword, "linux", runtime.GOARCH,
