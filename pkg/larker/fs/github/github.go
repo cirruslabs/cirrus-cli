@@ -17,7 +17,7 @@ import (
 
 var ErrAPI = errors.New("failed to communicate with the GitHub API")
 
-var httpGitHubClient = github.NewClient(&http.Client{
+var defaultGitHubClient = github.NewClient(&http.Client{
 	Transport: &http.Transport{
 		MaxIdleConns:        1024,
 		MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
@@ -130,10 +130,10 @@ func (gh *GitHub) Join(elem ...string) string {
 
 func (gh *GitHub) client() *github.Client {
 	if gh.token != "" {
-		return httpGitHubClient.WithAuthToken(gh.token)
+		return defaultGitHubClient.WithAuthToken(gh.token)
 	}
 
-	return httpGitHubClient
+	return defaultGitHubClient
 }
 
 func (gh *GitHub) getContentsWrapper(
