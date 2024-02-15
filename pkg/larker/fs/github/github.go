@@ -21,7 +21,7 @@ var defaultGitHubClient = github.NewClient(&http.Client{
 	Transport: &http.Transport{
 		MaxIdleConns:        1024,
 		MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
-		IdleConnTimeout:     time.Minute, // by default idle connections are never closed so let's put something big but not infinite
+		IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
 	},
 	Timeout: 11 * time.Second, // GitHub has a 10-second timeout for API requests
 })
