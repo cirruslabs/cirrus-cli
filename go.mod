@@ -25,7 +25,6 @@ require (
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/go-test/deep v1.1.0
 	github.com/golang/protobuf v1.5.3
-	github.com/google/go-github/v53 v53.0.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -58,7 +57,7 @@ require (
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20230302034142-4b1e35fe2254
 	golang.org/x/crypto v0.18.0
-	golang.org/x/oauth2 v0.13.0
+	golang.org/x/oauth2 v0.13.0 // indirect
 	golang.org/x/sys v0.16.0
 	golang.org/x/text v0.14.0
 	google.golang.org/appengine v1.6.8 // indirect
@@ -71,6 +70,7 @@ require (
 require (
 	github.com/IGLOU-EU/go-wildcard v1.0.3
 	github.com/goccy/go-yaml v1.11.0
+	github.com/google/go-github/v59 v59.0.0
 	github.com/puzpuzpuz/xsync/v3 v3.0.2
 	github.com/samber/lo v1.38.1
 	github.com/shirou/gopsutil/v3 v3.23.7

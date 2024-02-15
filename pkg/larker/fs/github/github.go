@@ -6,16 +6,25 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
-	"github.com/google/go-github/v53/github"
+	"github.com/google/go-github/v59/github"
 	lru "github.com/hashicorp/golang-lru"
-	"golang.org/x/oauth2"
 	"net/http"
 	"os"
 	"path"
 	"syscall"
+	"time"
 )
 
 var ErrAPI = errors.New("failed to communicate with the GitHub API")
+
+var httpGitHubClient = github.NewClient(&http.Client{
+	Transport: &http.Transport{
+		MaxIdleConns:        1024,
+		MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
+		IdleConnTimeout:     time.Minute, // by default idle connections are never closed so let's put something big but not infinite
+	},
+	Timeout: 11 * time.Second, // GitHub has a 10-second timeout for API requests
+})
 
 type GitHub struct {
 	token     string
@@ -119,17 +128,12 @@ func (gh *GitHub) Join(elem ...string) string {
 	return path.Join(elem...)
 }
 
-func (gh *GitHub) client(ctx context.Context) *github.Client {
-	var client *http.Client
-
+func (gh *GitHub) client() *github.Client {
 	if gh.token != "" {
-		tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
-			AccessToken: gh.token,
-		})
-		client = oauth2.NewClient(ctx, tokenSource)
+		return httpGitHubClient.WithAuthToken(gh.token)
 	}
 
-	return github.NewClient(client)
+	return httpGitHubClient
 }
 
 func (gh *GitHub) getContentsWrapper(
@@ -143,7 +147,7 @@ func (gh *GitHub) getContentsWrapper(
 
 	gh.apiCallCount++
 
-	fileContent, directoryContent, resp, err := gh.client(ctx).Repositories.GetContents(ctx, gh.owner, gh.repo, path,
+	fileContent, directoryContent, resp, err := gh.client().Repositories.GetContents(ctx, gh.owner, gh.repo, path,
 		&github.RepositoryContentGetOptions{
 			Ref: gh.reference,
 		},
