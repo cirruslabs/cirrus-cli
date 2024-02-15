@@ -36,7 +36,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to initialize Sentry: %v", err)
 	}
-	defer sentry.Flush(2 * time.Second)
+	defer sentry.Flush(5 * time.Second)
 	defer sentry.Recover()
 
 	// Enrich future events with Cirrus CI-specific tags

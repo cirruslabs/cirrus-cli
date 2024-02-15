@@ -36,17 +36,17 @@ func (worker *Worker) startTask(
 	upstream *upstreampkg.Upstream,
 	agentAwareTask *api.PollResponse_AgentAwareTask,
 ) {
-	if _, ok := worker.tasks[agentAwareTask.TaskId]; ok {
+	if _, ok := worker.tasks.Load(agentAwareTask.TaskId); ok {
 		worker.logger.Warnf("attempted to run task %d which is already running", agentAwareTask.TaskId)
 		return
 	}
 
 	taskCtx, cancel := context.WithCancel(ctx)
-	worker.tasks[agentAwareTask.TaskId] = &Task{
+	worker.tasks.Store(agentAwareTask.TaskId, &Task{
 		upstream:       upstream,
 		cancel:         cancel,
 		resourcesToUse: agentAwareTask.ResourcesToUse,
-	}
+	})
 
 	taskIdentification := &api.TaskIdentification{
 		TaskId: agentAwareTask.TaskId,
@@ -215,7 +215,7 @@ func (worker *Worker) runTask(
 }
 
 func (worker *Worker) stopTask(taskID int64) {
-	if task, ok := worker.tasks[taskID]; ok {
+	if task, ok := worker.tasks.Load(taskID); ok {
 		task.cancel()
 	}
 
@@ -223,13 +223,12 @@ func (worker *Worker) stopTask(taskID int64) {
 }
 
 func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int64) {
-	for taskID, task := range worker.tasks {
-		if task.upstream != upstream {
-			continue
+	worker.tasks.Range(func(taskID int64, task *Task) bool {
+		if task.upstream == upstream {
+			result = append(result, taskID)
 		}
-
-		result = append(result, taskID)
-	}
+		return true
+	})
 
 	return
 }
@@ -237,11 +236,12 @@ func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int
 func (worker *Worker) resourcesNotInUse() map[string]float64 {
 	result := maps.Clone(worker.userSpecifiedResources)
 
-	for _, task := range worker.tasks {
+	worker.tasks.Range(func(taskID int64, task *Task) bool {
 		for key, value := range task.resourcesToUse {
 			result[key] -= value
 		}
-	}
+		return true
+	})
 
 	return result
 }
@@ -249,11 +249,12 @@ func (worker *Worker) resourcesNotInUse() map[string]float64 {
 func (worker *Worker) resourcesInUse() map[string]float64 {
 	result := map[string]float64{}
 
-	for _, task := range worker.tasks {
+	worker.tasks.Range(func(taskID int64, task *Task) bool {
 		for key, value := range task.resourcesToUse {
 			result[key] += value
 		}
-	}
+		return true
+	})
 
 	return result
 }
@@ -262,9 +263,9 @@ func (worker *Worker) registerTaskCompletions() {
 	for {
 		select {
 		case taskID := <-worker.taskCompletions:
-			if task, ok := worker.tasks[taskID]; ok {
+			if task, ok := worker.tasks.Load(taskID); ok {
 				task.cancel()
-				delete(worker.tasks, taskID)
+				worker.tasks.Delete(taskID)
 				worker.logger.Infof("task %d completed", taskID)
 			} else {
 				worker.logger.Warnf("spurious task %d completed", taskID)

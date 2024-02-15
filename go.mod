@@ -71,6 +71,7 @@ require (
 require (
 	github.com/IGLOU-EU/go-wildcard v1.0.3
 	github.com/goccy/go-yaml v1.11.0
+	github.com/puzpuzpuz/xsync/v3 v3.0.2
 	github.com/samber/lo v1.38.1
 	github.com/shirou/gopsutil/v3 v3.23.7
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1

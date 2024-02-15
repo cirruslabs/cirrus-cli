@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
+	"github.com/puzpuzpuz/xsync/v3"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -36,7 +37,7 @@ type Worker struct {
 	userSpecifiedLabels    map[string]string
 	userSpecifiedResources map[string]float64
 
-	tasks           map[int64]*Task
+	tasks           *xsync.MapOf[int64, *Task]
 	taskCompletions chan int64
 
 	imagesCounter metric.Int64Counter
@@ -52,7 +53,7 @@ func New(opts ...Option) (*Worker, error) {
 
 		userSpecifiedLabels: make(map[string]string),
 
-		tasks:           make(map[int64]*Task),
+		tasks:           xsync.NewMapOf[int64, *Task](),
 		taskCompletions: make(chan int64),
 
 		logger: logrus.New(),
@@ -120,7 +121,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 	_, err := meter.Int64ObservableGauge("org.cirruslabs.persistent_worker.tasks.running_count",
 		metric.WithDescription("Number of tasks running on the Persistent Worker."),
 		metric.WithInt64Callback(func(ctx context.Context, observer metric.Int64Observer) error {
-			observer.Observe(int64(len(worker.tasks)))
+			observer.Observe(int64(worker.tasks.Size()))
 
 			return nil
 		}),
