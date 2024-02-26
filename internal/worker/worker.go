@@ -8,7 +8,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/resources"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/standby"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/puzpuzpuz/xsync/v3"
 	"github.com/sirupsen/logrus"
@@ -35,10 +37,12 @@ type Worker struct {
 	security *security.Security
 
 	userSpecifiedLabels    map[string]string
-	userSpecifiedResources map[string]float64
+	userSpecifiedResources resources.Resources
 
 	tasks           *xsync.MapOf[int64, *Task]
 	taskCompletions chan int64
+
+	standby *standby.Standby
 
 	imagesCounter metric.Int64Counter
 
@@ -76,6 +80,14 @@ func New(opts ...Option) (*Worker, error) {
 			ErrInitializationFailed, err)
 	}
 	worker.imagesCounter = imagesCounter
+
+	// Apply defaults
+	if worker.standby == nil {
+		worker.standby, err = standby.New(nil, worker.logger)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return worker, nil
 }
@@ -177,6 +189,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 	defer cancel()
 
 	for {
+		// Poll upstreams
 		for _, upstream := range worker.upstreams {
 			if err := worker.pollSingleUpstream(subCtx, upstream); err != nil {
 				if errors.Is(err, ErrShutdown) {
@@ -185,6 +198,12 @@ func (worker *Worker) Run(ctx context.Context) error {
 
 				worker.logger.Errorf("failed to poll upstream %s: %v", upstream.Name(), err)
 			}
+		}
+
+		// Start the standby slots if there are idle resources to
+		// allow for faster start-ups of the actual user instances
+		if err := worker.standby.StartSlots(ctx, worker.resourcesNotInUse()); err != nil {
+			worker.logger.Errorf("failed to start standby slots: %v", err)
 		}
 
 		select {

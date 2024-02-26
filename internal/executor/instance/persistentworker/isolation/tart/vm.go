@@ -31,7 +31,6 @@ func NewVMClonedFrom(
 	ctx context.Context,
 	from string,
 	to string,
-	lazyPull bool,
 	env map[string]string,
 	logger *echelon.Logger,
 ) (*VM, error) {
@@ -43,20 +42,6 @@ func NewVMClonedFrom(
 		runningVMCtx:       runningVMCtx,
 		runningVMCtxCancel: runningVMCtxCancel,
 		errChan:            make(chan error, 1),
-	}
-
-	pullLogger := logger.Scoped("pull virtual machine")
-	if !lazyPull {
-		pullLogger.Infof("Pulling virtual machine %s...", from)
-
-		if _, _, err := CmdWithLogger(ctx, vm.env, pullLogger, "pull", from); err != nil {
-			pullLogger.Errorf("Ignoring pull failure: %v", err)
-			pullLogger.FinishWithType(echelon.FinishTypeFailed)
-		} else {
-			pullLogger.FinishWithType(echelon.FinishTypeSucceeded)
-		}
-	} else {
-		pullLogger.FinishWithType(echelon.FinishTypeSkipped)
 	}
 
 	cloneLogger := logger.Scoped("clone virtual machine")

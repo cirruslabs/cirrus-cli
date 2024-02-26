@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strconv"
 	"time"
 )
 
@@ -68,7 +67,7 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.
 		"-client-token",
 		config.ClientSecret,
 		"-task-id",
-		strconv.FormatInt(config.TaskID, 10),
+		config.TaskID,
 		"-pre-created-working-dir",
 		pwi.tempDir,
 	)

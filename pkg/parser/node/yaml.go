@@ -57,6 +57,10 @@ func NewFromTextWithMergeExemptions(text string, mergeExemptions []nameable.Name
 		return nil, err
 	}
 
+	return NewFromNodeWithMergeExemptions(yamlNode, mergeExemptions)
+}
+
+func NewFromNodeWithMergeExemptions(yamlNode yaml.Node, mergeExemptions []nameable.Nameable) (*Node, error) {
 	// Empty document
 	if yamlNode.Kind == 0 || len(yamlNode.Content) == 0 {
 		return &Node{Name: "root"}, nil

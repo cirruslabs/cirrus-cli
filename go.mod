@@ -69,7 +69,6 @@ require (
 
 require (
 	github.com/IGLOU-EU/go-wildcard v1.0.3
-	github.com/goccy/go-yaml v1.11.0
 	github.com/google/go-github/v59 v59.0.0
 	github.com/puzpuzpuz/xsync/v3 v3.0.2
 	github.com/samber/lo v1.38.1
@@ -113,7 +112,6 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/fatih/color v1.15.0 // indirect
 	github.com/fvbommel/sortorder v1.1.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
@@ -134,7 +132,6 @@ require (
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect

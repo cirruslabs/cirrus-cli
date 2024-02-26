@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/resources"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/getsentry/sentry-go"
 	"go.opentelemetry.io/otel/attribute"
@@ -28,7 +29,7 @@ const perCallTimeout = 15 * time.Second
 type Task struct {
 	upstream       *upstreampkg.Upstream
 	cancel         context.CancelFunc
-	resourcesToUse map[string]float64
+	resourcesToUse resources.Resources
 }
 
 func (worker *Worker) startTask(
@@ -89,6 +90,14 @@ func (worker *Worker) runTask(
 	inst abstract.Instance,
 	taskIdentification *api.TaskIdentification,
 ) {
+	// Check if we have a standby slot that matches the task spec
+	inst, err := worker.findStandby(ctx, inst, agentAwareTask.ResourcesToUse)
+	if err != nil {
+		worker.logger.Errorf("failed to find a standby slot: %v", err)
+
+		return
+	}
+
 	// Provide tags for Sentry: task ID and upstream worker name
 	cirrusSentryTags := map[string]string{
 		"cirrus.task_id":              strconv.FormatInt(agentAwareTask.TaskId, 10),
@@ -143,7 +152,7 @@ func (worker *Worker) runTask(
 		Endpoint:     upstream.AgentEndpoint(),
 		ServerSecret: agentAwareTask.ServerSecret,
 		ClientSecret: agentAwareTask.ClientSecret,
-		TaskID:       agentAwareTask.TaskId,
+		TaskID:       strconv.FormatInt(agentAwareTask.TaskId, 10),
 		AdditionalEnvironment: map[string]string{
 			"CIRRUS_SENTRY_TAGS": strings.Join(cirrusSentryTagsFormatted, ","),
 		},
@@ -153,7 +162,7 @@ func (worker *Worker) runTask(
 		worker.logger.Warnf("failed to set agent's version for task %d: %v", agentAwareTask.TaskId, err)
 	}
 
-	err := inst.Run(ctx, &config)
+	err = inst.Run(ctx, &config)
 
 	if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(ctx.Err(), context.Canceled) {
 		worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
@@ -214,6 +223,47 @@ func (worker *Worker) runTask(
 	}
 }
 
+func (worker *Worker) findStandby(
+	ctx context.Context,
+	inst abstract.Instance,
+	resourcesToUse resources.Resources,
+) (abstract.Instance, error) {
+	// Do nothing if standby is not supported by this instance type
+	standbyCapableInstance, ok := inst.(abstract.StandbyCapableInstance)
+	if !ok {
+		return inst, nil
+	}
+
+	// Pull the instance and figure out its FQN
+	if err := standbyCapableInstance.Pull(ctx, nil, nil); err != nil {
+		return nil, err
+	}
+
+	fqn, err := standbyCapableInstance.FQN(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find a standby slot that matches both the FQN and the isolation specification
+	if standbyInstance := worker.standby.FindSlot(fqn, standbyCapableInstance.Isolation()); standbyInstance != nil {
+		if err := standbyCapableInstance.Close(); err != nil {
+			panic(err)
+		}
+
+		return standbyInstance, nil
+	}
+
+	// Kill off standby instances if no appropriate standby
+	// instance is found and we have a resource shortage
+	if !worker.resourcesNotInUse().CanFit(resourcesToUse) {
+		needResources := resourcesToUse.Sub(worker.resourcesNotInUse())
+
+		worker.standby.StopSlots(needResources)
+	}
+
+	return inst, nil
+}
+
 func (worker *Worker) stopTask(taskID int64) {
 	if task, ok := worker.tasks.Load(taskID); ok {
 		task.cancel()
@@ -233,7 +283,7 @@ func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int
 	return
 }
 
-func (worker *Worker) resourcesNotInUse() map[string]float64 {
+func (worker *Worker) resourcesNotInUse() resources.Resources {
 	result := maps.Clone(worker.userSpecifiedResources)
 
 	worker.tasks.Range(func(taskID int64, task *Task) bool {
@@ -246,13 +296,12 @@ func (worker *Worker) resourcesNotInUse() map[string]float64 {
 	return result
 }
 
-func (worker *Worker) resourcesInUse() map[string]float64 {
-	result := map[string]float64{}
+func (worker *Worker) resourcesInUse() resources.Resources {
+	result := resources.New()
 
 	worker.tasks.Range(func(taskID int64, task *Task) bool {
-		for key, value := range task.resourcesToUse {
-			result[key] += value
-		}
+		result = result.Add(task.resourcesToUse)
+
 		return true
 	})
 

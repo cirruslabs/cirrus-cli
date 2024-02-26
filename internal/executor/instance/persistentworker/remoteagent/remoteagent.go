@@ -13,7 +13,6 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io"
 	"net"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -157,7 +156,7 @@ func WaitForAgent(
 		"-client-token",
 		"\"" + config.ClientSecret + "\"",
 		"-task-id",
-		strconv.FormatInt(config.TaskID, 10),
+		config.TaskID,
 	}
 
 	if preCreatedWorkingDir != "" {
