@@ -45,8 +45,6 @@ type Tart struct {
 	softnet     bool
 	display     string
 	volumes     []*api.Isolation_Tart_Volume
-
-	mountTemporaryWorkingDirectoryFromHost bool
 }
 
 func New(
@@ -113,23 +111,6 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	}
 
 	// Start the VM (asynchronously)
-	var preCreatedWorkingDir string
-
-	if tart.mountTemporaryWorkingDirectoryFromHost {
-		tmpDir, err := os.MkdirTemp("", "")
-		if err != nil {
-			return fmt.Errorf("%w: failed to create temporary directory: %v",
-				ErrFailed, err)
-		}
-		defer func() {
-			_ = os.RemoveAll(tmpDir)
-		}()
-
-		config.ProjectDir = tmpDir
-		config.DirtyMode = true
-		preCreatedWorkingDir = tart.WorkingDirectory(config.ProjectDir, config.DirtyMode)
-	}
-
 	var directoryMounts []directoryMount
 	if config.DirtyMode {
 		directoryMounts = append(directoryMounts, directoryMount{
@@ -205,9 +186,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	prepareInstanceSpan.End()
 
-	err = remoteagent.WaitForAgent(ctx, tart.logger, ip,
-		tart.sshUser, tart.sshPassword, "darwin", "arm64",
-		config, true, initializeHooks, terminateHooks, preCreatedWorkingDir)
+	err = remoteagent.WaitForAgent(ctx, tart.logger, ip, tart.sshUser, tart.sshPassword, "darwin", "arm64", config, true, initializeHooks, terminateHooks)
 	if err != nil {
 		addTartListBreadcrumb(ctx)
 		addDHCPDLeasesBreadcrumb(ctx)
