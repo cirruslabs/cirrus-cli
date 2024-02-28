@@ -8,12 +8,15 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/projectdirsyncer"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/crypto/ssh"
 	"os"
 	"path"
@@ -76,51 +79,36 @@ func New(
 	return tart, nil
 }
 
-func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
-	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
-	defer prepareInstanceSpan.End()
-
+func Prepare(
+	ctx context.Context,
+	tart *Tart,
+	tartOptions options.TartOptions,
+	additionalEnvironment map[string]string,
+	logger *echelon.Logger,
+) (*VM, error) {
 	if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
 		localHub.ConfigureScope(func(scope *sentry.Scope) {
 			scope.SetExtra("Softnet enabled", tart.softnet)
 		})
 	}
 
-	tmpVMName := fmt.Sprintf("%s%d-", vmNamePrefix, config.TaskID) + uuid.NewString()
+	tmpVMName := vmNamePrefix + uuid.NewString()
 	vm, err := NewVMClonedFrom(ctx,
 		tart.vmName, tmpVMName,
-		config.TartOptions.LazyPull,
-		config.AdditionalEnvironment,
-		config.Logger(),
+		tartOptions.LazyPull,
+		additionalEnvironment,
+		logger,
 	)
 	if err != nil {
-		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
-	}
-	defer func() {
-		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
-			localHub.AddBreadcrumb(&sentry.Breadcrumb{
-				Message: fmt.Sprintf("stopping and deleting the VM %s", vm.ident),
-			}, nil)
-		}
-
-		_ = vm.Close()
-	}()
-
-	if err := vm.Configure(ctx, tart.cpu, tart.memory, tart.diskSize, tart.display, config.Logger()); err != nil {
-		return fmt.Errorf("%w: failed to configure VM %q: %v", ErrFailed, vm.Ident(), err)
+		return nil, fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
 	}
 
-	// Start the VM (asynchronously)
-	var directoryMounts []directoryMount
-	if config.DirtyMode {
-		directoryMounts = append(directoryMounts, directoryMount{
-			Name:     macOSAutomountDirectoryItem,
-			Path:     config.ProjectDir,
-			ReadOnly: false,
-		})
+	if err := vm.Configure(ctx, tart.cpu, tart.memory, tart.diskSize, tart.display, logger); err != nil {
+		return nil, fmt.Errorf("%w: failed to configure VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 
 	// Convert volumes to directory mounts
+	var directoryMounts []directoryMount
 	for _, volume := range tart.volumes {
 		if volume.Name == "" {
 			volume.Name = uuid.NewString()
@@ -130,13 +118,13 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		if err != nil {
 			if os.IsNotExist(err) {
 				if err := os.Mkdir(volume.Source, 0755); err != nil {
-					return fmt.Errorf("%w: volume source %q doesn't exist, failed to pre-create it: %v",
+					return nil, fmt.Errorf("%w: volume source %q doesn't exist, failed to pre-create it: %v",
 						ErrFailed, volume.Source, err)
 				}
 
 				volume.Cleanup = true
 			} else {
-				return fmt.Errorf("%w: volume source %q cannot be accessed: %v",
+				return nil, fmt.Errorf("%w: volume source %q cannot be accessed: %v",
 					ErrFailed, volume.Source, err)
 			}
 		}
@@ -148,18 +136,19 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		})
 	}
 
+	// Start the VM (asynchronously)
 	vm.Start(ctx, tart.softnet, directoryMounts)
 
 	// Wait for the VM to start and get it's DHCP address
 	var ip string
-	bootLogger := config.Logger().Scoped("boot virtual machine")
+	bootLogger := logger.Scoped("boot virtual machine")
 
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil, ctx.Err()
 		case err := <-vm.ErrChan():
-			return err
+			return nil, err
 		default:
 			time.Sleep(time.Second)
 		}
@@ -178,14 +167,50 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
 
-	initializeHooks := tart.initializeHooks(config)
-	terminateHooks := tart.terminateHooks(config)
-
-	addTartListBreadcrumb(ctx)
 	addDHCPDLeasesBreadcrumb(ctx)
 
+	return vm, nil
+}
+
+func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
+	addTartListBreadcrumb(ctx)
+
+	if config.DirtyMode {
+		tart.volumes = append(tart.volumes, &api.Isolation_Tart_Volume{
+			Name:     macOSAutomountDirectoryItem,
+			Source:   config.ProjectDir,
+			ReadOnly: false,
+		})
+	}
+
+	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
+	defer prepareInstanceSpan.End()
+
+	vm, err := Prepare(ctx, tart, config.TartOptions, config.AdditionalEnvironment, config.Logger())
+	if err != nil {
+		prepareInstanceSpan.SetStatus(codes.Error, err.Error())
+		return err
+	}
 	prepareInstanceSpan.End()
 
+	defer func() {
+		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
+			localHub.AddBreadcrumb(&sentry.Breadcrumb{
+				Message: fmt.Sprintf("stopping and deleting the VM %s", vm.ident),
+			}, nil)
+		}
+
+		_ = vm.Close()
+	}()
+
+	ip, err := vm.RetrieveIP(ctx)
+	if err != nil {
+		tart.logger.Debugf("failed to retrieve VM %s IP: %v\n", vm.Ident(), err)
+		return err
+	}
+
+	initializeHooks := tart.initializeHooks(config)
+	terminateHooks := tart.terminateHooks(config)
 	err = remoteagent.WaitForAgent(ctx, tart.logger, ip, tart.sshUser, tart.sshPassword, "darwin", "arm64", config, true, initializeHooks, terminateHooks)
 	if err != nil {
 		addTartListBreadcrumb(ctx)
