@@ -14,18 +14,18 @@ func WithLogger(logger logger.Lightweight) Option {
 
 func WithBridgedInterface(bridgedInterface string) Option {
 	return func(tart *Vetu) {
-		tart.bridgedInterface = bridgedInterface
+		tart.BridgedInterface = bridgedInterface
 	}
 }
 
 func WithHostNetworking() Option {
 	return func(tart *Vetu) {
-		tart.hostNetworking = true
+		tart.HostNetworking = true
 	}
 }
 
 func WithDiskSize(diskSize uint32) Option {
 	return func(vetu *Vetu) {
-		vetu.diskSize = diskSize
+		vetu.DiskSize = diskSize
 	}
 }

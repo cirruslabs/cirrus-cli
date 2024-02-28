@@ -29,18 +29,18 @@ const vmNamePrefix = "cirrus-cli-"
 
 type Vetu struct {
 	logger           logger.Lightweight
-	vmName           string
-	sshUser          string
-	sshPassword      string
-	cpu              uint32
-	memory           uint32
-	diskSize         uint32
-	bridgedInterface string
-	hostNetworking   bool
+	Image            string
+	SSHUser          string
+	SSHPassword      string
+	CPU              uint32
+	Memory           uint32
+	DiskSize         uint32
+	BridgedInterface string
+	HostNetworking   bool
 }
 
 func New(
-	vmName string,
+	image string,
 	sshUser string,
 	sshPassword string,
 	cpu uint32,
@@ -48,11 +48,11 @@ func New(
 	opts ...Option,
 ) (*Vetu, error) {
 	vetu := &Vetu{
-		vmName:      vmName,
-		sshUser:     sshUser,
-		sshPassword: sshPassword,
-		cpu:         cpu,
-		memory:      memory,
+		Image:       image,
+		SSHUser:     sshUser,
+		SSHPassword: sshPassword,
+		CPU:         cpu,
+		Memory:      memory,
 	}
 
 	// Apply options
@@ -74,13 +74,13 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 
 	tmpVMName := fmt.Sprintf("%s%d-", vmNamePrefix, config.TaskID) + uuid.NewString()
 	vm, err := NewVMClonedFrom(ctx,
-		vetu.vmName, tmpVMName,
+		vetu.Image, tmpVMName,
 		config.VetuOptions.LazyPull,
 		config.AdditionalEnvironment,
 		config.Logger(),
 	)
 	if err != nil {
-		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, vetu.vmName, err)
+		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, vetu.Image, err)
 	}
 	defer func() {
 		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
@@ -92,12 +92,12 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 		_ = vm.Close()
 	}()
 
-	if err := vm.Configure(ctx, vetu.cpu, vetu.memory, vetu.diskSize, config.Logger()); err != nil {
+	if err := vm.Configure(ctx, vetu.CPU, vetu.Memory, vetu.DiskSize, config.Logger()); err != nil {
 		return fmt.Errorf("%w: failed to configure VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 
 	// Start the VM (asynchronously)
-	vm.Start(ctx, vetu.bridgedInterface, vetu.hostNetworking)
+	vm.Start(ctx, vetu.BridgedInterface, vetu.HostNetworking)
 
 	// Wait for the VM to start and get its IP address
 	bootLogger := config.Logger().Scoped("boot virtual machine")
@@ -130,17 +130,13 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 
 	prepareInstanceSpan.End()
 
-	err = remoteagent.WaitForAgent(ctx, vetu.logger, ip, vetu.sshUser, vetu.sshPassword,
+	err = remoteagent.WaitForAgent(ctx, vetu.logger, ip, vetu.SSHUser, vetu.SSHPassword,
 		"linux", runtime.GOARCH, config, true, vetu.initializeHooks(config), nil)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (vetu *Vetu) Image() string {
-	return vetu.vmName
 }
 
 func (vetu *Vetu) WorkingDirectory(projectDir string, dirtyMode bool) string {

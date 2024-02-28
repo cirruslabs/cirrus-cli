@@ -72,7 +72,7 @@ func (worker *Worker) startTask(
 		))
 	case *vetu.Vetu:
 		worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(
-			attribute.String("image", typedInst.Image()),
+			attribute.String("image", typedInst.Image),
 			attribute.String("instance_type", "vetu"),
 		))
 	}
