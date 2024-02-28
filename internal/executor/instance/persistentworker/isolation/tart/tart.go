@@ -40,7 +40,7 @@ type Tart struct {
 }
 
 func New(
-	vmName string,
+	image string,
 	sshUser string,
 	sshPassword string,
 	cpu uint32,
@@ -49,7 +49,7 @@ func New(
 ) (*Tart, error) {
 	tart := &Tart{
 		LaunchParameters: LaunchParameters{
-			Image:       vmName,
+			Image:       image,
 			SSHUser:     sshUser,
 			SSHPassword: sshPassword,
 			CPU:         cpu,
