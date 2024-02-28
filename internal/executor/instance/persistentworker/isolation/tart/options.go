@@ -15,24 +15,24 @@ func WithLogger(logger logger.Lightweight) Option {
 
 func WithSoftnet() Option {
 	return func(tart *Tart) {
-		tart.softnet = true
+		tart.Softnet = true
 	}
 }
 
 func WithDisplay(display string) Option {
 	return func(tart *Tart) {
-		tart.display = display
+		tart.Display = display
 	}
 }
 
 func WithVolumes(volumes []*api.Isolation_Tart_Volume) Option {
 	return func(tart *Tart) {
-		tart.volumes = volumes
+		tart.Volumes = volumes
 	}
 }
 
 func WithDiskSize(diskSize uint32) Option {
 	return func(tart *Tart) {
-		tart.diskSize = diskSize
+		tart.DiskSize = diskSize
 	}
 }

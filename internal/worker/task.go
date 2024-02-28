@@ -67,7 +67,7 @@ func (worker *Worker) startTask(
 	switch typedInst := inst.(type) {
 	case *tart.Tart:
 		worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(
-			attribute.String("image", typedInst.Image()),
+			attribute.String("image", typedInst.Image),
 			attribute.String("instance_type", "tart"),
 		))
 	case *vetu.Vetu:

@@ -34,17 +34,9 @@ const (
 )
 
 type Tart struct {
-	logger      logger.Lightweight
-	vmName      string
-	sshUser     string
-	sshPassword string
-	cpu         uint32
-	memory      uint32
-	diskSize    uint32
-	softnet     bool
-	display     string
-	volumes     []*api.Isolation_Tart_Volume
-	launcher    Launcher
+	LaunchParameters
+	logger   logger.Lightweight
+	launcher Launcher
 }
 
 func New(
@@ -56,11 +48,13 @@ func New(
 	opts ...Option,
 ) (*Tart, error) {
 	tart := &Tart{
-		vmName:      vmName,
-		sshUser:     sshUser,
-		sshPassword: sshPassword,
-		cpu:         cpu,
-		memory:      memory,
+		LaunchParameters: LaunchParameters{
+			Image:       vmName,
+			SSHUser:     sshUser,
+			SSHPassword: sshPassword,
+			CPU:         cpu,
+			Memory:      memory,
+		},
 	}
 
 	// Apply options
@@ -83,7 +77,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	addTartListBreadcrumb(ctx)
 
 	if config.DirtyMode {
-		tart.volumes = append(tart.volumes, &api.Isolation_Tart_Volume{
+		tart.Volumes = append(tart.Volumes, &api.Isolation_Tart_Volume{
 			Name:     macOSAutomountDirectoryItem,
 			Source:   config.ProjectDir,
 			ReadOnly: false,
@@ -93,7 +87,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
 	defer prepareInstanceSpan.End()
 
-	vm, err := tart.launcher.PrepareVM(ctx, tart, config.TartOptions, config.AdditionalEnvironment, config.Logger())
+	vm, err := tart.launcher.PrepareVM(ctx, tart.LaunchParameters, config.TartOptions, config.AdditionalEnvironment, config.Logger())
 	if err != nil {
 		prepareInstanceSpan.SetStatus(codes.Error, err.Error())
 		return err
@@ -105,7 +99,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	initializeHooks := tart.initializeHooks(config)
 	terminateHooks := tart.terminateHooks(config)
-	err = remoteagent.WaitForAgent(ctx, tart.logger, vm.IP, tart.sshUser, tart.sshPassword,
+	err = remoteagent.WaitForAgent(ctx, tart.logger, vm.IP, tart.SSHUser, tart.SSHPassword,
 		"darwin", "arm64", config, true, initializeHooks, terminateHooks)
 	if err != nil {
 		addTartListBreadcrumb(ctx)
@@ -115,10 +109,6 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	}
 
 	return nil
-}
-
-func (tart *Tart) Image() string {
-	return tart.vmName
 }
 
 func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
@@ -131,7 +121,7 @@ func (tart *Tart) WorkingDirectory(projectDir string, dirtyMode bool) string {
 
 func (tart *Tart) Close() error {
 	// Cleanup volumes created by us
-	for _, volume := range tart.volumes {
+	for _, volume := range tart.Volumes {
 		if !volume.Cleanup {
 			continue
 		}
@@ -185,11 +175,11 @@ func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.Wai
 		})
 	}
 
-	if len(tart.volumes) != 0 {
+	if len(tart.Volumes) != 0 {
 		hooks = append(hooks, func(ctx context.Context, sshClient *ssh.Client) error {
 			syncLogger := config.Logger().Scoped("symlinking volume mounts")
 
-			for _, volume := range tart.volumes {
+			for _, volume := range tart.Volumes {
 				if volume.Target == "" {
 					continue
 				}
@@ -224,7 +214,7 @@ func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.Wai
 func (tart *Tart) terminateHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
 	var hooks []remoteagent.WaitForAgentHook
 
-	targetfulVolumes := lo.Filter(tart.volumes, func(volume *api.Isolation_Tart_Volume, index int) bool {
+	targetfulVolumes := lo.Filter(tart.Volumes, func(volume *api.Isolation_Tart_Volume, index int) bool {
 		return volume.Target != ""
 	})
 

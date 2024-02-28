@@ -3,6 +3,7 @@ package tart
 import (
 	"context"
 	"fmt"
+	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
@@ -11,10 +12,22 @@ import (
 	"time"
 )
 
+type LaunchParameters struct {
+	Image       string
+	SSHUser     string
+	SSHPassword string
+	CPU         uint32
+	Memory      uint32
+	DiskSize    uint32
+	Softnet     bool
+	Display     string
+	Volumes     []*api.Isolation_Tart_Volume
+}
+
 type Launcher interface {
 	PrepareVM(
 		ctx context.Context,
-		tart *Tart,
+		tartParameters LaunchParameters,
 		tartOptions options.TartOptions,
 		additionalEnvironment map[string]string,
 		logger *echelon.Logger,
@@ -31,35 +44,35 @@ type OnDemandLauncher struct {
 
 func (l *OnDemandLauncher) PrepareVM(
 	ctx context.Context,
-	tart *Tart,
+	tartParameters LaunchParameters,
 	tartOptions options.TartOptions,
 	additionalEnvironment map[string]string,
 	logger *echelon.Logger,
 ) (*LaunchedVM, error) {
 	if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
 		localHub.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetExtra("Softnet enabled", tart.softnet)
+			scope.SetExtra("Softnet enabled", tartParameters.Softnet)
 		})
 	}
 
 	tmpVMName := vmNamePrefix + uuid.NewString()
 	vm, err := NewVMClonedFrom(ctx,
-		tart.vmName, tmpVMName,
+		tartParameters.Image, tmpVMName,
 		tartOptions.LazyPull,
 		additionalEnvironment,
 		logger,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
+		return nil, fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tartParameters.Image, err)
 	}
 
-	if err := vm.Configure(ctx, tart.cpu, tart.memory, tart.diskSize, tart.display, logger); err != nil {
+	if err := vm.Configure(ctx, tartParameters.CPU, tartParameters.Memory, tartParameters.DiskSize, tartParameters.Display, logger); err != nil {
 		return nil, fmt.Errorf("%w: failed to configure VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 
 	// Convert volumes to directory mounts
 	var directoryMounts []directoryMount
-	for _, volume := range tart.volumes {
+	for _, volume := range tartParameters.Volumes {
 		if volume.Name == "" {
 			volume.Name = uuid.NewString()
 		}
@@ -87,7 +100,7 @@ func (l *OnDemandLauncher) PrepareVM(
 	}
 
 	// Start the VM (asynchronously)
-	vm.Start(ctx, tart.softnet, directoryMounts)
+	vm.Start(ctx, tartParameters.Softnet, directoryMounts)
 
 	// Wait for the VM to start and get it's DHCP address
 	var ip string
@@ -105,14 +118,14 @@ func (l *OnDemandLauncher) PrepareVM(
 
 		ip, err = vm.RetrieveIP(ctx)
 		if err != nil {
-			tart.logger.Debugf("failed to retrieve VM %s IP: %v\n", vm.Ident(), err)
+			logger.Debugf("failed to retrieve VM %s IP: %v\n", vm.Ident(), err)
 			continue
 		}
 
 		break
 	}
 
-	tart.logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, vm.Ident())
+	logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, vm.Ident())
 
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
