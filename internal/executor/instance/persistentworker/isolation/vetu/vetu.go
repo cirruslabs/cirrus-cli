@@ -130,7 +130,8 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 
 	prepareInstanceSpan.End()
 
-	err = remoteagent.WaitForAgent(ctx, vetu.logger, ip, vetu.sshUser, vetu.sshPassword, "linux", runtime.GOARCH, config, true, vetu.initializeHooks(config), nil)
+	err = remoteagent.WaitForAgent(ctx, vetu.logger, ip, vetu.sshUser, vetu.sshPassword,
+		"linux", runtime.GOARCH, config, true, vetu.initializeHooks(config), nil)
 	if err != nil {
 		return err
 	}

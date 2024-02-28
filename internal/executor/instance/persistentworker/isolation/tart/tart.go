@@ -8,12 +8,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/projectdirsyncer"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
-	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
-	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -21,7 +18,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"time"
 )
 
 var (
@@ -48,6 +44,7 @@ type Tart struct {
 	softnet     bool
 	display     string
 	volumes     []*api.Isolation_Tart_Volume
+	launcher    Launcher
 }
 
 func New(
@@ -75,101 +72,11 @@ func New(
 	if tart.logger == nil {
 		tart.logger = &logger.LightweightStub{}
 	}
+	if tart.launcher == nil {
+		tart.launcher = &OnDemandLauncher{}
+	}
 
 	return tart, nil
-}
-
-func Prepare(
-	ctx context.Context,
-	tart *Tart,
-	tartOptions options.TartOptions,
-	additionalEnvironment map[string]string,
-	logger *echelon.Logger,
-) (*VM, error) {
-	if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
-		localHub.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetExtra("Softnet enabled", tart.softnet)
-		})
-	}
-
-	tmpVMName := vmNamePrefix + uuid.NewString()
-	vm, err := NewVMClonedFrom(ctx,
-		tart.vmName, tmpVMName,
-		tartOptions.LazyPull,
-		additionalEnvironment,
-		logger,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
-	}
-
-	if err := vm.Configure(ctx, tart.cpu, tart.memory, tart.diskSize, tart.display, logger); err != nil {
-		return nil, fmt.Errorf("%w: failed to configure VM %q: %v", ErrFailed, vm.Ident(), err)
-	}
-
-	// Convert volumes to directory mounts
-	var directoryMounts []directoryMount
-	for _, volume := range tart.volumes {
-		if volume.Name == "" {
-			volume.Name = uuid.NewString()
-		}
-
-		_, err = os.Stat(volume.Source)
-		if err != nil {
-			if os.IsNotExist(err) {
-				if err := os.Mkdir(volume.Source, 0755); err != nil {
-					return nil, fmt.Errorf("%w: volume source %q doesn't exist, failed to pre-create it: %v",
-						ErrFailed, volume.Source, err)
-				}
-
-				volume.Cleanup = true
-			} else {
-				return nil, fmt.Errorf("%w: volume source %q cannot be accessed: %v",
-					ErrFailed, volume.Source, err)
-			}
-		}
-
-		directoryMounts = append(directoryMounts, directoryMount{
-			Name:     volume.Name,
-			Path:     volume.Source,
-			ReadOnly: volume.ReadOnly,
-		})
-	}
-
-	// Start the VM (asynchronously)
-	vm.Start(ctx, tart.softnet, directoryMounts)
-
-	// Wait for the VM to start and get it's DHCP address
-	var ip string
-	bootLogger := logger.Scoped("boot virtual machine")
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case err := <-vm.ErrChan():
-			return nil, err
-		default:
-			time.Sleep(time.Second)
-		}
-
-		ip, err = vm.RetrieveIP(ctx)
-		if err != nil {
-			tart.logger.Debugf("failed to retrieve VM %s IP: %v\n", vm.Ident(), err)
-			continue
-		}
-
-		break
-	}
-
-	tart.logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, vm.Ident())
-
-	bootLogger.Errorf("VM was assigned with %s IP", ip)
-	bootLogger.Finish(true)
-
-	addDHCPDLeasesBreadcrumb(ctx)
-
-	return vm, nil
 }
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
@@ -186,32 +93,20 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
 	defer prepareInstanceSpan.End()
 
-	vm, err := Prepare(ctx, tart, config.TartOptions, config.AdditionalEnvironment, config.Logger())
+	vm, err := tart.launcher.PrepareVM(ctx, tart, config.TartOptions, config.AdditionalEnvironment, config.Logger())
 	if err != nil {
 		prepareInstanceSpan.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	prepareInstanceSpan.End()
-
 	defer func() {
-		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
-			localHub.AddBreadcrumb(&sentry.Breadcrumb{
-				Message: fmt.Sprintf("stopping and deleting the VM %s", vm.ident),
-			}, nil)
-		}
-
-		_ = vm.Close()
+		_ = vm.Release(ctx)
 	}()
-
-	ip, err := vm.RetrieveIP(ctx)
-	if err != nil {
-		tart.logger.Debugf("failed to retrieve VM %s IP: %v\n", vm.Ident(), err)
-		return err
-	}
+	prepareInstanceSpan.End()
 
 	initializeHooks := tart.initializeHooks(config)
 	terminateHooks := tart.terminateHooks(config)
-	err = remoteagent.WaitForAgent(ctx, tart.logger, ip, tart.sshUser, tart.sshPassword, "darwin", "arm64", config, true, initializeHooks, terminateHooks)
+	err = remoteagent.WaitForAgent(ctx, tart.logger, vm.IP, tart.sshUser, tart.sshPassword,
+		"darwin", "arm64", config, true, initializeHooks, terminateHooks)
 	if err != nil {
 		addTartListBreadcrumb(ctx)
 		addDHCPDLeasesBreadcrumb(ctx)

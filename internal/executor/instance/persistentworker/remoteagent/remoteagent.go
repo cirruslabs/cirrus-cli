@@ -41,7 +41,19 @@ func (hooks WaitForAgentHooks) Run(ctx context.Context, cli *ssh.Client) error {
 	return nil
 }
 
-func WaitForAgent(ctx context.Context, logger logger.Lightweight, ip string, sshUser string, sshPassword string, agentOS string, agentArchitecture string, config *runconfig.RunConfig, synchronizeTime bool, initializeHooks WaitForAgentHooks, terminateHooks WaitForAgentHooks) error {
+func WaitForAgent(
+	ctx context.Context,
+	logger logger.Lightweight,
+	ip string,
+	sshUser string,
+	sshPassword string,
+	agentOS string,
+	agentArchitecture string,
+	config *runconfig.RunConfig,
+	synchronizeTime bool,
+	initializeHooks WaitForAgentHooks,
+	terminateHooks WaitForAgentHooks,
+) error {
 	ctx, span := tracer.Start(ctx, "upload-and-wait-for-agent")
 	defer span.End()
 
