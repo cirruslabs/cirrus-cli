@@ -87,7 +87,8 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
 	defer prepareInstanceSpan.End()
 
-	vm, err := tart.launcher.PrepareVM(ctx, tart.LaunchParameters, config.TartOptions, config.AdditionalEnvironment, config.Logger())
+	vm, err := tart.launcher.PrepareVM(ctx, tart.LaunchParameters, config.TartOptions,
+		config.AdditionalEnvironment, config.Logger())
 	if err != nil {
 		prepareInstanceSpan.SetStatus(codes.Error, err.Error())
 		return err

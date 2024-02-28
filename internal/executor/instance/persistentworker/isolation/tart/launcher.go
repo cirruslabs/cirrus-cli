@@ -66,7 +66,8 @@ func (l *OnDemandLauncher) PrepareVM(
 		return nil, fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tartParameters.Image, err)
 	}
 
-	if err := vm.Configure(ctx, tartParameters.CPU, tartParameters.Memory, tartParameters.DiskSize, tartParameters.Display, logger); err != nil {
+	if err := vm.Configure(ctx, tartParameters.CPU, tartParameters.Memory,
+		tartParameters.DiskSize, tartParameters.Display, logger); err != nil {
 		return nil, fmt.Errorf("%w: failed to configure VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 
