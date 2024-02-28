@@ -11,7 +11,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"os"
-	"time"
 )
 
 func Init(ctx context.Context) (func(), error) {
@@ -57,10 +56,7 @@ func Init(ctx context.Context) (func(), error) {
 	}
 	meterProvider := sdkmetric.NewMeterProvider(
 		sdkmetric.WithResource(resource),
-		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(
-			metricExporter,
-			sdkmetric.WithInterval(time.Second),
-		)),
+		sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter)),
 	)
 	finalizers = append(finalizers, func() {
 		_ = meterProvider.Shutdown(ctx)
