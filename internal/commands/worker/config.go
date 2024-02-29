@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
@@ -34,6 +35,8 @@ type Config struct {
 	Upstreams []ConfigUpstream `yaml:"upstreams"`
 
 	Security *security.Security `yaml:"security"`
+
+	TartParameters *tart.LaunchParameters `yaml:"standby_tart_instance"`
 }
 
 type ConfigLog struct {
@@ -199,6 +202,11 @@ func buildWorker(output io.Writer) (*worker.Worker, error) {
 	// Configure security
 	if security := config.Security; security != nil {
 		opts = append(opts, worker.WithSecurity(security))
+	}
+
+	if tartParams := config.TartParameters; tartParams != nil {
+		standByLauncher := tart.NewStandByLauncher(*tartParams)
+		opts = append(opts, worker.WithSubscriber(standByLauncher))
 	}
 
 	// Instantiate worker

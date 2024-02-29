@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
@@ -13,15 +14,16 @@ import (
 )
 
 type LaunchParameters struct {
-	Image       string
-	SSHUser     string
-	SSHPassword string
-	CPU         uint32
-	Memory      uint32
-	DiskSize    uint32
-	Softnet     bool
-	Display     string
-	Volumes     []*api.Isolation_Tart_Volume
+	Image       string `yaml:"image"`
+	SSHUser     string `yaml:"ssh_user"`
+	SSHPassword string `yaml:"ssh_password"`
+	CPU         uint32 `yaml:"cpu"`
+	Memory      uint32 `yaml:"memory"`
+	DiskSize    uint32 `yaml:"disk_size"`
+	Softnet     bool   `yaml:"softnet"`
+	Display     string `yaml:"display"`
+	// dont't support volumes for standby instances
+	Volumes []*api.Isolation_Tart_Volume
 }
 
 type Launcher interface {
@@ -145,4 +147,38 @@ func (l *OnDemandLauncher) PrepareVM(
 			return vm.Close()
 		},
 	}, nil
+}
+
+type StandByLauncher struct {
+	parameters LaunchParameters
+	vm         *VM
+}
+
+func NewStandByLauncher(parameters LaunchParameters) *StandByLauncher {
+	return &StandByLauncher{
+		parameters: parameters,
+	}
+
+}
+
+func (l *StandByLauncher) PrepareVM(
+	ctx context.Context,
+	tartParameters LaunchParameters,
+	tartOptions options.TartOptions,
+	additionalEnvironment map[string]string,
+	logger *echelon.Logger,
+) (*LaunchedVM, error) {
+	return nil, nil
+}
+
+func (l *StandByLauncher) Name() string {
+	return "TartStandByLauncher"
+}
+
+func (l *StandByLauncher) BeforePoll(ctx context.Context, request *api.PollRequest) error {
+	return nil
+}
+
+func (l *StandByLauncher) BeforeRunInstance(ctx context.Context, inst abstract.Instance) error {
+	return nil
 }

@@ -77,6 +77,19 @@ func (worker *Worker) startTask(
 		))
 	}
 
+	for _, subscriber := range worker.subscribers {
+		err := subscriber.BeforeRunInstance(taskCtx, inst)
+		if err != nil {
+			worker.logger.Errorf("failed to call subscriber %s for the task %d: %v", subscriber.Name(), agentAwareTask.TaskId, err)
+			_ = upstream.TaskFailed(taskCtx, &api.TaskFailedRequest{
+				TaskIdentification: taskIdentification,
+				Message:            err.Error(),
+			})
+
+			return
+		}
+	}
+
 	go worker.runTask(taskCtx, agentAwareTask, upstream, inst, taskIdentification)
 
 	worker.logger.Infof("started task %d", agentAwareTask.TaskId)

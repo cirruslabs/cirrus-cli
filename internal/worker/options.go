@@ -37,3 +37,9 @@ func WithSecurity(security *security.Security) Option {
 		e.security = security
 	}
 }
+
+func WithSubscriber(subscriber LifecycleSubscriber) Option {
+	return func(e *Worker) {
+		e.subscribers = append(e.subscribers, subscriber)
+	}
+}
