@@ -59,17 +59,9 @@ func (standby *Standby) Find(
 		return userInst, nil
 	}
 
-	// Destroy our standby instance because the user wants to run something else
+	// Do nothing if the user wants to run a standby-incompatible instance
 	userInstance, ok := userInst.(abstract.StandbyCapableInstance)
 	if !ok {
-		logger.Debugf("terminating standby instance because the user wants to run" +
-			"a standby-incompatible instance")
-
-		if err := standby.slot.Close(); err != nil {
-			logger.Errorf("failed to close the standby instance: %v", err)
-		}
-		standby.slot = nil
-
 		return userInst, nil
 	}
 
