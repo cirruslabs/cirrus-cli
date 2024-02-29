@@ -269,3 +269,38 @@ task:
 ```
 
 Once the VM spins up, persistent worker will connect to the VM's IP-address over SSH using `user` and `password` credentials and run the latest agent version.
+
+## Standby VM
+
+You can define a VM that the Persistent Worker will run even if no tasks are scheduled.
+
+When an actual task is assigned to a Persistent Worker, and if the isolation specification of that task matches the define standby configuration, the standby VM will be used to run the task instead of creating a new VM from scratch.
+
+This speeds up start times significantly, since the cloning, configuring and booting of a new VM would be normally be already done at the time the request to run a new VM arrives to a Persistent Worker.
+
+Here's an example on how to configure a single standby VM for Tart:
+
+```yaml
+standby:
+  tart:
+    image: ghcr.io/cirruslabs/macos-sonoma-base:latest
+    user: admin
+    password: admin
+    cpu: 4
+    memory: 12
+```
+
+This corresponds to the following CI configuration:
+
+```yaml
+persistent_worker:
+  isolation:
+    tart:
+      image: ghcr.io/cirruslabs/macos-sonoma-base:latest
+      user: admin
+      password: admin
+      cpu: 4
+      memory: 12
+```
+
+Currently only Tart isolation is supported.

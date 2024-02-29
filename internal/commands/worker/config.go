@@ -1,17 +1,19 @@
 package worker
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/standby"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/dustin/go-humanize"
-	"github.com/goccy/go-yaml"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"gopkg.in/yaml.v3"
 	"io"
 	"os"
 	"strconv"
@@ -34,6 +36,8 @@ type Config struct {
 	Upstreams []ConfigUpstream `yaml:"upstreams"`
 
 	Security *security.Security `yaml:"security"`
+
+	Standby *standby.Standby `yaml:"standby"`
 }
 
 type ConfigLog struct {
@@ -109,7 +113,13 @@ func parseConfig(path string) (*Config, error) {
 			return nil, err
 		}
 
-		if err := yaml.UnmarshalWithOptions(configBytes, &config, yaml.DisallowUnknownField()); err != nil {
+		decoder := yaml.NewDecoder(bytes.NewReader(configBytes))
+
+		// Decoding must be strict to prevent errors that might
+		// cause the security policy to be configured improperly
+		decoder.KnownFields(true)
+
+		if err := decoder.Decode(&config); err != nil {
 			return nil, err
 		}
 	}
@@ -199,6 +209,11 @@ func buildWorker(output io.Writer) (*worker.Worker, error) {
 	// Configure security
 	if security := config.Security; security != nil {
 		opts = append(opts, worker.WithSecurity(security))
+	}
+
+	// Configure standby slots
+	if config.Standby != nil {
+		opts = append(opts, worker.WithStandby(config.Standby))
 	}
 
 	// Instantiate worker

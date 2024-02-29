@@ -2,6 +2,7 @@ package worker
 
 import (
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/standby"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/sirupsen/logrus"
 )
@@ -35,5 +36,11 @@ func WithUpstream(upstream *upstream.Upstream) Option {
 func WithSecurity(security *security.Security) Option {
 	return func(e *Worker) {
 		e.security = security
+	}
+}
+
+func WithStandby(standby *standby.Standby) Option {
+	return func(e *Worker) {
+		e.standby = standby
 	}
 }

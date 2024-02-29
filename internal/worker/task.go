@@ -89,6 +89,23 @@ func (worker *Worker) runTask(
 	inst abstract.Instance,
 	taskIdentification *api.TaskIdentification,
 ) {
+	// Check if we have a standby slot that matches the task spec
+	if worker.standby != nil {
+		standbyInst, err := worker.standby.Find(ctx, inst, worker.logger)
+		if err != nil {
+			worker.logger.Errorf("failed to find a standby instance: %v", err)
+		} else {
+			// Close the original instance
+			if err := inst.Close(); err != nil {
+				worker.logger.Errorf("failed to close the original instance for task %d: %v",
+					agentAwareTask.TaskId, err)
+			}
+
+			// Replace the original instance with the standby one
+			inst = standbyInst
+		}
+	}
+
 	// Provide tags for Sentry: task ID and upstream worker name
 	cirrusSentryTags := map[string]string{
 		"cirrus.task_id":              strconv.FormatInt(agentAwareTask.TaskId, 10),

@@ -100,26 +100,13 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 		}
 	}
 
-	opts := []tart.Option{tart.WithVolumes(iso.Tart.Volumes), tart.WithLogger(logger)}
+	opts := []tart.Option{tart.WithLogger(logger)}
 
 	if iso.Tart.Softnet || tartPolicy.ForceSoftnet {
 		opts = append(opts, tart.WithSoftnet())
 	}
 
-	if iso.Tart.Display != "" {
-		opts = append(opts, tart.WithDisplay(iso.Tart.Display))
-	}
-
-	if iso.Tart.MountTemporaryWorkingDirectoryFromHost {
-		opts = append(opts, tart.WithMountTemporaryWorkingDirectoryFromHost())
-	}
-
-	if iso.Tart.DiskSize != 0 {
-		opts = append(opts, tart.WithDiskSize(iso.Tart.DiskSize))
-	}
-
-	return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, iso.Tart.Cpu, iso.Tart.Memory,
-		opts...)
+	return tart.NewFromIsolation(iso, opts...)
 }
 
 func newVetu(iso *api.Isolation_Vetu_, security *security.Security, logger logger.Lightweight) (*vetu.Vetu, error) {

@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/standby"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/puzpuzpuz/xsync/v3"
 	"github.com/sirupsen/logrus"
@@ -39,6 +40,8 @@ type Worker struct {
 
 	tasks           *xsync.MapOf[int64, *Task]
 	taskCompletions chan int64
+
+	standby *standby.Standby
 
 	imagesCounter metric.Int64Counter
 
@@ -116,6 +119,7 @@ func (worker *Worker) info(workerName string) *api.WorkerInfo {
 	}
 }
 
+//nolint:gocognit // let's refactor the metrics into a separate method later
 func (worker *Worker) Run(ctx context.Context) error {
 	// Task-related metrics
 	_, err := meter.Int64ObservableGauge("org.cirruslabs.persistent_worker.tasks.running_count",
@@ -184,6 +188,13 @@ func (worker *Worker) Run(ctx context.Context) error {
 				}
 
 				worker.logger.Errorf("failed to poll upstream %s: %v", upstream.Name(), err)
+			}
+		}
+
+		// Try to start the standby instance if no tasks are running
+		if worker.standby != nil && worker.tasks.Size() == 0 {
+			if err := worker.standby.TryStart(ctx, worker.logger); err != nil {
+				worker.logger.Errorf("failed to start the standby instance: %v", err)
 			}
 		}
 
