@@ -30,7 +30,8 @@ var (
 )
 
 type Worker struct {
-	upstreams []*upstreampkg.Upstream
+	upstreams   []*upstreampkg.Upstream
+	subscribers []LifecycleSubscriber
 
 	security *security.Security
 
@@ -211,6 +212,13 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 		WorkerInfo:     worker.info(upstream.WorkerName()),
 		RunningTasks:   worker.runningTasks(upstream),
 		ResourcesInUse: worker.resourcesInUse(),
+	}
+
+	for _, subscriber := range worker.subscribers {
+		if err := subscriber.BeforePoll(ctx, request); err != nil {
+			worker.logger.Errorf("BeforePoll method of %s subscriber failed: %v",
+				subscriber.Name(), err)
+		}
 	}
 
 	response, err := upstream.Poll(ctx, request)
