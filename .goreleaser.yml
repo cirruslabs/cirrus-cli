@@ -29,9 +29,16 @@ builds:
 archives:
   - id: binary
     format: binary
-    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
   - id: regular
-    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
+    files:
+      - LICENSE
+      - README.md
+      - completion/bash_completion
+      - completion/zsh_completion
+      - completion/bash_completion
+    wrap_in_directory: true
 
 release:
   prerelease: auto
@@ -43,6 +50,12 @@ brews:
     repository:
       owner: cirruslabs
       name: homebrew-cli
+    license: AGPL-3.0-only
+    install: |
+      bin.install "cirrus"
+      bash_completion.install "completion/bash_completion" => "cirrus"
+      zsh_completion.install "completion/zsh_completion" => "_cirrus"
+      fish_completion.install "completion/fish_completion" => "cirrus.fish"
     caveats: See the Github repository for more information
 
 nfpms:
