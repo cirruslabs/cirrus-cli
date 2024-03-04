@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+set -e
+
+cirrus completion bash > completion/bash_completion
+cirrus completion zsh > completion/zsh_completion
+cirrus completion fish > completion/fish_completion
