@@ -91,6 +91,6 @@ func (inst *Instance) WorkingDirectory(projectDir string, dirtyMode bool) string
 	return inst.Platform.GenericWorkingDir()
 }
 
-func (inst *Instance) Close() error {
+func (inst *Instance) Close(context.Context) error {
 	return nil
 }

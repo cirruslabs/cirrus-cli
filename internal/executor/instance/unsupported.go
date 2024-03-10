@@ -17,6 +17,6 @@ func (si *UnsupportedInstance) WorkingDirectory(projectDir string, dirtyMode boo
 	return ""
 }
 
-func (si *UnsupportedInstance) Close() error {
+func (si *UnsupportedInstance) Close(context.Context) error {
 	return nil
 }

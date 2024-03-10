@@ -118,7 +118,7 @@ func (worker *Worker) runTask(
 	ctx = sentry.SetHubOnContext(ctx, localHub)
 
 	defer func() {
-		if err := inst.Close(); err != nil {
+		if err := inst.Close(ctx); err != nil {
 			worker.logger.Errorf("failed to close persistent worker instance for task %d: %v",
 				agentAwareTask.TaskId, err)
 		}

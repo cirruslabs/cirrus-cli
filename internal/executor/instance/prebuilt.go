@@ -156,6 +156,6 @@ func (prebuilt *PrebuiltInstance) WorkingDirectory(projectDir string, dirtyMode 
 	return ""
 }
 
-func (prebuilt *PrebuiltInstance) Close() error {
+func (prebuilt *PrebuiltInstance) Close(context.Context) error {
 	return nil
 }

@@ -206,7 +206,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 
 	// Run task
 	defer func() {
-		if instanceCloseErr := task.Instance.Close(); instanceCloseErr != nil {
+		if instanceCloseErr := task.Instance.Close(ctx); instanceCloseErr != nil {
 			e.logger.Warnf("failed to cleanup task %s's instance: %v",
 				task.String(), instanceCloseErr)
 
