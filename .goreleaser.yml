@@ -43,6 +43,10 @@ brews:
     repository:
       owner: cirruslabs
       name: homebrew-cli
+    license: AGPL-3.0-only
+    install: |
+      bin.install "cirrus"
+      generate_completions_from_executable(bin/"cirrus", "completion")
     caveats: See the Github repository for more information
 
 nfpms:
