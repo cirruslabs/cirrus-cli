@@ -5,11 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
+	"github.com/cirruslabs/echelon"
+	"github.com/cirruslabs/echelon/renderers"
 	"github.com/puzpuzpuz/xsync/v3"
 	"github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -43,6 +47,9 @@ type Worker struct {
 	imagesCounter metric.Int64Counter
 
 	logger logrus.FieldLogger
+
+	standbyIsolation *api.Isolation
+	standbyInstance  abstract.Instance
 }
 
 func New(opts ...Option) (*Worker, error) {
@@ -177,6 +184,9 @@ func (worker *Worker) Run(ctx context.Context) error {
 	defer cancel()
 
 	for {
+		// Create and start a standby instance if configured and not created yet
+		worker.tryCreateStandby(ctx)
+
 		for _, upstream := range worker.upstreams {
 			if err := worker.pollSingleUpstream(subCtx, upstream); err != nil {
 				if errors.Is(err, ErrShutdown) {
@@ -194,6 +204,51 @@ func (worker *Worker) Run(ctx context.Context) error {
 			// continue the loop
 		}
 	}
+}
+
+func (worker *Worker) tryCreateStandby(ctx context.Context) {
+	// Do nothing if no standby instance is configured
+	if worker.standbyIsolation == nil {
+		return
+	}
+
+	// Do nothing if the standby instance is already instantiated
+	if worker.standbyInstance != nil {
+		return
+	}
+
+	// Do nothing if there are tasks that are running to simplify the resource management
+	if worker.tasks.Size() != 0 {
+		return
+	}
+
+	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyIsolation)
+
+	standbyInstance, err := persistentworker.New(worker.standbyIsolation, worker.security, worker.logger)
+	if err != nil {
+		worker.logger.Errorf("failed to create a standby instance: %v", err)
+
+		return
+	}
+
+	logger := echelon.NewLogger(echelon.TraceLevel, renderers.NewSimpleRenderer(os.Stdout, nil))
+
+	worker.logger.Debugf("warming-up the standby instance")
+
+	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, nil, logger); err != nil {
+		worker.logger.Errorf("failed to warm-up a standby instance: %v", err)
+
+		if err := standbyInstance.Close(ctx); err != nil {
+			worker.logger.Errorf("failed to terminate the standby instance after an: "+
+				"unsuccessful warm-up: %v", err)
+		}
+
+		return
+	}
+
+	worker.logger.Debugf("standby instance had successfully warmed-up")
+
+	worker.standbyInstance = standbyInstance
 }
 
 func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstreampkg.Upstream) error {

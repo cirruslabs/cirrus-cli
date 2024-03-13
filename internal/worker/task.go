@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/protobuf/proto"
 	"maps"
 	"net/url"
 	"runtime"
@@ -53,7 +54,7 @@ func (worker *Worker) startTask(
 		Secret: agentAwareTask.ClientSecret,
 	}
 
-	inst, err := persistentworker.New(agentAwareTask.Isolation, worker.security, worker.logger)
+	inst, err := worker.getInstance(ctx, agentAwareTask.Isolation)
 	if err != nil {
 		worker.logger.Errorf("failed to create an instance for the task %d: %v", agentAwareTask.TaskId, err)
 		_ = upstream.TaskFailed(taskCtx, &api.TaskFailedRequest{
@@ -80,6 +81,35 @@ func (worker *Worker) startTask(
 	go worker.runTask(taskCtx, agentAwareTask, upstream, inst, taskIdentification)
 
 	worker.logger.Infof("started task %d", agentAwareTask.TaskId)
+}
+
+func (worker *Worker) getInstance(ctx context.Context, isolation *api.Isolation) (abstract.Instance, error) {
+	if standbyInstance := worker.standbyInstance; standbyInstance != nil {
+		// Relinquish our ownership of the standby instance since
+		// we'll either return it to the task or terminate it
+		worker.standbyInstance = nil
+
+		// Return the standby instance if matches the isolation required by the task
+		if proto.Equal(worker.standbyIsolation, isolation) {
+			worker.logger.Debugf("standby instance matches the task's isolation configuration, " +
+				"yielding it to the task")
+
+			return standbyInstance, nil
+		}
+
+		// Otherwise terminate the standby instance to simplify the resource management
+		worker.logger.Debugf("standby instance does not match the task's isolation configuration, " +
+			"terminating it")
+
+		if err := worker.standbyInstance.Close(ctx); err != nil {
+			worker.logger.Errorf("failed to terminate the standby instance: %v", err)
+		} else {
+			worker.logger.Debugf("standby instance had successfully terminated")
+		}
+	}
+
+	// Otherwise proceed with creating a new instance
+	return persistentworker.New(isolation, worker.security, worker.logger)
 }
 
 func (worker *Worker) runTask(
