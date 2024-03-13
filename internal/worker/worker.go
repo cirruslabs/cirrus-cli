@@ -248,7 +248,7 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 
 	worker.logger.Debugf("warming-up the standby instance")
 
-	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, nil, logger); err != nil {
+	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil, logger); err != nil {
 		worker.logger.Errorf("failed to warm-up a standby instance: %v", err)
 
 		if err := standbyInstance.Close(ctx); err != nil {

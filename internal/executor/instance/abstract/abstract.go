@@ -14,5 +14,5 @@ type Instance interface {
 
 type WarmableInstance interface {
 	// Warmup can be optionally called in case of a persistent worker is configured to be warm
-	Warmup(context.Context, map[string]string, *echelon.Logger) error
+	Warmup(context.Context, string, map[string]string, *echelon.Logger) error
 }
