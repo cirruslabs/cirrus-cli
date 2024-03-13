@@ -65,6 +65,7 @@ func unaryInterceptor(
 	return handler(ctx, req)
 }
 
+//nolint:unparam // we'll need checkScripts later
 func workerTestHelper(
 	t *testing.T,
 	lis net.Listener,
