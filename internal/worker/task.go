@@ -48,6 +48,7 @@ func (worker *Worker) startTask(
 		cancel:         cancel,
 		resourcesToUse: agentAwareTask.ResourcesToUse,
 	})
+	worker.tasksCounter.Add(ctx, 1)
 
 	taskIdentification := &api.TaskIdentification{
 		TaskId: agentAwareTask.TaskId,
@@ -93,6 +94,7 @@ func (worker *Worker) getInstance(ctx context.Context, isolation *api.Isolation)
 		if proto.Equal(worker.standbyIsolation, isolation) {
 			worker.logger.Debugf("standby instance matches the task's isolation configuration, " +
 				"yielding it to the task")
+			worker.standbyHitCounter.Add(ctx, 1)
 
 			return standbyInstance, nil
 		}

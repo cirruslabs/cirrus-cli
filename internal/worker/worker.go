@@ -44,7 +44,9 @@ type Worker struct {
 	tasks           *xsync.MapOf[int64, *Task]
 	taskCompletions chan int64
 
-	imagesCounter metric.Int64Counter
+	imagesCounter     metric.Int64Counter
+	tasksCounter      metric.Int64Counter
+	standbyHitCounter metric.Int64Counter
 
 	logger logrus.FieldLogger
 
@@ -137,6 +139,11 @@ func (worker *Worker) Run(ctx context.Context) error {
 		return err
 	}
 
+	worker.tasksCounter, err = meter.Int64Counter("org.cirruslabs.persistent_worker.tasks.count")
+	if err != nil {
+		return err
+	}
+
 	// Resource-related metrics
 	_, err = meter.Float64ObservableGauge("org.cirruslabs.persistent_worker.resources.unused_count",
 		metric.WithDescription("Amount of resources available for use on the Persistent Worker."),
@@ -162,6 +169,12 @@ func (worker *Worker) Run(ctx context.Context) error {
 			return nil
 		}),
 	)
+	if err != nil {
+		return err
+	}
+
+	// Standby-related metrics
+	worker.standbyHitCounter, err = meter.Int64Counter("org.cirruslabs.persistent_worker.standby.hit")
 	if err != nil {
 		return err
 	}
