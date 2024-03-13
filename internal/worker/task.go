@@ -101,7 +101,7 @@ func (worker *Worker) getInstance(ctx context.Context, isolation *api.Isolation)
 		worker.logger.Debugf("standby instance does not match the task's isolation configuration, " +
 			"terminating it")
 
-		if err := worker.standbyInstance.Close(ctx); err != nil {
+		if err := standbyInstance.Close(ctx); err != nil {
 			worker.logger.Errorf("failed to terminate the standby instance: %v", err)
 		} else {
 			worker.logger.Debugf("standby instance had successfully terminated")
