@@ -105,9 +105,7 @@ func (worker *Worker) info(workerName string) *api.WorkerInfo {
 
 	// Merge with the user specified labels
 	for key, value := range worker.userSpecifiedLabels {
-		if _, alreadyExists := labels[key]; !alreadyExists {
-			labels[key] = value
-		}
+		labels[key] = value
 	}
 
 	return &api.WorkerInfo{
