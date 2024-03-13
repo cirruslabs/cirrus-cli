@@ -83,7 +83,12 @@ func (tart *Tart) Warmup(ctx context.Context, additionalEnvironment map[string]s
 	return tart.bootVM(ctx, additionalEnvironment, "", logger)
 }
 
-func (tart *Tart) bootVM(ctx context.Context, additionalEnvironment map[string]string, automountDir string, logger *echelon.Logger) error {
+func (tart *Tart) bootVM(
+	ctx context.Context,
+	additionalEnvironment map[string]string,
+	automountDir string,
+	logger *echelon.Logger,
+) error {
 	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
 	defer prepareInstanceSpan.End()
 
