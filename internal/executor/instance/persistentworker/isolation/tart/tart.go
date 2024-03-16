@@ -18,6 +18,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -79,11 +80,22 @@ func New(
 	return tart, nil
 }
 
-func (tart *Tart) Warmup(ctx context.Context, additionalEnvironment map[string]string, logger *echelon.Logger) error {
-	return tart.bootVM(ctx, additionalEnvironment, "", logger)
+func (tart *Tart) Warmup(
+	ctx context.Context,
+	ident string,
+	additionalEnvironment map[string]string,
+	logger *echelon.Logger,
+) error {
+	return tart.bootVM(ctx, ident, additionalEnvironment, "", logger)
 }
 
-func (tart *Tart) bootVM(ctx context.Context, additionalEnvironment map[string]string, automountDir string, logger *echelon.Logger) error {
+func (tart *Tart) bootVM(
+	ctx context.Context,
+	ident string,
+	additionalEnvironment map[string]string,
+	automountDir string,
+	logger *echelon.Logger,
+) error {
 	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
 	defer prepareInstanceSpan.End()
 
@@ -93,7 +105,13 @@ func (tart *Tart) bootVM(ctx context.Context, additionalEnvironment map[string]s
 		})
 	}
 
-	tmpVMName := fmt.Sprintf("%s-warm-", vmNamePrefix) + uuid.NewString()
+	var identToBeInjected string
+
+	if ident != "" {
+		identToBeInjected = fmt.Sprintf("%s-", ident)
+	}
+
+	tmpVMName := vmNamePrefix + identToBeInjected + uuid.NewString()
 	vm, err := NewVMClonedFrom(ctx,
 		tart.vmName, tmpVMName,
 		false, // always clone from the base image
@@ -189,7 +207,8 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		if config.DirtyMode && config.ProjectDir != "" {
 			automountProjectDir = config.ProjectDir
 		}
-		err = tart.bootVM(ctx, config.AdditionalEnvironment, automountProjectDir, config.Logger())
+		err = tart.bootVM(ctx, strconv.FormatInt(config.TaskID, 10), config.AdditionalEnvironment,
+			automountProjectDir, config.Logger())
 		if err != nil {
 			return err
 		}
