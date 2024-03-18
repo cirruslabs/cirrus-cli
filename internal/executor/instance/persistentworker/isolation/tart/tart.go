@@ -190,8 +190,6 @@ func (tart *Tart) bootVM(
 
 	tart.vm = vm
 
-	tart.logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, vm.Ident())
-
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
 
@@ -225,6 +223,8 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	addTartListBreadcrumb(ctx)
 	addDHCPDLeasesBreadcrumb(ctx)
+
+	tart.logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, tart.vm.Ident())
 
 	err = remoteagent.WaitForAgent(ctx, tart.logger, ip,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64",
