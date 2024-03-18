@@ -148,7 +148,7 @@ func (vetu *Vetu) WorkingDirectory(projectDir string, dirtyMode bool) string {
 	return platform.NewUnix().GenericWorkingDir()
 }
 
-func (vetu *Vetu) Close() error {
+func (vetu *Vetu) Close(context.Context) error {
 	return nil
 }
 

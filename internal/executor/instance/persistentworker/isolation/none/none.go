@@ -138,6 +138,6 @@ func (pwi *PersistentWorkerInstance) WorkingDirectory(projectDir string, dirtyMo
 	return pwi.tempDir
 }
 
-func (pwi *PersistentWorkerInstance) Close() error {
+func (pwi *PersistentWorkerInstance) Close(context.Context) error {
 	return pwi.cleanup()
 }

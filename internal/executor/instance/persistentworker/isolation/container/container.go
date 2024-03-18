@@ -50,6 +50,6 @@ func (cont *Container) WorkingDirectory(projectDir string, dirtyMode bool) strin
 	return cont.instance.WorkingDirectory(projectDir, dirtyMode)
 }
 
-func (cont *Container) Close() error {
+func (cont *Container) Close(context.Context) error {
 	return cont.cleanup()
 }

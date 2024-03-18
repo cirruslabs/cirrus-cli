@@ -76,6 +76,6 @@ func (parallels *Parallels) WorkingDirectory(projectDir string, dirtyMode bool) 
 	return platform.NewUnix().GenericWorkingDir()
 }
 
-func (parallels *Parallels) Close() error {
+func (parallels *Parallels) Close(context.Context) error {
 	return nil
 }

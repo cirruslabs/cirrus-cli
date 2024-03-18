@@ -117,6 +117,6 @@ func (pi *PipeInstance) WorkingDirectory(projectDir string, dirtyMode bool) stri
 	return platform.NewUnix().GenericWorkingDir()
 }
 
-func (pi *PipeInstance) Close() error {
+func (pi *PipeInstance) Close(context.Context) error {
 	return nil
 }

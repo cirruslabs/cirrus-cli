@@ -110,10 +110,6 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 		opts = append(opts, tart.WithDisplay(iso.Tart.Display))
 	}
 
-	if iso.Tart.MountTemporaryWorkingDirectoryFromHost {
-		opts = append(opts, tart.WithMountTemporaryWorkingDirectoryFromHost())
-	}
-
 	if iso.Tart.DiskSize != 0 {
 		opts = append(opts, tart.WithDiskSize(iso.Tart.DiskSize))
 	}

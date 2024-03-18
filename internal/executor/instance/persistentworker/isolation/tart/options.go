@@ -25,12 +25,6 @@ func WithDisplay(display string) Option {
 	}
 }
 
-func WithMountTemporaryWorkingDirectoryFromHost() Option {
-	return func(tart *Tart) {
-		tart.mountTemporaryWorkingDirectoryFromHost = true
-	}
-}
-
 func WithVolumes(volumes []*api.Isolation_Tart_Volume) Option {
 	return func(tart *Tart) {
 		tart.volumes = volumes

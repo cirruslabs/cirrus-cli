@@ -37,3 +37,9 @@ func WithSecurity(security *security.Security) Option {
 		e.security = security
 	}
 }
+
+func WithStandby(standby *Standby) Option {
+	return func(e *Worker) {
+		e.standbyIsolation = standby.Isolation
+	}
+}
