@@ -132,7 +132,8 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 
 	err = remoteagent.WaitForAgent(ctx, vetu.logger, ip,
 		vetu.sshUser, vetu.sshPassword, "linux", runtime.GOARCH,
-		config, true, vetu.initializeHooks(config), nil, "")
+		config, true, vetu.initializeHooks(config), nil, "",
+		map[string]string{"CIRRUS_VM_ID": vm.Ident()})
 	if err != nil {
 		return err
 	}
