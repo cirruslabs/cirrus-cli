@@ -105,7 +105,7 @@ func (tart *Tart) bootVM(
 		})
 	}
 
-	identToBeInjected := "ondemand"
+	var identToBeInjected string
 	if ident != "" {
 		identToBeInjected = fmt.Sprintf("%s-", ident)
 	}

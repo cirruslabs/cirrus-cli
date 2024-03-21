@@ -235,7 +235,8 @@ func TestWorkerIsolationTart(t *testing.T) {
 
 	workerTestHelper(t, lis, isolation,
 		[]string{
-			"[[ \"$CIRRUS_VM_ID\" = cirrus-cli-ondemand* ]]",
+			// 42 is the default task id
+			"[[ \"$CIRRUS_VM_ID\" = cirrus-cli-42* ]]",
 		},
 		worker.WithUpstream(upstream),
 	)
