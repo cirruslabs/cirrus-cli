@@ -171,7 +171,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 		return err
 	}
 
-	// StandbyConfig-related metrics
+	// standby-related metrics
 	worker.standbyHitCounter, err = meter.Int64Counter("org.cirruslabs.persistent_worker.standby.hit")
 	if err != nil {
 		return err
