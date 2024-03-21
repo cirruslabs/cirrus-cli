@@ -297,7 +297,6 @@ func (worker *Worker) canFitResources(resources map[string]float64) bool {
 		if resourcesNotInUse[key] < value {
 			return false
 		}
-
 	}
 	return true
 }
