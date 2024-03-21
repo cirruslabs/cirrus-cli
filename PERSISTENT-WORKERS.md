@@ -282,12 +282,15 @@ Here's an example on how to configure a standby VM for Tart:
 
 ```yaml
 standby:
-  tart:
-    image: ghcr.io/cirruslabs/macos-sonoma-base:latest
-    user: admin
-    password: admin
-    cpu: 4
-    memory: 12
+  resources:
+    tart-vms: 1
+  isolation:
+    tart:
+      image: ghcr.io/cirruslabs/macos-sonoma-base:latest
+      user: admin
+      password: admin
+      cpu: 4
+      memory: 12
 ```
 
 This corresponds to the following CI configuration:

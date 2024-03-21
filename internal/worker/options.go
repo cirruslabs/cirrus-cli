@@ -38,8 +38,8 @@ func WithSecurity(security *security.Security) Option {
 	}
 }
 
-func WithStandby(standby *Standby) Option {
+func WithStandby(standby *StandbyConfig) Option {
 	return func(e *Worker) {
-		e.standbyIsolation = standby.Isolation
+		e.standbyConfig = standby
 	}
 }

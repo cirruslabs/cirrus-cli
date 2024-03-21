@@ -50,8 +50,8 @@ type Worker struct {
 
 	logger logrus.FieldLogger
 
-	standbyIsolation *api.Isolation
-	standbyInstance  abstract.Instance
+	standbyConfig   *StandbyConfig
+	standbyInstance abstract.Instance
 }
 
 func New(opts ...Option) (*Worker, error) {
@@ -171,7 +171,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 		return err
 	}
 
-	// Standby-related metrics
+	// StandbyConfig-related metrics
 	worker.standbyHitCounter, err = meter.Int64Counter("org.cirruslabs.persistent_worker.standby.hit")
 	if err != nil {
 		return err
@@ -219,7 +219,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 
 func (worker *Worker) tryCreateStandby(ctx context.Context) {
 	// Do nothing if no standby instance is configured
-	if worker.standbyIsolation == nil {
+	if worker.standbyConfig == nil {
 		return
 	}
 
@@ -229,13 +229,13 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 	}
 
 	// Do nothing if there are tasks that are running to simplify the resource management
-	if worker.tasks.Size() != 0 {
+	if !worker.canFitResources(worker.standbyConfig.Resources) {
 		return
 	}
 
-	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyIsolation)
+	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyConfig.Isolation)
 
-	standbyInstance, err := persistentworker.New(worker.standbyIsolation, worker.security, worker.logger)
+	standbyInstance, err := persistentworker.New(worker.standbyConfig.Isolation, worker.security, worker.logger)
 	if err != nil {
 		worker.logger.Errorf("failed to create a standby instance: %v", err)
 
