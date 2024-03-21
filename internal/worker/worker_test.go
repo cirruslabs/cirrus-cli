@@ -234,7 +234,12 @@ func TestWorkerIsolationTart(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	workerTestHelper(t, lis, isolation, nil, worker.WithUpstream(upstream))
+	workerTestHelper(t, lis, isolation,
+		[]string{
+			"[[ \"$CIRRUS_VM_ID\" = cirrus-cli-ondemand* ]]",
+		},
+		worker.WithUpstream(upstream),
+	)
 }
 
 func TestWorkerStandByTart(t *testing.T) {
