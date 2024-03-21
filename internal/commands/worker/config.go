@@ -36,7 +36,7 @@ type Config struct {
 
 	Security *security.Security `yaml:"security"`
 
-	Standby *worker.Standby `yaml:"standby"`
+	Standby *worker.StandbyConfig `yaml:"standby"`
 }
 
 type ConfigLog struct {

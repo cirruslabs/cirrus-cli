@@ -65,7 +65,6 @@ func unaryInterceptor(
 	return handler(ctx, req)
 }
 
-//nolint:unparam // we'll need checkScripts later
 func workerTestHelper(
 	t *testing.T,
 	lis net.Listener,
@@ -234,7 +233,62 @@ func TestWorkerIsolationTart(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	workerTestHelper(t, lis, isolation, nil, worker.WithUpstream(upstream))
+	workerTestHelper(t, lis, isolation,
+		[]string{
+			// 42 is the default task id
+			"[[ \"$CIRRUS_VM_ID\" = cirrus-cli-42* ]]",
+		},
+		worker.WithUpstream(upstream),
+	)
+}
+
+func TestWorkerStandByTart(t *testing.T) {
+	// Support Tart isolation testing configured via environment variables
+	image, vmOk := os.LookupEnv("CIRRUS_INTERNAL_TART_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_TART_SSH_PASSWORD")
+	if !vmOk || !userOk || !passwordOk {
+		t.Skip("no Tart credentials configured")
+	}
+
+	t.Logf("Using Tart VM %s for testing...", image)
+
+	lis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	isolation := &api.Isolation{
+		Type: &api.Isolation_Tart_{
+			Tart: &api.Isolation_Tart{
+				Image:    image,
+				User:     user,
+				Password: password,
+				Cpu:      5,
+				Memory:   1024 * 5,
+			},
+		},
+	}
+
+	listenerPort := lis.Addr().(*net.TCPAddr).Port
+	rpcEndpoint := fmt.Sprintf("http://127.0.0.1:%d", listenerPort)
+	upstream, err := upstream.New("test", registrationToken,
+		upstream.WithRPCEndpoint(rpcEndpoint),
+		upstream.WithAgentEndpoint(endpoint.NewLocal(rpcEndpoint, rpcEndpoint)),
+	)
+	require.NoError(t, err)
+
+	standbyConfig := &worker.StandbyConfig{
+		Isolation: isolation,
+	}
+
+	workerTestHelper(t, lis, isolation,
+		[]string{
+			"[[ \"$CIRRUS_VM_ID\" = cirrus-cli-standby* ]]",
+		},
+		worker.WithUpstream(upstream),
+		worker.WithStandby(standbyConfig),
+	)
 }
 
 func TestWorkerSecurity(t *testing.T) {

@@ -106,7 +106,6 @@ func (tart *Tart) bootVM(
 	}
 
 	var identToBeInjected string
-
 	if ident != "" {
 		identToBeInjected = fmt.Sprintf("%s-", ident)
 	}
@@ -228,7 +227,8 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	err = remoteagent.WaitForAgent(ctx, tart.logger, ip,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64",
-		config, true, initializeHooks, terminateHooks, "")
+		config, true, initializeHooks, terminateHooks, "",
+		map[string]string{"CIRRUS_VM_ID": tart.vm.Ident()})
 	if err != nil {
 		addTartListBreadcrumb(ctx)
 		addDHCPDLeasesBreadcrumb(ctx)

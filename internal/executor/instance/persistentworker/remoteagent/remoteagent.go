@@ -54,6 +54,7 @@ func WaitForAgent(
 	initializeHooks WaitForAgentHooks,
 	terminateHooks WaitForAgentHooks,
 	preCreatedWorkingDir string,
+	env map[string]string,
 ) error {
 	ctx, span := tracer.Start(ctx, "upload-and-wait-for-agent")
 	defer span.End()
@@ -120,6 +121,13 @@ func WaitForAgent(
 	err = sess.Shell()
 	if err != nil {
 		return fmt.Errorf("%w: failed to start a shell: %v", ErrFailed, err)
+	}
+
+	for key, value := range env {
+		_, err = stdinBuf.Write([]byte(fmt.Sprintf("export %s=%s\n", key, value)))
+		if err != nil {
+			return fmt.Errorf("%w: failed set env variable %s: %v", ErrFailed, key, err)
+		}
 	}
 
 	// Synchronize time for suspended VMs

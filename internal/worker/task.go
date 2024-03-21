@@ -91,7 +91,7 @@ func (worker *Worker) getInstance(ctx context.Context, isolation *api.Isolation)
 		worker.standbyInstance = nil
 
 		// Return the standby instance if matches the isolation required by the task
-		if proto.Equal(worker.standbyIsolation, isolation) {
+		if proto.Equal(worker.standbyConfig.Isolation, isolation) {
 			worker.logger.Debugf("standby instance matches the task's isolation configuration, " +
 				"yielding it to the task")
 			worker.standbyHitCounter.Add(ctx, 1)
@@ -289,6 +289,16 @@ func (worker *Worker) resourcesInUse() map[string]float64 {
 	})
 
 	return result
+}
+
+func (worker *Worker) canFitResources(resources map[string]float64) bool {
+	resourcesNotInUse := worker.resourcesNotInUse()
+	for key, value := range resources {
+		if resourcesNotInUse[key] < value {
+			return false
+		}
+	}
+	return true
 }
 
 func (worker *Worker) registerTaskCompletions() {
