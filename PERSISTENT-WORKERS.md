@@ -303,7 +303,7 @@ persistent_worker:
       user: admin
       password: admin
       cpu: 4
-      memory: 12
+      memory: 12288 # 13 GB
 ```
 
 Currently only Tart isolation is supported.
