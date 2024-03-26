@@ -11,6 +11,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
 	"os"
+	"runtime"
 )
 
 func Init(ctx context.Context) (func(), error) {
@@ -31,8 +32,11 @@ func Init(ctx context.Context) (func(), error) {
 
 	customResource, err := resource.New(ctx,
 		resource.WithSchemaURL(semconv.SchemaURL),
-		resource.WithHost(),
 		resource.WithOSType(),
+		resource.WithHost(),
+		resource.WithAttributes(
+			semconv.HostArchKey.String(runtime.GOARCH),
+		),
 		resource.WithAttributes(
 			semconv.ServiceName("cirrus-cli"),
 			semconv.ServiceVersion(version.Version),
