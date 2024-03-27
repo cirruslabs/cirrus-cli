@@ -16,6 +16,7 @@ import (
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/volume"
 	"github.com/docker/docker/client"
@@ -55,7 +56,7 @@ func (backend *Docker) Close() error {
 }
 
 func (backend *Docker) ImagePull(ctx context.Context, reference string, architecture *api.Architecture) error {
-	options := &types.ImagePullOptions{}
+	options := &image.PullOptions{}
 
 	if architecture != nil {
 		switch *architecture {
@@ -84,7 +85,7 @@ func (backend *Docker) ImagePush(ctx context.Context, reference string) error {
 		return err
 	}
 
-	stream, err := backend.cli.ImagePush(ctx, reference, types.ImagePushOptions{
+	stream, err := backend.cli.ImagePush(ctx, reference, image.PushOptions{
 		RegistryAuth: auth,
 	})
 	if err != nil {
@@ -176,7 +177,7 @@ func (backend *Docker) ImageInspect(ctx context.Context, reference string) error
 }
 
 func (backend *Docker) ImageDelete(ctx context.Context, reference string) error {
-	_, err := backend.cli.ImageRemove(ctx, reference, types.ImageRemoveOptions{})
+	_, err := backend.cli.ImageRemove(ctx, reference, image.RemoveOptions{})
 
 	if client.IsErrNotFound(err) {
 		return ErrNotFound
@@ -275,7 +276,7 @@ func (backend *Docker) ContainerCreate(
 }
 
 func (backend *Docker) ContainerStart(ctx context.Context, id string) error {
-	return backend.cli.ContainerStart(ctx, id, types.ContainerStartOptions{})
+	return backend.cli.ContainerStart(ctx, id, container.StartOptions{})
 }
 
 func (backend *Docker) ContainerWait(ctx context.Context, id string) (<-chan ContainerWaitResult, <-chan error) {
@@ -307,7 +308,7 @@ func (backend *Docker) ContainerWait(ctx context.Context, id string) (<-chan Con
 func (backend *Docker) ContainerLogs(ctx context.Context, id string) (<-chan string, error) {
 	logChan := make(chan string, containerLogsChannelSize)
 
-	multiplexedStream, err := backend.cli.ContainerLogs(ctx, id, types.ContainerLogsOptions{
+	multiplexedStream, err := backend.cli.ContainerLogs(ctx, id, container.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     true,
@@ -338,7 +339,7 @@ func (backend *Docker) ContainerLogs(ctx context.Context, id string) (<-chan str
 }
 
 func (backend *Docker) ContainerDelete(ctx context.Context, id string) error {
-	return backend.cli.ContainerRemove(ctx, id, types.ContainerRemoveOptions{
+	return backend.cli.ContainerRemove(ctx, id, container.RemoveOptions{
 		RemoveVolumes: true,
 		Force:         true,
 	})

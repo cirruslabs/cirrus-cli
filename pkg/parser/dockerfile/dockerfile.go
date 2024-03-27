@@ -3,8 +3,9 @@ package dockerfile
 import (
 	"context"
 	"encoding/json"
-	"github.com/moby/buildkit/client/llb"
+	"github.com/moby/buildkit/client/llb/sourceresolver"
 	"github.com/moby/buildkit/frontend/dockerfile/dockerfile2llb"
+	"github.com/moby/buildkit/frontend/dockerui"
 	"github.com/moby/buildkit/solver/pb"
 	"github.com/opencontainers/go-digest"
 )
@@ -14,9 +15,9 @@ type DummyResolver struct{}
 func (dr *DummyResolver) ResolveImageConfig(
 	ctx context.Context,
 	ref string,
-	opt llb.ResolveImageConfigOpt,
-) (digest.Digest, []byte, error) {
-	return "", []byte("{}"), nil
+	opt sourceresolver.Opt,
+) (string, digest.Digest, []byte, error) {
+	return ref, "", []byte("{}"), nil
 }
 
 func LocalContextSourcePaths(
@@ -26,13 +27,14 @@ func LocalContextSourcePaths(
 ) ([]string, error) {
 	var result []string
 
-	const localContextName = "context"
-
-	state, _, _, err := dockerfile2llb.Dockerfile2LLB(context.Background(), dockerfileContents, dockerfile2llb.ConvertOpt{
-		MetaResolver:     &DummyResolver{},
-		BuildArgs:        dockerArguments,
-		ContextLocalName: localContextName,
-	})
+	state, _, _, _, err := dockerfile2llb.Dockerfile2LLB(context.Background(), dockerfileContents,
+		dockerfile2llb.ConvertOpt{
+			Config: dockerui.Config{
+				BuildArgs: dockerArguments,
+			},
+			MetaResolver: &DummyResolver{},
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +56,7 @@ func LocalContextSourcePaths(
 			continue
 		}
 
-		if source.Identifier != "local://"+localContextName {
+		if source.Identifier != "local://"+dockerui.DefaultLocalNameContext {
 			continue
 		}
 

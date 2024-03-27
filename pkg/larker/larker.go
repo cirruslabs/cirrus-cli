@@ -10,7 +10,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
 	"github.com/cirruslabs/cirrus-cli/pkg/yamlhelper"
-	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v3"
 	"time"
@@ -49,10 +48,6 @@ func New(opts ...Option) *Larker {
 		fs:  dummy.New(),
 		env: make(map[string]string),
 	}
-
-	// weird global init by Starlark
-	// we need floats at least for configuring CPUs for containers
-	resolve.AllowFloat = true
 
 	// Apply options
 	for _, opt := range opts {
