@@ -2,7 +2,7 @@ docker_builder:
   name: Test (Linux with Docker)
   alias: Tests
   test_script:
-    - wget --no-verbose -O - https://go.dev/dl/go1.21.5.linux-amd64.tar.gz | tar -C /usr/local -xz
+    - wget --no-verbose -O - https://go.dev/dl/go1.22.1.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
     - go test ./...
   env:
@@ -23,7 +23,7 @@ docker_builder:
   run_podman_background_script:
     - podman system service -t 0 unix:///tmp/podman.sock
   test_script:
-    - wget --no-verbose -O - https://go.dev/dl/go1.21.5.linux-amd64.tar.gz | tar -C /usr/local -xz
+    - wget --no-verbose -O - https://go.dev/dl/go1.22.1.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
     - go test ./...
   env:
@@ -51,7 +51,7 @@ task:
     resources:
       tart-vms: 1
   env:
-    CIRRUS_INTERNAL_TART_VM: ghcr.io/cirruslabs/macos-ventura-base:latest
+    CIRRUS_INTERNAL_TART_VM: ghcr.io/cirruslabs/macos-sonoma-base:latest
     CIRRUS_INTERNAL_TART_SSH_PASSWORD: admin
     CIRRUS_INTERNAL_TART_SSH_USER: admin
   test_script:
