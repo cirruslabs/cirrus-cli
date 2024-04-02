@@ -9,6 +9,7 @@ import (
 	"io"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 const tartCommandName = "tart"
@@ -58,6 +59,10 @@ func CmdWithLogger(
 	args = append([]string{name}, args...)
 
 	cmd := exec.CommandContext(ctx, tartCommandName, args...)
+
+	// Work around https://github.com/golang/go/issues/23019,
+	// most likely happens when running with --net-softnet
+	cmd.WaitDelay = time.Second
 
 	// Default environment
 	cmd.Env = cmd.Environ()
