@@ -120,6 +120,7 @@ func (tart *Tart) bootVM(
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, tart.vmName, err)
 	}
+	tart.vm = vm
 
 	if err := vm.Configure(ctx, tart.cpu, tart.memory, tart.diskSize, tart.display, logger); err != nil {
 		return fmt.Errorf("%w: failed to configure VM %q: %v", ErrFailed, vm.Ident(), err)
@@ -186,8 +187,6 @@ func (tart *Tart) bootVM(
 
 		break
 	}
-
-	tart.vm = vm
 
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
