@@ -15,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/ssh"
 	"os"
 	"path"
@@ -78,6 +79,13 @@ func New(
 	}
 
 	return tart, nil
+}
+
+func (tart *Tart) Attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("image", tart.Image()),
+		attribute.String("instance_type", "tart"),
+	}
 }
 
 func (tart *Tart) Warmup(

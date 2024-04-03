@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/otiai10/copy"
+	"go.opentelemetry.io/otel/attribute"
 	"os"
 	"os/exec"
 	"runtime"
@@ -51,6 +52,12 @@ func New(opts ...Option) (*PersistentWorkerInstance, error) {
 	}
 
 	return pwi, nil
+}
+
+func (pwi *PersistentWorkerInstance) Attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("instance_type", "none"),
+	}
 }
 
 func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {

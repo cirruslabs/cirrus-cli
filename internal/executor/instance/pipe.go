@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var ErrPipeCreationFailed = errors.New("failed to create pipe instance")
@@ -52,6 +53,12 @@ func PipeStagesFromCommands(commands []*api.Command) ([]PipeStage, error) {
 	}
 
 	return stages, nil
+}
+
+func (pi *PipeInstance) Attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("instance_type", "pipe"),
+	}
 }
 
 func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {

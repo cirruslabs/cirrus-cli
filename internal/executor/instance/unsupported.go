@@ -3,6 +3,7 @@ package instance
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type UnsupportedInstance struct {
@@ -18,5 +19,9 @@ func (si *UnsupportedInstance) WorkingDirectory(projectDir string, dirtyMode boo
 }
 
 func (si *UnsupportedInstance) Close(context.Context) error {
+	return nil
+}
+
+func (si *UnsupportedInstance) Attributes() []attribute.KeyValue {
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
+	"go.opentelemetry.io/otel/attribute"
 	"io"
 	"os"
 	"path/filepath"
@@ -80,6 +81,13 @@ func CreateTempArchive(dir string) (string, error) {
 	}
 
 	return tmpFile.Name(), nil
+}
+
+func (prebuilt *PrebuiltInstance) Attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("image", prebuilt.Image),
+		attribute.String("instance_type", "prebuilt"),
+	}
 }
 
 func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *runconfig.RunConfig) error {

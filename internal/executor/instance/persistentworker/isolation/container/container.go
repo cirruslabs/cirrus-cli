@@ -7,6 +7,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/pwdir"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
+	"go.opentelemetry.io/otel/attribute"
 	"os"
 )
 
@@ -36,6 +37,13 @@ func New(image string, cpu float32, memory uint32, volumes []*api.Volume) (*Cont
 			return os.RemoveAll(tempDir)
 		},
 	}, nil
+}
+
+func (cont *Container) Attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("image", cont.instance.Image),
+		attribute.String("instance_type", "container"),
+	}
 }
 
 func (cont *Container) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {

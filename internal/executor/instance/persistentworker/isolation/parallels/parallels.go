@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var (
@@ -42,6 +43,13 @@ func New(vmImage, sshUser, sshPassword, agentOS string, opts ...Option) (*Parall
 	}
 
 	return parallels, nil
+}
+
+func (parallels *Parallels) Attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("image", parallels.vmImage),
+		attribute.String("instance_type", "parallels"),
+	}
 }
 
 func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
