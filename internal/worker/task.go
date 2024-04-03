@@ -7,8 +7,6 @@ import (
 	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/getsentry/sentry-go"
@@ -66,19 +64,7 @@ func (worker *Worker) startTask(
 		return
 	}
 
-	switch typedInst := inst.(type) {
-	case *tart.Tart:
-		worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(
-			attribute.String("image", typedInst.Image()),
-			attribute.String("instance_type", "tart"),
-		))
-	case *vetu.Vetu:
-		worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(
-			attribute.String("image", typedInst.Image()),
-			attribute.String("instance_type", "vetu"),
-		))
-	}
-
+	worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(inst.Attributes()...))
 	go worker.runTask(taskCtx, agentAwareTask, upstream, inst, taskIdentification)
 
 	worker.logger.Infof("started task %d", agentAwareTask.TaskId)
@@ -134,10 +120,9 @@ func (worker *Worker) runTask(
 		cirrusSentryTags["cirrus.upstream_hostname"] = upstream.Name()
 	}
 
-	// Start an OpenTelemetry span with the same attributes
-	// we propagate through Sentry
-	var otelAttributes []attribute.KeyValue
+	var otelAttributes = inst.Attributes()
 
+	// add Sentry tags to OpenTelemetry attributes
 	for key, value := range cirrusSentryTags {
 		otelAttributes = append(otelAttributes, attribute.String(key, value))
 	}

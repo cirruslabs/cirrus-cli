@@ -12,6 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/ssh"
 	"runtime"
 	"strings"
@@ -66,6 +67,13 @@ func New(
 	}
 
 	return vetu, nil
+}
+
+func (vetu *Vetu) Attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("image", vetu.Image()),
+		attribute.String("instance_type", "vetu"),
+	}
 }
 
 func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {

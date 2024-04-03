@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type Instance struct {
@@ -31,6 +32,13 @@ type Params struct {
 	WorkingVolumeName      string
 	WorkingDirectory       string
 	Volumes                []*api.Volume
+}
+
+func (inst *Instance) Attributes() []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("image", inst.Image),
+		attribute.String("instance_type", "container"),
+	}
 }
 
 func (inst *Instance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
