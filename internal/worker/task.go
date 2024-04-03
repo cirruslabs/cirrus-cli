@@ -120,10 +120,9 @@ func (worker *Worker) runTask(
 		cirrusSentryTags["cirrus.upstream_hostname"] = upstream.Name()
 	}
 
-	// Start an OpenTelemetry span with the same attributes
-	// we propagate through Sentry
 	var otelAttributes = inst.Attributes()
 
+	// add Sentry tags to OpenTelemetry attributes
 	for key, value := range cirrusSentryTags {
 		otelAttributes = append(otelAttributes, attribute.String(key, value))
 	}
