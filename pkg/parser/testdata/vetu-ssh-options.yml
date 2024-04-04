@@ -1,0 +1,10 @@
+task:
+  persistent_worker:
+    isolation:
+      vetu:
+        image: ghcr.io/cirruslabs/ubuntu:latest
+        username: root
+        password: doesn't matter
+        port: 2222
+
+  script: uname -a

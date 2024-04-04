@@ -1,0 +1,10 @@
+task:
+  persistent_worker:
+    isolation:
+      tart:
+        image: ghcr.io/cirruslabs/macos-sonoma-base:latest
+        username: root
+        password: doesn't matter
+        port: 2222
+
+  script: uname -a

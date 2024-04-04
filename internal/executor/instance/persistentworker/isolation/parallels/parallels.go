@@ -75,7 +75,7 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 		return fmt.Errorf("%w: failed to retrieve VM %q IP-address: %v", ErrFailed, vm.name, err)
 	}
 
-	return remoteagent.WaitForAgent(ctx, parallels.logger, ip,
+	return remoteagent.WaitForAgent(ctx, parallels.logger, ip, 22,
 		parallels.sshUser, parallels.sshPassword, parallels.agentOS, "amd64",
 		config, vm.ClonedFromSuspended(), nil, nil, "",
 		map[string]string{"CIRRUS_VM_ID": vm.Ident()})

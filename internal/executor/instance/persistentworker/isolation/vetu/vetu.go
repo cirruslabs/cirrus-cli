@@ -33,6 +33,7 @@ type Vetu struct {
 	vmName           string
 	sshUser          string
 	sshPassword      string
+	sshPort          uint16
 	cpu              uint32
 	memory           uint32
 	diskSize         uint32
@@ -44,6 +45,7 @@ func New(
 	vmName string,
 	sshUser string,
 	sshPassword string,
+	sshPort uint16,
 	cpu uint32,
 	memory uint32,
 	opts ...Option,
@@ -52,6 +54,7 @@ func New(
 		vmName:      vmName,
 		sshUser:     sshUser,
 		sshPassword: sshPassword,
+		sshPort:     sshPort,
 		cpu:         cpu,
 		memory:      memory,
 	}
@@ -138,7 +141,7 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 
 	prepareInstanceSpan.End()
 
-	err = remoteagent.WaitForAgent(ctx, vetu.logger, ip,
+	err = remoteagent.WaitForAgent(ctx, vetu.logger, ip, vetu.sshPort,
 		vetu.sshUser, vetu.sshPassword, "linux", runtime.GOARCH,
 		config, true, vetu.initializeHooks(config), nil, "",
 		map[string]string{"CIRRUS_VM_ID": vm.Ident()})

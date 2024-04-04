@@ -45,6 +45,7 @@ func WaitForAgent(
 	ctx context.Context,
 	logger logger.Lightweight,
 	ip string,
+	port uint16,
 	sshUser string,
 	sshPassword string,
 	agentOS string,
@@ -59,7 +60,12 @@ func WaitForAgent(
 	ctx, span := tracer.Start(ctx, "upload-and-wait-for-agent")
 	defer span.End()
 
-	addr := ip + ":22"
+	// Default to 22
+	if port == 0 {
+		port = 22
+	}
+
+	addr := fmt.Sprintf("%s:%d", ip, port)
 
 	cli, err := connectViaSSH(ctx, logger, addr, sshUser, sshPassword)
 	if err != nil {

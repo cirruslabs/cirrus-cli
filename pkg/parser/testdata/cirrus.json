@@ -3153,6 +3153,10 @@
                       "description": "SSH password.",
                       "type": "string"
                     },
+                    "port": {
+                      "description": "SSH port.",
+                      "type": "integer"
+                    },
                     "user": {
                       "description": "SSH username.",
                       "type": "string"
@@ -3209,6 +3213,10 @@
                     "password": {
                       "description": "SSH password.",
                       "type": "string"
+                    },
+                    "port": {
+                      "description": "SSH port.",
+                      "type": "integer"
                     },
                     "user": {
                       "description": "SSH username.",
@@ -3591,6 +3599,10 @@
                   "description": "SSH password.",
                   "type": "string"
                 },
+                "port": {
+                  "description": "SSH port.",
+                  "type": "integer"
+                },
                 "user": {
                   "description": "SSH username.",
                   "type": "string"
@@ -3647,6 +3659,10 @@
                 "password": {
                   "description": "SSH password.",
                   "type": "string"
+                },
+                "port": {
+                  "description": "SSH port.",
+                  "type": "integer"
                 },
                 "user": {
                   "description": "SSH username.",

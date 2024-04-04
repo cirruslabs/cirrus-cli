@@ -57,6 +57,8 @@ var validCases = []string{
 	"file-instruction-from-contents",
 	"execution-behavior-on-timeout",
 	"vetu-isolation",
+	"tart-ssh-options",
+	"vetu-ssh-options",
 }
 
 func absolutize(file string) string {

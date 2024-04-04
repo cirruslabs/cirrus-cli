@@ -61,6 +61,23 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Tart {
 		return nil
 	})
 
+	portSchema := schema.Integer("SSH port.")
+	tart.OptionalField(nameable.NewSimpleNameable("port"), portSchema, func(node *node.Node) error {
+		rawPort, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		port, err := strconv.ParseUint(rawPort, 10, 16)
+		if err != nil {
+			return node.ParserError("failed to parse \"port:\" value: %v", err)
+		}
+
+		tart.proto.Tart.Port = uint32(port)
+
+		return nil
+	})
+
 	cpuSchema := schema.Number("Number of VM CPUs.")
 	tart.OptionalField(nameable.NewSimpleNameable("cpu"), cpuSchema, func(node *node.Node) error {
 		cpu, err := node.GetExpandedStringValue(mergedEnv)

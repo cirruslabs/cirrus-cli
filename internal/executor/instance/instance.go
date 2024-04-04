@@ -111,8 +111,8 @@ func NewFromProto(
 			},
 		}, security.NoSecurity(), logger)
 	case *api.MacOSInstance:
-		return tart.New(instance.Image, instance.User, instance.Password, instance.Cpu, instance.Memory,
-			tart.WithLogger(logger))
+		return tart.New(instance.Image, instance.User, instance.Password, 22,
+			instance.Cpu, instance.Memory, tart.WithLogger(logger))
 	default:
 		return &UnsupportedInstance{
 			err: fmt.Errorf("%w: %T", ErrUnsupportedInstance, instance),
