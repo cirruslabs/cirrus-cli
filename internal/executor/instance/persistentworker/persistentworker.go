@@ -114,8 +114,8 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 		opts = append(opts, tart.WithDiskSize(iso.Tart.DiskSize))
 	}
 
-	return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, iso.Tart.Cpu, iso.Tart.Memory,
-		opts...)
+	return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, uint16(iso.Tart.Port),
+		iso.Tart.Cpu, iso.Tart.Memory, opts...)
 }
 
 func newVetu(iso *api.Isolation_Vetu_, security *security.Security, logger logger.Lightweight) (*vetu.Vetu, error) {
@@ -145,6 +145,6 @@ func newVetu(iso *api.Isolation_Vetu_, security *security.Security, logger logge
 		opts = append(opts, vetu.WithDiskSize(iso.Vetu.DiskSize))
 	}
 
-	return vetu.New(iso.Vetu.Image, iso.Vetu.User, iso.Vetu.Password, iso.Vetu.Cpu, iso.Vetu.Memory,
-		opts...)
+	return vetu.New(iso.Vetu.Image, iso.Vetu.User, iso.Vetu.Password, uint16(iso.Vetu.Port),
+		iso.Vetu.Cpu, iso.Vetu.Memory, opts...)
 }

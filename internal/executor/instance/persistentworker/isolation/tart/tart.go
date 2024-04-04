@@ -42,6 +42,7 @@ type Tart struct {
 	vmName      string
 	sshUser     string
 	sshPassword string
+	sshPort     uint16
 	cpu         uint32
 	memory      uint32
 	diskSize    uint32
@@ -56,6 +57,7 @@ func New(
 	vmName string,
 	sshUser string,
 	sshPassword string,
+	sshPort uint16,
 	cpu uint32,
 	memory uint32,
 	opts ...Option,
@@ -64,6 +66,7 @@ func New(
 		vmName:      vmName,
 		sshUser:     sshUser,
 		sshPassword: sshPassword,
+		sshPort:     sshPort,
 		cpu:         cpu,
 		memory:      memory,
 	}
@@ -232,7 +235,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	tart.logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, tart.vm.Ident())
 
-	err = remoteagent.WaitForAgent(ctx, tart.logger, ip,
+	err = remoteagent.WaitForAgent(ctx, tart.logger, ip, tart.sshPort,
 		tart.sshUser, tart.sshPassword, "darwin", "arm64",
 		config, true, initializeHooks, terminateHooks, "",
 		map[string]string{"CIRRUS_VM_ID": tart.vm.Ident()})
