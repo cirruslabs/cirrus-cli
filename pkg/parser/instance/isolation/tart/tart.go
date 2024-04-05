@@ -107,7 +107,7 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Tart {
 		return nil
 	})
 
-	softnetSchema := schema.Boolean("Enable or disable the softnet networking.")
+	softnetSchema := schema.Boolean("Enable or disable the Softnet networking.")
 	tart.OptionalField(nameable.NewSimpleNameable("softnet"), softnetSchema, func(node *node.Node) error {
 		softnet, err := node.GetBoolValue(mergedEnv, parserKit.Boolevator)
 		if err != nil {
