@@ -59,6 +59,7 @@ var validCases = []string{
 	"vetu-isolation",
 	"tart-ssh-options",
 	"vetu-ssh-options",
+	"tart-default-config",
 }
 
 func absolutize(file string) string {

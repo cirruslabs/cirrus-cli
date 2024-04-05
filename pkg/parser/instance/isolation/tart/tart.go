@@ -107,6 +107,28 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Tart {
 		return nil
 	})
 
+	softnetSchema := schema.Boolean("Enable or disable the softnet networking.")
+	tart.OptionalField(nameable.NewSimpleNameable("softnet"), softnetSchema, func(node *node.Node) error {
+		softnet, err := node.GetBoolValue(mergedEnv, parserKit.Boolevator)
+		if err != nil {
+			return err
+		}
+		tart.proto.Tart.Softnet = softnet
+		return nil
+	})
+
+	displaySchema := schema.String("Virtual display configuration.")
+	tart.OptionalField(nameable.NewSimpleNameable("display"), displaySchema, func(node *node.Node) error {
+		display, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		tart.proto.Tart.Display = display
+
+		return nil
+	})
+
 	volumeSchema := schema.ArrayOf(NewVolume(mergedEnv, parserKit).Schema())
 	tart.OptionalField(nameable.NewSimpleNameable("volumes"), volumeSchema, func(node *node.Node) error {
 		for _, child := range node.Children {
