@@ -1,0 +1,13 @@
+task:
+  persistent_worker:
+    isolation:
+      tart:
+        image: ghcr.io/cirruslabs/macos-runner:sonoma
+        user: admin
+        password: admin
+        display: 1920x1080
+        softnet: true
+        cpu: 4
+        memory: 12288
+
+  script: uname -a

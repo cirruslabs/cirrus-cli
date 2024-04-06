@@ -3140,6 +3140,10 @@
                       "description": "Number of VM CPUs.",
                       "type": "number"
                     },
+                    "display": {
+                      "description": "Virtual display configuration.",
+                      "type": "string"
+                    },
                     "image": {
                       "description": "Source VM image (or name) to clone the new VM from.",
                       "type": "string"
@@ -3156,6 +3160,10 @@
                     "port": {
                       "description": "SSH port.",
                       "type": "integer"
+                    },
+                    "softnet": {
+                      "description": "Enable or disable the Softnet networking.",
+                      "type": "boolean"
                     },
                     "user": {
                       "description": "SSH username.",
@@ -3586,6 +3594,10 @@
                   "description": "Number of VM CPUs.",
                   "type": "number"
                 },
+                "display": {
+                  "description": "Virtual display configuration.",
+                  "type": "string"
+                },
                 "image": {
                   "description": "Source VM image (or name) to clone the new VM from.",
                   "type": "string"
@@ -3602,6 +3614,10 @@
                 "port": {
                   "description": "SSH port.",
                   "type": "integer"
+                },
+                "softnet": {
+                  "description": "Enable or disable the Softnet networking.",
+                  "type": "boolean"
                 },
                 "user": {
                   "description": "SSH username.",
