@@ -3162,7 +3162,7 @@
                       "type": "integer"
                     },
                     "softnet": {
-                      "description": "Enable or disable the softnet networking.",
+                      "description": "Enable or disable the Softnet networking.",
                       "type": "boolean"
                     },
                     "user": {
@@ -3616,7 +3616,7 @@
                   "type": "integer"
                 },
                 "softnet": {
-                  "description": "Enable or disable the softnet networking.",
+                  "description": "Enable or disable the Softnet networking.",
                   "type": "boolean"
                 },
                 "user": {
