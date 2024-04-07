@@ -4,8 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/issue"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"gopkg.in/yaml.v3"
 	"strconv"
 )
@@ -34,8 +37,12 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 		return ErrIsolationMissing
 	}
 	// Parse isolation
-	isolationParser := isolation.NewIsolation(nil, nil)
-	if err := isolationParser.Parse(isolationNode, nil); err != nil {
+	parserKit := &parserkit.ParserKit{
+		Boolevator:    boolevator.New(),
+		IssueRegistry: issue.NewRegistry(),
+	}
+	isolationParser := isolation.NewIsolation(nil, parserKit)
+	if err := isolationParser.Parse(isolationNode, parserKit); err != nil {
 		return err
 	}
 
