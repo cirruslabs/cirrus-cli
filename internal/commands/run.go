@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -62,28 +61,17 @@ var vetuLazyPull bool
 // Flags useful for debugging.
 var debugNoCleanup bool
 
-var baseEnvironment map[string]string
-
-var userSpecifiedEnvironment map[string]string
-
-func init() {
-	// Standard environment
-	baseEnvironment = eenvironment.Merge(
-		eenvironment.Static(),
-		eenvironment.BuildID(),
-		eenvironment.ProjectSpecific(projectDir),
-	)
-
-	// User-specified environment
-	var err error
-	userSpecifiedEnvironment, err = makeUserSpecifiedEnvironment()
-	if err != nil {
-		log.Fatalf("%v: %v\n", ErrRun, err)
-	}
-}
+var baseEnvironment map[string]string = eenvironment.Merge(
+	eenvironment.Static(),
+	eenvironment.BuildID(),
+	eenvironment.ProjectSpecific(projectDir),
+)
 
 func readYaml(ctx context.Context) (*parser.Result, error) {
-	// TODO: Find a way to defined userSpecifiedEnvironment once
+	userSpecifiedEnvironment, err := makeUserSpecifiedEnvironment()
+	if err != nil {
+		return nil, fmt.Errorf("%v: %v", ErrRun, err)
+	}
 
 	// Retrieve the combined YAML configuration
 	combinedYAML, err := helpers.ReadCombinedConfig(
@@ -130,6 +118,11 @@ func readYaml(ctx context.Context) (*parser.Result, error) {
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	userSpecifiedEnvironment, err := makeUserSpecifiedEnvironment()
+	if err != nil {
+		return fmt.Errorf("%v: %v", ErrRun, err)
+	}
+
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
