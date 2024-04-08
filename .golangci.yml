@@ -22,7 +22,6 @@ linters:
   - gocyclo
   - godot
   - godox
-  - goerr113
   - gofmt
   - goheader
   - gomodguard
@@ -116,6 +115,9 @@ linters:
     # Generates absolutely useless errors, e.g.
     # "string `.yml` has 3 occurrences, make it a constant"
     - goconst
+
+    # It's OK to have dynamic errors as this is mostly a CLI
+    - goerr113
 
 issues:
   # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.
