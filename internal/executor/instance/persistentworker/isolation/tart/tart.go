@@ -177,32 +177,42 @@ func (tart *Tart) bootVM(
 	vm.Start(ctx, tart.softnet, directoryMounts)
 
 	// Wait for the VM to start and get it's DHCP address
-	var ip string
 	bootLogger := logger.Scoped("boot virtual machine")
 
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case err := <-vm.ErrChan():
-			return err
-		default:
-			time.Sleep(time.Second)
-		}
+	ipCtx, ipCtxCancel := context.WithTimeoutCause(ctx, 10*time.Minute,
+		fmt.Errorf("timed out while trying to retrieve the VM %s IP", vm.Ident()))
+	defer ipCtxCancel()
 
-		ip, err = vm.RetrieveIP(ctx)
-		if err != nil {
-			tart.logger.Debugf("failed to retrieve VM %s IP: %v\n", vm.Ident(), err)
-			continue
-		}
-
-		break
+	ip, err := tart.retrieveIPLoop(ipCtx, vm)
+	if err != nil {
+		return err
 	}
 
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 	bootLogger.Finish(true)
 
 	return nil
+}
+
+func (tart *Tart) retrieveIPLoop(ctx context.Context, vm *VM) (string, error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		case err := <-vm.ErrChan():
+			return "", err
+		default:
+			time.Sleep(time.Second)
+		}
+
+		ip, err := vm.RetrieveIP(ctx)
+		if err != nil {
+			tart.logger.Debugf("failed to retrieve VM %s IP: %v\n", vm.Ident(), err)
+			continue
+		}
+
+		return ip, nil
+	}
 }
 
 func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
