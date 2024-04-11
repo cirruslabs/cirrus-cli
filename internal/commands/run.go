@@ -4,8 +4,13 @@
 package commands
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
@@ -17,36 +22,41 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
-	"time"
 )
+
+const projectDir = "."
 
 var ErrRun = errors.New("run failed")
 
 // General flags.
-var artifactsDir string
-var dirty bool
-var heartbeatTimeoutRaw string
-var output string
-var env []string
-var envFile string
-var affectedFiles []string
-var affectedFilesGitRevision string
-var affectedFilesGitCachedRevision string
-var verbose bool
+var (
+	artifactsDir                   string
+	dirty                          bool
+	heartbeatTimeoutRaw            string
+	output                         string
+	env                            []string
+	envFile                        string
+	affectedFiles                  []string
+	affectedFilesGitRevision       string
+	affectedFilesGitCachedRevision string
+	verbose                        bool
+)
 
 // Common instance-related flags.
 var lazyPull bool
 
 // Container-related flags.
-var containerBackendType string
-var containerLazyPull bool
+var (
+	containerBackendType string
+	containerLazyPull    bool
+)
 
 // Container-related flags: Dockerfile as CI environment[1] feature.
 // [1]: https://cirrus-ci.org/guide/docker-builder-vm/#dockerfile-as-a-ci-environment
-var dockerfileImageTemplate string
-var dockerfileImagePush bool
+var (
+	dockerfileImageTemplate string
+	dockerfileImagePush     bool
+)
 
 // Tart-related flags.
 var tartLazyPull bool
@@ -57,35 +67,26 @@ var vetuLazyPull bool
 // Flags useful for debugging.
 var debugNoCleanup bool
 
-func run(cmd *cobra.Command, args []string) error {
-	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
-	cmd.SilenceUsage = true
+var baseEnvironment map[string]string = eenvironment.Merge(
+	eenvironment.Static(),
+	eenvironment.BuildID(),
+	eenvironment.ProjectSpecific(projectDir),
+)
 
-	// Standard environment
-	projectDir := "."
-	baseEnvironment := eenvironment.Merge(
-		eenvironment.Static(),
-		eenvironment.BuildID(),
-		eenvironment.ProjectSpecific(projectDir),
-	)
-
-	// User-specified environment
-	userSpecifiedEnvironment, err := userSpecifiedEnvironment()
-	if err != nil {
-		return fmt.Errorf("%w: %v", ErrRun, err)
-	}
-
+func readYaml(ctx context.Context, userSpecifiedEnvironment map[string]string) (*parser.Result, error) {
 	// Retrieve the combined YAML configuration
-	combinedYAML, err := helpers.ReadCombinedConfig(cmd.Context(),
-		eenvironment.Merge(baseEnvironment, userSpecifiedEnvironment))
+	combinedYAML, err := helpers.ReadCombinedConfig(
+		ctx,
+		eenvironment.Merge(baseEnvironment, userSpecifiedEnvironment),
+	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if affectedFilesGitRevision != "" {
 		affectedFilesFromGit, err := helpers.GitDiff(projectDir, affectedFilesGitRevision, false)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		affectedFiles = append(affectedFiles, affectedFilesFromGit...)
 	}
@@ -93,7 +94,7 @@ func run(cmd *cobra.Command, args []string) error {
 	if affectedFilesGitCachedRevision != "" {
 		affectedFilesFromGit, err := helpers.GitDiff(projectDir, affectedFilesGitCachedRevision, true)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		affectedFiles = append(affectedFiles, affectedFilesFromGit...)
 	}
@@ -105,12 +106,29 @@ func run(cmd *cobra.Command, args []string) error {
 		parser.WithAffectedFiles(affectedFiles),
 		parser.WithFileSystem(local.New(projectDir)),
 	)
-	result, err := p.Parse(cmd.Context(), combinedYAML)
+	result, err := p.Parse(ctx, combinedYAML)
 	if err != nil {
 		if re, ok := err.(*parsererror.Rich); ok {
 			fmt.Print(re.ContextLines())
 		}
 
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func run(cmd *cobra.Command, args []string) error {
+	userSpecifiedEnvironment, err := makeUserSpecifiedEnvironment()
+	if err != nil {
+		return fmt.Errorf("%v: %v", ErrRun, err)
+	}
+
+	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
+	cmd.SilenceUsage = true
+
+	result, err := readYaml(cmd.Context(), userSpecifiedEnvironment)
+	if err != nil {
 		return err
 	}
 
@@ -191,6 +209,25 @@ func newRunCmd() *cobra.Command {
 		Short: "Execute Cirrus CI tasks locally",
 		RunE:  run,
 		Args:  cobra.MaximumNArgs(1),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			completions := []string{}
+
+			userSpecifiedEnvironment, err := makeUserSpecifiedEnvironment()
+			if err != nil {
+				return completions, cobra.ShellCompDirectiveError
+			}
+
+			result, err := readYaml(cmd.Context(), userSpecifiedEnvironment)
+			if err != nil {
+				return completions, cobra.ShellCompDirectiveError
+			}
+
+			for _, task := range result.Tasks {
+				completions = append(completions, task.Name)
+			}
+
+			return completions, cobra.ShellCompDirectiveNoFileComp
+		},
 	}
 
 	// General flags
@@ -260,7 +297,7 @@ func newRunCmd() *cobra.Command {
 	return cmd
 }
 
-func userSpecifiedEnvironment() (map[string]string, error) {
+func makeUserSpecifiedEnvironment() (map[string]string, error) {
 	var result map[string]string
 	var err error
 
