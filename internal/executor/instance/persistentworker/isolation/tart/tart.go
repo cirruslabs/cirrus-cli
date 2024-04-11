@@ -77,6 +77,10 @@ func New(
 	}
 
 	// Apply default options (to cover those that weren't specified)
+	if tart.sshPort == 0 {
+		tart.sshPort = 22
+	}
+
 	if tart.logger == nil {
 		tart.logger = &logger.LightweightStub{}
 	}
@@ -189,6 +193,14 @@ func (tart *Tart) bootVM(
 	}
 
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
+
+	sshClient, err := remoteagent.WaitForSSH(ipCtx, fmt.Sprintf("%s:%d", ip, tart.sshPort), tart.sshUser,
+		tart.sshPassword, tart.logger)
+	if err != nil {
+		return err
+	}
+	_ = sshClient.Close()
+
 	bootLogger.Finish(true)
 
 	return nil
@@ -245,7 +257,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	tart.logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, tart.vm.Ident())
 
-	err = remoteagent.WaitForAgent(ctx, tart.logger, ip, tart.sshPort,
+	err = remoteagent.WaitForAgent(ctx, tart.logger, fmt.Sprintf("%s:%d", ip, tart.sshPort),
 		tart.sshUser, tart.sshPassword, "darwin", "arm64",
 		config, true, initializeHooks, terminateHooks, "",
 		map[string]string{"CIRRUS_VM_ID": tart.vm.Ident()})
