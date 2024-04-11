@@ -65,6 +65,10 @@ func New(
 	}
 
 	// Apply default options (to cover those that weren't specified)
+	if vetu.sshPort == 0 {
+		vetu.sshPort = 22
+	}
+
 	if vetu.logger == nil {
 		vetu.logger = &logger.LightweightStub{}
 	}
@@ -141,7 +145,7 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 
 	prepareInstanceSpan.End()
 
-	err = remoteagent.WaitForAgent(ctx, vetu.logger, ip, vetu.sshPort,
+	err = remoteagent.WaitForAgent(ctx, vetu.logger, fmt.Sprintf("%s:%d", ip, vetu.sshPort),
 		vetu.sshUser, vetu.sshPassword, "linux", runtime.GOARCH,
 		config, true, vetu.initializeHooks(config), nil, "",
 		map[string]string{"CIRRUS_VM_ID": vm.Ident()})

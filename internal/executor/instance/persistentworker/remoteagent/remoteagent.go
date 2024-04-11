@@ -44,8 +44,7 @@ func (hooks WaitForAgentHooks) Run(ctx context.Context, cli *ssh.Client) error {
 func WaitForAgent(
 	ctx context.Context,
 	logger logger.Lightweight,
-	ip string,
-	port uint16,
+	addr string,
 	sshUser string,
 	sshPassword string,
 	agentOS string,
@@ -59,13 +58,6 @@ func WaitForAgent(
 ) error {
 	ctx, span := tracer.Start(ctx, "upload-and-wait-for-agent")
 	defer span.End()
-
-	// Default to 22
-	if port == 0 {
-		port = 22
-	}
-
-	addr := fmt.Sprintf("%s:%d", ip, port)
 
 	cli, err := connectViaSSH(ctx, logger, addr, sshUser, sshPassword)
 	if err != nil {
@@ -249,11 +241,29 @@ func connectViaSSH(
 	defer span.End()
 
 	// Connect to the VM and upload the agent
+
+	logger.Debugf("connecting via SSH to %s...", addr)
+
+	sshClient, err := WaitForSSH(ctx, addr, sshUser, sshPassword, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debugf("creating new SSH client...")
+
+	return sshClient, nil
+}
+
+func WaitForSSH(
+	ctx context.Context,
+	addr string,
+	sshUser string,
+	sshPassword string,
+	logger logger.Lightweight,
+) (*ssh.Client, error) {
 	var sshConn ssh.Conn
 	var chans <-chan ssh.NewChannel
 	var reqs <-chan *ssh.Request
-
-	logger.Debugf("connecting via SSH to %s...", addr)
 
 	if err := retry.Do(func() error {
 		dialer := net.Dialer{
@@ -297,8 +307,6 @@ func connectViaSSH(
 	); err != nil {
 		return nil, fmt.Errorf("%w: failed to connect via SSH: %v", ErrFailed, err)
 	}
-
-	logger.Debugf("creating new SSH client...")
 
 	return ssh.NewClient(sshConn, chans, reqs), nil
 }
