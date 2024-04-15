@@ -107,7 +107,7 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Vetu {
 		return nil
 	})
 
-	vetu.OptionalField(nameable.NewRegexNameable("networking"), nil, func(node *node.Node) error {
+	vetu.OptionalField(nameable.NewSimpleNameable("networking"), nil, func(node *node.Node) error {
 		if node.HasChild("host") {
 			vetu.proto.Vetu.Networking = &api.Isolation_Vetu_Host_{
 				Host: &api.Isolation_Vetu_Host{},
@@ -115,6 +115,23 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Vetu {
 		} else {
 			return node.ParserError("please specify the networking to use")
 		}
+
+		return nil
+	})
+
+	diskSizeSchema := schema.Integer("Disk size to use in gigabytes.")
+	vetu.OptionalField(nameable.NewSimpleNameable("disk_size"), diskSizeSchema, func(node *node.Node) error {
+		diskSizeRaw, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		diskSize, err := strconv.ParseUint(diskSizeRaw, 10, 16)
+		if err != nil {
+			return node.ParserError("%v", err)
+		}
+
+		vetu.proto.Vetu.DiskSize = uint32(diskSize)
 
 		return nil
 	})

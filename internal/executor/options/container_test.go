@@ -5,11 +5,16 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"runtime"
 	"testing"
 )
 
 func TestForcePull(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	do := options.ContainerOptions{
 		NoPullImages: []string{"nonexistent.invalid/should/not/be:pulled"},
 	}
@@ -34,6 +39,10 @@ func TestForcePull(t *testing.T) {
 }
 
 func TestLazyPull(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	do := options.ContainerOptions{
 		LazyPull:     true,
 		NoPullImages: []string{"nonexistent.invalid/should/not/be:pulled"},

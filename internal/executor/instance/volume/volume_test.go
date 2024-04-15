@@ -11,11 +11,16 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+	"os"
 	"testing"
 )
 
 // TestWorkingVolumeSmoke ensures that the working volume gets successfully created and cleaned up.
 func TestWorkingVolumeSmoke(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	dir := testutil.TempDir(t)
 
 	backend := testutil.ContainerBackendFromEnv(t)
@@ -49,6 +54,10 @@ func TestWorkingVolumeSmoke(t *testing.T) {
 
 // TestCleanupOnFailure ensures that the not-yet-populated volume gets cleaned up on CreateWorkingVolume() failure.
 func TestCleanupOnFailure(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	// Create a container backend client
 	backend := testutil.ContainerBackendFromEnv(t)
 

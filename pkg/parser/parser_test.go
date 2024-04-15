@@ -559,9 +559,7 @@ func TestSchema(t *testing.T) {
 	}
 
 	// Uncomment to update schema
-	// if err := os.WriteFile(schemaPath, ourBytes, 0600); err != nil {
-	//	t.Fatal(err)
-	// }
+	// require.NoError(t, os.WriteFile(schemaPath, ourBytes, 0600))
 
 	// Compare two schemas
 	differ := gojsondiff.New()

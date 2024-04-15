@@ -306,4 +306,22 @@ persistent_worker:
       memory: 12
 ```
 
-Currently only Tart isolation is supported.
+Vetu configuration on `arm64` is similar:
+
+```yaml
+standby:
+  isolation:
+    vetu:
+      image: ghcr.io/cirruslabs/ubuntu-runner-arm64:latest
+      user: admin
+      password: admin
+      cpu: 16
+      memory: 48
+      networking:
+        host: {}
+      disk_size: 100
+```
+
+On `amd64`, simply replace the `image` with `ghcr.io/cirruslabs/ubuntu-runner-amd64:latest`.
+
+Currently only Tart and Vetu isolations are supported for standby.
