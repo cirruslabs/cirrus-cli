@@ -242,6 +242,7 @@ func TestWorkerIsolationTart(t *testing.T) {
 	)
 }
 
+//nolint:dupl
 func TestWorkerStandByTart(t *testing.T) {
 	// Support Tart isolation testing configured via environment variables
 	image, vmOk := os.LookupEnv("CIRRUS_INTERNAL_TART_VM")
@@ -261,6 +262,56 @@ func TestWorkerStandByTart(t *testing.T) {
 	isolation := &api.Isolation{
 		Type: &api.Isolation_Tart_{
 			Tart: &api.Isolation_Tart{
+				Image:    image,
+				User:     user,
+				Password: password,
+				Cpu:      5,
+				Memory:   1024 * 5,
+			},
+		},
+	}
+
+	listenerPort := lis.Addr().(*net.TCPAddr).Port
+	rpcEndpoint := fmt.Sprintf("http://127.0.0.1:%d", listenerPort)
+	upstream, err := upstream.New("test", registrationToken,
+		upstream.WithRPCEndpoint(rpcEndpoint),
+		upstream.WithAgentEndpoint(endpoint.NewLocal(rpcEndpoint, rpcEndpoint)),
+	)
+	require.NoError(t, err)
+
+	standbyConfig := &worker.StandbyConfig{
+		Isolation: isolation,
+	}
+
+	workerTestHelper(t, lis, isolation,
+		[]string{
+			"[[ \"$CIRRUS_VM_ID\" = cirrus-cli-standby* ]]",
+		},
+		worker.WithUpstream(upstream),
+		worker.WithStandby(standbyConfig),
+	)
+}
+
+//nolint:dupl
+func TestWorkerStandByVetu(t *testing.T) {
+	// Support Vetu isolation testing configured via environment variables
+	image, vmOk := os.LookupEnv("CIRRUS_INTERNAL_VETU_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_VETU_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_VETU_SSH_PASSWORD")
+	if !vmOk || !userOk || !passwordOk {
+		t.Skip("no Vetu credentials configured")
+	}
+
+	t.Logf("Using Vetu VM %s for testing...", image)
+
+	lis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	isolation := &api.Isolation{
+		Type: &api.Isolation_Vetu_{
+			Vetu: &api.Isolation_Vetu{
 				Image:    image,
 				User:     user,
 				Password: password,

@@ -58,6 +58,36 @@ task:
     - go test -v -p 1 ./...
 
 task:
+  name: Test (Linux with Vetu)
+  alias: Tests
+  aws_credentials:
+    role_arn: arn:aws:iam::944424729675:role/VetuIntegrationTests
+    role_session_name: cirrus
+    region: us-east-2
+  ec2_instance:
+    image: ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*
+    architecture: arm64
+    region: us-east-2
+    type: a1.metal
+    block_device_mappings:
+      - device_name: /dev/sda1
+        ebs:
+          volume_size: 100
+  install_vetu_script:
+    - sudo apt-get update && sudo apt-get -y install apt-transport-https ca-certificates
+    - echo "deb [trusted=yes] https://apt.fury.io/cirruslabs/ /" | sudo tee /etc/apt/sources.list.d/cirruslabs.list
+    - sudo apt-get update && sudo apt-get -y install vetu
+  test_script:
+    - wget --no-verbose -O - https://go.dev/dl/go1.22.2.linux-arm64.tar.gz | tar -C /usr/local -xz
+    - export PATH=$PATH:/usr/local/go/bin
+    - go test -v -p 1 ./...
+  env:
+    CIRRUS_INTERNAL_VETU_VM: ghcr.io/cirruslabs/ubuntu-runner-arm64:latest
+    CIRRUS_INTERNAL_VETU_SSH_PASSWORD: admin
+    CIRRUS_INTERNAL_VETU_SSH_USER: admin
+    HOME: /root
+
+task:
   name: Release (Dry Run)
   only_if: $CIRRUS_TAG == ''
   container:

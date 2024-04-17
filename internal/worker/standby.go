@@ -19,7 +19,7 @@ type StandbyConfig struct {
 }
 
 var ErrIsolationMissing = errors.New("isolation configuration is required for standby")
-var ErrUnsupportedIsolation = errors.New("only Tart instances are currently supported for standby")
+var ErrUnsupportedIsolation = errors.New("only Tart and Vetu instances are currently supported for standby")
 
 func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 	node, err := node.NewFromNodeWithMergeExemptions(yaml.Node{
@@ -46,8 +46,14 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 		return err
 	}
 
-	if _, ok := isolationParser.Proto().Type.(*api.Isolation_Tart_); !ok {
-		return fmt.Errorf("%w, got %T", ErrUnsupportedIsolation, isolationParser.Proto().Type)
+	// Only allow Tart and Vetu to be configured as standby
+	switch isolationType := isolationParser.Proto().Type.(type) {
+	case *api.Isolation_Tart_:
+		// OK
+	case *api.Isolation_Vetu_:
+		// OK
+	default:
+		return fmt.Errorf("%w, got %T", ErrUnsupportedIsolation, isolationType)
 	}
 
 	standby.Isolation = isolationParser.Proto()

@@ -9,12 +9,14 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/ssh"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -39,6 +41,8 @@ type Vetu struct {
 	diskSize         uint32
 	bridgedInterface string
 	hostNetworking   bool
+
+	vm *VM
 }
 
 func New(
@@ -83,72 +87,93 @@ func (vetu *Vetu) Attributes() []attribute.KeyValue {
 	}
 }
 
-func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
+func (vetu *Vetu) Warmup(
+	ctx context.Context,
+	ident string,
+	env map[string]string,
+	logger *echelon.Logger,
+) error {
+	return vetu.bootVM(ctx, ident, env, false, logger)
+}
+
+func (vetu *Vetu) bootVM(
+	ctx context.Context,
+	ident string,
+	env map[string]string,
+	lazyPull bool,
+	logger *echelon.Logger,
+) error {
 	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
 	defer prepareInstanceSpan.End()
 
-	tmpVMName := fmt.Sprintf("%s%d-", vmNamePrefix, config.TaskID) + uuid.NewString()
-	vm, err := NewVMClonedFrom(ctx,
-		vetu.vmName, tmpVMName,
-		config.VetuOptions.LazyPull,
-		config.AdditionalEnvironment,
-		config.Logger(),
-	)
+	var identToBeInjected string
+	if ident != "" {
+		identToBeInjected = fmt.Sprintf("%s-", ident)
+	}
+
+	tmpVMName := vmNamePrefix + identToBeInjected + uuid.NewString()
+
+	vm, err := NewVMClonedFrom(ctx, vetu.vmName, tmpVMName, lazyPull, env, logger)
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, vetu.vmName, err)
 	}
-	defer func() {
-		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
-			localHub.AddBreadcrumb(&sentry.Breadcrumb{
-				Message: fmt.Sprintf("stopping and deleting the VM %s", vm.ident),
-			}, nil)
-		}
 
-		_ = vm.Close()
-	}()
+	vetu.vm = vm
 
-	if err := vm.Configure(ctx, vetu.cpu, vetu.memory, vetu.diskSize, config.Logger()); err != nil {
+	if err := vm.Configure(ctx, vetu.cpu, vetu.memory, vetu.diskSize, logger); err != nil {
 		return fmt.Errorf("%w: failed to configure VM %q: %v", ErrFailed, vm.Ident(), err)
 	}
 
 	// Start the VM (asynchronously)
 	vm.Start(ctx, vetu.bridgedInterface, vetu.hostNetworking)
 
-	// Wait for the VM to start and get its IP address
-	bootLogger := config.Logger().Scoped("boot virtual machine")
+	// Wait for the VM to start and get it's DHCP address
+	bootLogger := logger.Scoped("boot virtual machine")
 
-	var ip string
+	ipCtx, ipCtxCancel := context.WithTimeoutCause(ctx, 10*time.Minute,
+		fmt.Errorf("timed out while trying to retrieve the VM %s IP", vm.Ident()))
+	defer ipCtxCancel()
 
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case err := <-vm.ErrChan():
-			return err
-		default:
-			time.Sleep(time.Second)
-		}
-
-		ip, err = vm.RetrieveIP(ctx)
-		if err != nil {
-			vetu.logger.Debugf("failed to retrieve VM %s IP: %v\n", vm.Ident(), err)
-			continue
-		}
-
-		break
+	ip, err := vetu.retrieveIPLoop(ipCtx, vm)
+	if err != nil {
+		return err
 	}
 
-	vetu.logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, vm.Ident())
-
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
+
+	sshClient, err := remoteagent.WaitForSSH(ipCtx, fmt.Sprintf("%s:%d", ip, vetu.sshPort), vetu.sshUser,
+		vetu.sshPassword, logger)
+	if err != nil {
+		return err
+	}
+	_ = sshClient.Close()
+
 	bootLogger.Finish(true)
 
-	prepareInstanceSpan.End()
+	return nil
+}
+
+func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
+	if vetu.vm == nil {
+		err := vetu.bootVM(ctx, strconv.FormatInt(config.TaskID, 10), config.AdditionalEnvironment,
+			config.VetuOptions.LazyPull, config.Logger())
+		if err != nil {
+			return err
+		}
+	}
+
+	ip, err := vetu.vm.RetrieveIP(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Wait for the VM to start and get its IP address
+	vetu.logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, vetu.vm.Ident())
 
 	err = remoteagent.WaitForAgent(ctx, vetu.logger, fmt.Sprintf("%s:%d", ip, vetu.sshPort),
 		vetu.sshUser, vetu.sshPassword, "linux", runtime.GOARCH,
 		config, true, vetu.initializeHooks(config), nil, "",
-		map[string]string{"CIRRUS_VM_ID": vm.Ident()})
+		map[string]string{"CIRRUS_VM_ID": vetu.vm.Ident()})
 	if err != nil {
 		return err
 	}
@@ -164,8 +189,18 @@ func (vetu *Vetu) WorkingDirectory(projectDir string, dirtyMode bool) string {
 	return platform.NewUnix().GenericWorkingDir()
 }
 
-func (vetu *Vetu) Close(context.Context) error {
-	return nil
+func (vetu *Vetu) Close(ctx context.Context) error {
+	if vetu.vm == nil {
+		return nil
+	}
+
+	if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
+		localHub.AddBreadcrumb(&sentry.Breadcrumb{
+			Message: fmt.Sprintf("stopping and deleting the VM %s", vetu.vm.ident),
+		}, nil)
+	}
+
+	return vetu.vm.Close()
 }
 
 func Cleanup() error {
@@ -207,4 +242,25 @@ func (vetu *Vetu) initializeHooks(config *runconfig.RunConfig) []remoteagent.Wai
 	}
 
 	return hooks
+}
+
+func (vetu *Vetu) retrieveIPLoop(ctx context.Context, vm *VM) (string, error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		case err := <-vm.ErrChan():
+			return "", err
+		default:
+			time.Sleep(time.Second)
+		}
+
+		ip, err := vm.RetrieveIP(ctx)
+		if err != nil {
+			vetu.logger.Debugf("failed to retrieve VM %s IP: %v\n", vm.Ident(), err)
+			continue
+		}
+
+		return ip, nil
+	}
 }

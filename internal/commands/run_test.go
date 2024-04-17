@@ -286,6 +286,10 @@ func TestRunYAMLAndStarlarkHooks(t *testing.T) {
 
 // TestRunContainerPull ensures that container images are pulled by default.
 func TestRunContainerPull(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	backend, err := containerbackend.New(containerbackend.BackendTypeAuto)
 	if err != nil {
 		t.Fatal(err)
@@ -432,6 +436,10 @@ func TestRunPrebuiltImageTemplate(t *testing.T) {
 }
 
 func TestAffectedFiles(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-affected-files")
 
 	// Create os.Stderr writer that duplicates it's output to buf
@@ -464,6 +472,10 @@ func TestHasStaticEnvironment(t *testing.T) {
 }
 
 func TestRunGitHubAnnotations(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-github-annotations")
 
 	t.Setenv("GITHUB_ACTIONS", "true")
@@ -492,6 +504,10 @@ func TestRunGitHubAnnotations(t *testing.T) {
 }
 
 func TestRunArtifactsDir(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	testutil.TempChdirPopulatedWith(t, "testdata/run-artifacts-dir")
 
 	// Create os.Stderr writer that duplicates it's output to buf

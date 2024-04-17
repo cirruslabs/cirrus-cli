@@ -8,7 +8,7 @@ import (
 )
 
 type Instance interface {
-	Run(context.Context, *runconfig.RunConfig) error
+	Run(ctx context.Context, config *runconfig.RunConfig) error
 	WorkingDirectory(projectDir string, dirtyMode bool) string
 	Close(ctx context.Context) error
 	Attributes() []attribute.KeyValue
@@ -16,5 +16,5 @@ type Instance interface {
 
 type WarmableInstance interface {
 	// Warmup can be optionally called in case of a persistent worker is configured to be warm
-	Warmup(context.Context, string, map[string]string, *echelon.Logger) error
+	Warmup(ctx context.Context, ident string, env map[string]string, logger *echelon.Logger) error
 }
