@@ -266,8 +266,20 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	tart.logger.Debugf("IP %s retrieved from VM %s, running agent...", ip, tart.vm.Ident())
 
+	// Try to determine the agent OS, falling back to "darwin"
+	// in case anything goes wrong to preserve the old behavior
+	agentOS := "darwin"
+
+	info, err := tart.vm.Info(ctx)
+	if err != nil {
+		tart.logger.Debugf("failed to auto-detect the VM's operating system, assuming %q", agentOS)
+	} else if info.OS != "" {
+		agentOS = info.OS
+		tart.logger.Debugf("successfully auto-detected the VM's operating system as %q", agentOS)
+	}
+
 	err = remoteagent.WaitForAgent(ctx, tart.logger, fmt.Sprintf("%s:%d", ip, tart.sshPort),
-		tart.sshUser, tart.sshPassword, "darwin", "arm64",
+		tart.sshUser, tart.sshPassword, agentOS, "arm64",
 		config, true, initializeHooks, terminateHooks, "",
 		map[string]string{"CIRRUS_VM_ID": tart.vm.Ident()})
 	if err != nil {
