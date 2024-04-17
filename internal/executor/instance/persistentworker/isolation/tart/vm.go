@@ -2,6 +2,7 @@ package tart
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
@@ -19,6 +20,10 @@ type VM struct {
 	runningVMCtxCancel context.CancelFunc
 	wg                 sync.WaitGroup
 	errChan            chan error
+}
+
+type Info struct {
+	OS string `json:"os"`
 }
 
 type directoryMount struct {
@@ -184,6 +189,21 @@ func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
 	}
 
 	return strings.TrimSpace(stdout), nil
+}
+
+func (vm *VM) Info(ctx context.Context) (*Info, error) {
+	stdout, _, err := Cmd(ctx, vm.env, "get", "--format", "json", vm.ident)
+	if err != nil {
+		return nil, err
+	}
+
+	var info Info
+
+	if err := json.Unmarshal([]byte(stdout), &info); err != nil {
+		return nil, err
+	}
+
+	return &info, nil
 }
 
 func (vm *VM) Close() error {
