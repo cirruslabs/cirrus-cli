@@ -39,8 +39,8 @@ Here is an example of `.cirrus.yml` configuration file for testing a Go applicat
 task:
   env:
     matrix:
-      VERSION: 1.15
-      VERSION: 1.14
+      VERSION: 1.21
+      VERSION: 1.22
   name: Tests (Go $VERSION)
   container:
     image: golang:$VERSION
@@ -51,6 +51,8 @@ task:
   build_script: go build ./...
   test_script: go test ./...
 ```
+
+Note: `container:` implies the `amd64` architecture. If you're running on `arm64`, please use with the `arm_container` instead.
 
 ### Running Cirrus Tasks
 
