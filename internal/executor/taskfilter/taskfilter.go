@@ -17,44 +17,66 @@ func MatchAnyTask() TaskFilter {
 	}
 }
 
-func MatchExactTask(desiredTaskName string) TaskFilter {
+func MatchExactTask(desiredTaskNameOrAlias string) TaskFilter {
 	return func(tasks []*api.Task) ([]*api.Task, error) {
-		var filteredTasks []*api.Task
+		var matchedTasks []*api.Task
 
 		for _, task := range tasks {
-			// Ensure that this task's name matches with the name we're looking for
-			desiredTaskNameLower := strings.ToLower(desiredTaskName)
-			taskNameLower := strings.ToLower(task.Name)
-
-			if !strings.HasPrefix(desiredTaskNameLower, taskNameLower) {
+			// Ensure that this task's name (or an alias) matches
+			// with the name (or an alias) that we're looking for
+			if !matchTask(desiredTaskNameOrAlias, task.Name, task.Metadata) &&
+				!matchTask(desiredTaskNameOrAlias, taskAlias(task), task.Metadata) {
 				continue
 			}
 
-			// In case we're looking for a task with specific labels — extract them and ensure they all match
-			desiredLabels := extractLabels(strings.TrimPrefix(desiredTaskNameLower, taskNameLower))
-
-			var actualLabels []string
-			if task.Metadata != nil {
-				actualLabels = task.Metadata.UniqueLabels
-			}
-
-			if !containsAll(actualLabels, desiredLabels) {
-				continue
-			}
-
-			// Clear task's dependencies
+			// Clear the task's dependencies
 			task.RequiredGroups = task.RequiredGroups[:0]
 
-			filteredTasks = append(filteredTasks, task)
+			matchedTasks = append(matchedTasks, task)
 		}
 
-		if len(filteredTasks) == 0 {
+		if len(matchedTasks) == 0 {
 			return nil, fmt.Errorf("%w: none of the %d task(s) were matched using a %q filter",
-				ErrNoMatch, len(tasks), desiredTaskName)
+				ErrNoMatch, len(tasks), desiredTaskNameOrAlias)
 		}
 
-		return filteredTasks, nil
+		return matchedTasks, nil
 	}
+}
+
+func taskAlias(task *api.Task) string {
+	if task.Metadata == nil {
+		return ""
+	}
+
+	if task.Metadata.Properties == nil {
+		return ""
+	}
+
+	return task.Metadata.Properties["alias"]
+}
+
+func matchTask(desiredTaskName string, nameOrAlias string, metadata *api.Task_Metadata) bool {
+	if nameOrAlias == "" {
+		return false
+	}
+
+	desiredTaskNameLower := strings.ToLower(desiredTaskName)
+	nameOrAliasLower := strings.ToLower(nameOrAlias)
+
+	if !strings.HasPrefix(desiredTaskNameLower, nameOrAliasLower) {
+		return false
+	}
+
+	// In case we're looking for a task with specific labels — extract them and ensure they all match
+	desiredLabels := extractLabels(strings.TrimPrefix(desiredTaskNameLower, nameOrAliasLower))
+
+	var actualLabels []string
+	if metadata != nil {
+		actualLabels = metadata.UniqueLabels
+	}
+
+	return containsAll(actualLabels, desiredLabels)
 }
 
 func extractLabels(s string) (result []string) {
