@@ -101,7 +101,7 @@ func (tart *Tart) Warmup(
 	additionalEnvironment map[string]string,
 	logger *echelon.Logger,
 ) error {
-	return tart.bootVM(ctx, ident, additionalEnvironment, "", logger)
+	return tart.bootVM(ctx, ident, additionalEnvironment, "", false, logger)
 }
 
 func (tart *Tart) bootVM(
@@ -109,6 +109,7 @@ func (tart *Tart) bootVM(
 	ident string,
 	additionalEnvironment map[string]string,
 	automountDir string,
+	lazyPull bool,
 	logger *echelon.Logger,
 ) error {
 	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
@@ -128,7 +129,7 @@ func (tart *Tart) bootVM(
 	tmpVMName := vmNamePrefix + identToBeInjected + uuid.NewString()
 	vm, err := NewVMClonedFrom(ctx,
 		tart.vmName, tmpVMName,
-		false, // always clone from the base image
+		lazyPull,
 		additionalEnvironment,
 		logger,
 	)
@@ -237,7 +238,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 			automountProjectDir = config.ProjectDir
 		}
 		err = tart.bootVM(ctx, strconv.FormatInt(config.TaskID, 10), config.AdditionalEnvironment,
-			automountProjectDir, config.Logger())
+			automountProjectDir, config.TartOptions.LazyPull, config.Logger())
 		if err != nil {
 			return err
 		}
