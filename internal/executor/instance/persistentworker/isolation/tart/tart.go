@@ -33,7 +33,7 @@ var (
 
 const (
 	vmNamePrefix                = "cirrus-cli-"
-	macOSAutomountDirectoryPath = "/Volumes/My Shared Files"
+	macOSAutomountDirectoryPath = "$HOME/working-dir"
 	macOSAutomountDirectoryItem = "working-dir"
 )
 
@@ -50,7 +50,9 @@ type Tart struct {
 	display     string
 	volumes     []*api.Isolation_Tart_Volume
 
-	vm *VM
+	vm              *VM
+	initializeHooks []remoteagent.WaitForAgentHook
+	terminateHooks  []remoteagent.WaitForAgentHook
 }
 
 func New(
@@ -144,11 +146,17 @@ func (tart *Tart) bootVM(
 
 	var directoryMounts []directoryMount
 	if automountDir != "" {
+		tag := fmt.Sprintf("tart.virtiofs.%s", macOSAutomountDirectoryItem)
+
 		directoryMounts = append(directoryMounts, directoryMount{
 			Name:     macOSAutomountDirectoryItem,
 			Path:     automountDir,
+			Tag:      tag,
 			ReadOnly: false,
 		})
+
+		tart.initializeHooks = append(tart.initializeHooks, mountWorkingDirectoryHook(tag, logger))
+		tart.terminateHooks = append(tart.terminateHooks, unmountWorkingDirectoryHook(logger))
 	}
 
 	// Convert volumes to directory mounts
@@ -250,8 +258,8 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		return err
 	}
 
-	initializeHooks := tart.initializeHooks(config)
-	terminateHooks := tart.terminateHooks(config)
+	initializeHooks := tart.getInitializeHooks(config)
+	terminateHooks := tart.getTerminateHooks(config)
 
 	addTartListBreadcrumb(ctx)
 	addDHCPDLeasesBreadcrumb(ctx)
@@ -334,7 +342,7 @@ func Cleanup() error {
 	return nil
 }
 
-func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
+func (tart *Tart) getInitializeHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
 	var hooks []remoteagent.WaitForAgentHook
 
 	if config.ProjectDir != "" && !config.DirtyMode {
@@ -366,12 +374,14 @@ func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.Wai
 
 				sshSess, err := sshClient.NewSession()
 				if err != nil {
+					syncLogger.Finish(false)
 					return err
 				}
 
 				if err := sshSess.Run(command); err != nil {
 					_ = sshSess.Close()
 
+					syncLogger.Finish(false)
 					return err
 				}
 
@@ -383,10 +393,10 @@ func (tart *Tart) initializeHooks(config *runconfig.RunConfig) []remoteagent.Wai
 		})
 	}
 
-	return hooks
+	return append(tart.initializeHooks, hooks...)
 }
 
-func (tart *Tart) terminateHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
+func (tart *Tart) getTerminateHooks(config *runconfig.RunConfig) []remoteagent.WaitForAgentHook {
 	var hooks []remoteagent.WaitForAgentHook
 
 	targetfulVolumes := lo.Filter(tart.volumes, func(volume *api.Isolation_Tart_Volume, index int) bool {
@@ -421,7 +431,7 @@ func (tart *Tart) terminateHooks(config *runconfig.RunConfig) []remoteagent.Wait
 		})
 	}
 
-	return hooks
+	return append(tart.terminateHooks, hooks...)
 }
 
 func addTartListBreadcrumb(ctx context.Context) {

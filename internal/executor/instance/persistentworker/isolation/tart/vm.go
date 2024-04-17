@@ -24,6 +24,7 @@ type VM struct {
 type directoryMount struct {
 	Name     string
 	Path     string
+	Tag      string
 	ReadOnly bool
 }
 
@@ -146,10 +147,20 @@ func (vm *VM) Start(
 		}
 
 		for _, directoryMount := range directoryMounts {
-			dirArgumentValue := fmt.Sprintf("%s:%s", directoryMount.Name, directoryMount.Path)
+			var opts []string
+
+			if tag := directoryMount.Tag; tag != "" {
+				opts = append(opts, fmt.Sprintf("tag=%s", tag))
+			}
 
 			if directoryMount.ReadOnly {
-				dirArgumentValue += ":ro"
+				opts = append(opts, "ro")
+			}
+
+			dirArgumentValue := fmt.Sprintf("%s:%s", directoryMount.Name, directoryMount.Path)
+
+			if len(opts) != 0 {
+				dirArgumentValue += ":" + strings.Join(opts, ",")
 			}
 
 			args = append(args, "--dir", dirArgumentValue)
