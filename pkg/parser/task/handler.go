@@ -1,7 +1,7 @@
 package task
 
 import (
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"strconv"

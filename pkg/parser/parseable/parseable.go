@@ -1,7 +1,7 @@
 package parseable
 
 import (
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	nodepkg "github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"

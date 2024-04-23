@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"github.com/breml/rootcerts/embedded"
+	"github.com/cirruslabs/cirrus-cli/internal/agent"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
 	"github.com/cirruslabs/cirrus-cli/internal/opentelemetry"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
@@ -38,6 +39,13 @@ func main() {
 	}
 	defer sentry.Flush(5 * time.Second)
 	defer sentry.Recover()
+
+	// Run the Cirrus CI Agent if requested
+	if len(os.Args) >= 2 && os.Args[1] == "agent" {
+		agent.Run()
+
+		return
+	}
 
 	// Enrich future events with Cirrus CI-specific tags
 	if tags, ok := os.LookupEnv("CIRRUS_SENTRY_TAGS"); ok {

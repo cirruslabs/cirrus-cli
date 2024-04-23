@@ -2,8 +2,8 @@ package testutil
 
 import (
 	"context"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/echelon"

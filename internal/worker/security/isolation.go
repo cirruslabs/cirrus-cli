@@ -2,7 +2,7 @@ package security
 
 import (
 	"github.com/IGLOU-EU/go-wildcard"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"path/filepath"
 	"strings"
 )

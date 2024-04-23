@@ -2,8 +2,8 @@ package rpc
 
 import (
 	"context"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"io"

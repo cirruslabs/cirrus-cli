@@ -2,10 +2,10 @@ package container
 
 import (
 	"context"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"go.opentelemetry.io/otel/attribute"
 )
 

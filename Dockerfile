@@ -11,6 +11,6 @@ RUN goreleaser build --timeout 60m --single-target
 
 FROM alpine:latest
 LABEL org.opencontainers.image.source=https://github.com/cirruslabs/cirrus-cli/
-
+RUN apk add --no-cache rsync
 COPY --from=builder /build/dist/linux_*/cirrus_linux_*/cirrus /usr/local/bin/
 ENTRYPOINT ["/usr/local/bin/cirrus"]

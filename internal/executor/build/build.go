@@ -1,10 +1,10 @@
 package build
 
 import (
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"path/filepath"

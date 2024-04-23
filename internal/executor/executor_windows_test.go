@@ -3,9 +3,9 @@ package executor_test
 import (
 	"context"
 	"fmt"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/golang/protobuf/ptypes"

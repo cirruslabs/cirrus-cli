@@ -1,9 +1,9 @@
 package build_test
 
 import (
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"testing"

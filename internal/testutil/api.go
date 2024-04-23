@@ -2,7 +2,7 @@ package testutil
 
 import (
 	"encoding/json"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"google.golang.org/protobuf/encoding/protojson"
 	"testing"
 )
