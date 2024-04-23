@@ -43,7 +43,7 @@ func uploadAgent(
 	}
 
 	// Create agent's binary remotely
-	remoteAgentPath := path.Join(platform.NewUnix().CirrusDir(), "cirrus-ci-agent")
+	remoteAgentPath := path.Join(platform.NewUnix().CirrusDir(), "cirrus")
 	remoteAgentFile, err := sftpCli.Create(remoteAgentPath)
 	if err != nil {
 		return "", err

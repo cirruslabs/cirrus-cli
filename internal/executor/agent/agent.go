@@ -36,7 +36,7 @@ func RetrieveBinary(
 
 	agentPath := filepath.Join(
 		agentCacheDir,
-		fmt.Sprintf("cirrus-ci-agent-%s-%s-%s%s", agentVersion, agentOS, agentArchitecture, agentSuffix),
+		fmt.Sprintf("cirrus-%s-%s-%s%s", agentVersion, agentOS, agentArchitecture, agentSuffix),
 	)
 
 	// Agent found in the cache
@@ -51,7 +51,7 @@ func RetrieveBinary(
 	}
 
 	// Download the agent
-	agentURL := fmt.Sprintf("https://github.com/cirruslabs/cirrus-ci-agent/releases/download/v%s/agent-%s-%s%s",
+	agentURL := fmt.Sprintf("https://github.com/cirruslabs/cirrus-cli/releases/download/v%s/cirrus-%s-%s%s",
 		agentVersion, agentOS, agentArchitecture, agentSuffix)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", agentURL, http.NoBody)

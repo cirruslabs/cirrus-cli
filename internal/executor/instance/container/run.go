@@ -63,7 +63,8 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 		Image:        params.Image,
 		Architecture: params.Architecture,
 		Entrypoint: []string{
-			params.Platform.ContainerAgentPath(),
+			params.Platform.ContainerCLIPath(),
+			"agent",
 			"-api-endpoint",
 			config.Endpoint.Container(),
 			"-server-token",

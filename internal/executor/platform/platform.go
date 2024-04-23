@@ -5,13 +5,13 @@ const (
 	workingVolumeWorkingDir = "working-dir"
 
 	// workingVolumeAgentBinary is the name of the agent binary relative to the CirrusDir().
-	workingVolumeAgentBinary = "cirrus-ci-agent"
+	workingVolumeAgentBinary = "cirrus"
 
 	// agentImageBase is used as a prefix to the agent's version to craft the full agent image name.
-	agentImageBase = "ghcr.io/cirruslabs/cirrus-ci-agent:v"
+	agentImageBase = "ghcr.io/cirruslabs/cirrus-cli:v"
 
 	// DefaultAgentVersion represents the default version of the https://github.com/cirruslabs/cirrus-ci-agent to use.
-	DefaultAgentVersion = "1.134.0"
+	DefaultAgentVersion = "0.117.0"
 )
 
 type CopyCommand struct {
@@ -24,7 +24,7 @@ type CopyCommand struct {
 type Platform interface {
 	ContainerAgentImage(version string) string
 	ContainerCopyCommand(populate bool) *CopyCommand
-	ContainerAgentPath() string
+	ContainerCLIPath() string
 	ContainerAgentVolumeDir() string
 
 	CirrusDir() string

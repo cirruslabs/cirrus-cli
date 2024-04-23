@@ -38,7 +38,7 @@ task:
   install_proctools_script:
     - brew install proctools
   script:
-    - pkill -STOP cirrus-ci-agent
+    - pkill -STOP -f "cirrus agent"
 `, image, user, password)
 
 	testutil.TempChdir(t)

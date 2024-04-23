@@ -80,7 +80,7 @@ func WaitForAgent(
 
 	logger.Debugf("uploading agent to %s...", addr)
 
-	remoteAgentPath, err := uploadAgent(ctx, cli, agentOS, config.GetAgentVersion(), agentArchitecture)
+	remoteCLIPath, err := uploadAgent(ctx, cli, agentOS, config.GetAgentVersion(), agentArchitecture)
 	if err != nil {
 		return fmt.Errorf("%w: failed to upload agent via SFTP: %v",
 			ErrFailed, err)
@@ -155,7 +155,8 @@ func WaitForAgent(
 	}
 
 	command := []string{
-		remoteAgentPath,
+		remoteCLIPath,
+		"agent",
 		"-api-endpoint",
 		apiEndpoint,
 		"-server-token",

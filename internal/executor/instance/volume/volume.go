@@ -97,7 +97,7 @@ func CreateWorkingVolume(
 	input := &containerbackend.ContainerCreateInput{
 		Image:        agentImage,
 		Architecture: architecture,
-		Command:      copyCommand.Command,
+		Entrypoint:   copyCommand.Command,
 		Mounts: []containerbackend.ContainerMount{
 			{
 				Type:   containerbackend.MountTypeVolume,

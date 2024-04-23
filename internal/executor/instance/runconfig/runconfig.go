@@ -66,11 +66,11 @@ func (rc *RunConfig) GetAgentVersion() string {
 	return rc.agentVersion
 }
 
-func (rc *RunConfig) SetAgentVersion(agentVersion string) {
+func (rc *RunConfig) SetCLIVersion(agentVersion string) {
 	rc.agentVersion = agentVersion
 }
 
-func (rc *RunConfig) SetAgentVersionWithoutDowngrade(agentVersion string) error {
+func (rc *RunConfig) SetCLIVersionWithoutDowngrade(agentVersion string) error {
 	if agentVersion == "" {
 		return nil
 	}

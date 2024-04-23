@@ -12,7 +12,7 @@ func NewUnix() Platform {
 	return &UnixPlatform{}
 }
 
-func (platform *UnixPlatform) ContainerAgentPath() string {
+func (platform *UnixPlatform) ContainerCLIPath() string {
 	return filepath.Join(platform.ContainerAgentVolumeDir(), workingVolumeAgentBinary)
 }
 
@@ -35,7 +35,7 @@ func (platform *UnixPlatform) ContainerCopyCommand(populate bool) *CopyCommand {
 		CopiesProjectToDir:   "/project-volume",
 	}
 
-	copyCmd := fmt.Sprintf("cp /bin/cirrus-ci-agent %s",
+	copyCmd := fmt.Sprintf("cp /usr/local/bin/cirrus %s",
 		path.Join(copyCommand.CopiesAgentToDir, workingVolumeAgentBinary))
 
 	if populate {

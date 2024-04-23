@@ -26,7 +26,7 @@ func NewWindows(osVersion string) Platform {
 	}
 }
 
-func (platform *WindowsPlatform) ContainerAgentPath() string {
+func (platform *WindowsPlatform) ContainerCLIPath() string {
 	return filepath.Join(platform.ContainerAgentVolumeDir(), workingVolumeAgentBinary)
 }
 
@@ -49,8 +49,8 @@ func (platform *WindowsPlatform) ContainerCopyCommand(populate bool) *CopyComman
 		CopiesProjectToDir:   "C:\\project-volume",
 	}
 
-	windowsAgentURL := fmt.Sprintf("https://github.com/cirruslabs/cirrus-ci-agent/releases/"+
-		"download/v%s/agent-windows-amd64.exe", DefaultAgentVersion)
+	windowsAgentURL := fmt.Sprintf("https://github.com/cirruslabs/cirrus-cli/releases/"+
+		"download/v%s/cirrus-windows-amd64.exe", DefaultAgentVersion)
 
 	copyCmd := fmt.Sprintf("(New-Object System.Net.WebClient).DownloadFile(\"%s\", \"%s\")",
 		windowsAgentURL, filepath.Join(copyCommand.CopiesAgentToDir, workingVolumeAgentBinary))

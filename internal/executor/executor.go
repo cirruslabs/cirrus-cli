@@ -194,8 +194,8 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 	instanceRunOpts.SetLogger(taskLogger)
 
 	// Respect custom agent version
-	if agentVersionFromEnv, ok := task.Environment["CIRRUS_AGENT_VERSION"]; ok {
-		instanceRunOpts.SetAgentVersion(agentVersionFromEnv)
+	if agentVersionFromEnv, ok := task.Environment["CIRRUS_CLI_VERSION"]; ok {
+		instanceRunOpts.SetCLIVersion(agentVersionFromEnv)
 	}
 
 	// Wrap the context to enforce a timeout for this task
