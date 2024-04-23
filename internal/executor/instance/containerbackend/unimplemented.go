@@ -2,7 +2,7 @@ package containerbackend
 
 import (
 	"context"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"io"
 )
 

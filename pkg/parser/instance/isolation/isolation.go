@@ -1,7 +1,7 @@
 package isolation
 
 import (
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"

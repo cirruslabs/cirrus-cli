@@ -2,7 +2,7 @@ package rpc
 
 import (
 	"context"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/golang/protobuf/ptypes/empty"
 	"io"
 )

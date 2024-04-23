@@ -3,12 +3,12 @@ package worker_test
 import (
 	"context"
 	"fmt"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
 	gopsutilprocess "github.com/shirou/gopsutil/v3/process"
 	"github.com/stretchr/testify/assert"

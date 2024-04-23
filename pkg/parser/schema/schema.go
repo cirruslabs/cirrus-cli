@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	schema "github.com/lestrrat-go/jsschema"
 	"regexp"
 	"sort"

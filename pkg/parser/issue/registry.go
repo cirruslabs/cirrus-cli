@@ -2,7 +2,7 @@ package issue
 
 import (
 	"fmt"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 )
 
 const pathYAML = ".cirrus.yml"

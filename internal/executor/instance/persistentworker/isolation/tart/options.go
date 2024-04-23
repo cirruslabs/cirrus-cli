@@ -1,8 +1,8 @@
 package tart
 
 import (
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 )
 
 type Option func(*Tart)

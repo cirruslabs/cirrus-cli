@@ -3,8 +3,8 @@
 package security_test
 
 import (
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

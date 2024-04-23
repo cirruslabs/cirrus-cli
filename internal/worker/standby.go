@@ -3,7 +3,7 @@ package worker
 import (
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/issue"

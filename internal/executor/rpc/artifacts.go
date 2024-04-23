@@ -1,8 +1,8 @@
 package rpc
 
 import (
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/pathsafe"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"io"
 	"os"
 	"path/filepath"

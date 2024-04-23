@@ -3,7 +3,6 @@ package instance
 import (
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
@@ -11,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/golang/protobuf/ptypes/any"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"

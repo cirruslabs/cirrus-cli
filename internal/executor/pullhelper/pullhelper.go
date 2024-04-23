@@ -2,9 +2,9 @@ package pullhelper
 
 import (
 	"context"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 )

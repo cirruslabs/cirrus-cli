@@ -3,7 +3,6 @@ package persistentworker
 import (
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-ci-agent/api"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/none"
@@ -12,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"runtime"
 	"strings"
 )

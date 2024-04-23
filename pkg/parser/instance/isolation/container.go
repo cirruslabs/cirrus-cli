@@ -1,7 +1,7 @@
 package isolation
 
 import (
-	"github.com/cirruslabs/cirrus-ci-agent/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/constants"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
