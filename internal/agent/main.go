@@ -33,7 +33,7 @@ import (
 	"time"
 )
 
-func Run() {
+func Run(args []string) {
 	apiEndpointPtr := flag.String("api-endpoint", "https://grpc.cirrus-ci.com:443", "GRPC endpoint URL")
 	taskIdPtr := flag.String("task-id", "0", "Task ID")
 	clientTokenPtr := flag.String("client-token", "", "Secret token")
@@ -45,7 +45,7 @@ func Run() {
 	commandToPtr := flag.String("command-to", "", "Command to stop execution at (exclusive)")
 	preCreatedWorkingDir := flag.String("pre-created-working-dir", "",
 		"working directory to use when spawned via Persistent Worker")
-	flag.Parse()
+	_ = flag.CommandLine.Parse(args)
 
 	// Parse task ID as an integer for backwards-compatibility with the TaskIdentification message
 	oldStyleTaskID, err := strconv.ParseInt(*taskIdPtr, 10, 64)

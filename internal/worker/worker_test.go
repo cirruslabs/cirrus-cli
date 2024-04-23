@@ -21,6 +21,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -488,6 +489,11 @@ func TestWorkerSecurityVolumes(t *testing.T) {
 }
 
 func TestTaskCancellation(t *testing.T) {
+	// Windows has no "sleep" command
+	if runtime.GOOS == "windows" {
+		t.SkipNow()
+	}
+
 	//nolint:gosec // this is a test, so it's fine to bind on 0.0.0.0
 	lis, err := net.Listen("tcp", "0.0.0.0:0")
 	if err != nil {
