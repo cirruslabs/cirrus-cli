@@ -42,7 +42,7 @@ func main() {
 
 	// Run the Cirrus CI Agent if requested
 	if len(os.Args) >= 2 && os.Args[1] == "agent" {
-		agent.Run()
+		agent.Run(os.Args[2:])
 
 		return
 	}
