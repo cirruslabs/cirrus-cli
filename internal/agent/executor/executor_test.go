@@ -14,6 +14,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"os"
 	"testing"
 )
 
@@ -30,6 +31,10 @@ import (
 //     This allows us to compose variables out of other Vault-boxed variables,
 //     (see VALUE_USING_VAULT_BOXED_VALUE for an example).
 func TestVaultSpecificVariableExpansion(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	ctx := context.Background()
 
 	var vaultToken = uuid.New().String()

@@ -1,21 +1,19 @@
-package main
+package agent
 
 import (
 	"context"
-	"crypto/x509"
 	"flag"
 	"fmt"
 	"github.com/avast/retry-go/v4"
-	"github.com/breml/rootcerts/embedded"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/network"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/signalfilter"
+	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/grpchelper"
 	"github.com/getsentry/sentry-go"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	goversion "github.com/hashicorp/go-version"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -35,41 +33,7 @@ import (
 	"time"
 )
 
-var (
-	version = "unknown"
-	commit  = "unknown"
-)
-
-func fullVersion() string {
-	var versionToNormalize string
-
-	if version == "unknown" {
-		if info, ok := debug.ReadBuildInfo(); ok {
-			versionToNormalize = info.Main.Version
-		}
-	} else {
-		versionToNormalize = version
-	}
-
-	// We parse the version here for two reasons:
-	// * to weed out the "(devel)" version and fallback to "unknown" instead
-	//   (see https://github.com/golang/go/issues/29228 for details on when this might happen)
-	// * to remove the "v" prefix from the BuildInfo's version (e.g. "v0.7.0") and thus be consistent
-	//   with the binary builds, where the version string would be "0.7.0" instead
-	semver, err := goversion.NewSemver(versionToNormalize)
-	if err == nil {
-		version = semver.String()
-	}
-
-	return fmt.Sprintf("%s-%s", version, commit)
-}
-
-func main() {
-	// Provide fallback root CA certificates
-	mozillaRoots := x509.NewCertPool()
-	mozillaRoots.AppendCertsFromPEM([]byte(embedded.MozillaCACertificatesPEM()))
-	x509.SetFallbackRoots(mozillaRoots)
-
+func Run() {
 	apiEndpointPtr := flag.String("api-endpoint", "https://grpc.cirrus-ci.com:443", "GRPC endpoint URL")
 	taskIdPtr := flag.String("task-id", "0", "Task ID")
 	clientTokenPtr := flag.String("client-token", "", "Secret token")
@@ -82,22 +46,6 @@ func main() {
 	preCreatedWorkingDir := flag.String("pre-created-working-dir", "",
 		"working directory to use when spawned via Persistent Worker")
 	flag.Parse()
-
-	// Initialize Sentry
-	var release string
-
-	if version != "unknown" {
-		release = fmt.Sprintf("cirrus-ci-agent@%s", version)
-	}
-
-	err := sentry.Init(sentry.ClientOptions{
-		Release:          release,
-		AttachStacktrace: true,
-	})
-	if err != nil {
-		log.Fatalf("failed to initialize Sentry: %v", err)
-	}
-	defer sentry.Flush(2 * time.Second)
 
 	// Parse task ID as an integer for backwards-compatibility with the TaskIdentification message
 	oldStyleTaskID, err := strconv.ParseInt(*taskIdPtr, 10, 64)
@@ -184,7 +132,7 @@ func main() {
 	}()
 
 	if *versionFlag {
-		fmt.Println(fullVersion())
+		fmt.Println(version.FullVersion)
 		os.Exit(0)
 	}
 
@@ -195,7 +143,7 @@ func main() {
 
 	var conn *grpc.ClientConn
 
-	log.Printf("Running agent version %s", fullVersion())
+	log.Printf("Running agent version %s", version.FullVersion)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -10,11 +10,16 @@ import (
 	vault "github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
+	"os"
 	"testing"
 	"time"
 )
 
 func TestVault(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	ctx := context.Background()
 
 	var vaultToken = uuid.New().String()
@@ -70,6 +75,10 @@ func TestVault(t *testing.T) {
 }
 
 func TestVaultUseCache(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	ctx := context.Background()
 
 	var vaultToken = uuid.New().String()
@@ -151,6 +160,10 @@ func TestVaultUseCache(t *testing.T) {
 }
 
 func TestVaultDictionaryAsJSON(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	ctx := context.Background()
 
 	var vaultToken = uuid.New().String()

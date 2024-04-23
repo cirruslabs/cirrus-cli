@@ -82,7 +82,7 @@ require (
 	github.com/puzpuzpuz/xsync/v3 v3.1.0
 	github.com/samber/lo v1.39.0
 	github.com/shirou/gopsutil/v3 v3.24.2
-	github.com/testcontainers/testcontainers-go v0.23.0
+	github.com/testcontainers/testcontainers-go v0.30.0
 	github.com/tonistiigi/go-actions-cache v0.0.0-20240227172821-a0b64f338598
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0
 	go.opentelemetry.io/otel v1.24.0
