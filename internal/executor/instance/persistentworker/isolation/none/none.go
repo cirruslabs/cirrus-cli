@@ -62,12 +62,13 @@ func (pwi *PersistentWorkerInstance) Attributes() []attribute.KeyValue {
 
 func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.RunConfig) (err error) {
 	// Retrieve the agent's binary
-	agentPath, err := agent.RetrieveBinary(ctx, config.GetAgentVersion(), runtime.GOOS, runtime.GOARCH)
+	cliPath, err := agent.RetrieveBinary(ctx, config.GetAgentVersion(), runtime.GOOS, runtime.GOARCH)
 	if err != nil {
 		return err
 	}
 
-	cmd := exec.Command(agentPath,
+	cmd := exec.Command(cliPath,
+		"agent",
 		"-api-endpoint",
 		config.Endpoint.Direct(),
 		"-server-token",

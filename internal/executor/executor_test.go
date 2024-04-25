@@ -63,6 +63,9 @@ func TestExecutorClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	renderer := renderers.NewSimpleRenderer(os.Stdout, nil)
+	logger := echelon.NewLogger(echelon.TraceLevel, renderer)
+
 	e, err := executor.New(dir, []*api.Task{
 		{
 			LocalGroupId: 0,
@@ -85,7 +88,7 @@ func TestExecutorClone(t *testing.T) {
 			},
 			Instance: testutil.GetBasicContainerInstance(t, "debian:latest"),
 		},
-	})
+	}, executor.WithLogger(logger))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -14,14 +14,14 @@ func TestSetAgentVersionWithoutDowngrade(t *testing.T) {
 
 	// No downgrade
 	prettyLowVersion := "0.1.0"
-	if err := rc.SetAgentVersionWithoutDowngrade(prettyLowVersion); err != nil {
+	if err := rc.SetCLIVersionWithoutDowngrade(prettyLowVersion); err != nil {
 		t.Fatal(err)
 	}
 	assert.Equal(t, platform.DefaultAgentVersion, rc.GetAgentVersion())
 
 	// Only upgrade
 	prettyHighVersion := fmt.Sprintf("%d.0.0", math.MaxInt32)
-	if err := rc.SetAgentVersionWithoutDowngrade(prettyHighVersion); err != nil {
+	if err := rc.SetCLIVersionWithoutDowngrade(prettyHighVersion); err != nil {
 		t.Fatal(err)
 	}
 	assert.Equal(t, prettyHighVersion, rc.GetAgentVersion())

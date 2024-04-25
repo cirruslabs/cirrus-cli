@@ -166,8 +166,8 @@ func (worker *Worker) runTask(
 		},
 	}
 
-	if err := config.SetAgentVersionWithoutDowngrade(agentAwareTask.AgentVersion); err != nil {
-		worker.logger.Warnf("failed to set agent's version for task %d: %v", agentAwareTask.TaskId, err)
+	if err := config.SetCLIVersionWithoutDowngrade(agentAwareTask.CliVersion); err != nil {
+		worker.logger.Warnf("failed to set CLI's version for task %d: %v", agentAwareTask.TaskId, err)
 	}
 
 	err := inst.Run(ctx, &config)
