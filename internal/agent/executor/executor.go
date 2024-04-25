@@ -52,6 +52,7 @@ type StepResult struct {
 
 var (
 	ErrStepExit = errors.New("executor step requested to terminate execution")
+	ErrTimedOut = errors.New("timed out")
 )
 
 func NewExecutor(
@@ -215,7 +216,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// Normal timeout-bounded context
 	timeout := time.Duration(response.TimeoutInSeconds) * time.Second
 
-	timeoutCtx, timeoutCtxCancel := context.WithTimeout(ctx, timeout)
+	timeoutCtx, timeoutCtxCancel := context.WithTimeoutCause(ctx, timeout, ErrTimedOut)
 	defer timeoutCtxCancel()
 
 	// Like timeout-bounded context, but extended by 5 minutes
@@ -500,7 +501,7 @@ func (executor *Executor) performStep(ctx context.Context, currentStep *api.Comm
 				signaledToExit = ws.Signaled()
 			}
 		}
-		if err == TimeOutError {
+		if errors.Is(err, ErrTimedOut) {
 			signaledToExit = false
 		}
 	case *api.Command_BackgroundScriptInstruction:
