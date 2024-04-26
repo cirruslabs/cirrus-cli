@@ -16,7 +16,7 @@ import (
 // the shell spawned in ShellCommandsAndGetOutput() has been placed into, thus killing
 // it's children processes.
 func TestProcessGroupTermination(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeoutCause(context.Background(), 1*time.Second, ErrTimedOut)
 	defer cancel()
 
 	success, output := ShellCommandsAndGetOutput(ctx, []string{"sleep 86400 & echo target PID is $! ; sleep 60"}, nil)

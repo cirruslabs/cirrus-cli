@@ -53,7 +53,7 @@ func TestMain(m *testing.M) {
 // TestProcessGroupTermination ensures that we terminate all processes we've automatically
 // tainted by assigning a job object to a shell spawned in ShellCommandsAndGetOutput().
 func TestJobObjectTermination(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeoutCause(context.Background(), 10*time.Second, ErrTimedOut)
 	defer cancel()
 
 	success, output := ShellCommandsAndGetOutput(ctx, []string{os.Args[0]},

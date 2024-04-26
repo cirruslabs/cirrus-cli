@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -22,8 +23,6 @@ type ShellOutputWriter struct {
 	io.Writer
 	handler ShellOutputHandler
 }
-
-var TimeOutError = errors.New("timed out")
 
 func (writer ShellOutputWriter) Write(bytes []byte) (int, error) {
 	return writer.handler(bytes)
@@ -61,7 +60,8 @@ func ShellCommandsAndWait(
 
 	select {
 	case <-ctx.Done():
-		handler([]byte("\nTimed out!"))
+		errorMessage := fmt.Sprintf("%v!", context.Cause(ctx))
+		handler([]byte("\n" + strings.ToUpper(errorMessage[:1]) + errorMessage[1:]))
 
 		processdumper.Dump()
 
@@ -69,7 +69,7 @@ func ShellCommandsAndWait(
 			handler([]byte(fmt.Sprintf("\nFailed to kill a timed out shell session: %s", err)))
 		}
 
-		return cmd, TimeOutError
+		return cmd, context.Cause(ctx)
 	case <-done:
 		var forcePiperClosure bool
 

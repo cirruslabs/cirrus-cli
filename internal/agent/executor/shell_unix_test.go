@@ -112,7 +112,7 @@ func Test_ShellCommands_CustomWorkingDir_Unix(t *testing.T) {
 }
 
 func Test_ShellCommands_Timeout_Unix(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeoutCause(context.Background(), 5*time.Second, ErrTimedOut)
 	defer cancel()
 
 	_, output := ShellCommandsAndGetOutput(ctx, []string{"sleep 60"}, nil)
@@ -124,7 +124,7 @@ func Test_ShellCommands_Timeout_Unix(t *testing.T) {
 }
 
 func TestChildrenProcessesAreCancelled(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeoutCause(context.Background(), time.Second*5, ErrTimedOut)
 	defer cancel()
 
 	success, output := ShellCommandsAndGetOutput(ctx, []string{"sleep 60 & sleep 10"}, nil)
