@@ -238,7 +238,7 @@ func evaluateTwoTasksIdentical(t *testing.T, yamlConfig string, additionalInstan
 			Instances: additionalInstancesMapping,
 			DescriptorSet: &descriptor.FileDescriptorSet{
 				File: []*descriptor.FileDescriptorProto{
-					protodesc.ToFileDescriptorProto(api.File_cirrus_ci_service_proto),
+					protodesc.ToFileDescriptorProto(api.File_api_cirrus_ci_service_proto),
 					protodesc.ToFileDescriptorProto(anypb.File_google_protobuf_any_proto),
 					protodesc.ToFileDescriptorProto(emptypb.File_google_protobuf_empty_proto),
 					protodesc.ToFileDescriptorProto(descriptorpb.File_google_protobuf_descriptor_proto),
