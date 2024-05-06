@@ -1,17 +1,11 @@
 syntax = "proto3";
 
-package org.cirruslabs.ci.services.cirruscigrpc;
+package build.buf.gen.org.cirruslabs.ci.services.cirruscigrpc;
 
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/descriptor.proto";
 import "google/protobuf/struct.proto";
-
-option java_multiple_files = true;
-option java_package = "org.cirruslabs.ci.services.cirruscigrpc.grpc";
-option java_outer_classname = "CirrusCIProto";
-
-option go_package = "github.com/cirruslabs/cirrus-ci-agent/api";
 
 service CirrusConfigurationEvaluatorService {
   // Parser
