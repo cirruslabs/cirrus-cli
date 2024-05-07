@@ -16,7 +16,6 @@ linters:
   - errcheck
   - exhaustive
   - exportloopref
-  - gochecknoinits
   - gocognit
   - gocritic
   - gocyclo
@@ -118,6 +117,9 @@ linters:
 
     # It's OK to have dynamic errors as this is mostly a CLI
     - goerr113
+
+    # Work around https://github.com/golangci/golangci-lint/pull/4698
+    - gochecknoinits
 
 issues:
   # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.

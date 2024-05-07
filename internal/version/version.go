@@ -12,7 +12,6 @@ var (
 	FullVersion = ""
 )
 
-//nolint:gochecknoinits
 func init() {
 	if Version == "unknown" {
 		info, ok := debug.ReadBuildInfo()
