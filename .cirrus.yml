@@ -181,8 +181,8 @@ task:
   push_script: buf push --tag $CIRRUS_TAG
 
   env:
-    BUF_LOGIN: edigaryev
-    BUF_TOKEN: ENCRYPTED[b52d145079b1e26201b3c1a69f32a28fd9f9176b4b7fca2af1d193296bb7d12f895b2f36871a5d873ca4b51cf3aff15f]
+    BUF_LOGIN: fkorotkov
+    BUF_TOKEN: ENCRYPTED[!8ee7eb2504cc84b08d4a7c0dacbe103640b1feaa26d06f0df010784e872d39e65a0cdea3fc7c09b065a917a77113b96b!]
 
 task:
   only_if: $CIRRUS_BRANCH != ''
