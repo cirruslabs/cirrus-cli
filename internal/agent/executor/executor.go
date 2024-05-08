@@ -14,6 +14,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/vaultunboxer"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/samber/lo"
 	"log"
 	"os"
 	"os/exec"
@@ -369,6 +370,19 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		_, _ = client.CirrusClient.ReportAgentWarning(ctx, &api.ReportAgentProblemRequest{
 			TaskIdentification: executor.taskIdentification,
 			Message:            message,
+		})
+	}
+
+	// Emit a warning if multi-line secrets were used[1]
+	//
+	// [1]: https://github.com/cirruslabs/cirrus-cli/issues/729
+	hasMultiLineSecretValues := lo.ContainsBy(executor.env.SensitiveValues(), func(value string) bool {
+		return strings.Contains(value, "\n")
+	})
+	if hasMultiLineSecretValues {
+		_, _ = client.CirrusClient.ReportAgentWarning(ctx, &api.ReportAgentProblemRequest{
+			TaskIdentification: executor.taskIdentification,
+			Message:            "Found multi-line secret values, masking them would not work",
 		})
 	}
 
