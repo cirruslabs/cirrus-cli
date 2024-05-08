@@ -186,13 +186,13 @@ task:
 
 task:
   only_if: $CIRRUS_BRANCH != ''
-  name: buf push (branch)
+  name: buf push (commit)
 
   container:
     image: bufbuild/buf
 
   login_script: echo $BUF_TOKEN | buf registry login --username $BUF_LOGIN --token-stdin
-  push_script: buf push --branch $CIRRUS_BRANCH
+  push_script: buf push
 
   env:
     BUF_LOGIN: fkorotkov
