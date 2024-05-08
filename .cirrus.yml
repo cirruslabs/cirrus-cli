@@ -160,3 +160,40 @@ docker_builder:
       --tag ghcr.io/cirruslabs/cirrus-cli:$CIRRUS_TAG \
       --tag ghcr.io/cirruslabs/cirrus-cli:latest \
       .
+
+task:
+  name: Check for lacking "buf generate" invocation
+
+  container:
+    image: bufbuild/buf
+
+  generate_script: buf generate
+  check_script: git diff --exit-code
+
+task:
+  only_if: $CIRRUS_TAG != ''
+  name: buf push (tagged)
+
+  container:
+    image: bufbuild/buf
+
+  login_script: echo $BUF_TOKEN | buf registry login --username $BUF_LOGIN --token-stdin
+  push_script: buf push --tag $CIRRUS_TAG
+
+  env:
+    BUF_LOGIN: fkorotkov
+    BUF_TOKEN: ENCRYPTED[!8ee7eb2504cc84b08d4a7c0dacbe103640b1feaa26d06f0df010784e872d39e65a0cdea3fc7c09b065a917a77113b96b!]
+
+task:
+  only_if: $CIRRUS_BRANCH != ''
+  name: buf push (branch)
+
+  container:
+    image: bufbuild/buf
+
+  login_script: echo $BUF_TOKEN | buf registry login --username $BUF_LOGIN --token-stdin
+  push_script: buf push --branch $CIRRUS_BRANCH
+
+  env:
+    BUF_LOGIN: fkorotkov
+    BUF_TOKEN: ENCRYPTED[!8ee7eb2504cc84b08d4a7c0dacbe103640b1feaa26d06f0df010784e872d39e65a0cdea3fc7c09b065a917a77113b96b!]

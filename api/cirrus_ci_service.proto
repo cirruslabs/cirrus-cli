@@ -1,0 +1,853 @@
+syntax = "proto3";
+
+package org.cirruslabs.ci.services.cirruscigrpc;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/descriptor.proto";
+import "google/protobuf/struct.proto";
+
+option java_multiple_files = true;
+option java_package = "org.cirruslabs.ci.services.cirruscigrpc.grpc";
+option java_outer_classname = "CirrusCIProto";
+
+option go_package = "github.com/cirruslabs/cirrus-ci-agent/api";
+
+service CirrusConfigurationEvaluatorService {
+  // Parser
+  rpc EvaluateConfig(EvaluateConfigRequest) returns (EvaluateConfigResponse);
+  rpc JSONSchema(JSONSchemaRequest) returns (JSONSchemaResponse);
+
+  // Hooks
+  rpc EvaluateFunction(EvaluateFunctionRequest) returns (EvaluateFunctionResponse);
+}
+
+service CirrusRemoteExecutorService {
+  rpc Capabilities(CapabilitiesRequest) returns (CapabilitiesResponse);
+}
+
+message CapabilitiesRequest {
+}
+
+message CapabilitiesResponse {
+  AdditionalInstancesInfo supported_instances = 1;
+}
+
+message AdditionalInstancesInfo {
+  map<string, string> instances = 1; // field name to proto FQN
+  google.protobuf.FileDescriptorSet descriptor_set = 2;
+}
+
+message EvaluateConfigRequest {
+  reserved 5;
+
+  string yaml_config = 1;
+  string starlark_config = 2;
+  map<string, string> environment = 3;
+  repeated string affectedFiles = 4;
+  AdditionalInstancesInfo additional_instances_info = 6;
+  repeated google.protobuf.FieldDescriptorProto additional_task_properties = 7;
+
+  // New file system abstraction
+  FileSystem fs = 8;
+}
+
+message FileSystem {
+  message Memory {
+    map<string, bytes> filesContents = 1;
+  }
+
+  message Github {
+    string owner = 1;
+    string repo = 2;
+    string reference = 3;
+    string token = 4;
+  }
+
+  oneof impl {
+    Memory memory = 1;
+    Github github = 2;
+  }
+}
+
+message EvaluateConfigResponse {
+  reserved 4;
+
+  repeated Task tasks = 1;
+  bytes output_logs = 2;
+  int64 tasks_count_before_filtering = 3;
+  string processed_config = 5;
+  repeated Issue issues = 6;
+}
+
+message RichError {
+  string message = 1;
+  string processed_config = 2;
+  uint64 line = 3;
+  uint64 column = 4;
+}
+
+message Issue {
+  enum Level {
+    INFO = 0;
+    WARNING = 1;
+    ERROR = 2;
+  }
+
+  Level level = 1;
+  string message = 2;
+  string raw_details = 5;
+  string path = 6;
+  uint64 line = 3;
+  uint64 column = 4;
+}
+
+message JSONSchemaRequest {
+  AdditionalInstancesInfo additional_instances_info = 1;
+}
+
+message JSONSchemaResponse {
+  string schema = 1;
+}
+
+message EvaluateFunctionRequest {
+  string starlark_config = 1;
+  string function_name = 2;
+  google.protobuf.ListValue arguments = 3;
+  map<string, string> environment = 4;
+  FileSystem fs = 5;
+}
+
+message EvaluateFunctionResponse {
+  string error_message = 1;
+  bytes output_logs = 2;
+  int64 duration_nanos = 3;
+  google.protobuf.Value result = 4;
+}
+
+service CirrusWorkersService {
+  // Issued by the persistent worker after it starts
+  //
+  // Can be called without a session token.
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // Periodically issued by the registered persistent worker to get new jobs and indicate that it's alive
+  rpc Poll(PollRequest) returns (PollResponse);
+
+  // Issued by the registered persistent worker to indicate task status
+  rpc TaskStarted(TaskIdentification) returns (google.protobuf.Empty);
+  rpc TaskFailed(TaskFailedRequest) returns (google.protobuf.Empty);
+  rpc TaskStopped(TaskIdentification) returns (google.protobuf.Empty);
+
+  rpc UpdateStatus(UpdateStatusRequest) returns (WorkerStatus);
+  rpc QueryRunningTasks(QueryRunningTasksRequest) returns (QueryRunningTasksResponse);
+}
+
+message RegisterRequest {
+  string registration_token = 1;
+
+  WorkerInfo worker_info = 2;
+}
+
+message RegisterResponse {
+  string session_token = 1;
+}
+
+message PollRequest {
+  WorkerInfo worker_info = 1;
+  repeated int64 running_tasks = 2;
+  map<string, double> resources_in_use = 3;
+}
+
+message QueryRunningTasksRequest {
+  WorkerInfo info = 1;
+}
+
+message QueryRunningTasksResponse {
+  WorkerStatus status = 1;
+  repeated int64 running_tasks = 2;
+}
+
+message TaskFailedRequest {
+  TaskIdentification task_identification = 1;
+  string message = 2;
+}
+
+message PollResponse {
+  message AgentAwareTask {
+    int64 task_id = 1;
+    string client_secret = 2;
+    string server_secret = 3;
+    Isolation isolation = 4;
+    string agent_version = 5 [deprecated = true];
+    string cli_version = 7;
+    map<string, double> resources_to_use = 6;
+  }
+
+  repeated AgentAwareTask tasks_to_start = 1;
+
+  repeated int64 tasks_to_stop = 2;
+
+  uint32 poll_interval_in_seconds = 3;
+
+  bool shutdown = 4;
+}
+
+message WorkerInfo {
+  /*
+   * Well-Known Labels:
+   * name — worker's name
+   * version — full version (the one returned when running "cirrus --version")
+   * hostname — name of the host system
+   * os — runtime.GOOS
+   * arch — runtime.GOARCH
+   */
+  map<string, string> labels = 1;
+
+  map<string, double> resources_total = 2;
+}
+
+message UpdateStatusRequest {
+  bool disabled = 1;
+}
+
+message WorkerStatus {
+  bool disabled = 1;
+}
+
+service CirrusCIService {
+  rpc InitialCommands (InitialCommandsRequest) returns (CommandsResponse) {
+  }
+  rpc ReportCommandUpdates (ReportCommandUpdatesRequest) returns (ReportCommandUpdatesResponse) {
+  }
+  rpc ReportAnnotations (ReportAnnotationsCommandRequest) returns (google.protobuf.Empty) {
+  }
+  rpc StreamLogs (stream LogEntry) returns (UploadLogsResponse) {
+  }
+  rpc SaveLogs (stream LogEntry) returns (UploadLogsResponse) {
+  }
+  rpc UploadCache (stream CacheEntry) returns (UploadCacheResponse) {
+  }
+
+  // Artifacts upload over gRPC
+  rpc UploadArtifacts (stream ArtifactEntry) returns (UploadArtifactsResponse);
+
+  // Artifacts upload over HTTPS
+  rpc GenerateArtifactUploadURLs (GenerateArtifactUploadURLsRequest) returns (GenerateArtifactUploadURLsResponse);
+  rpc CommitUploadedArtifacts (CommitUploadedArtifactsRequest) returns (CommitUploadedArtifactsResponse);
+
+  rpc DownloadCache (DownloadCacheRequest) returns (stream DataChunk) {
+  }
+  rpc CacheInfo (CacheInfoRequest) returns (CacheInfoResponse) {
+  }
+  rpc DeleteCache (DeleteCacheRequest) returns (DeleteCacheResponse) {
+  }
+  rpc Heartbeat (HeartbeatRequest) returns (HeartbeatResponse) {
+  }
+  rpc ReportStopHook (ReportStopHookRequest) returns (google.protobuf.Empty) {
+  }
+  rpc ReportAgentError (ReportAgentProblemRequest) returns (google.protobuf.Empty) {
+  }
+  rpc ReportAgentWarning (ReportAgentProblemRequest) returns (google.protobuf.Empty) {
+  }
+  rpc ReportAgentSignal (ReportAgentSignalRequest) returns (google.protobuf.Empty) {
+  }
+  rpc ReportAgentLogs (ReportAgentLogsRequest) returns (google.protobuf.Empty) {
+  }
+  rpc ReportAgentFinished (ReportAgentFinishedRequest) returns (ReportAgentFinishedResponse) {
+  }
+  rpc ReportTerminalAttached (ReportTerminalAttachedRequest) returns (ReportTerminalAttachedResponse) {
+  }
+  rpc ReportTerminalLifecycle (ReportTerminalLifecycleRequest) returns (ReportTerminalLifecycleResponse) {
+  }
+  rpc GenerateCacheUploadURL (CacheKey) returns (GenerateURLResponse) {
+  }
+  rpc GenerateCacheDownloadURLs (CacheKey) returns (GenerateURLsResponse) {
+  }
+}
+
+message ReportTerminalAttachedRequest {
+  TaskIdentification task_identification = 1;
+  string locator = 2;
+  string trusted_secret = 3;
+}
+
+message ReportTerminalAttachedResponse {
+  // empty for now
+}
+
+message ReportTerminalLifecycleRequest {
+  TaskIdentification task_identification = 1;
+
+  message Started {
+    // empty for now
+  }
+
+  message Expiring {
+    // empty for now
+  }
+
+  oneof lifecycle {
+    Started started = 2;
+    Expiring expiring = 3;
+  }
+}
+
+message ReportTerminalLifecycleResponse {
+  // empty for now
+}
+
+message TaskIdentification {
+  int64 task_id = 1;
+  string secret = 2;
+}
+
+message DataChunk {
+  bytes data = 1;
+  string redirect_url = 2;
+}
+
+message InitialCommandsRequest {
+  TaskIdentification task_identification = 1;
+  int64 local_timestamp = 2;
+  string continue_from_command = 3;
+  bool retry = 4;
+}
+
+message LogEntry {
+  message LogKey {
+    TaskIdentification task_identification = 1;
+    string command_name = 2;
+    bool raw = 3; // true to disable live updates
+  }
+  oneof value {
+    LogKey key = 1;
+    DataChunk chunk = 2;
+  }
+}
+
+message UploadLogsResponse {
+  int64 bytes_logged = 1;
+}
+
+message CacheKey {
+  TaskIdentification task_identification = 1;
+  string cache_key = 2;
+}
+
+message CacheEntry {
+  oneof value {
+    CacheKey key = 1;
+    DataChunk chunk = 2;
+  }
+}
+
+message UploadCacheResponse {
+  int64 bytes_saved = 1;
+}
+
+message ArtifactEntry {
+  message ArtifactsUpload {
+    TaskIdentification task_identification = 1;
+    string name = 2;
+    string type = 3;
+    string format = 4;
+  }
+  message ArtifactChunk {
+    string artifact_path = 1;
+    bytes data = 2;
+  }
+  oneof value {
+    ArtifactsUpload artifacts_upload = 1;
+    ArtifactChunk chunk = 2;
+  }
+}
+
+message UploadArtifactsResponse {
+  int64 bytes_saved = 1;
+}
+
+message ArtifactFileInfo {
+  string path = 1;
+  int64 size_in_bytes = 2;
+}
+
+message GenerateArtifactUploadURLsRequest {
+  TaskIdentification task_identification = 1;
+
+  string name = 2;
+  repeated ArtifactFileInfo files = 3;
+}
+
+message GenerateArtifactUploadURLsResponse {
+  message UploadURL {
+    string url = 1;
+    map<string, string> headers = 2;
+  }
+
+  repeated UploadURL urls = 1;
+}
+
+message CommitUploadedArtifactsRequest {
+  TaskIdentification task_identification = 1;
+
+  string name = 2;
+  string type = 3;
+  string format = 4;
+
+  repeated ArtifactFileInfo files = 5;
+}
+
+message CommitUploadedArtifactsResponse {
+  // nothing for now
+}
+
+message DownloadCacheRequest {
+  TaskIdentification task_identification = 1;
+  string cache_key = 2;
+}
+
+message CommandsResponse {
+  map<string, string> environment = 1;
+  repeated Command commands = 2;
+  string serverToken = 3;
+  int64 timeout_in_seconds = 4;
+  repeated string secrets_to_mask = 5;
+  bool failed_at_least_once = 6;
+}
+
+message ReportCommandUpdatesRequest {
+  TaskIdentification task_identification = 1;
+  repeated CommandResult updates = 2;
+}
+
+message ReportCommandUpdatesResponse {
+  // empty for now
+}
+
+message ReportAnnotationsCommandRequest {
+  TaskIdentification task_identification = 1;
+  repeated Annotation annotations = 2;
+}
+
+message Annotation {
+  message FileLocation {
+    string path = 1;
+    int64 start_line = 2;
+    int64 end_line = 3;
+    int64 start_column = 4;
+    int64 end_column = 5;
+  }
+  enum Level {
+    NOTICE = 0;
+    WARNING = 1;
+    FAILURE = 2;
+  }
+  enum Type {
+    GENERIC = 0;
+    TEST_RESULT = 1;
+    LINT_RESULT = 2;
+    ANALYSIS_RESULT = 3;
+  }
+  Type type = 1;
+  Level level = 2;
+  string message = 3;
+  string raw_details = 4;
+  string fully_qualified_name = 5;
+  FileLocation file_location = 6;
+}
+
+message HeartbeatRequest {
+  TaskIdentification task_identification = 1;
+}
+
+message HeartbeatResponse {
+}
+
+message CacheInfoRequest {
+  TaskIdentification task_identification = 1;
+  string cache_key = 2;
+}
+
+message CacheInfo {
+  string key = 1;
+  int64 size_in_bytes = 2;
+  int64 creation_timestamp = 3;
+  int64 created_by_task_id = 4;
+}
+
+message CacheInfoResponse {
+  CacheInfo info = 1;
+}
+
+message DeleteCacheRequest {
+  TaskIdentification task_identification = 1;
+  string cache_key = 2;
+}
+
+message DeleteCacheResponse {
+  // nothing for now
+}
+
+message ReportAgentProblemRequest {
+  TaskIdentification task_identification = 1;
+  string message = 2;
+  string stack = 3;
+}
+
+message ReportStopHookRequest {
+  TaskIdentification task_identification = 1;
+}
+
+message ReportAgentSignalRequest {
+  TaskIdentification task_identification = 1;
+  string signal = 2;
+}
+
+message ReportAgentLogsRequest {
+  TaskIdentification task_identification = 1;
+  string logs = 2;
+}
+
+message CacheRetrievalAttempt {
+  message Hit {
+    uint64 size_bytes = 1;
+    uint64 downloaded_in_nanos = 2;
+    uint64 extracted_in_nanos = 3;
+  }
+
+  message Miss {
+    uint64 size_bytes = 1;
+    uint64 populated_in_nanos = 2;
+    uint64 archived_in_nanos = 3;
+    uint64 uploaded_in_nanos = 4;
+  }
+
+  string error = 1;
+
+  oneof result {
+    Hit hit = 2;
+    Miss miss = 3;
+  }
+}
+
+message ResourceUtilization {
+  repeated ChartPoint cpu_chart = 1;
+  repeated ChartPoint memory_chart = 2;
+
+  double cpu_total = 3;
+  double memory_total = 4;
+}
+
+message ChartPoint {
+  uint32 seconds_from_start = 1;
+  double value = 2;
+}
+
+message CommandResult {
+  string name = 1;
+  bool succeded = 2 [deprecated = true];
+  Status status = 5;
+  int64 duration_in_nanos = 3;
+  bool signaled_to_exit = 4;
+}
+
+message ReportAgentFinishedRequest {
+  TaskIdentification task_identification = 1;
+  map<string, CacheRetrievalAttempt> cacheRetrievalAttempts = 2;
+  repeated CommandResult command_results = 3;
+  ResourceUtilization resource_utilization = 4;
+}
+
+message ReportAgentFinishedResponse {
+  // empty for now
+}
+
+enum Status {
+  CREATED = 0;
+  TRIGGERED = 1;
+  SCHEDULED = 2;
+  EXECUTING = 3; // execution
+  ABORTED = 4; // by user or GCP
+  FAILED = 5;
+  COMPLETED = 6;
+  SKIPPED = 7;
+}
+
+message Task {
+  message Metadata {
+    repeated string unique_labels = 1;
+    map<string, string> properties = 2;
+  }
+
+  int64 local_group_id = 1;
+  repeated int64 required_groups = 2;
+  string name = 3;
+  Status status = 4;
+  map<string, string> environment = 5;
+  Metadata metadata = 6;
+  repeated Command commands = 8;
+  google.protobuf.Any instance = 9;
+}
+
+message Command {
+  enum CommandExecutionBehavior {
+    ON_SUCCESS = 0;
+    ON_FAILURE = 1;
+    ON_TIMEOUT = 3;
+    ALWAYS = 2;
+  }
+  string name = 1;
+  oneof instruction {
+    ExitInstruction exit_instruction = 2;
+    ScriptInstruction script_instruction = 3;
+    BackgroundScriptInstruction background_script_instruction = 4;
+    CacheInstruction cache_instruction = 5;
+    UploadCacheInstruction upload_cache_instruction = 6;
+    CloneInstruction clone_instruction = 7;
+    FileInstruction file_instruction = 8;
+    ArtifactsInstruction artifacts_instruction = 9;
+    WaitForTerminalInstruction wait_for_terminal_instruction = 12;
+  }
+  CommandExecutionBehavior execution_behaviour = 10;
+  map<string, string> properties = 11;
+}
+
+message ExitInstruction {
+}
+
+message ScriptInstruction {
+  repeated string scripts = 1;
+}
+
+message BackgroundScriptInstruction {
+  repeated string scripts = 1;
+}
+
+message CacheInstruction {
+  string folder = 1;
+  repeated string folders = 5;
+
+  /*
+   * Derive final cache key either from a script output, or a static value.
+   * The latter can be easily checked against a GraphQL API from a Starlark
+   * script to allow implementing custom logic.
+   *
+   * These two fields are mutually exclusive.
+   */
+  repeated string fingerprint_scripts = 2;
+  string fingerprint_key = 6;
+
+  repeated string populate_scripts = 3;
+  bool reupload_on_changes = 4;
+}
+
+message UploadCacheInstruction {
+  string cache_name = 1;
+}
+
+message CloneInstruction {
+}
+
+message FileInstruction {
+  string destination_path = 1;
+  oneof source {
+    string from_environment_variable = 2;
+    string from_contents = 3;
+  }
+}
+
+message ArtifactsInstruction {
+  repeated string paths = 1;
+  string type = 2;
+  string format = 3;
+}
+
+message WaitForTerminalInstruction {
+  string terminal_server_address = 1;
+}
+
+enum Platform {
+  LINUX = 0;
+  WINDOWS = 1;
+  DARWIN = 2;
+}
+
+enum Architecture {
+  AMD64 = 0;
+  ARM64 = 1;
+}
+
+message PipeInstance {
+  float cpu = 1;
+  uint32 memory = 2;
+}
+
+message ContainerInstance {
+  reserved 11;
+
+  string image = 1;
+  float cpu = 2;
+  uint32 memory = 3; // in MB
+  repeated AdditionalContainer additional_containers = 4;
+  Platform platform = 5;
+  string dockerfile = 6;
+  string os_version = 7;
+  string registry_config = 8;
+  map<string, string> docker_arguments = 9;
+  bool privileged = 10;
+  bool use_in_memory_disk = 12;
+  bool greedy = 13;
+  Architecture architecture = 14;
+}
+
+message PortMapping {
+  uint32 container_port = 1;
+  uint32 host_port = 2;
+}
+
+message AdditionalContainer {
+  string name = 1;
+  string image = 2;
+  float cpu = 3;
+  uint32 memory = 4; // in MB
+  uint32 container_port = 5;
+  map<string, string> environment = 6;
+  repeated string command = 7;
+  repeated string readiness_command = 8;
+  bool privileged = 9;
+  uint32 host_port = 10;
+  repeated PortMapping ports = 11;
+}
+
+message PrebuiltImageInstance {
+  reserved 4, 5;
+  string repository = 1;
+  Platform platform = 2;
+  string reference = 3;
+  string dockerfile = 6;
+  map<string, string> arguments = 7;
+}
+
+message Volume {
+  string source = 1;
+  string target = 2;
+  bool read_only = 3;
+}
+
+message Isolation {
+  message None {
+    // no parameters
+  }
+
+  message Parallels {
+    string image = 1;
+    string user = 2;
+    string password = 3;
+    Platform platform = 4;
+  }
+
+  message Container {
+    string image = 1;
+    float cpu = 2;
+    uint32 memory = 3; // in MB
+    repeated Volume volumes = 4;
+    string dockerfile = 5;
+    map<string, string> docker_arguments = 6;
+    Platform platform = 7;
+  }
+
+  message Tart {
+    string image = 1;
+    string user = 2;
+    string password = 3;
+    uint32 port = 11;
+    uint32 cpu = 4; // requested number of CPUs
+    uint32 memory = 5; // requested amount of memory in mebibytes
+
+    // Whether to enable Softnet[1] networking
+    //
+    // [1]: https://github.com/cirruslabs/softnet
+    bool softnet = 6;
+
+    // Whether to mount a temporary working directory
+    // from host to speed-up I/O, see [1] for more details.
+    //
+    // [1]: https://github.com/cirruslabs/cirrus-cli/issues/605
+    bool mount_temporary_working_directory_from_host = 7;
+
+    // VM display resolution in a format of <width>x<height>. For example, 1200x800
+    string display = 8;
+
+    message Volume {
+      string name = 1;
+      string source = 2;
+      string target = 3;
+      bool read_only = 4;
+      bool cleanup = 5;
+    }
+    repeated Volume volumes = 9;
+
+    uint32 disk_size = 10; // requested disk size in gigabytes
+  }
+
+  message Vetu {
+    string image = 1;
+    string user = 2;
+    string password = 3;
+    uint32 port = 9;
+    uint32 cpu = 4; // requested number of CPUs
+    uint32 memory = 5; // requested amount of memory in mebibytes
+
+    message Bridged {
+      string interface = 1;
+    }
+
+    message Host {
+      // nothing for now
+    }
+
+    oneof networking {
+      Bridged bridged = 6;
+      Host host = 7;
+    }
+
+    uint32 disk_size = 8; // requested disk size in gigabytes
+  }
+
+  oneof type {
+    None none = 1;
+    Parallels parallels = 2;
+    Container container = 3;
+    Tart tart = 4;
+    Vetu vetu = 5;
+  }
+}
+
+message PersistentWorkerInstance {
+  map<string, string> labels = 1;
+  Isolation isolation = 2;
+  map<string, double> resources_to_acquire = 3;
+}
+
+message MacOSInstance {
+  string image = 1;
+  string user = 2;
+  string password = 3;
+  uint32 cpu = 4; // requested number of CPUs
+  uint32 memory = 5; // requested amount of memory in mebibytes
+}
+
+message DockerBuilder {
+  Platform platform = 1;
+  string os_version = 2;
+}
+
+message GenerateURLResponse {
+  string url = 1;
+  map<string, string> extra_headers = 2;
+}
+
+message GenerateURLsResponse {
+  repeated string urls = 1;
+}
