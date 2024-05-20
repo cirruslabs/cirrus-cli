@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/bmatcuk/doublestar"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
@@ -143,10 +144,24 @@ func test(cmd *cobra.Command, args []string) error {
 	// Discover tests
 	var testDirs []string
 	err := filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
-		// Does it look like a Starlark test?
-		if info.Name() == ".cirrus.expected.yml" {
-			testDirs = append(testDirs, filepath.Dir(path))
+		if err != nil {
+			return err
 		}
+
+		// Does it look like a Starlark test?
+		if info.Name() != ".cirrus.expected.yml" {
+			return nil
+		}
+
+		ok, err := match(args, path)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return nil
+		}
+
+		testDirs = append(testDirs, filepath.Dir(path))
 
 		return nil
 	})
@@ -221,6 +236,32 @@ func test(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func match(globs []string, path string) (bool, error) {
+	if len(globs) == 0 {
+		return true, nil
+	}
+
+	for _, glob := range globs {
+		fullMatch, err := doublestar.PathMatch(glob, filepath.Dir(path))
+		if err != nil {
+			return false, err
+		}
+		if fullMatch {
+			return true, nil
+		}
+
+		directoryMatch, err := doublestar.PathMatch(glob, filepath.Base(filepath.Dir(path)))
+		if err != nil {
+			return false, err
+		}
+		if directoryMatch {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 func logDifferenceIfAny(logger *echelon.Logger, where string, a, b string) *Comparison {
 	if a == b {
 		return &Comparison{FoundDifference: false}
@@ -245,7 +286,7 @@ func logDifferenceIfAny(logger *echelon.Logger, where string, a, b string) *Comp
 
 func NewTestCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "test",
+		Use:   "test [GLOB ...]",
 		Short: "Discover and run Starlark tests",
 		RunE:  test,
 	}
