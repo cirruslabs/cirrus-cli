@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bmatcuk/doublestar"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/environment"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
@@ -167,6 +168,10 @@ func test(cmd *cobra.Command, args []string) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	if len(args) != 0 && len(testDirs) == 0 {
+		return helpers.NewExitCodeError(2, fmt.Errorf("no tests matched"))
 	}
 
 	// Configure hierarchical progress renderer

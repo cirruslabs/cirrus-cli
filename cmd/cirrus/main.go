@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"github.com/breml/rootcerts/embedded"
 	"github.com/cirruslabs/cirrus-cli/internal/agent"
 	"github.com/cirruslabs/cirrus-cli/internal/commands"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/opentelemetry"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/getsentry/sentry-go"
@@ -80,10 +82,20 @@ func main() {
 		sentry.CaptureException(err)
 		sentry.Flush(2 * time.Second)
 
-		// Capture the error into stderr and terminate
-		//nolint:gocritic // "log.Fatal will exit, and `defer sentry.Recover()` will not run" — it's OK,
+		// Capture the error into stderr
+		_, _ = fmt.Fprintln(os.Stderr, err)
+
+		// Terminate
+		exitCode := 1
+
+		var exitCodeError helpers.ExitCodeError
+		if errors.As(err, &exitCodeError) {
+			exitCode = exitCodeError.ExitCode()
+		}
+
+		//nolint:gocritic // "os.Exit will exit, and `defer sentry.Recover()` will not run" — it's OK,
 		// since we're already capturing the error above
-		log.Fatal(err)
+		os.Exit(exitCode)
 	}
 }
 
