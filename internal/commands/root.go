@@ -11,9 +11,11 @@ import (
 
 func NewRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "cirrus",
-		Short:   "Cirrus CLI",
-		Version: version.FullVersion,
+		Use:           "cirrus",
+		Short:         "Cirrus CLI",
+		Version:       version.FullVersion,
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
 
 	commands := []*cobra.Command{
