@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"github.com/samber/lo"
 	"reflect"
 	"strings"
 )
@@ -181,15 +182,32 @@ func (node *Node) MergeFrom(other *Node) {
 			}
 		}
 	case *ListValue:
-		for i, otherChild := range other.Children {
-			if i < len(node.Children) {
-				// We have a counterpart child, do a merge
-				node.Children[i].MergeFrom(otherChild)
-			} else {
-				// They have more children that we do, simply append them one by one
-				node.Children = append(node.Children, otherChild.CopyWithParent(node))
+		// The strange logic below is only needed to make the tests
+		// overriding the "additional_containers:" field pass.
+		//
+		// However, it works very awkwardly for a lot of other
+		// use-cases, because, well, merging lists like that is
+		// just asking for it.
+		//
+		// Let's only allow this logic for "additional_containers:"
+		// and deprecate for the rest of the fields.
+		if node.Name == "additional_containers" {
+			for i, otherChild := range other.Children {
+				if i < len(node.Children) {
+					// We have a counterpart child, do a merge
+					node.Children[i].MergeFrom(otherChild)
+				} else {
+					// They have more children that we do, simply append them one by one
+					node.Children = append(node.Children, otherChild.CopyWithParent(node))
+				}
 			}
+
+			break
 		}
+
+		node.Children = lo.Map(other.Children, func(child *Node, _ int) *Node {
+			return child.CopyWithParent(node)
+		})
 	case *ScalarValue:
 		node.Value = other.Value
 	}
