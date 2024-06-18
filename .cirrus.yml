@@ -90,10 +90,8 @@ task:
 task:
   name: Release (Dry Run)
   only_if: $CIRRUS_TAG == ''
-  container:
-    image: golang:latest
-    cpu: 4
-    memory: 12G
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-runner:sonoma
   env:
     MACOS_SIGN_P12: ENCRYPTED[!805a27ad934b0c3d9e9f12309003ec9a0e7c3f0c9ac6551e5bda30af0142d7dd56a48a50d47ebb8e10c80a266b3c30f6!]
     MACOS_SIGN_PASSWORD: ENCRYPTED[!9c9b2cf6ecebdd35fdedb4de498b7261b9eef847e5874c103a1ba50f3e3d50e7b725322d7bef2aba438a375b6562043d!]
@@ -101,10 +99,8 @@ task:
     MACOS_NOTARY_KEY_ID: ENCRYPTED[!af9e5da1010a6b04e548ef494acc77a6e0ce176549de98f81c5b5cdd72856de09f77e51cf0849e3c4b7a2d2c22f25ca8!]
     MACOS_NOTARY_KEY: ENCRYPTED[!c70c53f3e6c163931c7cdf9d90aff8934ef21d5dd1090158688e00b94e97c68257d9cf4ae1df873e6ae0d949866aee72!]
   install_script:
-    - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/sources.list.d/goreleaser.list
-    - apt-get update
-    - apt-get -y install goreleaser-pro
-  release_script: goreleaser build --snapshot
+    - brew install go goreleaser/tap/goreleaser-pro
+  goreleaser_script: goreleaser release --skip-publish --snapshot --clean
   binaries_artifacts:
     path: "dist/cirrus_*/cirrus*"
 
@@ -114,6 +110,8 @@ task:
   depends_on:
     - Lint
     - Tests
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-runner:sonoma
   env:
     MACOS_SIGN_P12: ENCRYPTED[!805a27ad934b0c3d9e9f12309003ec9a0e7c3f0c9ac6551e5bda30af0142d7dd56a48a50d47ebb8e10c80a266b3c30f6!]
     MACOS_SIGN_PASSWORD: ENCRYPTED[!9c9b2cf6ecebdd35fdedb4de498b7261b9eef847e5874c103a1ba50f3e3d50e7b725322d7bef2aba438a375b6562043d!]
@@ -126,15 +124,8 @@ task:
     SENTRY_ORG: cirrus-labs
     SENTRY_PROJECT: persistent-workers
     SENTRY_AUTH_TOKEN: ENCRYPTED[!c16a5cf7da5f856b4bc2f21fe8cb7aa2a6c981f851c094ed4d3025fd02ea59a58a86cee8b193a69a1fc20fa217e56ac3!]
-  container:
-    image: golang:latest
-    cpu: 4
-    memory: 12G
   install_script:
-    - curl -sL https://sentry.io/get-cli/ | bash
-    - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/sources.list.d/goreleaser.list
-    - apt-get update
-    - apt-get -y install goreleaser-pro
+    - brew install go goreleaser/tap/goreleaser-pro
   release_script: goreleaser
   create_sentry_release_script:
     - export SENTRY_RELEASE="cirrus-cli@$CIRRUS_TAG"
