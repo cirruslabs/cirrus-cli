@@ -72,5 +72,3 @@ notarize:
       sign:
         certificate: "{{.Env.MACOS_SIGN_P12}}"
         password: "{{.Env.MACOS_SIGN_PASSWORD}}"
-
-      notarize:
