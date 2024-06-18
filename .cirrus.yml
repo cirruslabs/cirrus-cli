@@ -100,7 +100,7 @@ task:
     MACOS_NOTARY_KEY: ENCRYPTED[!c70c53f3e6c163931c7cdf9d90aff8934ef21d5dd1090158688e00b94e97c68257d9cf4ae1df873e6ae0d949866aee72!]
   install_script:
     - brew install go goreleaser/tap/goreleaser-pro
-  goreleaser_script: goreleaser release --skip-publish --snapshot --clean
+  goreleaser_script: goreleaser release --skip=publish --snapshot --clean
   binaries_artifacts:
     path: "dist/cirrus_*/cirrus*"
 
