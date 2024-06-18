@@ -12,7 +12,7 @@ builds:
       -X github.com/cirruslabs/cirrus-cli/internal/version.Version={{.Version}}
       -X github.com/cirruslabs/cirrus-cli/internal/version.Commit={{.ShortCommit}}
     env:
-      - CGO_ENABLED={{if eq .Os "darwin"}}1{{else}}0{{end}}
+      - CGO_ENABLED=0
     goos:
       - linux
       - darwin
