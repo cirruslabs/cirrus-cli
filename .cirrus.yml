@@ -101,7 +101,7 @@ task:
     MACOS_NOTARY_KEY_ID: ENCRYPTED[!af9e5da1010a6b04e548ef494acc77a6e0ce176549de98f81c5b5cdd72856de09f77e51cf0849e3c4b7a2d2c22f25ca8!]
     MACOS_NOTARY_KEY: ENCRYPTED[!c70c53f3e6c163931c7cdf9d90aff8934ef21d5dd1090158688e00b94e97c68257d9cf4ae1df873e6ae0d949866aee72!]
   install_script:
-    - curl -sfL https://goreleaser.com/static/run | VERSION=nightly DISTRIBUTION=pro bash -s -- release --clean
+    - curl -sfL https://goreleaser.com/static/run | VERSION=nightly DISTRIBUTION=oss bash -s -- release --clean
   printenv_script: printenv
   goreleaser_script: goreleaser release --skip=publish --snapshot --clean
   binaries_artifacts:
@@ -127,7 +127,7 @@ task:
     SENTRY_PROJECT: persistent-workers
     SENTRY_AUTH_TOKEN: ENCRYPTED[!c16a5cf7da5f856b4bc2f21fe8cb7aa2a6c981f851c094ed4d3025fd02ea59a58a86cee8b193a69a1fc20fa217e56ac3!]
   install_script:
-    - curl -sfL https://goreleaser.com/static/run | VERSION=nightly DISTRIBUTION=pro bash -s -- release --clean
+    - curl -sfL https://goreleaser.com/static/run | VERSION=nightly DISTRIBUTION=oss bash -s -- release --clean
   printenv_script: printenv
   release_script: goreleaser
   create_sentry_release_script:
