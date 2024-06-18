@@ -107,9 +107,6 @@ task:
 task:
   name: Release
   only_if: $CIRRUS_TAG != ''
-  depends_on:
-    - Lint
-    - Tests
   macos_instance:
     image: ghcr.io/cirruslabs/macos-runner:sonoma
   env:
