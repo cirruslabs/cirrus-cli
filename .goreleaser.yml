@@ -1,3 +1,5 @@
+version: 2
+
 project_name: cirrus
 
 before:
@@ -10,10 +12,9 @@ builds:
       -X github.com/cirruslabs/cirrus-cli/internal/version.Version={{.Version}}
       -X github.com/cirruslabs/cirrus-cli/internal/version.Commit={{.ShortCommit}}
     env:
-      - CGO_ENABLED={{if eq .Runtime.Goos "darwin"}}1{{else}}0{{end}}
+      - CGO_ENABLED=0
     goos:
       - linux
-      - darwin
       - windows
       - freebsd
       - openbsd
@@ -63,3 +64,14 @@ nfpms:
 
 furies:
   - account: cirruslabs
+
+notarize:
+  macos:
+    - enabled: '{{ isEnvSet "MACOS_SIGN_P12" }}'
+      sign:
+        certificate: "{{.Env.MACOS_SIGN_P12}}"
+        password: "{{.Env.MACOS_SIGN_PASSWORD}}"
+      notarize:
+        issuer_id: "{{.Env.MACOS_NOTARY_ISSUER_ID}}"
+        key_id: "{{.Env.MACOS_NOTARY_KEY_ID}}"
+        key: "{{.Env.MACOS_NOTARY_KEY}}"
