@@ -100,6 +100,7 @@ task:
     MACOS_NOTARY_KEY: ENCRYPTED[!c70c53f3e6c163931c7cdf9d90aff8934ef21d5dd1090158688e00b94e97c68257d9cf4ae1df873e6ae0d949866aee72!]
   install_script:
     - brew install go goreleaser/tap/goreleaser-pro
+  printenv_script: printenv
   goreleaser_script: goreleaser release --skip=publish --snapshot --clean
   binaries_artifacts:
     path: "dist/cirrus_*/cirrus*"
@@ -123,6 +124,7 @@ task:
     SENTRY_AUTH_TOKEN: ENCRYPTED[!c16a5cf7da5f856b4bc2f21fe8cb7aa2a6c981f851c094ed4d3025fd02ea59a58a86cee8b193a69a1fc20fa217e56ac3!]
   install_script:
     - brew install go goreleaser/tap/goreleaser-pro
+  printenv_script: printenv
   release_script: goreleaser
   create_sentry_release_script:
     - export SENTRY_RELEASE="cirrus-cli@$CIRRUS_TAG"
