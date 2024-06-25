@@ -188,7 +188,7 @@ task:
     image: bufbuild/buf
 
   login_script: echo $BUF_TOKEN | buf registry login --username $BUF_LOGIN --token-stdin
-  push_script: buf push --tag $CIRRUS_TAG
+  push_script: buf push --label $CIRRUS_TAG
 
   env:
     BUF_LOGIN: fkorotkov
