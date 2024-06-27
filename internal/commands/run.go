@@ -276,7 +276,7 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&dockerfileImageTemplate, "dockerfile-image-template",
 		"gcr.io/cirrus-ci-community/%s:latest", "image that Dockerfile as CI environment feature should produce")
 	cmd.PersistentFlags().BoolVar(&dockerfileImagePush, "dockerfile-image-push",
-		false, "whether to push whe image produced by the Dockerfile as CI environment feature")
+		false, "whether to push the image produced by the Dockerfile as CI environment feature")
 
 	// Tart-related flags
 	cmd.PersistentFlags().BoolVar(&tartLazyPull, "tart-lazy-pull", false,
