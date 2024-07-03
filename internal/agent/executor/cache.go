@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"github.com/bmatcuk/doublestar"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/environment"
@@ -16,6 +17,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -57,17 +59,22 @@ func (executor *Executor) DownloadCache(
 	var partiallyExpandedFolders []string
 
 	for _, folder := range instruction.Folders {
-		folder = custom_env.ExpandText(folder)
+		expandedFolder := custom_env.ExpandText(folder)
 
-		folder, err := filepath.Abs(folder)
-		if err != nil {
+		absFolder, err := filepath.Abs(expandedFolder)
+		// check if `getwd: no such file or directory`
+		var syscallError *os.SyscallError
+		if errors.As(err, &syscallError) && syscallError.Syscall == "getwd" && !filepath.IsAbs(expandedFolder) {
+			logUploader.Write([]byte("\nFailed to get process working directory. Assuming CIRRUS_WORKING_DIR\n"))
+			absFolder = path.Join(custom_env.Get("CIRRUS_WORKING_DIR"), expandedFolder)
+		} else if err != nil {
 			message := fmt.Sprintf("\nFailed to compute absolute path for cache folder '%s': %v\n", folder, err)
 			executor.cacheAttempts.Failed(cacheKey, message)
 			logUploader.Write([]byte(message))
 			return false
 		}
 
-		partiallyExpandedFolders = append(partiallyExpandedFolders, folder)
+		partiallyExpandedFolders = append(partiallyExpandedFolders, absFolder)
 	}
 
 	// Determine the base folder
