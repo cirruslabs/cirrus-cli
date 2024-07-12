@@ -48,7 +48,8 @@ type Worker struct {
 	tasksCounter      metric.Int64Counter
 	standbyHitCounter metric.Int64Counter
 
-	logger logrus.FieldLogger
+	logger        logrus.FieldLogger
+	echelonLogger *echelon.Logger
 
 	standbyConfig   *StandbyConfig
 	standbyInstance abstract.Instance
@@ -65,7 +66,8 @@ func New(opts ...Option) (*Worker, error) {
 		tasks:           xsync.NewMapOf[int64, *Task](),
 		taskCompletions: make(chan int64),
 
-		logger: logrus.New(),
+		logger:        logrus.New(),
+		echelonLogger: echelon.NewLogger(echelon.TraceLevel, renderers.NewSimpleRenderer(os.Stdout, nil)),
 	}
 
 	// Apply options
@@ -242,11 +244,9 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 		return
 	}
 
-	logger := echelon.NewLogger(echelon.TraceLevel, renderers.NewSimpleRenderer(os.Stdout, nil))
-
 	worker.logger.Debugf("warming-up the standby instance")
 
-	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil, logger); err != nil {
+	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil, worker.echelonLogger); err != nil {
 		worker.logger.Errorf("failed to warm-up a standby instance: %v", err)
 
 		if err := standbyInstance.Close(ctx); err != nil {
