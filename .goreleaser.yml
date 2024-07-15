@@ -25,6 +25,9 @@ builds:
       - arm64
       - s390x
       - ppc64le
+    hooks:
+      post:
+        - codesign --remove-signature {{ .Path }}
 
 archives:
   - id: binary
