@@ -1,3 +1,5 @@
+use_compute_credits: true
+
 docker_builder:
   name: Test (Linux with Docker)
   alias: Tests
@@ -90,22 +92,18 @@ task:
 task:
   name: Release (Dry Run)
   only_if: $CIRRUS_TAG == ''
-  container:
-    image: golang:latest
-    cpu: 4
-    memory: 12G
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-runner:sonoma
   env:
     MACOS_SIGN_P12: ENCRYPTED[!183482723ca1a95f9c4439f7a79c9d3b115472bb18c739ed1586e12d3914ccf94ade8169eeda7332fc204f8be9c27d9f!]
     MACOS_SIGN_PASSWORD: ENCRYPTED[!417423346c567f12007f42d084bff1cfee30ee14f7e8258550157679a269c70d541c9f19224224ab0293b10f2c6d4c5e!]
     MACOS_NOTARY_ISSUER_ID: ENCRYPTED[!74076906e9fa36bca3c1da1637b0759b58bb009eb1a707446896eefad3767e8dba1d0f87e71106b98cde98ac4b037a2a!]
     MACOS_NOTARY_KEY_ID: ENCRYPTED[!af9e5da1010a6b04e548ef494acc77a6e0ce176549de98f81c5b5cdd72856de09f77e51cf0849e3c4b7a2d2c22f25ca8!]
     MACOS_NOTARY_KEY: ENCRYPTED[!c70c53f3e6c163931c7cdf9d90aff8934ef21d5dd1090158688e00b94e97c68257d9cf4ae1df873e6ae0d949866aee72!]
+    GORELEASER_KEY: ENCRYPTED[!9b80b6ef684ceaf40edd4c7af93014ee156c8aba7e6e5795f41c482729887b5c31f36b651491d790f1f668670888d9fd!]
 
   install_script:
-    - curl -sL https://sentry.io/get-cli/ | bash
-    - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/sources.list.d/goreleaser.list
-    - apt-get update
-    - apt-get -y install goreleaser-pro
+    - brew update && brew install go goreleaser/tap/goreleaser-pro getsentry/tools/sentry-cli
   goreleaser_script: goreleaser release --skip=publish --snapshot --clean --verbose
   binaries_artifacts:
     path: "dist/cirrus_*/cirrus*"
@@ -113,10 +111,8 @@ task:
 task:
   name: Release
   only_if: $CIRRUS_TAG != ''
-  container:
-    image: golang:latest
-    cpu: 4
-    memory: 12G
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-runner:sonoma
   env:
     MACOS_SIGN_P12: ENCRYPTED[!183482723ca1a95f9c4439f7a79c9d3b115472bb18c739ed1586e12d3914ccf94ade8169eeda7332fc204f8be9c27d9f!]
     MACOS_SIGN_PASSWORD: ENCRYPTED[!417423346c567f12007f42d084bff1cfee30ee14f7e8258550157679a269c70d541c9f19224224ab0293b10f2c6d4c5e!]
@@ -130,10 +126,7 @@ task:
     SENTRY_PROJECT: persistent-workers
     SENTRY_AUTH_TOKEN: ENCRYPTED[!c16a5cf7da5f856b4bc2f21fe8cb7aa2a6c981f851c094ed4d3025fd02ea59a58a86cee8b193a69a1fc20fa217e56ac3!]
   install_script:
-    - curl -sL https://sentry.io/get-cli/ | bash
-    - echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/sources.list.d/goreleaser.list
-    - apt-get update
-    - apt-get -y install goreleaser-pro
+    - brew update && brew install go goreleaser/tap/goreleaser-pro getsentry/tools/sentry-cli
   release_script: goreleaser
   create_sentry_release_script:
     - export SENTRY_RELEASE="cirrus-cli@$CIRRUS_TAG"
