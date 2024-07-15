@@ -1,3 +1,5 @@
+use_compute_credits: true
+
 docker_builder:
   name: Test (Linux with Docker)
   alias: Tests
