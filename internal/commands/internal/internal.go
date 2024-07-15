@@ -2,6 +2,7 @@ package internal
 
 import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/internal/metrics"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/internal/test"
 	"github.com/spf13/cobra"
 )
@@ -15,6 +16,7 @@ func NewRootCmd() *cobra.Command {
 
 	commands := []*cobra.Command{
 		test.NewTestCmd(),
+		metrics.NewMetricsCmd(),
 	}
 
 	return helpers.ConsumeSubCommands(cmd, commands)
