@@ -25,6 +25,9 @@ builds:
       - arm64
       - s390x
       - ppc64le
+    hooks:
+      post:
+        - bash .ci/remove-signature.sh {{ .Path }}
 
 archives:
   - id: binary
