@@ -27,7 +27,7 @@ builds:
       - ppc64le
     hooks:
       post:
-        - codesign --remove-signature {{ .Path }}
+        - bash .ci/remove-signature.sh {{ .Path }}
 
 archives:
   - id: binary
