@@ -325,3 +325,20 @@ standby:
 On `amd64`, simply replace the `image` with `ghcr.io/cirruslabs/ubuntu-runner-amd64:latest`.
 
 Currently only Tart and Vetu isolations are supported for standby.
+
+## Observability
+
+Persistent worker produces some useful OpenTelemetry metrics. Metrics are scoped with `org.cirruslabs.persistent_worker` prefix and include information about resource utilization, running tasks and VM images used.
+
+By default, the telemetry is sent to https://localhost:4317 using the gRPC protocol and to http://localhost:4318 using the HTTP protocol.
+
+You can override this by setting the [standard OpenTelemetry environment variable](https://opentelemetry.io/docs/specs/otel/configuration/sdk-environment-variables/) `OTEL_EXPORTER_OTLP_ENDPOINT`.
+
+Please refer to [OTEL Collector documentation](https://opentelemetry.io/docs/collector/) for instruction on how to install and configure the collector or find out if your SaaS monitoring has an available OTEL endpoint (see [Datadog](https://docs.datadoghq.com/opentelemetry/) and [Honeycomb](https://docs.honeycomb.io/send-data/opentelemetry/) as an example).
+
+### Sending metrics to Google Cloud Platform
+
+There are two standard options of ingesting metrics procuded by the persistent worker into the GCP:
+
+* [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/) + [Google Cloud Exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/googlecloudexporter/README.md) — open-source solution that can be later re-purposed to send metrics to any OTLP-compatible endpoint by swapping a single [exporter](https://opentelemetry.io/docs/collector/configuration/#exporters)
+* [Ops Agent](https://cloud.google.com/monitoring/agent/ops-agent/otlp) — Google-backed solution with a syntax similar to OpenTelemetry Collector, but tied to GCP-only
