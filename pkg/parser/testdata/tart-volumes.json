@@ -29,7 +29,9 @@
               "source": "/var/agent-dir",
               "target": "/tmp/agent-dir"
             }
-          ]
+          ],
+          "user": "admin",
+          "password": "admin"
         }
       }
     },
@@ -73,7 +75,9 @@
               "source": "/tmp/scratch-dir",
               "target": "/tmp/scratch-dir"
             }
-          ]
+          ],
+          "user": "admin",
+          "password": "admin"
         }
       }
     },

@@ -19,6 +19,7 @@
       "isolation": {
         "vetu": {
           "image": "ghcr.io/cirruslabs/ubuntu:latest",
+          "user": "root",
           "password": "doesn't matter",
           "port": 2222
         }

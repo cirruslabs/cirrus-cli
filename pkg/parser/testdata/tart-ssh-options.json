@@ -22,6 +22,7 @@
       "isolation": {
         "tart": {
           "image": "ghcr.io/cirruslabs/macos-sonoma-base:latest",
+          "user": "root",
           "password": "doesn't matter",
           "port": 2222
         }

@@ -3154,6 +3154,7 @@
                       "type": "string"
                     },
                     "password": {
+                      "default": "admin",
                       "description": "SSH password.",
                       "type": "string"
                     },
@@ -3166,6 +3167,7 @@
                       "type": "boolean"
                     },
                     "user": {
+                      "default": "admin",
                       "description": "SSH username.",
                       "type": "string"
                     },
@@ -3223,6 +3225,7 @@
                       "type": "string"
                     },
                     "password": {
+                      "default": "admin",
                       "description": "SSH password.",
                       "type": "string"
                     },
@@ -3231,6 +3234,7 @@
                       "type": "integer"
                     },
                     "user": {
+                      "default": "admin",
                       "description": "SSH username.",
                       "type": "string"
                     }
@@ -3612,6 +3616,7 @@
                   "type": "string"
                 },
                 "password": {
+                  "default": "admin",
                   "description": "SSH password.",
                   "type": "string"
                 },
@@ -3624,6 +3629,7 @@
                   "type": "boolean"
                 },
                 "user": {
+                  "default": "admin",
                   "description": "SSH username.",
                   "type": "string"
                 },
@@ -3681,6 +3687,7 @@
                   "type": "string"
                 },
                 "password": {
+                  "default": "admin",
                   "description": "SSH password.",
                   "type": "string"
                 },
@@ -3689,6 +3696,7 @@
                   "type": "integer"
                 },
                 "user": {
+                  "default": "admin",
                   "description": "SSH username.",
                   "type": "string"
                 }
