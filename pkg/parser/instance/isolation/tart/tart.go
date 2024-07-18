@@ -21,7 +21,10 @@ type Tart struct {
 func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Tart {
 	tart := &Tart{
 		proto: &api.Isolation_Tart_{
-			Tart: &api.Isolation_Tart{},
+			Tart: &api.Isolation_Tart{
+				User:     "admin",
+				Password: "admin",
+			},
 		},
 	}
 
@@ -37,7 +40,7 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Tart {
 		return nil
 	})
 
-	userSchema := schema.String("SSH username.")
+	userSchema := schema.StringWithDefaultValue("SSH username.", tart.proto.Tart.User)
 	tart.OptionalField(nameable.NewSimpleNameable("user"), userSchema, func(node *node.Node) error {
 		user, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
@@ -49,7 +52,7 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Tart {
 		return nil
 	})
 
-	passwordSchema := schema.String("SSH password.")
+	passwordSchema := schema.StringWithDefaultValue("SSH password.", tart.proto.Tart.Password)
 	tart.OptionalField(nameable.NewSimpleNameable("password"), passwordSchema, func(node *node.Node) error {
 		password, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {

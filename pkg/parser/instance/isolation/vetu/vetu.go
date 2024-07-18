@@ -21,7 +21,10 @@ type Vetu struct {
 func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Vetu {
 	vetu := &Vetu{
 		proto: &api.Isolation_Vetu_{
-			Vetu: &api.Isolation_Vetu{},
+			Vetu: &api.Isolation_Vetu{
+				User:     "admin",
+				Password: "admin",
+			},
 		},
 	}
 
@@ -37,7 +40,7 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Vetu {
 		return nil
 	})
 
-	userSchema := schema.String("SSH username.")
+	userSchema := schema.StringWithDefaultValue("SSH username.", vetu.proto.Vetu.User)
 	vetu.OptionalField(nameable.NewSimpleNameable("user"), userSchema, func(node *node.Node) error {
 		user, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
@@ -49,7 +52,7 @@ func New(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Vetu {
 		return nil
 	})
 
-	passwordSchema := schema.String("SSH password.")
+	passwordSchema := schema.StringWithDefaultValue("SSH password.", vetu.proto.Vetu.Password)
 	vetu.OptionalField(nameable.NewSimpleNameable("password"), passwordSchema, func(node *node.Node) error {
 		password, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {

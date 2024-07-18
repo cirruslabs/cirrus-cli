@@ -69,6 +69,14 @@ func String(description string) *schema.Schema {
 	}
 }
 
+func StringWithDefaultValue(description string, defaultValue string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.PrimitiveTypes{schema.StringType},
+		Description: description,
+		Default:     defaultValue,
+	}
+}
+
 func Memory() *schema.Schema {
 	return &schema.Schema{
 		Type:    schema.PrimitiveTypes{schema.StringType},
