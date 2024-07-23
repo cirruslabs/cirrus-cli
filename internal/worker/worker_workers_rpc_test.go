@@ -46,7 +46,7 @@ func (workersRPC *WorkersRPC) Poll(ctx context.Context, request *api.PollRequest
 		return &api.PollResponse{
 			TasksToStart: []*api.PollResponse_AgentAwareTask{
 				{
-					TaskId:       taskID,
+					TaskIdOld:    taskID,
 					ClientSecret: clientSecret,
 					ServerSecret: serverSecret,
 					Isolation:    workersRPC.Isolation,
@@ -63,7 +63,7 @@ func (workersRPC *WorkersRPC) Poll(ctx context.Context, request *api.PollRequest
 
 	if workersRPC.ShouldStopTasks {
 		pollResponse := &api.PollResponse{
-			TasksToStop: []int64{taskID},
+			TasksToStopOld: []int64{taskID},
 		}
 
 		workersRPC.ShouldStopTasks = false
@@ -74,16 +74,22 @@ func (workersRPC *WorkersRPC) Poll(ctx context.Context, request *api.PollRequest
 	return &api.PollResponse{}, nil
 }
 
-func (workersRPC *WorkersRPC) TaskStarted(ctx context.Context, request *api.TaskIdentification) (*empty.Empty, error) {
-	if request.TaskId == taskID {
+func (workersRPC *WorkersRPC) TaskStarted(
+	ctx context.Context,
+	request *api.WorkerTaskIdentification,
+) (*empty.Empty, error) {
+	if request.TaskIdOld == taskID {
 		workersRPC.TaskWasStarted = true
 	}
 
 	return &empty.Empty{}, nil
 }
 
-func (workersRPC *WorkersRPC) TaskStopped(ctx context.Context, request *api.TaskIdentification) (*empty.Empty, error) {
-	if request.TaskId == taskID {
+func (workersRPC *WorkersRPC) TaskStopped(
+	ctx context.Context,
+	request *api.WorkerTaskIdentification,
+) (*empty.Empty, error) {
+	if request.TaskIdOld == taskID {
 		workersRPC.TaskWasStopped = true
 	}
 
@@ -91,7 +97,7 @@ func (workersRPC *WorkersRPC) TaskStopped(ctx context.Context, request *api.Task
 }
 
 func (workersRPC *WorkersRPC) TaskFailed(ctx context.Context, request *api.TaskFailedRequest) (*empty.Empty, error) {
-	if request.TaskIdentification.TaskId == taskID {
+	if request.TaskIdentification.TaskIdOld == taskID {
 		workersRPC.TaskWasFailed = true
 		workersRPC.TaskFailureMesage = request.Message
 	}

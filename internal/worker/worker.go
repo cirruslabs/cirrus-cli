@@ -22,6 +22,7 @@ import (
 	"math"
 	"os"
 	"runtime"
+	"strconv"
 	"time"
 )
 
@@ -41,8 +42,8 @@ type Worker struct {
 	userSpecifiedLabels    map[string]string
 	userSpecifiedResources map[string]float64
 
-	tasks           *xsync.MapOf[int64, *Task]
-	taskCompletions chan int64
+	tasks           *xsync.MapOf[string, *Task]
+	taskCompletions chan string
 
 	imagesCounter     metric.Int64Counter
 	tasksCounter      metric.Int64Counter
@@ -63,8 +64,8 @@ func New(opts ...Option) (*Worker, error) {
 
 		userSpecifiedLabels: make(map[string]string),
 
-		tasks:           xsync.NewMapOf[int64, *Task](),
-		taskCompletions: make(chan int64),
+		tasks:           xsync.NewMapOf[string, *Task](),
+		taskCompletions: make(chan string),
 
 		logger:        logrus.New(),
 		echelonLogger: echelon.NewLogger(echelon.TraceLevel, renderers.NewSimpleRenderer(os.Stdout, nil)),
@@ -275,16 +276,17 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 
 	request := &api.PollRequest{
 		WorkerInfo:     worker.info(upstream.WorkerName()),
-		RunningTasks:   worker.runningTasks(upstream),
 		ResourcesInUse: worker.resourcesInUse(),
 	}
+
+	request.RunningTasks, request.RunningTasksOld = FromNewTasks(worker.runningTasks(upstream))
 
 	response, err := upstream.Poll(ctx, request)
 	if err != nil {
 		return err
 	}
 
-	for _, taskToStop := range response.TasksToStop {
+	for _, taskToStop := range ToNewTasks(response.TasksToStop, response.TasksToStopOld) {
 		worker.stopTask(taskToStop)
 	}
 
@@ -358,6 +360,40 @@ func (worker *Worker) pollIntervalSeconds() uint32 {
 		if upstream.PollIntervalSeconds() < result {
 			result = upstream.PollIntervalSeconds()
 		}
+	}
+
+	return result
+}
+
+func ToNewTask(newTaskID string, oldTaskID int64) string {
+	if newTaskID != "" {
+		return newTaskID
+	}
+
+	return strconv.FormatInt(oldTaskID, 10)
+}
+
+func FromNewTasks(tasks []string) ([]string, []int64) {
+	var newTaskIDs []string
+	var oldTaskIDs []int64
+
+	for _, task := range tasks {
+		taskID, err := strconv.ParseInt(task, 10, 64)
+		if err != nil {
+			newTaskIDs = append(newTaskIDs, task)
+		} else {
+			oldTaskIDs = append(oldTaskIDs, taskID)
+		}
+	}
+
+	return newTaskIDs, oldTaskIDs
+}
+
+func ToNewTasks(newTaskIDs []string, oldTaskIDs []int64) []string {
+	result := newTaskIDs
+
+	for _, oldTaskID := range oldTaskIDs {
+		result = append(result, strconv.FormatInt(oldTaskID, 10))
 	}
 
 	return result

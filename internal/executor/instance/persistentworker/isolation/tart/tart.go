@@ -19,7 +19,6 @@ import (
 	"golang.org/x/crypto/ssh"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -245,7 +244,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		if config.DirtyMode && config.ProjectDir != "" {
 			automountProjectDir = config.ProjectDir
 		}
-		err = tart.bootVM(ctx, strconv.FormatInt(config.TaskID, 10), config.AdditionalEnvironment,
+		err = tart.bootVM(ctx, config.TaskID, config.AdditionalEnvironment,
 			automountProjectDir, config.TartOptions.LazyPull, config.Logger())
 		if err != nil {
 			return err

@@ -304,9 +304,9 @@ type CirrusWorkersServiceClient interface {
 	// Periodically issued by the registered persistent worker to get new jobs and indicate that it's alive
 	Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error)
 	// Issued by the registered persistent worker to indicate task status
-	TaskStarted(ctx context.Context, in *TaskIdentification, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	TaskStarted(ctx context.Context, in *WorkerTaskIdentification, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	TaskFailed(ctx context.Context, in *TaskFailedRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	TaskStopped(ctx context.Context, in *TaskIdentification, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	TaskStopped(ctx context.Context, in *WorkerTaskIdentification, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UpdateStatus(ctx context.Context, in *UpdateStatusRequest, opts ...grpc.CallOption) (*WorkerStatus, error)
 	QueryRunningTasks(ctx context.Context, in *QueryRunningTasksRequest, opts ...grpc.CallOption) (*QueryRunningTasksResponse, error)
 }
@@ -339,7 +339,7 @@ func (c *cirrusWorkersServiceClient) Poll(ctx context.Context, in *PollRequest, 
 	return out, nil
 }
 
-func (c *cirrusWorkersServiceClient) TaskStarted(ctx context.Context, in *TaskIdentification, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *cirrusWorkersServiceClient) TaskStarted(ctx context.Context, in *WorkerTaskIdentification, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, CirrusWorkersService_TaskStarted_FullMethodName, in, out, cOpts...)
@@ -359,7 +359,7 @@ func (c *cirrusWorkersServiceClient) TaskFailed(ctx context.Context, in *TaskFai
 	return out, nil
 }
 
-func (c *cirrusWorkersServiceClient) TaskStopped(ctx context.Context, in *TaskIdentification, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *cirrusWorkersServiceClient) TaskStopped(ctx context.Context, in *WorkerTaskIdentification, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, CirrusWorkersService_TaskStopped_FullMethodName, in, out, cOpts...)
@@ -400,9 +400,9 @@ type CirrusWorkersServiceServer interface {
 	// Periodically issued by the registered persistent worker to get new jobs and indicate that it's alive
 	Poll(context.Context, *PollRequest) (*PollResponse, error)
 	// Issued by the registered persistent worker to indicate task status
-	TaskStarted(context.Context, *TaskIdentification) (*emptypb.Empty, error)
+	TaskStarted(context.Context, *WorkerTaskIdentification) (*emptypb.Empty, error)
 	TaskFailed(context.Context, *TaskFailedRequest) (*emptypb.Empty, error)
-	TaskStopped(context.Context, *TaskIdentification) (*emptypb.Empty, error)
+	TaskStopped(context.Context, *WorkerTaskIdentification) (*emptypb.Empty, error)
 	UpdateStatus(context.Context, *UpdateStatusRequest) (*WorkerStatus, error)
 	QueryRunningTasks(context.Context, *QueryRunningTasksRequest) (*QueryRunningTasksResponse, error)
 	mustEmbedUnimplementedCirrusWorkersServiceServer()
@@ -418,13 +418,13 @@ func (UnimplementedCirrusWorkersServiceServer) Register(context.Context, *Regist
 func (UnimplementedCirrusWorkersServiceServer) Poll(context.Context, *PollRequest) (*PollResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Poll not implemented")
 }
-func (UnimplementedCirrusWorkersServiceServer) TaskStarted(context.Context, *TaskIdentification) (*emptypb.Empty, error) {
+func (UnimplementedCirrusWorkersServiceServer) TaskStarted(context.Context, *WorkerTaskIdentification) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaskStarted not implemented")
 }
 func (UnimplementedCirrusWorkersServiceServer) TaskFailed(context.Context, *TaskFailedRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaskFailed not implemented")
 }
-func (UnimplementedCirrusWorkersServiceServer) TaskStopped(context.Context, *TaskIdentification) (*emptypb.Empty, error) {
+func (UnimplementedCirrusWorkersServiceServer) TaskStopped(context.Context, *WorkerTaskIdentification) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TaskStopped not implemented")
 }
 func (UnimplementedCirrusWorkersServiceServer) UpdateStatus(context.Context, *UpdateStatusRequest) (*WorkerStatus, error) {
@@ -483,7 +483,7 @@ func _CirrusWorkersService_Poll_Handler(srv interface{}, ctx context.Context, de
 }
 
 func _CirrusWorkersService_TaskStarted_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TaskIdentification)
+	in := new(WorkerTaskIdentification)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -495,7 +495,7 @@ func _CirrusWorkersService_TaskStarted_Handler(srv interface{}, ctx context.Cont
 		FullMethod: CirrusWorkersService_TaskStarted_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CirrusWorkersServiceServer).TaskStarted(ctx, req.(*TaskIdentification))
+		return srv.(CirrusWorkersServiceServer).TaskStarted(ctx, req.(*WorkerTaskIdentification))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -519,7 +519,7 @@ func _CirrusWorkersService_TaskFailed_Handler(srv interface{}, ctx context.Conte
 }
 
 func _CirrusWorkersService_TaskStopped_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TaskIdentification)
+	in := new(WorkerTaskIdentification)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -531,7 +531,7 @@ func _CirrusWorkersService_TaskStopped_Handler(srv interface{}, ctx context.Cont
 		FullMethod: CirrusWorkersService_TaskStopped_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CirrusWorkersServiceServer).TaskStopped(ctx, req.(*TaskIdentification))
+		return srv.(CirrusWorkersServiceServer).TaskStopped(ctx, req.(*WorkerTaskIdentification))
 	}
 	return interceptor(ctx, in, info, handler)
 }

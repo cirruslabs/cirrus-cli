@@ -22,6 +22,7 @@ import (
 	"io"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -184,7 +185,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		Endpoint:             endpoint.NewLocal(e.rpc.ContainerEndpoint(), e.rpc.DirectEndpoint()),
 		ServerSecret:         e.rpc.ServerSecret(),
 		ClientSecret:         e.rpc.ClientSecret(),
-		TaskID:               task.ID,
+		TaskID:               strconv.FormatInt(task.ID, 10),
 		DirtyMode:            e.dirtyMode,
 		ContainerOptions:     e.containerOptions,
 		TartOptions:          e.tartOptions,

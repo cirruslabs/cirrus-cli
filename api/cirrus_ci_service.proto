@@ -135,9 +135,9 @@ service CirrusWorkersService {
   rpc Poll(PollRequest) returns (PollResponse);
 
   // Issued by the registered persistent worker to indicate task status
-  rpc TaskStarted(TaskIdentification) returns (google.protobuf.Empty);
+  rpc TaskStarted(WorkerTaskIdentification) returns (google.protobuf.Empty);
   rpc TaskFailed(TaskFailedRequest) returns (google.protobuf.Empty);
-  rpc TaskStopped(TaskIdentification) returns (google.protobuf.Empty);
+  rpc TaskStopped(WorkerTaskIdentification) returns (google.protobuf.Empty);
 
   rpc UpdateStatus(UpdateStatusRequest) returns (WorkerStatus);
   rpc QueryRunningTasks(QueryRunningTasksRequest) returns (QueryRunningTasksResponse);
@@ -155,7 +155,8 @@ message RegisterResponse {
 
 message PollRequest {
   WorkerInfo worker_info = 1;
-  repeated int64 running_tasks = 2;
+  repeated int64 running_tasks_old = 2;
+  repeated string running_tasks = 4;
   map<string, double> resources_in_use = 3;
 }
 
@@ -165,17 +166,19 @@ message QueryRunningTasksRequest {
 
 message QueryRunningTasksResponse {
   WorkerStatus status = 1;
-  repeated int64 running_tasks = 2;
+  repeated int64 running_tasks_old = 2;
+  repeated string running_tasks = 3;
 }
 
 message TaskFailedRequest {
-  TaskIdentification task_identification = 1;
+  WorkerTaskIdentification task_identification = 1;
   string message = 2;
 }
 
 message PollResponse {
   message AgentAwareTask {
-    int64 task_id = 1;
+    int64 task_id_old = 1;
+    string task_id = 8;
     string client_secret = 2;
     string server_secret = 3;
     Isolation isolation = 4;
@@ -186,7 +189,8 @@ message PollResponse {
 
   repeated AgentAwareTask tasks_to_start = 1;
 
-  repeated int64 tasks_to_stop = 2;
+  repeated int64 tasks_to_stop_old = 2;
+  repeated string tasks_to_stop = 5;
 
   uint32 poll_interval_in_seconds = 3;
 
@@ -299,6 +303,12 @@ message ReportTerminalLifecycleResponse {
 
 message TaskIdentification {
   int64 task_id = 1;
+  string secret = 2;
+}
+
+message WorkerTaskIdentification {
+  int64 task_id_old = 1;
+  string task_id = 3;
   string secret = 2;
 }
 

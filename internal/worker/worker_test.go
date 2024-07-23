@@ -13,6 +13,7 @@ import (
 	gopsutilprocess "github.com/shirou/gopsutil/v3/process"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -23,6 +24,7 @@ import (
 	"os"
 	"runtime"
 	"testing"
+	"testing/quick"
 	"time"
 )
 
@@ -617,4 +619,21 @@ func TestTaskCancellation(t *testing.T) {
 
 	// Stop the RPC server
 	server.GracefulStop()
+}
+
+func TestNewOldTaskIDs(t *testing.T) {
+	transform := func(input []string) bool {
+		newTaskIDs, oldTaskIDs := worker.FromNewTasks(input)
+
+		output := worker.ToNewTasks(newTaskIDs, oldTaskIDs)
+
+		slices.Sort(input)
+		slices.Sort(output)
+
+		return slices.Compare(input, output) == 0
+	}
+
+	require.NoError(t, quick.Check(transform, &quick.Config{
+		MaxCount: 100_000,
+	}))
 }

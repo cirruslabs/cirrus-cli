@@ -187,7 +187,7 @@ func (upstream *Upstream) TaskFailed(ctx context.Context, request *api.TaskFaile
 	return err
 }
 
-func (upstream *Upstream) TaskStarted(ctx context.Context, request *api.TaskIdentification) error {
+func (upstream *Upstream) TaskStarted(ctx context.Context, request *api.WorkerTaskIdentification) error {
 	if err := upstream.Connect(ctx); err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (upstream *Upstream) TaskStarted(ctx context.Context, request *api.TaskIden
 	return err
 }
 
-func (upstream *Upstream) TaskStopped(ctx context.Context, request *api.TaskIdentification) error {
+func (upstream *Upstream) TaskStopped(ctx context.Context, request *api.WorkerTaskIdentification) error {
 	if err := upstream.Connect(ctx); err != nil {
 		return err
 	}

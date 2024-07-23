@@ -17,7 +17,6 @@ import (
 	"maps"
 	"net/url"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -35,22 +34,25 @@ func (worker *Worker) startTask(
 	upstream *upstreampkg.Upstream,
 	agentAwareTask *api.PollResponse_AgentAwareTask,
 ) {
-	if _, ok := worker.tasks.Load(agentAwareTask.TaskId); ok {
+	taskID := ToNewTask(agentAwareTask.TaskId, agentAwareTask.TaskIdOld)
+
+	if _, ok := worker.tasks.Load(taskID); ok {
 		worker.logger.Warnf("attempted to run task %d which is already running", agentAwareTask.TaskId)
 		return
 	}
 
 	taskCtx, cancel := context.WithCancel(ctx)
-	worker.tasks.Store(agentAwareTask.TaskId, &Task{
+	worker.tasks.Store(taskID, &Task{
 		upstream:       upstream,
 		cancel:         cancel,
 		resourcesToUse: agentAwareTask.ResourcesToUse,
 	})
 	worker.tasksCounter.Add(ctx, 1)
 
-	taskIdentification := &api.TaskIdentification{
-		TaskId: agentAwareTask.TaskId,
-		Secret: agentAwareTask.ClientSecret,
+	taskIdentification := &api.WorkerTaskIdentification{
+		TaskId:    agentAwareTask.TaskId,
+		TaskIdOld: agentAwareTask.TaskIdOld,
+		Secret:    agentAwareTask.ClientSecret,
 	}
 
 	inst, err := worker.getInstance(ctx, agentAwareTask.Isolation)
@@ -105,11 +107,13 @@ func (worker *Worker) runTask(
 	agentAwareTask *api.PollResponse_AgentAwareTask,
 	upstream *upstreampkg.Upstream,
 	inst abstract.Instance,
-	taskIdentification *api.TaskIdentification,
+	taskIdentification *api.WorkerTaskIdentification,
 ) {
 	// Provide tags for Sentry: task ID and upstream worker name
+	taskID := ToNewTask(agentAwareTask.TaskId, agentAwareTask.TaskIdOld)
+
 	cirrusSentryTags := map[string]string{
-		"cirrus.task_id":              strconv.FormatInt(agentAwareTask.TaskId, 10),
+		"cirrus.task_id":              taskID,
 		"cirrus.upstream_worker_name": upstream.WorkerName(),
 	}
 
@@ -140,7 +144,7 @@ func (worker *Worker) runTask(
 				agentAwareTask.TaskId, err)
 		}
 
-		worker.taskCompletions <- agentAwareTask.TaskId
+		worker.taskCompletions <- taskID
 	}()
 
 	if err := upstream.TaskStarted(ctx, taskIdentification); err != nil {
@@ -160,7 +164,7 @@ func (worker *Worker) runTask(
 		Endpoint:     upstream.AgentEndpoint(),
 		ServerSecret: agentAwareTask.ServerSecret,
 		ClientSecret: agentAwareTask.ClientSecret,
-		TaskID:       agentAwareTask.TaskId,
+		TaskID:       taskID,
 		AdditionalEnvironment: map[string]string{
 			"CIRRUS_SENTRY_TAGS": strings.Join(cirrusSentryTagsFormatted, ","),
 		},
@@ -231,7 +235,7 @@ func (worker *Worker) runTask(
 	}
 }
 
-func (worker *Worker) stopTask(taskID int64) {
+func (worker *Worker) stopTask(taskID string) {
 	if task, ok := worker.tasks.Load(taskID); ok {
 		task.cancel()
 	}
@@ -239,8 +243,8 @@ func (worker *Worker) stopTask(taskID int64) {
 	worker.logger.Infof("sent cancellation signal to task %d", taskID)
 }
 
-func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int64) {
-	worker.tasks.Range(func(taskID int64, task *Task) bool {
+func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []string) {
+	worker.tasks.Range(func(taskID string, task *Task) bool {
 		if task.upstream == upstream {
 			result = append(result, taskID)
 		}
@@ -253,7 +257,7 @@ func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int
 func (worker *Worker) resourcesNotInUse() map[string]float64 {
 	result := maps.Clone(worker.userSpecifiedResources)
 
-	worker.tasks.Range(func(taskID int64, task *Task) bool {
+	worker.tasks.Range(func(taskID string, task *Task) bool {
 		for key, value := range task.resourcesToUse {
 			result[key] -= value
 		}
@@ -266,7 +270,7 @@ func (worker *Worker) resourcesNotInUse() map[string]float64 {
 func (worker *Worker) resourcesInUse() map[string]float64 {
 	result := map[string]float64{}
 
-	worker.tasks.Range(func(taskID int64, task *Task) bool {
+	worker.tasks.Range(func(taskID string, task *Task) bool {
 		for key, value := range task.resourcesToUse {
 			result[key] += value
 		}
