@@ -36,7 +36,7 @@ func ClientConn(t *testing.T) *grpc.ClientConn {
 		require.NoError(t, server.Serve(lis))
 	}()
 
-	clientConn, err := grpc.DialContext(context.Background(), lis.Addr().String(),
+	clientConn, err := grpc.NewClient(lis.Addr().String(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 

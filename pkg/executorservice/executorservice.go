@@ -37,10 +37,8 @@ func (p *ExecutorService) SupportedInstances() (*api.AdditionalInstancesInfo, er
 	tlsCredentials := credentials.NewTLS(&tls.Config{
 		MinVersion: tls.VersionTLS13,
 	})
-	conn, err := grpc.DialContext(
-		ctx,
+	conn, err := grpc.NewClient(
 		DefaultRPCEndpoint,
-		grpc.WithBlock(),
 		grpc.WithTransportCredentials(tlsCredentials),
 		grpc.WithUnaryInterceptor(
 			grpcretry.UnaryClientInterceptor(
