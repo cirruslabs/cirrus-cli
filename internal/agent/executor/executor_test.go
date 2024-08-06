@@ -104,7 +104,7 @@ func TestVaultSpecificVariableExpansion(t *testing.T) {
 	)
 
 	// Initialize Cirrus CI service client
-	conn, err := grpc.Dial(cirrusCIServiceMock.Address(),
+	conn, err := grpc.NewClient(cirrusCIServiceMock.Address(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 

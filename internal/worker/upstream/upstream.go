@@ -118,7 +118,7 @@ func (upstream *Upstream) Connect(ctx context.Context) error {
 	}
 
 	// https://github.com/grpc/grpc-go/blob/master/Documentation/concurrency.md
-	conn, err := grpc.DialContext(ctx, upstream.rpcTarget, rpcSecurity,
+	conn, err := grpc.NewClient(upstream.rpcTarget, rpcSecurity,
 		grpc.WithUnaryInterceptor(deadlineUnaryInterceptor(defaultDeadlineInSeconds*time.Second)),
 	)
 	if err != nil {

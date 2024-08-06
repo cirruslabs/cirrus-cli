@@ -287,10 +287,8 @@ func dialWithTimeout(ctx context.Context, apiEndpoint string, md metadata.MD) (*
 	retryCodes := []codes.Code{
 		codes.Unavailable, codes.Internal, codes.Unknown, codes.ResourceExhausted, codes.DeadlineExceeded,
 	}
-	return grpc.DialContext(
-		ctx,
+	return grpc.NewClient(
 		target,
-		grpc.WithBlock(),
 		transportSecurity,
 		grpc.WithKeepaliveParams(
 			keepalive.ClientParameters{

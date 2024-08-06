@@ -48,7 +48,7 @@ func getClient(t *testing.T) api.CirrusConfigurationEvaluatorServiceClient {
 		}
 	})
 
-	conn, err := grpc.Dial(lis.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(lis.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		t.Fatal(err)
 	}
