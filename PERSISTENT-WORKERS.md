@@ -326,6 +326,46 @@ On `amd64`, simply replace the `image` with `ghcr.io/cirruslabs/ubuntu-runner-am
 
 Currently only Tart and Vetu isolations are supported for standby.
 
+## Resource modifiers
+
+Resource modifiers allow you to change the behavior of the underlying isolation engine when a certain amount of resources is allocated to the task.
+
+This comes in handy when you want to pass through one or multiple physical devices such as GPUs using e.g. [Vetu](https://github.com/cirruslabs/vetu), as `vetu run` expects a path to a PCI device in its `--device` argument.
+
+As an example, let's say you've split a single physical GPU using vGPU or SR-IOV technology as follows:
+
+* 1 ×️ 1/2 of GPU (PCI device `01:00.0`)
+* 2 × 1/4 of GPU (PCI devices `02:00.0` and `03:00.0`)
+
+You can then ensure that each task that runs on a Persistent Worker and asks for a `gpu` resource will get the corresponding vGPU that matches the requirements:
+
+```yaml
+token: <TOKEN>
+
+name: "gpu-enabled-worker"
+
+resources:
+  gpu: 1
+
+resource-modifiers:
+  - match:
+      gpu: 0.5
+    append:
+      run: ["--device", "/sys/bus/pci/devices/0000:01:00.0/,iommu=on"]
+  - match:
+      gpu: 0.25
+    append:
+      run: ["--device", "/sys/bus/pci/devices/0000:02:00.0/,iommu=on"]
+  - match:
+      gpu: 0.25
+    append:
+      run: ["--device", "/sys/bus/pci/devices/0000:03:00.0/,iommu=on"]
+```
+
+Note that Persistent Worker keeps track of used resource modifiers and no `--device` will be passed to the `vetu run` more than once if a match occurs on a modifier that is already in use.
+
+Keep this in mind when assigning `resources:` to a Persistent Worker and writing `resource-modifiers:`.
+
 ## Observability
 
 Persistent worker produces some useful OpenTelemetry metrics. Metrics are scoped with `org.cirruslabs.persistent_worker` prefix and include information about resource utilization, running tasks and VM images used.

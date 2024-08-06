@@ -2,6 +2,7 @@ package vetu
 
 import (
 	"context"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
 	"strconv"
@@ -13,6 +14,8 @@ type VM struct {
 	ident string
 
 	env map[string]string
+
+	resourceModifier *resourcemodifier.Modifier
 
 	runningVMCtx       context.Context
 	runningVMCtxCancel context.CancelFunc
@@ -26,6 +29,7 @@ func NewVMClonedFrom(
 	to string,
 	lazyPull bool,
 	env map[string]string,
+	resourceModifier *resourcemodifier.Modifier,
 	logger *echelon.Logger,
 ) (*VM, error) {
 	runningVMCtx, runningVMCtxCancel := context.WithCancel(context.Background())
@@ -33,6 +37,7 @@ func NewVMClonedFrom(
 	vm := &VM{
 		ident:              to,
 		env:                env,
+		resourceModifier:   resourceModifier,
 		runningVMCtx:       runningVMCtx,
 		runningVMCtxCancel: runningVMCtxCancel,
 		errChan:            make(chan error, 1),
@@ -129,6 +134,11 @@ func (vm *VM) Start(
 			args = append(args, "--net-bridged", bridgedInterface)
 		} else if hostNetworking {
 			args = append(args, "--net-host")
+		}
+
+		// Apply "run" resource modifier
+		if vm.resourceModifier != nil {
+			args = append(args, vm.resourceModifier.Append.Run...)
 		}
 
 		args = append(args, vm.ident)

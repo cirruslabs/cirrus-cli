@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
@@ -41,6 +42,7 @@ type Vetu struct {
 	diskSize         uint32
 	bridgedInterface string
 	hostNetworking   bool
+	resourceModifier *resourcemodifier.Modifier
 
 	vm *VM
 }
@@ -52,15 +54,17 @@ func New(
 	sshPort uint16,
 	cpu uint32,
 	memory uint32,
+	resourceModifier *resourcemodifier.Modifier,
 	opts ...Option,
 ) (*Vetu, error) {
 	vetu := &Vetu{
-		vmName:      vmName,
-		sshUser:     sshUser,
-		sshPassword: sshPassword,
-		sshPort:     sshPort,
-		cpu:         cpu,
-		memory:      memory,
+		vmName:           vmName,
+		sshUser:          sshUser,
+		sshPassword:      sshPassword,
+		sshPort:          sshPort,
+		cpu:              cpu,
+		memory:           memory,
+		resourceModifier: resourceModifier,
 	}
 
 	// Apply options
@@ -113,7 +117,7 @@ func (vetu *Vetu) bootVM(
 
 	tmpVMName := vmNamePrefix + identToBeInjected + uuid.NewString()
 
-	vm, err := NewVMClonedFrom(ctx, vetu.vmName, tmpVMName, lazyPull, env, logger)
+	vm, err := NewVMClonedFrom(ctx, vetu.vmName, tmpVMName, lazyPull, env, vetu.resourceModifier, logger)
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, vetu.vmName, err)
 	}
@@ -190,6 +194,10 @@ func (vetu *Vetu) WorkingDirectory(projectDir string, dirtyMode bool) string {
 }
 
 func (vetu *Vetu) Close(ctx context.Context) error {
+	if vetu.resourceModifier != nil {
+		vetu.resourceModifier.Unlock()
+	}
+
 	if vetu.vm == nil {
 		return nil
 	}

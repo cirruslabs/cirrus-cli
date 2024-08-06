@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/dustin/go-humanize"
@@ -37,6 +38,8 @@ type Config struct {
 	Security *security.Security `yaml:"security"`
 
 	Standby *worker.StandbyConfig `yaml:"standby"`
+
+	ResourceModifiers []*resourcemodifier.Modifier `yaml:"resource-modifiers"`
 }
 
 type ConfigLog struct {
@@ -213,6 +216,13 @@ func buildWorker(output io.Writer) (*worker.Worker, error) {
 	// Configure standby
 	if standby := config.Standby; standby != nil {
 		opts = append(opts, worker.WithStandby(standby))
+	}
+
+	// Configure resource modifiers
+	if len(config.ResourceModifiers) != 0 {
+		opts = append(opts, worker.WithResourceModifiersManager(
+			resourcemodifier.NewManager(config.ResourceModifiers...),
+		))
 	}
 
 	// Instantiate worker
