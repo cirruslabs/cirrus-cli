@@ -92,6 +92,12 @@ func (vm *VM) Configure(
 	configureLogger := logger.Scoped("configure virtual machine")
 	configureLogger.Infof("Configuring virtual machine %s...", vm.ident)
 
+	_, _, err := CmdWithLogger(ctx, vm.env, configureLogger, "set", vm.ident, "--random-mac")
+	if err != nil {
+		configureLogger.Finish(false)
+		return err
+	}
+
 	if cpu != 0 {
 		cpuStr := strconv.FormatUint(uint64(cpu), 10)
 
