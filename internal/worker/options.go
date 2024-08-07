@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/sirupsen/logrus"
@@ -41,5 +42,11 @@ func WithSecurity(security *security.Security) Option {
 func WithStandby(standby *StandbyConfig) Option {
 	return func(e *Worker) {
 		e.standbyConfig = standby
+	}
+}
+
+func WithResourceModifiersManager(resourceModifiersManager *resourcemodifier.Manager) Option {
+	return func(e *Worker) {
+		e.resourceModifierManager = resourceModifiersManager
 	}
 }

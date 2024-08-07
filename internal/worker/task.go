@@ -53,7 +53,7 @@ func (worker *Worker) startTask(
 		Secret: agentAwareTask.ClientSecret,
 	}
 
-	inst, err := worker.getInstance(ctx, agentAwareTask.Isolation)
+	inst, err := worker.getInstance(ctx, agentAwareTask.Isolation, agentAwareTask.ResourcesToUse)
 	if err != nil {
 		worker.logger.Errorf("failed to create an instance for the task %d: %v", agentAwareTask.TaskId, err)
 		_ = upstream.TaskFailed(taskCtx, &api.TaskFailedRequest{
@@ -70,7 +70,11 @@ func (worker *Worker) startTask(
 	worker.logger.Infof("started task %d", agentAwareTask.TaskId)
 }
 
-func (worker *Worker) getInstance(ctx context.Context, isolation *api.Isolation) (abstract.Instance, error) {
+func (worker *Worker) getInstance(
+	ctx context.Context,
+	isolation *api.Isolation,
+	resourcesToUse map[string]float64,
+) (abstract.Instance, error) {
 	if standbyInstance := worker.standbyInstance; standbyInstance != nil {
 		// Relinquish our ownership of the standby instance since
 		// we'll either return it to the task or terminate it
@@ -97,7 +101,8 @@ func (worker *Worker) getInstance(ctx context.Context, isolation *api.Isolation)
 	}
 
 	// Otherwise proceed with creating a new instance
-	return persistentworker.New(isolation, worker.security, worker.logger)
+	return persistentworker.New(isolation, worker.security,
+		worker.resourceModifierManager.Acquire(resourcesToUse), worker.logger)
 }
 
 func (worker *Worker) runTask(

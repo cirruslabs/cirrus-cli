@@ -11,7 +11,8 @@ import (
 const taskID = 42
 
 type WorkersRPC struct {
-	Isolation *api.Isolation
+	Isolation      *api.Isolation
+	ResourcesToUse map[string]float64
 
 	WorkerWasRegistered bool
 	TaskWasAssigned     bool
@@ -46,10 +47,11 @@ func (workersRPC *WorkersRPC) Poll(ctx context.Context, request *api.PollRequest
 		return &api.PollResponse{
 			TasksToStart: []*api.PollResponse_AgentAwareTask{
 				{
-					TaskId:       taskID,
-					ClientSecret: clientSecret,
-					ServerSecret: serverSecret,
-					Isolation:    workersRPC.Isolation,
+					TaskId:         taskID,
+					ClientSecret:   clientSecret,
+					ServerSecret:   serverSecret,
+					Isolation:      workersRPC.Isolation,
+					ResourcesToUse: workersRPC.ResourcesToUse,
 				},
 			},
 		}, nil

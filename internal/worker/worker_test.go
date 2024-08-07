@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
@@ -341,6 +342,106 @@ func TestWorkerStandByVetu(t *testing.T) {
 		worker.WithUpstream(upstream),
 		worker.WithStandby(standbyConfig),
 	)
+}
+
+func TestWorkerResourceModifiers(t *testing.T) {
+	// Support Vetu isolation testing configured via environment variables
+	image, vmOk := os.LookupEnv("CIRRUS_INTERNAL_VETU_VM")
+	user, userOk := os.LookupEnv("CIRRUS_INTERNAL_VETU_SSH_USER")
+	password, passwordOk := os.LookupEnv("CIRRUS_INTERNAL_VETU_SSH_PASSWORD")
+	if !vmOk || !userOk || !passwordOk {
+		t.Skip("no Vetu credentials configured")
+	}
+
+	t.Logf("Using Vetu VM %s for testing...", image)
+
+	lis, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	isolation := &api.Isolation{
+		Type: &api.Isolation_Vetu_{
+			Vetu: &api.Isolation_Vetu{
+				Image:    image,
+				User:     user,
+				Password: password,
+				Cpu:      5,
+				Memory:   1024 * 5,
+			},
+		},
+	}
+
+	listenerPort := lis.Addr().(*net.TCPAddr).Port
+	rpcEndpoint := fmt.Sprintf("http://127.0.0.1:%d", listenerPort)
+	upstream, err := upstream.New("test", registrationToken,
+		upstream.WithRPCEndpoint(rpcEndpoint),
+		upstream.WithAgentEndpoint(endpoint.NewLocal(rpcEndpoint, rpcEndpoint)),
+	)
+	require.NoError(t, err)
+
+	// Start the RPC server
+	server := grpc.NewServer(grpc.UnaryInterceptor(unaryInterceptor))
+
+	workersRPC := &WorkersRPC{Isolation: isolation, ResourcesToUse: map[string]float64{
+		"gpu": 1,
+	}}
+	api.RegisterCirrusWorkersServiceServer(server, workersRPC)
+	tasksRPC := NewTasksRPC([]string{"uname -a"})
+	api.RegisterCirrusCIServiceServer(server, tasksRPC)
+
+	go func() {
+		if err := server.Serve(lis); err != nil {
+			t.Error(err)
+		}
+	}()
+
+	// Instantiate and start the Persistent Worker
+	worker, err := worker.New(
+		worker.WithResources(map[string]float64{
+			"gpu": 1,
+		}),
+		worker.WithUpstream(upstream),
+		worker.WithResourceModifiersManager(
+			resourcemodifier.NewManager(
+				&resourcemodifier.Modifier{
+					Match: map[string]float64{
+						"gpu": 0.5,
+					},
+					Append: resourcemodifier.Append{
+						Run: []string{"--non-existent-argument-unexpected"},
+					},
+				},
+				&resourcemodifier.Modifier{
+					Match: map[string]float64{
+						"gpu": 1,
+					},
+					Append: resourcemodifier.Append{
+						Run: []string{"--non-existent-argument-expected"},
+					},
+				},
+				&resourcemodifier.Modifier{
+					Match: map[string]float64{
+						"gpu": 0.5,
+					},
+					Append: resourcemodifier.Append{
+						Run: []string{"--non-existent-argument-unexpected"},
+					},
+				},
+			),
+		),
+	)
+	require.NoError(t, err)
+	require.NoError(t, worker.Run(context.Background()))
+
+	server.GracefulStop()
+
+	assert.True(t, workersRPC.WorkerWasRegistered)
+	assert.True(t, workersRPC.TaskWasAssigned)
+	assert.True(t, workersRPC.TaskWasStarted)
+	assert.True(t, workersRPC.TaskWasStopped)
+	assert.True(t, workersRPC.TaskWasFailed)
+	assert.Contains(t, workersRPC.TaskFailureMesage, "unknown flag: --non-existent-argument-expected")
 }
 
 func TestWorkerSecurity(t *testing.T) {

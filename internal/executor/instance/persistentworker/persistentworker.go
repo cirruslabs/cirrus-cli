@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"runtime"
@@ -18,7 +19,12 @@ import (
 
 var ErrInvalidIsolation = errors.New("invalid isolation parameters")
 
-func New(isolation *api.Isolation, security *security.Security, logger logger.Lightweight) (abstract.Instance, error) {
+func New(
+	isolation *api.Isolation,
+	security *security.Security,
+	resourceModifier *resourcemodifier.Modifier,
+	logger logger.Lightweight,
+) (abstract.Instance, error) {
 	if isolation == nil {
 		nonePolicy := security.NonePolicy()
 		if nonePolicy == nil {
@@ -67,7 +73,7 @@ func New(isolation *api.Isolation, security *security.Security, logger logger.Li
 	case *api.Isolation_Tart_:
 		return newTart(iso, security, logger)
 	case *api.Isolation_Vetu_:
-		return newVetu(iso, security, logger)
+		return newVetu(iso, security, resourceModifier, logger)
 	default:
 		return nil, fmt.Errorf("%w: unsupported isolation type %T", ErrInvalidIsolation, iso)
 	}
@@ -118,7 +124,12 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 		iso.Tart.Cpu, iso.Tart.Memory, opts...)
 }
 
-func newVetu(iso *api.Isolation_Vetu_, security *security.Security, logger logger.Lightweight) (*vetu.Vetu, error) {
+func newVetu(
+	iso *api.Isolation_Vetu_,
+	security *security.Security,
+	resourceModifier *resourcemodifier.Modifier,
+	logger logger.Lightweight,
+) (*vetu.Vetu, error) {
 	vetuPolicy := security.VetuPolicy()
 	if vetuPolicy == nil {
 		return nil, fmt.Errorf("%w: \"vetu\" isolation is not allowed by this Persistent Worker's "+
@@ -146,5 +157,5 @@ func newVetu(iso *api.Isolation_Vetu_, security *security.Security, logger logge
 	}
 
 	return vetu.New(iso.Vetu.Image, iso.Vetu.User, iso.Vetu.Password, uint16(iso.Vetu.Port),
-		iso.Vetu.Cpu, iso.Vetu.Memory, opts...)
+		iso.Vetu.Cpu, iso.Vetu.Memory, resourceModifier, opts...)
 }

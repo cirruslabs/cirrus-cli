@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
@@ -36,7 +37,8 @@ var (
 type Worker struct {
 	upstreams []*upstreampkg.Upstream
 
-	security *security.Security
+	security                *security.Security
+	resourceModifierManager *resourcemodifier.Manager
 
 	userSpecifiedLabels    map[string]string
 	userSpecifiedResources map[string]float64
@@ -59,7 +61,8 @@ func New(opts ...Option) (*Worker, error) {
 	worker := &Worker{
 		upstreams: []*upstreampkg.Upstream{},
 
-		security: security.NoSecurity(),
+		security:                security.NoSecurity(),
+		resourceModifierManager: resourcemodifier.NewManager(),
 
 		userSpecifiedLabels: make(map[string]string),
 
@@ -237,7 +240,8 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 
 	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyConfig.Isolation)
 
-	standbyInstance, err := persistentworker.New(worker.standbyConfig.Isolation, worker.security, worker.logger)
+	standbyInstance, err := persistentworker.New(worker.standbyConfig.Isolation, worker.security,
+		worker.resourceModifierManager.Acquire(worker.standbyConfig.Resources), worker.logger)
 	if err != nil {
 		worker.logger.Errorf("failed to create a standby instance: %v", err)
 
