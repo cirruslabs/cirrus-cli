@@ -15,11 +15,14 @@ type Append struct {
 	Run []string `yaml:"run"`
 }
 
-func (modifier *Modifier) Matches(other map[string]float64) bool {
+func (modifier *Modifier) Matches(requested map[string]float64) bool {
 	for matchKey, matchValue := range modifier.Match {
-		otherValue := other[matchKey]
+		requestedValue, ok := requested[matchKey]
+		if !ok {
+			return false
+		}
 
-		if otherValue < matchValue {
+		if requestedValue > matchValue {
 			return false
 		}
 	}

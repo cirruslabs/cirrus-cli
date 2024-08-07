@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestAcquire(t *testing.T) {
+func TestAcquireSimple(t *testing.T) {
 	manager := resourcemodifier.NewManager(
 		&resourcemodifier.Modifier{
 			Match: map[string]float64{
@@ -32,4 +32,76 @@ func TestAcquire(t *testing.T) {
 		"tart-vms": 1,
 		"gpu":      0.5,
 	}))
+}
+
+func TestAcquireIsNotConfusedByValues(t *testing.T) {
+	manager := resourcemodifier.NewManager(
+		&resourcemodifier.Modifier{
+			Match: map[string]float64{
+				"gpu": 0.5,
+			},
+			Append: resourcemodifier.Append{
+				Run: []string{"--non-existent-argument-unexpected"},
+			},
+		},
+		&resourcemodifier.Modifier{
+			Match: map[string]float64{
+				"gpu": 1,
+			},
+			Append: resourcemodifier.Append{
+				Run: []string{"--non-existent-argument-expected"},
+			},
+		},
+		&resourcemodifier.Modifier{
+			Match: map[string]float64{
+				"gpu": 0.5,
+			},
+			Append: resourcemodifier.Append{
+				Run: []string{"--non-existent-argument-unexpected"},
+			},
+		},
+	)
+
+	modifier := manager.Acquire(map[string]float64{
+		"gpu": 1,
+	})
+	require.NotNil(t, modifier)
+	require.Equal(t, []string{"--non-existent-argument-expected"}, modifier.Append.Run)
+}
+
+func TestAcquireIsNotConfusedByKeys(t *testing.T) {
+	manager := resourcemodifier.NewManager(
+		&resourcemodifier.Modifier{
+			Match: map[string]float64{
+				"gpu":                   1,
+				"non-existent-resource": 1,
+			},
+			Append: resourcemodifier.Append{
+				Run: []string{"--non-existent-argument-unexpected"},
+			},
+		},
+		&resourcemodifier.Modifier{
+			Match: map[string]float64{
+				"gpu": 1,
+			},
+			Append: resourcemodifier.Append{
+				Run: []string{"--non-existent-argument-expected"},
+			},
+		},
+		&resourcemodifier.Modifier{
+			Match: map[string]float64{
+				"gpu":                   1,
+				"non-existent-resource": 1,
+			},
+			Append: resourcemodifier.Append{
+				Run: []string{"--non-existent-argument-unexpected"},
+			},
+		},
+	)
+
+	modifier := manager.Acquire(map[string]float64{
+		"gpu": 1,
+	})
+	require.NotNil(t, modifier)
+	require.Equal(t, []string{"--non-existent-argument-expected"}, modifier.Append.Run)
 }
