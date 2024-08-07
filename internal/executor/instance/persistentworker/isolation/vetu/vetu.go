@@ -195,7 +195,7 @@ func (vetu *Vetu) WorkingDirectory(projectDir string, dirtyMode bool) string {
 
 func (vetu *Vetu) Close(ctx context.Context) error {
 	if vetu.resourceModifier != nil {
-		vetu.resourceModifier.Unlock()
+		defer vetu.resourceModifier.Unlock()
 	}
 
 	if vetu.vm == nil {
