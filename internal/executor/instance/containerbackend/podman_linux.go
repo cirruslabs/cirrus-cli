@@ -42,6 +42,8 @@ func NewPodman() (ContainerBackend, error) {
 
 	cmd := exec.Command("podman", "system", "service", "-t", "0", socketURI)
 
+	cmd.WaitDelay = time.Second
+
 	// Prevent the signals sent to the CLI from reaching the Podman process
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: true,
