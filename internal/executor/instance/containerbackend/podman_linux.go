@@ -111,7 +111,7 @@ func (backend *Podman) Close() error {
 			return err
 		default:
 			if !interruptSent {
-				if err := backend.cmd.Process.Signal(os.Interrupt); err != nil {
+				if err := backend.cmd.Process.Signal(syscall.SIGTERM); err != nil {
 					return err
 				}
 				interruptSent = true
