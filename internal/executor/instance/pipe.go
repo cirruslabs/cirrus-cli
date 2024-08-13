@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/container"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
@@ -24,6 +25,8 @@ type PipeInstance struct {
 	CPU              float32
 	Memory           uint32
 	CustomWorkingDir string
+
+	containerBackend containerbackend.ContainerBackend
 }
 
 // PipeStagesFromCommands uses image hints in commands to build the stages.
@@ -69,6 +72,7 @@ func (pi *PipeInstance) Run(ctx context.Context, config *runconfig.RunConfig) (e
 	if err != nil {
 		return err
 	}
+	pi.containerBackend = containerBackend
 
 	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, platform, nil)
 	if err != nil {
@@ -125,5 +129,9 @@ func (pi *PipeInstance) WorkingDirectory(projectDir string, dirtyMode bool) stri
 }
 
 func (pi *PipeInstance) Close(context.Context) error {
+	if pi.containerBackend != nil {
+		return pi.containerBackend.Close()
+	}
+
 	return nil
 }

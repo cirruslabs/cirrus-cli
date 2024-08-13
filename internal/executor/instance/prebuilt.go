@@ -16,6 +16,8 @@ type PrebuiltInstance struct {
 	Image      string
 	Dockerfile string
 	Arguments  map[string]string
+
+	containerBackend containerbackend.ContainerBackend
 }
 
 func CreateTempArchive(dir string) (string, error) {
@@ -96,6 +98,7 @@ func (prebuilt *PrebuiltInstance) Run(ctx context.Context, config *runconfig.Run
 	if err != nil {
 		return err
 	}
+	prebuilt.containerBackend = backend
 
 	// Check if the image we're about to build is available locally
 	if err = backend.ImageInspect(ctx, prebuilt.Image); err == nil {
@@ -165,5 +168,9 @@ func (prebuilt *PrebuiltInstance) WorkingDirectory(projectDir string, dirtyMode 
 }
 
 func (prebuilt *PrebuiltInstance) Close(context.Context) error {
+	if prebuilt.containerBackend != nil {
+		return prebuilt.containerBackend.Close()
+	}
+
 	return nil
 }

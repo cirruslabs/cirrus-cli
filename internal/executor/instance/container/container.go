@@ -2,6 +2,7 @@ package container
 
 import (
 	"context"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
@@ -18,6 +19,8 @@ type Instance struct {
 	Platform             platform.Platform
 	CustomWorkingDir     string
 	Volumes              []*api.Volume
+
+	containerBackend containerbackend.ContainerBackend
 }
 
 type Params struct {
@@ -48,6 +51,7 @@ func (inst *Instance) Run(ctx context.Context, config *runconfig.RunConfig) (err
 	if err != nil {
 		return err
 	}
+	inst.containerBackend = containerBackend
 
 	agentVolume, workingVolume, err := volume.CreateWorkingVolumeFromConfig(ctx, config, inst.Platform,
 		inst.Architecture)
@@ -100,5 +104,9 @@ func (inst *Instance) WorkingDirectory(projectDir string, dirtyMode bool) string
 }
 
 func (inst *Instance) Close(context.Context) error {
+	if inst.containerBackend != nil {
+		return inst.containerBackend.Close()
+	}
+
 	return nil
 }
