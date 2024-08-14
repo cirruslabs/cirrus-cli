@@ -147,7 +147,7 @@ Outer:
 		case line := <-logChan:
 			logger.Infof("%s", line)
 		case err := <-errChan:
-			if errors.Is(containerbackend.ErrDone, err) {
+			if errors.Is(err, containerbackend.ErrDone) {
 				break Outer
 			}
 

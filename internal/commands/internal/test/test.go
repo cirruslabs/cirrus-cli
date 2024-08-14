@@ -280,7 +280,7 @@ func logDifferenceIfAny(logger *echelon.Logger, where string, a, b string) *Comp
 	}
 
 	logger.Warnf("Detected difference in %s:", where)
-	logger.Warnf(dmp.DiffPrettyText(diffs))
+	logger.Warnf("%s", dmp.DiffPrettyText(diffs))
 
 	return &Comparison{
 		FoundDifference: true,

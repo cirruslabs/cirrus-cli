@@ -221,7 +221,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 	result, err := lrk.Hook(ctx, request.StarlarkConfig, request.FunctionName, request.Arguments.AsSlice())
 	if err != nil {
 		if errors.Is(err, larker.ErrNotFound) {
-			return nil, status.Errorf(codes.NotFound, err.Error())
+			return nil, status.Errorf(codes.NotFound, "%s", err.Error())
 		}
 
 		if ee, ok := err.(*larker.ExtendedError); ok {
@@ -231,7 +231,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 			}, nil
 		}
 
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "%s", err.Error())
 	}
 
 	response := &api.EvaluateFunctionResponse{
