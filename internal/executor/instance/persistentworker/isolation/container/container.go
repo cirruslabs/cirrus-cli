@@ -58,6 +58,10 @@ func (cont *Container) WorkingDirectory(projectDir string, dirtyMode bool) strin
 	return cont.instance.WorkingDirectory(projectDir, dirtyMode)
 }
 
-func (cont *Container) Close(context.Context) error {
+func (cont *Container) Close(ctx context.Context) error {
+	if err := cont.instance.Close(ctx); err != nil {
+		return err
+	}
+
 	return cont.cleanup()
 }
