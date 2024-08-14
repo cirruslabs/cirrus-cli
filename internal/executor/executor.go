@@ -250,7 +250,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 				task.Timeout)
 			task.SetStatus(taskstatus.TimedOut)
 		case errors.Is(err, instance.ErrUnsupportedInstance):
-			taskLogger.Warnf(err.Error())
+			taskLogger.Warnf("%s", err.Error())
 			task.SetStatus(taskstatus.Skipped)
 		default:
 			cancel(context.Canceled)

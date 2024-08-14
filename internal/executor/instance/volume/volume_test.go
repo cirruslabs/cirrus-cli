@@ -2,7 +2,6 @@ package volume_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/volume"
@@ -80,10 +79,8 @@ func TestCleanupOnFailure(t *testing.T) {
 	require.Error(t, err)
 
 	err = backend.VolumeInspect(context.Background(), agentVolumeName)
-	require.Error(t, err)
-	require.True(t, errors.Is(containerbackend.ErrNotFound, err))
+	require.ErrorIs(t, err, containerbackend.ErrNotFound)
 
 	err = backend.VolumeInspect(context.Background(), workingVolumeName)
-	require.Error(t, err)
-	require.True(t, errors.Is(containerbackend.ErrNotFound, err))
+	require.ErrorIs(t, err, containerbackend.ErrNotFound)
 }
