@@ -306,14 +306,15 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			failedAtLeastOnce = true
 		}
 
-		log.Printf("%s finished!", command.Name)
-
 		var currentCommandStatus api.Status
 		if stepResult.Success {
 			currentCommandStatus = api.Status_COMPLETED
 		} else {
 			currentCommandStatus = api.Status_FAILED
 		}
+
+		log.Printf("%s %s!", command.Name, strings.ToLower(currentCommandStatus.String()))
+
 		ub.Queue(&api.CommandResult{
 			Name:            command.Name,
 			Status:          currentCommandStatus,
