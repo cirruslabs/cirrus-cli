@@ -100,7 +100,10 @@ func NewFromProto(
 	case *api.DockerBuilder:
 		// Ensures that we're not trying to run e.g. Windows-specific scripts on macOS
 		instanceOS := strings.ToLower(instance.Platform.String())
-		if runtime.GOOS != instanceOS {
+
+		haveOrNeedWindows := runtime.GOOS == "windows" || instanceOS == "windows"
+
+		if runtime.GOOS != instanceOS && haveOrNeedWindows {
 			return nil, fmt.Errorf("%w: cannot run %s Docker Builder instance on this platform",
 				ErrFailedToCreateInstance, cases.Title(language.AmericanEnglish).String(instanceOS))
 		}
