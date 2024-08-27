@@ -1,0 +1,78 @@
+[
+  {
+    "commands": [
+      {
+        "cloneInstruction": {
+        },
+        "name": "clone"
+      }
+    ],
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
+      "isolation": {
+        "container": {
+          "cpu": 2.5,
+          "image": "alpine:latest",
+          "memory": 4096,
+          "volumes": [
+            {
+              "readOnly": true,
+              "source": "/tmp/cache",
+              "target": "/tmp/cache"
+            }
+          ]
+        }
+      }
+    },
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "0",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "regular"
+  },
+  {
+    "commands": [
+      {
+        "cloneInstruction": {
+        },
+        "name": "clone"
+      }
+    ],
+    "environment": {
+      "CIRRUS_OS": "linux"
+    },
+    "instance": {
+      "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
+      "isolation": {
+        "container": {
+          "cpu": 2.5,
+          "image": "alpine:latest",
+          "memory": 4096,
+          "volumes": [
+            {
+              "readOnly": true,
+              "source": "/tmp/cache",
+              "target": "/tmp/cache"
+            }
+          ]
+        }
+      }
+    },
+    "localGroupId": "1",
+    "metadata": {
+      "properties": {
+        "allow_failures": "false",
+        "experimental": "false",
+        "indexWithinBuild": "1",
+        "timeout_in": "3600",
+        "trigger_type": "AUTOMATIC"
+      }
+    },
+    "name": "proto"
+  }
+]

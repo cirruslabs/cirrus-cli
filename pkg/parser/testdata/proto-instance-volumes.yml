@@ -1,0 +1,17 @@
+aliases: &worker_body
+  isolation:
+    container:
+      image: alpine:latest
+      platform: linux
+      cpu: 2.5
+      memory: 4G
+      volumes:
+        - /tmp/cache:/tmp/cache:ro
+
+regular_task:
+  persistent_worker:
+    <<: *worker_body
+
+proto_task:
+  proto_worker:
+    <<: *worker_body

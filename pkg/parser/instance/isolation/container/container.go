@@ -1,9 +1,10 @@
-package isolation
+package container
 
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/constants"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -12,17 +13,6 @@ import (
 	jsschema "github.com/lestrrat-go/jsschema"
 	"strconv"
 	"strings"
-)
-
-const (
-	sourceSplitIdx = iota
-	targetSplitIdx
-	flagsSplitIdx
-)
-
-const (
-	numSourceAndTargetSplits      = 2
-	numSourceTargetAndFlagsSplits = 3
 )
 
 const (
@@ -91,29 +81,12 @@ func NewContainer(mergedEnv map[string]string) *Container {
 			return err
 		}
 
-		for _, volume := range volumes {
-			splits := strings.Split(volume, ":")
-
-			switch len(splits) {
-			case numSourceAndTargetSplits:
-				// src:dst
-				container.proto.Container.Volumes = append(container.proto.Container.Volumes, &api.Volume{
-					Source: splits[sourceSplitIdx],
-					Target: splits[targetSplitIdx],
-				})
-			case numSourceTargetAndFlagsSplits:
-				// src:dst:ro
-				if splits[flagsSplitIdx] != "ro" {
-					return node.ParserError("only \"ro\" volume flag is currently supported")
-				}
-				container.proto.Container.Volumes = append(container.proto.Container.Volumes, &api.Volume{
-					Source:   splits[sourceSplitIdx],
-					Target:   splits[targetSplitIdx],
-					ReadOnly: true,
-				})
-			default:
-				return node.ParserError("only source:target[:ro] volume specification is currently supported")
+		for _, v := range volumes {
+			err, v := volume.ParseVolume(node, v)
+			if err != nil {
+				return err
 			}
+			container.proto.Container.Volumes = append(container.proto.Container.Volumes, v)
 		}
 
 		return nil

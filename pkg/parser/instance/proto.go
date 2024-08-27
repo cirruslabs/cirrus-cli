@@ -2,6 +2,7 @@ package instance
 
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
+	volume2 "github.com/cirruslabs/cirrus-cli/pkg/parser/instance/volume"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parseable"
@@ -108,6 +109,22 @@ func NewProtoParser(
 							parsedChild = dynamicpb.NewMessage(field.Message())
 							//nolint:ineffassign,staticcheck
 							err = proto.Unmarshal(additionalContainerBytes, parsedChild)
+						} else if fieldName == "volumes" {
+							volumeValue, err := child.GetExpandedStringValue(mergedEnv)
+							if err != nil {
+								return err
+							}
+							err, volume := volume2.ParseVolume(node, volumeValue)
+							if err != nil {
+								return err
+							}
+							volumeBytes, err := proto.Marshal(volume)
+							if err != nil {
+								return err
+							}
+							parsedChild = dynamicpb.NewMessage(field.Message())
+							//nolint:ineffassign,staticcheck
+							err = proto.Unmarshal(volumeBytes, parsedChild)
 						} else {
 							childParser := NewProtoParser(field.Message(), mergedEnv, parserKit)
 							parsedChild, err = childParser.Parse(child, parserKit)

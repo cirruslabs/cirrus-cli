@@ -2,6 +2,8 @@ package isolation
 
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation/container"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation/parallels"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation/vetu"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
@@ -20,9 +22,9 @@ type Isolation struct {
 func NewIsolation(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *Isolation {
 	isolation := &Isolation{}
 
-	parallelsSchema := NewParallels(mergedEnv).Schema()
+	parallelsSchema := parallels.NewParallels(mergedEnv).Schema()
 	isolation.OptionalField(nameable.NewSimpleNameable("parallels"), parallelsSchema, func(node *node.Node) error {
-		parallels := NewParallels(mergedEnv)
+		parallels := parallels.NewParallels(mergedEnv)
 
 		if err := parallels.Parse(node, parserKit); err != nil {
 			return err
@@ -33,9 +35,9 @@ func NewIsolation(mergedEnv map[string]string, parserKit *parserkit.ParserKit) *
 		return nil
 	})
 
-	containerSchema := NewContainer(mergedEnv).Schema()
+	containerSchema := container.NewContainer(mergedEnv).Schema()
 	isolation.OptionalField(nameable.NewSimpleNameable("container"), containerSchema, func(node *node.Node) error {
-		container := NewContainer(mergedEnv)
+		container := container.NewContainer(mergedEnv)
 
 		if err := container.Parse(node, parserKit); err != nil {
 			return err

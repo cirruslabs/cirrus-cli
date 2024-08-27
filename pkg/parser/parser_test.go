@@ -152,7 +152,7 @@ func TestProblematicConfigs(t *testing.T) {
 	}
 }
 
-func TestAdditionalInstances(t *testing.T) {
+func TestProtoAdditionalInstances(t *testing.T) {
 	containerInstanceReflect := (&api.ContainerInstance{}).ProtoReflect()
 	p := parser.New(parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
 		"proto_container": containerInstanceReflect.Descriptor(),
@@ -163,6 +163,19 @@ func TestAdditionalInstances(t *testing.T) {
 	require.NotEmpty(t, result.Tasks)
 
 	assertExpectedTasks(t, absolutize("proto-instance.json"), result)
+}
+
+func TestProtoVolumes(t *testing.T) {
+	workerInstanceReflect := (&api.PersistentWorkerInstance{}).ProtoReflect()
+	p := parser.New(parser.WithAdditionalInstances(map[string]protoreflect.MessageDescriptor{
+		"proto_worker": workerInstanceReflect.Descriptor(),
+	}))
+	result, err := p.ParseFromFile(context.Background(), absolutize("proto-instance-volumes.yml"))
+
+	require.Nil(t, err)
+	require.NotEmpty(t, result.Tasks)
+
+	assertExpectedTasks(t, absolutize("proto-instance-volumes.json"), result)
 }
 
 func TestAdditionalInstancesInvalidProto(t *testing.T) {

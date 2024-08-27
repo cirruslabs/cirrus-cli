@@ -1,4 +1,4 @@
-package isolation
+package parallels
 
 import (
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
