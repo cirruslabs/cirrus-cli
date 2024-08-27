@@ -828,6 +828,10 @@ message PersistentWorkerInstance {
   map<string, string> labels = 1;
   Isolation isolation = 2;
   map<string, double> resources_to_acquire = 3;
+  string gcp_credentials = 4;
+  string aws_credentials = 5;
+  string oracle_credentials = 6;
+  string azure_credentials = 7;
 }
 
 message MacOSInstance {
