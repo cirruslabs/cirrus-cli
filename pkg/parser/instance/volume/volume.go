@@ -17,27 +17,27 @@ const (
 	numSourceTargetAndFlagsSplits = 3
 )
 
-func ParseVolume(node *node.Node, volume string) (error, *api.Volume) {
+func ParseVolume(node *node.Node, volume string) (*api.Volume, error) {
 	splits := strings.Split(volume, ":")
 
 	switch len(splits) {
 	case numSourceAndTargetSplits:
 		// src:dst
-		return nil, &api.Volume{
+		return &api.Volume{
 			Source: splits[sourceSplitIdx],
 			Target: splits[targetSplitIdx],
-		}
+		}, nil
 	case numSourceTargetAndFlagsSplits:
 		// src:dst:ro
 		if splits[flagsSplitIdx] != "ro" {
-			return node.ParserError("only \"ro\" volume flag is currently supported"), nil
+			return nil, node.ParserError("only \"ro\" volume flag is currently supported")
 		}
-		return nil, &api.Volume{
+		return &api.Volume{
 			Source:   splits[sourceSplitIdx],
 			Target:   splits[targetSplitIdx],
 			ReadOnly: true,
-		}
+		}, nil
 	default:
-		return node.ParserError("only source:target[:ro] volume specification is currently supported"), nil
+		return nil, node.ParserError("only source:target[:ro] volume specification is currently supported")
 	}
 }

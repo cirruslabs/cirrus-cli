@@ -93,10 +93,11 @@ func NewProtoParser(
 				case field.IsList():
 					fieldInstance := instance.proto.NewField(field)
 					for _, child := range node.Children {
-						var err error
+						var parseError error
 						var parsedChild *dynamicpb.Message
 						// a little bit of magic to support port forwarding via `port` field instead of two fields
-						if fieldName == "additional_containers" {
+						switch fieldName {
+						case "additional_containers":
 							childParser := NewAdditionalContainer(mergedEnv, parserKit)
 							additionalContainer, err := childParser.Parse(child, parserKit)
 							if err != nil {
@@ -107,14 +108,13 @@ func NewProtoParser(
 								return err
 							}
 							parsedChild = dynamicpb.NewMessage(field.Message())
-							//nolint:ineffassign,staticcheck
-							err = proto.Unmarshal(additionalContainerBytes, parsedChild)
-						} else if fieldName == "volumes" {
+							parseError = proto.Unmarshal(additionalContainerBytes, parsedChild)
+						case "volumes":
 							volumeValue, err := child.GetExpandedStringValue(mergedEnv)
 							if err != nil {
 								return err
 							}
-							err, volume := volume2.ParseVolume(node, volumeValue)
+							volume, err := volume2.ParseVolume(node, volumeValue)
 							if err != nil {
 								return err
 							}
@@ -123,14 +123,13 @@ func NewProtoParser(
 								return err
 							}
 							parsedChild = dynamicpb.NewMessage(field.Message())
-							//nolint:ineffassign,staticcheck
-							err = proto.Unmarshal(volumeBytes, parsedChild)
-						} else {
+							parseError = proto.Unmarshal(volumeBytes, parsedChild)
+						default:
 							childParser := NewProtoParser(field.Message(), mergedEnv, parserKit)
-							parsedChild, err = childParser.Parse(child, parserKit)
+							parsedChild, parseError = childParser.Parse(child, parserKit)
 						}
-						if err != nil {
-							return err
+						if parseError != nil {
+							return parseError
 						}
 						fieldInstance.List().Append(protoreflect.ValueOfMessage(parsedChild))
 					}
