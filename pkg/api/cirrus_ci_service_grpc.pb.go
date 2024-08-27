@@ -704,9 +704,9 @@ type CirrusCIServiceClient interface {
 	GenerateCacheUploadURL(ctx context.Context, in *CacheKey, opts ...grpc.CallOption) (*GenerateURLResponse, error)
 	GenerateCacheDownloadURLs(ctx context.Context, in *CacheKey, opts ...grpc.CallOption) (*GenerateURLsResponse, error)
 	// Multipart cache upload
-	MultipartCacheUploadCreate(ctx context.Context, in *MultipartCacheUploadCreateRequest, opts ...grpc.CallOption) (*MultipartCacheUploadCreateResponse, error)
-	MultipartCacheUploadPart(ctx context.Context, in *MultipartCacheUploadPartRequest, opts ...grpc.CallOption) (*MultipartCacheUploadPartResponse, error)
-	MultipartCacheUploadCommit(ctx context.Context, in *MultipartCacheUploadCommitRequest, opts ...grpc.CallOption) (*MultipartCacheUploadCommitResponse, error)
+	MultipartCacheUploadCreate(ctx context.Context, in *CacheKey, opts ...grpc.CallOption) (*MultipartCacheUploadCreateResponse, error)
+	MultipartCacheUploadPart(ctx context.Context, in *MultipartCacheUploadPartRequest, opts ...grpc.CallOption) (*GenerateURLResponse, error)
+	MultipartCacheUploadCommit(ctx context.Context, in *MultipartCacheUploadCommitRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type cirrusCIServiceClient struct {
@@ -968,7 +968,7 @@ func (c *cirrusCIServiceClient) GenerateCacheDownloadURLs(ctx context.Context, i
 	return out, nil
 }
 
-func (c *cirrusCIServiceClient) MultipartCacheUploadCreate(ctx context.Context, in *MultipartCacheUploadCreateRequest, opts ...grpc.CallOption) (*MultipartCacheUploadCreateResponse, error) {
+func (c *cirrusCIServiceClient) MultipartCacheUploadCreate(ctx context.Context, in *CacheKey, opts ...grpc.CallOption) (*MultipartCacheUploadCreateResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MultipartCacheUploadCreateResponse)
 	err := c.cc.Invoke(ctx, CirrusCIService_MultipartCacheUploadCreate_FullMethodName, in, out, cOpts...)
@@ -978,9 +978,9 @@ func (c *cirrusCIServiceClient) MultipartCacheUploadCreate(ctx context.Context, 
 	return out, nil
 }
 
-func (c *cirrusCIServiceClient) MultipartCacheUploadPart(ctx context.Context, in *MultipartCacheUploadPartRequest, opts ...grpc.CallOption) (*MultipartCacheUploadPartResponse, error) {
+func (c *cirrusCIServiceClient) MultipartCacheUploadPart(ctx context.Context, in *MultipartCacheUploadPartRequest, opts ...grpc.CallOption) (*GenerateURLResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MultipartCacheUploadPartResponse)
+	out := new(GenerateURLResponse)
 	err := c.cc.Invoke(ctx, CirrusCIService_MultipartCacheUploadPart_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -988,9 +988,9 @@ func (c *cirrusCIServiceClient) MultipartCacheUploadPart(ctx context.Context, in
 	return out, nil
 }
 
-func (c *cirrusCIServiceClient) MultipartCacheUploadCommit(ctx context.Context, in *MultipartCacheUploadCommitRequest, opts ...grpc.CallOption) (*MultipartCacheUploadCommitResponse, error) {
+func (c *cirrusCIServiceClient) MultipartCacheUploadCommit(ctx context.Context, in *MultipartCacheUploadCommitRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MultipartCacheUploadCommitResponse)
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, CirrusCIService_MultipartCacheUploadCommit_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -1028,9 +1028,9 @@ type CirrusCIServiceServer interface {
 	GenerateCacheUploadURL(context.Context, *CacheKey) (*GenerateURLResponse, error)
 	GenerateCacheDownloadURLs(context.Context, *CacheKey) (*GenerateURLsResponse, error)
 	// Multipart cache upload
-	MultipartCacheUploadCreate(context.Context, *MultipartCacheUploadCreateRequest) (*MultipartCacheUploadCreateResponse, error)
-	MultipartCacheUploadPart(context.Context, *MultipartCacheUploadPartRequest) (*MultipartCacheUploadPartResponse, error)
-	MultipartCacheUploadCommit(context.Context, *MultipartCacheUploadCommitRequest) (*MultipartCacheUploadCommitResponse, error)
+	MultipartCacheUploadCreate(context.Context, *CacheKey) (*MultipartCacheUploadCreateResponse, error)
+	MultipartCacheUploadPart(context.Context, *MultipartCacheUploadPartRequest) (*GenerateURLResponse, error)
+	MultipartCacheUploadCommit(context.Context, *MultipartCacheUploadCommitRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCirrusCIServiceServer()
 }
 
@@ -1110,13 +1110,13 @@ func (UnimplementedCirrusCIServiceServer) GenerateCacheUploadURL(context.Context
 func (UnimplementedCirrusCIServiceServer) GenerateCacheDownloadURLs(context.Context, *CacheKey) (*GenerateURLsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateCacheDownloadURLs not implemented")
 }
-func (UnimplementedCirrusCIServiceServer) MultipartCacheUploadCreate(context.Context, *MultipartCacheUploadCreateRequest) (*MultipartCacheUploadCreateResponse, error) {
+func (UnimplementedCirrusCIServiceServer) MultipartCacheUploadCreate(context.Context, *CacheKey) (*MultipartCacheUploadCreateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MultipartCacheUploadCreate not implemented")
 }
-func (UnimplementedCirrusCIServiceServer) MultipartCacheUploadPart(context.Context, *MultipartCacheUploadPartRequest) (*MultipartCacheUploadPartResponse, error) {
+func (UnimplementedCirrusCIServiceServer) MultipartCacheUploadPart(context.Context, *MultipartCacheUploadPartRequest) (*GenerateURLResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MultipartCacheUploadPart not implemented")
 }
-func (UnimplementedCirrusCIServiceServer) MultipartCacheUploadCommit(context.Context, *MultipartCacheUploadCommitRequest) (*MultipartCacheUploadCommitResponse, error) {
+func (UnimplementedCirrusCIServiceServer) MultipartCacheUploadCommit(context.Context, *MultipartCacheUploadCommitRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MultipartCacheUploadCommit not implemented")
 }
 func (UnimplementedCirrusCIServiceServer) mustEmbedUnimplementedCirrusCIServiceServer() {}
@@ -1504,7 +1504,7 @@ func _CirrusCIService_GenerateCacheDownloadURLs_Handler(srv interface{}, ctx con
 }
 
 func _CirrusCIService_MultipartCacheUploadCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MultipartCacheUploadCreateRequest)
+	in := new(CacheKey)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1516,7 +1516,7 @@ func _CirrusCIService_MultipartCacheUploadCreate_Handler(srv interface{}, ctx co
 		FullMethod: CirrusCIService_MultipartCacheUploadCreate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CirrusCIServiceServer).MultipartCacheUploadCreate(ctx, req.(*MultipartCacheUploadCreateRequest))
+		return srv.(CirrusCIServiceServer).MultipartCacheUploadCreate(ctx, req.(*CacheKey))
 	}
 	return interceptor(ctx, in, info, handler)
 }
