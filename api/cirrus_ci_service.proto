@@ -264,6 +264,49 @@ service CirrusCIService {
   }
   rpc GenerateCacheDownloadURLs (CacheKey) returns (GenerateURLsResponse) {
   }
+
+  // Multipart cache upload
+  rpc MultipartCacheUploadCreate(MultipartCacheUploadCreateRequest) returns (MultipartCacheUploadCreateResponse);
+  rpc MultipartCacheUploadPart(MultipartCacheUploadPartRequest) returns (MultipartCacheUploadPartResponse);
+  rpc MultipartCacheUploadCommit(MultipartCacheUploadCommitRequest) returns (MultipartCacheUploadCommitResponse);
+}
+
+message MultipartCacheUploadCreateRequest {
+  CacheKey cache_key = 1;
+}
+
+message MultipartCacheUploadCreateResponse {
+  string upload_id = 1;
+}
+
+message MultipartCacheUploadPartRequest {
+  CacheKey cache_key = 1;
+  string upload_id = 2;
+  uint32 part_number = 3;
+}
+
+message MultipartCacheUploadPartResponse {
+  message StringList {
+    repeated string value = 1;
+  }
+
+  string url = 1;
+  map<string, StringList> headers = 2;
+}
+
+message MultipartCacheUploadCommitRequest {
+  message Part {
+    uint32 part_number = 1;
+    string etag = 2;
+  }
+
+  CacheKey cache_key = 1;
+  string upload_id = 2;
+  repeated Part parts = 3;
+}
+
+message MultipartCacheUploadCommitResponse {
+  // nothing for now
 }
 
 message ReportTerminalAttachedRequest {
