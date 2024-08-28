@@ -669,6 +669,9 @@ const (
 	CirrusCIService_ReportTerminalLifecycle_FullMethodName    = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportTerminalLifecycle"
 	CirrusCIService_GenerateCacheUploadURL_FullMethodName     = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/GenerateCacheUploadURL"
 	CirrusCIService_GenerateCacheDownloadURLs_FullMethodName  = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/GenerateCacheDownloadURLs"
+	CirrusCIService_MultipartCacheUploadCreate_FullMethodName = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/MultipartCacheUploadCreate"
+	CirrusCIService_MultipartCacheUploadPart_FullMethodName   = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/MultipartCacheUploadPart"
+	CirrusCIService_MultipartCacheUploadCommit_FullMethodName = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/MultipartCacheUploadCommit"
 )
 
 // CirrusCIServiceClient is the client API for CirrusCIService service.
@@ -700,6 +703,10 @@ type CirrusCIServiceClient interface {
 	ReportTerminalLifecycle(ctx context.Context, in *ReportTerminalLifecycleRequest, opts ...grpc.CallOption) (*ReportTerminalLifecycleResponse, error)
 	GenerateCacheUploadURL(ctx context.Context, in *CacheKey, opts ...grpc.CallOption) (*GenerateURLResponse, error)
 	GenerateCacheDownloadURLs(ctx context.Context, in *CacheKey, opts ...grpc.CallOption) (*GenerateURLsResponse, error)
+	// Multipart cache upload
+	MultipartCacheUploadCreate(ctx context.Context, in *CacheKey, opts ...grpc.CallOption) (*MultipartCacheUploadCreateResponse, error)
+	MultipartCacheUploadPart(ctx context.Context, in *MultipartCacheUploadPartRequest, opts ...grpc.CallOption) (*GenerateURLResponse, error)
+	MultipartCacheUploadCommit(ctx context.Context, in *MultipartCacheUploadCommitRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type cirrusCIServiceClient struct {
@@ -961,6 +968,36 @@ func (c *cirrusCIServiceClient) GenerateCacheDownloadURLs(ctx context.Context, i
 	return out, nil
 }
 
+func (c *cirrusCIServiceClient) MultipartCacheUploadCreate(ctx context.Context, in *CacheKey, opts ...grpc.CallOption) (*MultipartCacheUploadCreateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MultipartCacheUploadCreateResponse)
+	err := c.cc.Invoke(ctx, CirrusCIService_MultipartCacheUploadCreate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cirrusCIServiceClient) MultipartCacheUploadPart(ctx context.Context, in *MultipartCacheUploadPartRequest, opts ...grpc.CallOption) (*GenerateURLResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GenerateURLResponse)
+	err := c.cc.Invoke(ctx, CirrusCIService_MultipartCacheUploadPart_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cirrusCIServiceClient) MultipartCacheUploadCommit(ctx context.Context, in *MultipartCacheUploadCommitRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, CirrusCIService_MultipartCacheUploadCommit_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CirrusCIServiceServer is the server API for CirrusCIService service.
 // All implementations must embed UnimplementedCirrusCIServiceServer
 // for forward compatibility.
@@ -990,6 +1027,10 @@ type CirrusCIServiceServer interface {
 	ReportTerminalLifecycle(context.Context, *ReportTerminalLifecycleRequest) (*ReportTerminalLifecycleResponse, error)
 	GenerateCacheUploadURL(context.Context, *CacheKey) (*GenerateURLResponse, error)
 	GenerateCacheDownloadURLs(context.Context, *CacheKey) (*GenerateURLsResponse, error)
+	// Multipart cache upload
+	MultipartCacheUploadCreate(context.Context, *CacheKey) (*MultipartCacheUploadCreateResponse, error)
+	MultipartCacheUploadPart(context.Context, *MultipartCacheUploadPartRequest) (*GenerateURLResponse, error)
+	MultipartCacheUploadCommit(context.Context, *MultipartCacheUploadCommitRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedCirrusCIServiceServer()
 }
 
@@ -1068,6 +1109,15 @@ func (UnimplementedCirrusCIServiceServer) GenerateCacheUploadURL(context.Context
 }
 func (UnimplementedCirrusCIServiceServer) GenerateCacheDownloadURLs(context.Context, *CacheKey) (*GenerateURLsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateCacheDownloadURLs not implemented")
+}
+func (UnimplementedCirrusCIServiceServer) MultipartCacheUploadCreate(context.Context, *CacheKey) (*MultipartCacheUploadCreateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultipartCacheUploadCreate not implemented")
+}
+func (UnimplementedCirrusCIServiceServer) MultipartCacheUploadPart(context.Context, *MultipartCacheUploadPartRequest) (*GenerateURLResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultipartCacheUploadPart not implemented")
+}
+func (UnimplementedCirrusCIServiceServer) MultipartCacheUploadCommit(context.Context, *MultipartCacheUploadCommitRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultipartCacheUploadCommit not implemented")
 }
 func (UnimplementedCirrusCIServiceServer) mustEmbedUnimplementedCirrusCIServiceServer() {}
 func (UnimplementedCirrusCIServiceServer) testEmbeddedByValue()                         {}
@@ -1453,6 +1503,60 @@ func _CirrusCIService_GenerateCacheDownloadURLs_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CirrusCIService_MultipartCacheUploadCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CacheKey)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CirrusCIServiceServer).MultipartCacheUploadCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CirrusCIService_MultipartCacheUploadCreate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CirrusCIServiceServer).MultipartCacheUploadCreate(ctx, req.(*CacheKey))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CirrusCIService_MultipartCacheUploadPart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultipartCacheUploadPartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CirrusCIServiceServer).MultipartCacheUploadPart(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CirrusCIService_MultipartCacheUploadPart_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CirrusCIServiceServer).MultipartCacheUploadPart(ctx, req.(*MultipartCacheUploadPartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CirrusCIService_MultipartCacheUploadCommit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultipartCacheUploadCommitRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CirrusCIServiceServer).MultipartCacheUploadCommit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CirrusCIService_MultipartCacheUploadCommit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CirrusCIServiceServer).MultipartCacheUploadCommit(ctx, req.(*MultipartCacheUploadCommitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CirrusCIService_ServiceDesc is the grpc.ServiceDesc for CirrusCIService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1531,6 +1635,18 @@ var CirrusCIService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GenerateCacheDownloadURLs",
 			Handler:    _CirrusCIService_GenerateCacheDownloadURLs_Handler,
+		},
+		{
+			MethodName: "MultipartCacheUploadCreate",
+			Handler:    _CirrusCIService_MultipartCacheUploadCreate_Handler,
+		},
+		{
+			MethodName: "MultipartCacheUploadPart",
+			Handler:    _CirrusCIService_MultipartCacheUploadPart_Handler,
+		},
+		{
+			MethodName: "MultipartCacheUploadCommit",
+			Handler:    _CirrusCIService_MultipartCacheUploadCommit_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

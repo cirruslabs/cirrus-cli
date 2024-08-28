@@ -264,6 +264,33 @@ service CirrusCIService {
   }
   rpc GenerateCacheDownloadURLs (CacheKey) returns (GenerateURLsResponse) {
   }
+
+  // Multipart cache upload
+  rpc MultipartCacheUploadCreate(CacheKey) returns (MultipartCacheUploadCreateResponse);
+  rpc MultipartCacheUploadPart(MultipartCacheUploadPartRequest) returns (GenerateURLResponse);
+  rpc MultipartCacheUploadCommit(MultipartCacheUploadCommitRequest) returns (google.protobuf.Empty);
+}
+
+message MultipartCacheUploadCreateResponse {
+  string upload_id = 1;
+}
+
+message MultipartCacheUploadPartRequest {
+  CacheKey cache_key = 1;
+  string upload_id = 2;
+  uint32 part_number = 3;
+  uint64 content_length = 4;
+}
+
+message MultipartCacheUploadCommitRequest {
+  message Part {
+    uint32 part_number = 1;
+    string etag = 2;
+  }
+
+  CacheKey cache_key = 1;
+  string upload_id = 2;
+  repeated Part parts = 3;
 }
 
 message ReportTerminalAttachedRequest {
