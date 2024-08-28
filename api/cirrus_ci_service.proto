@@ -279,6 +279,7 @@ message MultipartCacheUploadPartRequest {
   CacheKey cache_key = 1;
   string upload_id = 2;
   uint32 part_number = 3;
+  uint64 content_length = 4;
 }
 
 message MultipartCacheUploadCommitRequest {
