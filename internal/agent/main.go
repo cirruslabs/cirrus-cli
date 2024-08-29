@@ -194,16 +194,16 @@ func Run(args []string) {
 
 	log.Printf("Connected!\n")
 
-	client.InitClient(conn)
+	client.InitClient(conn, &api.TaskIdentification{
+		TaskId: oldStyleTaskID,
+		Secret: *clientTokenPtr,
+	})
 
 	if *stopHook {
 		log.Printf("Stop hook!\n")
-		taskIdentification := api.TaskIdentification{
-			TaskId: oldStyleTaskID,
-			Secret: *clientTokenPtr,
-		}
+
 		request := api.ReportStopHookRequest{
-			TaskIdentification: &taskIdentification,
+			TaskIdentification: client.CirrusTaskIdentification,
 		}
 		_, err = client.CirrusClient.ReportStopHook(ctx, &request)
 		if err != nil {

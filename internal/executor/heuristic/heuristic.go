@@ -5,7 +5,7 @@ package heuristic
 
 import (
 	"context"
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"net"
 )
@@ -17,7 +17,7 @@ func getCloudBuildSubnet(ctx context.Context) string {
 	}
 	defer cli.Close()
 
-	network, err := cli.NetworkInspect(ctx, CloudBuildNetworkName, types.NetworkInspectOptions{})
+	network, err := cli.NetworkInspect(ctx, CloudBuildNetworkName, network.InspectOptions{})
 	if err != nil {
 		return ""
 	}
