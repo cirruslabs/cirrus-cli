@@ -20,8 +20,6 @@ import (
 	"time"
 )
 
-var cirrusTaskIdentification *api.TaskIdentification
-
 const (
 	activeRequestsPerLogicalCPU = 4
 
@@ -32,9 +30,7 @@ var sem = semaphore.NewWeighted(int64(runtime.NumCPU() * activeRequestsPerLogica
 
 var httpProxyClient = &http.Client{}
 
-func Start(taskIdentification *api.TaskIdentification) string {
-	cirrusTaskIdentification = taskIdentification
-
+func Start() string {
 	maxConcurrentConnections := runtime.NumCPU() * activeRequestsPerLogicalCPU
 	httpProxyClient = &http.Client{
 		Transport: &http.Transport{
@@ -116,7 +112,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func checkCacheExists(w http.ResponseWriter, cacheKey string) {
 	cacheInfoRequest := api.CacheInfoRequest{
-		TaskIdentification: cirrusTaskIdentification,
+		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	}
 	response, err := client.CirrusClient.CacheInfo(context.Background(), &cacheInfoRequest)
@@ -134,7 +130,7 @@ func checkCacheExists(w http.ResponseWriter, cacheKey string) {
 
 func downloadCache(w http.ResponseWriter, r *http.Request, cacheKey string) {
 	key := api.CacheKey{
-		TaskIdentification: cirrusTaskIdentification,
+		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	}
 	response, err := client.CirrusClient.GenerateCacheDownloadURLs(context.Background(), &key)
@@ -189,7 +185,7 @@ func proxyDownloadFromURL(w http.ResponseWriter, url string) bool {
 
 func uploadCacheEntry(w http.ResponseWriter, r *http.Request, cacheKey string) {
 	key := api.CacheKey{
-		TaskIdentification: cirrusTaskIdentification,
+		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	}
 	generateResp, err := client.CirrusClient.GenerateCacheUploadURL(context.Background(), &key)
@@ -240,7 +236,7 @@ func uploadCacheEntry(w http.ResponseWriter, r *http.Request, cacheKey string) {
 
 func deleteCacheEntry(w http.ResponseWriter, cacheKey string) {
 	request := api.DeleteCacheRequest{
-		TaskIdentification: cirrusTaskIdentification,
+		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	}
 

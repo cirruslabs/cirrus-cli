@@ -209,7 +209,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	}
 
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
-		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", http_cache.Start(executor.taskIdentification))
+		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", http_cache.Start())
 	}
 
 	executor.httpCacheHost = executor.env.Get("CIRRUS_HTTP_CACHE_HOST")

@@ -1,66 +1,73 @@
 package uploadable
 
 import (
+	"cmp"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/httprange"
-	"io"
-	"math"
-	"os"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/rangetopart"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"golang.org/x/exp/slices"
 	"sync"
 )
 
 type Uploadable struct {
-	Key     string
-	Version string
+	key      string
+	version  string
+	uploadID string
+	parts    map[uint32]*Part
 
-	file      *os.File
+	RangeToPart *rangetopart.RangeToPart
+
 	finalized bool
 	mtx       sync.Mutex
 }
 
-func New(key string, version string) (*Uploadable, error) {
-	file, err := os.CreateTemp("", "")
-	if err != nil {
-		return nil, err
-	}
-
-	_ = os.Remove(file.Name())
-
-	return &Uploadable{
-		Key:     key,
-		Version: version,
-		file:    file,
-	}, nil
+type Part struct {
+	Number uint32
+	ETag   string
+	Size   int64
 }
 
-func (uploadable *Uploadable) WriteChunk(contentRange string, buf []byte) error {
+func New(key string, version string, uploadID string) *Uploadable {
+	return &Uploadable{
+		key:      key,
+		version:  version,
+		uploadID: uploadID,
+		parts:    map[uint32]*Part{},
+
+		RangeToPart: rangetopart.New(),
+	}
+}
+
+func (uploadable *Uploadable) Key() string {
+	return uploadable.key
+}
+
+func (uploadable *Uploadable) Version() string {
+	return uploadable.version
+}
+
+func (uploadable *Uploadable) UploadID() string {
+	return uploadable.uploadID
+}
+
+func (uploadable *Uploadable) AppendPart(number uint32, etag string, size int64) error {
 	uploadable.mtx.Lock()
 	defer uploadable.mtx.Unlock()
 
 	if uploadable.finalized {
-		return fmt.Errorf("cannot write a chunk to a finalized uploadable")
+		return fmt.Errorf("cannot finalize the uploadable twice")
 	}
 
-	httpRanges, err := httprange.ParseRange(contentRange, math.MaxInt64)
-	if err != nil {
-		return fmt.Errorf("failed to parse Content-Range header: %w", err)
-	}
-
-	if len(httpRanges) != 1 {
-		return fmt.Errorf("expected a single range in the \"Content-Range\" header, "+
-			"got %d ranges instead", len(httpRanges))
-	}
-
-	_, err = uploadable.file.WriteAt(buf, httpRanges[0].Start)
-	if err != nil {
-		return fmt.Errorf("failed to write the chunk to a file associated "+
-			"with this uploadable: %w", err)
+	uploadable.parts[number] = &Part{
+		Number: number,
+		ETag:   etag,
+		Size:   size,
 	}
 
 	return nil
 }
 
-func (uploadable *Uploadable) Finalize() (io.ReadCloser, int64, error) {
+func (uploadable *Uploadable) Finalize() ([]*api.MultipartCacheUploadCommitRequest_Part, int64, error) {
 	uploadable.mtx.Lock()
 	defer uploadable.mtx.Unlock()
 
@@ -68,19 +75,24 @@ func (uploadable *Uploadable) Finalize() (io.ReadCloser, int64, error) {
 		return nil, 0, fmt.Errorf("cannot finalize the uploadable twice")
 	}
 
-	// Determine the file size (needed for the consumer)
-	size, err := uploadable.file.Seek(0, io.SeekEnd)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// Rewind the file
-	if _, err := uploadable.file.Seek(0, io.SeekStart); err != nil {
-		return nil, 0, err
-	}
-
 	// Mark the uploadable as finalized
 	uploadable.finalized = true
 
-	return uploadable.file, size, nil
+	var parts []*api.MultipartCacheUploadCommitRequest_Part
+	var partsSize int64
+
+	for _, part := range uploadable.parts {
+		parts = append(parts, &api.MultipartCacheUploadCommitRequest_Part{
+			PartNumber: part.Number,
+			Etag:       part.ETag,
+		})
+
+		partsSize += part.Size
+	}
+
+	slices.SortFunc(parts, func(a, b *api.MultipartCacheUploadCommitRequest_Part) int {
+		return cmp.Compare(a.PartNumber, b.PartNumber)
+	})
+
+	return parts, partsSize, nil
 }

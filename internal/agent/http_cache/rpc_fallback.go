@@ -12,7 +12,7 @@ import (
 
 func downloadCacheViaRPC(w http.ResponseWriter, r *http.Request, cacheKey string) {
 	cacheStream, err := client.CirrusClient.DownloadCache(r.Context(), &api.DownloadCacheRequest{
-		TaskIdentification: cirrusTaskIdentification,
+		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	})
 	if err != nil {
@@ -77,7 +77,7 @@ func uploadCacheEntryViaRPC(w http.ResponseWriter, r *http.Request, cacheKey str
 	if err := uploadCacheClient.Send(&api.CacheEntry{
 		Value: &api.CacheEntry_Key{
 			Key: &api.CacheKey{
-				TaskIdentification: cirrusTaskIdentification,
+				TaskIdentification: client.CirrusTaskIdentification,
 				CacheKey:           cacheKey,
 			},
 		},

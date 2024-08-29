@@ -18,9 +18,9 @@ import (
 func TestGHA(t *testing.T) {
 	ctx := context.Background()
 
-	client.InitClient(cirruscimock.ClientConn(t))
+	client.InitClient(cirruscimock.ClientConn(t), &api.TaskIdentification{})
 
-	httpCacheURL := "http://" + http_cache.Start(&api.TaskIdentification{}) + "/"
+	httpCacheURL := "http://" + http_cache.Start() + "/"
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"ac":  `[]`,

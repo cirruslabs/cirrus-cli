@@ -2,11 +2,14 @@ package ghacache
 
 import (
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/httprange"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/uploadable"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/go-chi/render"
 	"github.com/puzpuzpuz/xsync/v3"
-	"io"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -100,15 +103,18 @@ func (cache *GHACache) reserveUploadable(writer http.ResponseWriter, request *ht
 		CacheID: rand.Int63n(jsNumberMaxSafeInteger),
 	}
 
-	uploadable, err := uploadable.New(jsonReq.Key, jsonReq.Version)
+	grpcResp, err := client.CirrusClient.MultipartCacheUploadCreate(request.Context(), &api.CacheKey{
+		TaskIdentification: client.CirrusTaskIdentification,
+		CacheKey:           httpCacheKey(jsonReq.Key, jsonReq.Version),
+	})
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed instantiate "+
-			"an uploadable: %v", err)
+		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to create "+
+			"multipart upload for key %q and version %q: %v", jsonReq.Key, jsonReq.Version, err)
 
 		return
 	}
 
-	cache.uploadables.Store(jsonResp.CacheID, uploadable)
+	cache.uploadables.Store(jsonResp.CacheID, uploadable.New(jsonReq.Key, jsonReq.Version, grpcResp.UploadId))
 
 	render.JSON(writer, request, &jsonResp)
 }
@@ -130,17 +136,74 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	bodyBytes, err := io.ReadAll(request.Body)
+	httpRanges, err := httprange.ParseRange(request.Header.Get("Content-Range"), math.MaxInt64)
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to read a "+
-			"chunk from the user for the uploadable %d: %v", id, err)
+		fail(writer, request, http.StatusBadRequest, "GHA cache failed to parse Content-Range header %q: %v",
+			request.Header.Get("Content-Range"), err)
 
 		return
 	}
 
-	if err := uploadable.WriteChunk(request.Header.Get("Content-Range"), bodyBytes); err != nil {
-		fail(writer, request, http.StatusBadRequest, "GHA cache failed to write a chunk to "+
-			"the uploadable %d: %v", id, err)
+	if len(httpRanges) != 1 {
+		fail(writer, request, http.StatusBadRequest, "GHA cache expected exactly one Content-Range value, got %d",
+			len(httpRanges))
+
+		return
+	}
+
+	partNumber, err := uploadable.RangeToPart.Tell(request.Context(), httpRanges[0].Start, httpRanges[0].Length)
+	if err != nil {
+		fail(writer, request, http.StatusBadRequest, "GHA cache failed to tell the part number for "+
+			"Content-Range header %q: %v", request.Header.Get("Content-Range"), err)
+
+		return
+	}
+
+	response, err := client.CirrusClient.MultipartCacheUploadPart(request.Context(), &api.MultipartCacheUploadPartRequest{
+		CacheKey: &api.CacheKey{
+			TaskIdentification: client.CirrusTaskIdentification,
+			CacheKey:           httpCacheKey(uploadable.Key(), uploadable.Version()),
+		},
+		UploadId:      uploadable.UploadID(),
+		PartNumber:    uint32(partNumber),
+		ContentLength: uint64(httpRanges[0].Length),
+	})
+	if err != nil {
+		fail(writer, request, http.StatusInternalServerError, "GHA cache failed create pre-signed "+
+			"upload part URL for key %q, version %q and part %d: %v", uploadable.Key(),
+			uploadable.Version(), partNumber, err)
+
+		return
+	}
+
+	uploadPartRequest, err := http.NewRequest(http.MethodPut, response.Url, request.Body)
+	if err != nil {
+		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to create upload part "+
+			"request for key %q, version %q and part %d: %v", uploadable.Key(), uploadable.Version(), partNumber, err)
+
+		return
+	}
+
+	uploadPartResponse, err := http.DefaultClient.Do(uploadPartRequest)
+	if err != nil {
+		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to upload part "+
+			"for key %q, version %q and part %d: %v", uploadable.Key(), uploadable.Version(), partNumber, err)
+
+		return
+	}
+
+	if uploadPartResponse.StatusCode != http.StatusOK {
+		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to upload part "+
+			"for key %q, version %q and part %d: got HTTP %d", uploadable.Key(), uploadable.Version(), partNumber,
+			uploadPartResponse.StatusCode)
+
+		return
+	}
+
+	err = uploadable.AppendPart(uint32(partNumber), uploadPartResponse.Header.Get("ETag"), httpRanges[0].Length)
+	if err != nil {
+		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to append part "+
+			"for key %q, version %q and part %d: %v", uploadable.Key(), uploadable.Version(), partNumber, err)
 
 		return
 	}
@@ -177,7 +240,7 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	finalizedUploadableReader, finalizedUploadableSize, err := uploadable.Finalize()
+	parts, partsSize, err := uploadable.Finalize()
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to "+
 			"finalize uploadable %d: %v", id, err)
@@ -185,43 +248,26 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	if jsonReq.Size != finalizedUploadableSize {
+	if jsonReq.Size != partsSize {
 		fail(writer, request, http.StatusBadRequest, "GHA cache detected a cache entry "+
 			"size mismatch for uploadable %d: expected %d bytes, got %d bytes",
-			id, finalizedUploadableSize, jsonReq.Size)
+			id, partsSize, jsonReq.Size)
 
 		return
 	}
 
-	req, err := http.NewRequestWithContext(request.Context(), http.MethodPost, cache.httpCacheURL(uploadable.Key,
-		uploadable.Version), finalizedUploadableReader)
+	_, err = client.CirrusClient.MultipartCacheUploadCommit(request.Context(), &api.MultipartCacheUploadCommitRequest{
+		CacheKey: &api.CacheKey{
+			TaskIdentification: client.CirrusTaskIdentification,
+			CacheKey:           httpCacheKey(uploadable.Key(), uploadable.Version()),
+		},
+		UploadId: uploadable.UploadID(),
+		Parts:    parts,
+	})
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to "+
-			"upload the uploadable with ID %d: %v", id, err)
-
-		return
-	}
-
-	// Explicitly set the Content-Length header,
-	// otherwise HTTP 411 Length Required from
-	// the upstream S3-compatible server
-	req.ContentLength = finalizedUploadableSize
-
-	// Set the Content-Type header to indicate
-	// that we're sending arbitrary binary data
-	req.Header.Set("Content-Type", "application/octet-stream")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to "+
-			"upload the uploadable with ID %d: %v", id, err)
-
-		return
-	}
-
-	if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
-		fail(writer, request, resp.StatusCode, "GHA cache failed to "+
-			"upload the uploadable with ID %d: got HTTP %d", id, resp.StatusCode)
+		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to commit multipart upload "+
+			"for key %q, version %q and uploadable %q: %v", uploadable.Key(), uploadable.Version(),
+			uploadable.UploadID(), err)
 
 		return
 	}
@@ -229,8 +275,12 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 	writer.WriteHeader(http.StatusCreated)
 }
 
+func httpCacheKey(key string, version string) string {
+	return fmt.Sprintf("%s-%s", url.PathEscape(key), url.PathEscape(version))
+}
+
 func (cache *GHACache) httpCacheURL(key string, version string) string {
-	return fmt.Sprintf("http://%s/%s-%s", cache.cacheHost, url.PathEscape(key), url.PathEscape(version))
+	return fmt.Sprintf("http://%s/%s", cache.cacheHost, httpCacheKey(key, version))
 }
 
 func getID(request *http.Request) (int64, bool) {

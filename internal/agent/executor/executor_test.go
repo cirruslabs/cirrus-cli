@@ -108,7 +108,7 @@ func TestVaultSpecificVariableExpansion(t *testing.T) {
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 
-	client.InitClient(conn)
+	client.InitClient(conn, &api.TaskIdentification{})
 
 	// Run the executor
 	executor := executor.NewExecutor(0, "", "", "", "",
