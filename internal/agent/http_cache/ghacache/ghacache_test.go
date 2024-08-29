@@ -11,11 +11,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	actionscache "github.com/tonistiigi/go-actions-cache"
+	"os"
 	"testing"
 	"time"
 )
 
 func TestGHA(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
 	ctx := context.Background()
 
 	client.InitClient(cirruscimock.ClientConn(t), &api.TaskIdentification{})
