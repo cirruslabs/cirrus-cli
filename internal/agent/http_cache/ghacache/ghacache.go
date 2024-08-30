@@ -184,6 +184,18 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
+	// Golang's HTTP client won't send the Content-Length
+	// because it doesn't know the request.Body's size,
+	// so we do it for it, otherwise we'll get HTTP 403
+	// from S3 since non-existent "Content-Length" header
+	// is not equal to "Content-Length: X" that was pre-signed.
+	uploadPartRequest.ContentLength = httpRanges[0].Length
+
+	// Add headers mandated by the pre-signed request
+	for key, value := range response.ExtraHeaders {
+		uploadPartRequest.Header.Set(key, value)
+	}
+
 	uploadPartResponse, err := http.DefaultClient.Do(uploadPartRequest)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to upload part "+
