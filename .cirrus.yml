@@ -79,6 +79,8 @@ task:
     - sudo apt-get update && sudo apt-get -y install apt-transport-https ca-certificates
     - echo "deb [trusted=yes] https://apt.fury.io/cirruslabs/ /" | sudo tee /etc/apt/sources.list.d/cirruslabs.list
     - sudo apt-get update && sudo apt-get -y install vetu
+  pre_pull_vm_script:
+    - vetu pull $CIRRUS_INTERNAL_VETU_VM
   test_script:
     - wget --no-verbose -O - https://go.dev/dl/go1.22.2.linux-arm64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
