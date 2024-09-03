@@ -239,7 +239,6 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 
 		return
 	}
-	defer cache.uploadables.Delete(id)
 
 	var jsonReq struct {
 		Size int64 `json:"size"`
@@ -283,6 +282,9 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 
 		return
 	}
+
+	// Delete uploadable only on success. GHA Runner can retry in case of a failure.
+	cache.uploadables.Delete(id)
 
 	writer.WriteHeader(http.StatusCreated)
 }
