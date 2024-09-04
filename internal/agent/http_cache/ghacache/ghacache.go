@@ -8,6 +8,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/go-chi/render"
 	"github.com/puzpuzpuz/xsync/v3"
+	"github.com/samber/lo"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"log"
 	"math"
 	"math/rand"
@@ -55,33 +58,42 @@ func (cache *GHACache) get(writer http.ResponseWriter, request *http.Request) {
 	keys := strings.Split(request.URL.Query().Get("keys"), ",")
 	version := request.URL.Query().Get("version")
 
-	for _, key := range keys {
-		httpCacheURL := cache.httpCacheURL(key, version)
+	keysWithVersions := lo.Map(keys, func(key string, _ int) string {
+		return key + version
+	})
 
-		resp, err := http.Head(httpCacheURL)
-		if err != nil {
-			fail(writer, request, http.StatusInternalServerError, "GHA cache failed to "+
-				"retrieve %q: %v", httpCacheURL, err)
-
-			return
-		}
-
-		if resp.StatusCode == http.StatusOK {
-			jsonResp := struct {
-				Key string `json:"cacheKey"`
-				URL string `json:"archiveLocation"`
-			}{
-				Key: key,
-				URL: httpCacheURL,
-			}
-
-			render.JSON(writer, request, &jsonResp)
-
-			return
-		}
+	grpcRequest := &api.CacheInfoRequest{
+		TaskIdentification: client.CirrusTaskIdentification,
+		CacheKey:           keysWithVersions[0],
 	}
 
-	writer.WriteHeader(http.StatusNoContent)
+	if len(keysWithVersions) > 1 {
+		grpcRequest.CacheKeyPrefixes = keysWithVersions[1:]
+	}
+
+	grpcResponse, err := client.CirrusClient.CacheInfo(request.Context(), grpcRequest)
+	if err != nil {
+		if status, ok := status.FromError(err); ok && status.Code() == codes.NotFound {
+			writer.WriteHeader(http.StatusNoContent)
+
+			return
+		}
+
+		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to "+
+			"retrieve information about cache key %q: %v", keys[0], err)
+
+		return
+	}
+
+	jsonResp := struct {
+		Key string `json:"cacheKey"`
+		URL string `json:"archiveLocation"`
+	}{
+		Key: grpcResponse.Info.Key,
+		URL: cache.httpCacheURL(grpcResponse.Info.Key, version),
+	}
+
+	render.JSON(writer, request, &jsonResp)
 }
 
 func (cache *GHACache) reserveUploadable(writer http.ResponseWriter, request *http.Request) {

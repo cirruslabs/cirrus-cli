@@ -494,6 +494,7 @@ message HeartbeatResponse {
 message CacheInfoRequest {
   TaskIdentification task_identification = 1;
   string cache_key = 2;
+  repeated string cache_key_prefixes = 3;
 }
 
 message CacheInfo {
