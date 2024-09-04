@@ -17,6 +17,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"io"
 	"net"
+	"net/http"
 	"testing"
 	"time"
 )
@@ -138,8 +139,8 @@ func (mock *cirrusCIMock) CacheInfo(ctx context.Context, request *api.CacheInfoR
 		Key:    aws.String(request.CacheKey),
 	})
 	if err != nil {
-		var aerr awserr.Error
-		if errors.As(err, &aerr) && aerr.Code() == s3.ErrCodeNoSuchKey {
+		var requestFailure awserr.RequestFailure
+		if errors.As(err, &requestFailure) && requestFailure.StatusCode() == http.StatusNotFound {
 			return nil, status.Errorf(codes.NotFound, "cache entry for key %s is not found",
 				request.CacheKey)
 		}

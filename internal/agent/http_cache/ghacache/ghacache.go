@@ -59,7 +59,7 @@ func (cache *GHACache) get(writer http.ResponseWriter, request *http.Request) {
 	version := request.URL.Query().Get("version")
 
 	keysWithVersions := lo.Map(keys, func(key string, _ int) string {
-		return key + version
+		return httpCacheKey(key, version)
 	})
 
 	grpcRequest := &api.CacheInfoRequest{
@@ -89,8 +89,8 @@ func (cache *GHACache) get(writer http.ResponseWriter, request *http.Request) {
 		Key string `json:"cacheKey"`
 		URL string `json:"archiveLocation"`
 	}{
-		Key: grpcResponse.Info.Key,
-		URL: cache.httpCacheURL(grpcResponse.Info.Key, version),
+		Key: strings.TrimSuffix(grpcResponse.Info.Key, "-"+version),
+		URL: cache.httpCacheURL(grpcResponse.Info.Key),
 	}
 
 	render.JSON(writer, request, &jsonResp)
@@ -291,8 +291,8 @@ func httpCacheKey(key string, version string) string {
 	return fmt.Sprintf("%s-%s", url.PathEscape(key), url.PathEscape(version))
 }
 
-func (cache *GHACache) httpCacheURL(key string, version string) string {
-	return fmt.Sprintf("http://%s/%s", cache.cacheHost, httpCacheKey(key, version))
+func (cache *GHACache) httpCacheURL(keyWithVersion string) string {
+	return fmt.Sprintf("http://%s/%s", cache.cacheHost, keyWithVersion)
 }
 
 func getID(request *http.Request) (int64, bool) {
