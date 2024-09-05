@@ -306,7 +306,7 @@ func httpCacheKey(key string, version string) string {
 }
 
 func (cache *GHACache) httpCacheURL(keyWithVersion string) string {
-	return fmt.Sprintf("http://%s/%s", cache.cacheHost, keyWithVersion)
+	return fmt.Sprintf("http://%s/%s", cache.cacheHost, url.PathEscape(keyWithVersion))
 }
 
 func getID(request *http.Request) (int64, bool) {
