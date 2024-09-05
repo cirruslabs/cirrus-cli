@@ -89,7 +89,7 @@ func (cache *GHACache) get(writer http.ResponseWriter, request *http.Request) {
 		Key string `json:"cacheKey"`
 		URL string `json:"archiveLocation"`
 	}{
-		Key: strings.TrimSuffix(grpcResponse.Info.Key, "-"+version),
+		Key: strings.TrimPrefix(grpcResponse.Info.Key, httpCacheKey("", version)),
 		URL: cache.httpCacheURL(grpcResponse.Info.Key),
 	}
 
@@ -288,7 +288,7 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 }
 
 func httpCacheKey(key string, version string) string {
-	return fmt.Sprintf("%s-%s", url.PathEscape(key), url.PathEscape(version))
+	return fmt.Sprintf("%s-%s", url.PathEscape(version), url.PathEscape(key))
 }
 
 func (cache *GHACache) httpCacheURL(keyWithVersion string) string {
