@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Masterminds/semver/v3"
 	"github.com/antihax/optional"
 	"github.com/avast/retry-go/v4"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/podman"
@@ -33,7 +34,7 @@ type Podman struct {
 	httpClient *http.Client
 	cli        *swagger.APIClient
 
-	usingNumericalContainerState bool
+	version *semver.Version
 }
 
 func NewPodman() (ContainerBackend, error) {
@@ -82,9 +83,8 @@ func NewPodman() (ContainerBackend, error) {
 	if err != nil {
 		return nil, err
 	}
-	if version.Version == "3.0.0" {
-		podman.usingNumericalContainerState = true
-	}
+
+	podman.version, _ = semver.NewVersion(version.Version)
 
 	return podman, nil
 }
@@ -108,6 +108,25 @@ func (backend *Podman) Close() error {
 				killSent = true
 			}
 		case err := <-doneChan:
+			// Podman < 4.1.0 and lower doesn't seem to
+			// exit cleanly, yielding exit code 1.
+			//
+			// So, let's ignore that since it's a pretty
+			// old Podman version anyway.
+			//
+			// From the changelog:
+			//
+			// >Podman now exits cleanly (with exit code 0) after receiving SIGTERM.[1]
+			//
+			// [1]: https://github.com/containers/podman/releases/tag/v4.1.0
+			if backend.version != nil {
+				execError := &exec.ExitError{}
+				if errors.As(err, &execError) && execError.ExitCode() == 1 &&
+					backend.version.LessThan(semver.MustParse("v4.1.0")) {
+					return nil
+				}
+			}
+
 			return err
 		default:
 			if !interruptSent {
@@ -431,7 +450,7 @@ func (backend *Podman) ContainerWait(ctx context.Context, id string) (<-chan Con
 	go func() {
 		condition := "stopped"
 
-		if backend.usingNumericalContainerState {
+		if backend.version != nil && backend.version.Equal(semver.MustParse("v3.0.0")) {
 			// https://github.com/containers/podman/blob/v3.0.0/libpod/define/containerstate.go#L22
 			condition = "4"
 		}

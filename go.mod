@@ -68,6 +68,7 @@ require (
 
 require (
 	github.com/IGLOU-EU/go-wildcard v1.0.3
+	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/bmatcuk/doublestar v1.3.4
 	github.com/cirruslabs/cirrus-ci-annotations v0.10.0
