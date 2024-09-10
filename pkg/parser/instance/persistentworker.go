@@ -39,7 +39,7 @@ func NewPersistentWorker(mergedEnv map[string]string, parserKit *parserkit.Parse
 			return err
 		}
 
-		pworker.proto.ResourcesToAcquire = resources
+		pworker.proto.Resources = resources
 
 		return nil
 	})
