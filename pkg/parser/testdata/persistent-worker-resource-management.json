@@ -19,7 +19,7 @@
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
-      "resourcesToAcquire": {
+      "resources": {
         "cpu": 0.5,
         "tart-vms": 2
       }
