@@ -1,4 +1,9 @@
+env:
+  NAME: test-name
+
 aliases: &worker_body
+  labels:
+    name: $NAME
   isolation:
     container:
       image: alpine:latest
