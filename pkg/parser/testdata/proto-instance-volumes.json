@@ -7,6 +7,9 @@
         "name": "clone"
       }
     ],
+    "environment": {
+      "NAME": "test-name"
+    },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
       "isolation": {
@@ -22,6 +25,9 @@
             }
           ]
         }
+      },
+      "labels": {
+        "name": "test-name"
       }
     },
     "metadata": {
@@ -44,7 +50,8 @@
       }
     ],
     "environment": {
-      "CIRRUS_OS": "linux"
+      "CIRRUS_OS": "linux",
+      "NAME": "test-name"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance",
@@ -61,6 +68,9 @@
             }
           ]
         }
+      },
+      "labels": {
+        "name": "test-name"
       }
     },
     "localGroupId": "1",
