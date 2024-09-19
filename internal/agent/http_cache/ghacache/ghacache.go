@@ -79,7 +79,7 @@ func (cache *GHACache) get(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to "+
+		fail(writer, request, http.StatusServiceUnavailable, "GHA cache failed to "+
 			"retrieve information about cache key %q: %v", keys[0], err)
 
 		return
@@ -120,7 +120,7 @@ func (cache *GHACache) reserveUploadable(writer http.ResponseWriter, request *ht
 		CacheKey:           httpCacheKey(jsonReq.Key, jsonReq.Version),
 	})
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to create "+
+		fail(writer, request, http.StatusServiceUnavailable, "GHA cache failed to create "+
 			"multipart upload for key %q and version %q: %v", jsonReq.Key, jsonReq.Version, err)
 
 		return
@@ -181,7 +181,7 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 		ContentLength: uint64(httpRanges[0].Length),
 	})
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed create pre-signed "+
+		fail(writer, request, http.StatusServiceUnavailable, "GHA cache failed create pre-signed "+
 			"upload part URL for key %q, version %q and part %d: %v", uploadable.Key(),
 			uploadable.Version(), partNumber, err)
 
@@ -210,27 +210,21 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 
 	uploadPartResponse, err := http.DefaultClient.Do(uploadPartRequest)
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to upload part "+
+		fail(writer, request, http.StatusServiceUnavailable, "GHA cache failed to upload part "+
 			"for key %q, version %q and part %d: %v", uploadable.Key(), uploadable.Version(), partNumber, err)
 
 		return
 	}
 
 	if uploadPartResponse.StatusCode != http.StatusOK {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to upload part "+
+		fail(writer, request, http.StatusServiceUnavailable, "GHA cache failed to upload part "+
 			"for key %q, version %q and part %d: got HTTP %d", uploadable.Key(), uploadable.Version(), partNumber,
 			uploadPartResponse.StatusCode)
 
 		return
 	}
 
-	err = uploadable.AppendPart(uint32(partNumber), uploadPartResponse.Header.Get("ETag"), httpRanges[0].Length)
-	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to append part "+
-			"for key %q, version %q and part %d: %v", uploadable.Key(), uploadable.Version(), partNumber, err)
-
-		return
-	}
+	uploadable.AppendPart(uint32(partNumber), uploadPartResponse.Header.Get("ETag"), httpRanges[0].Length)
 
 	writer.WriteHeader(http.StatusOK)
 }
@@ -263,13 +257,7 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	parts, partsSize, err := uploadable.Finalize()
-	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to "+
-			"finalize uploadable %d: %v", id, err)
-
-		return
-	}
+	parts, partsSize := uploadable.BuildCommitRequestParts()
 
 	if jsonReq.Size != partsSize {
 		fail(writer, request, http.StatusBadRequest, "GHA cache detected a cache entry "+
@@ -279,7 +267,7 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	_, err = client.CirrusClient.MultipartCacheUploadCommit(request.Context(), &api.MultipartCacheUploadCommitRequest{
+	_, err := client.CirrusClient.MultipartCacheUploadCommit(request.Context(), &api.MultipartCacheUploadCommitRequest{
 		CacheKey: &api.CacheKey{
 			TaskIdentification: client.CirrusTaskIdentification,
 			CacheKey:           httpCacheKey(uploadable.Key(), uploadable.Version()),
@@ -288,7 +276,7 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 		Parts:    parts,
 	})
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to commit multipart upload "+
+		fail(writer, request, http.StatusServiceUnavailable, "GHA cache failed to commit multipart upload "+
 			"for key %q, version %q and uploadable %q: %v", uploadable.Key(), uploadable.Version(),
 			uploadable.UploadID(), err)
 

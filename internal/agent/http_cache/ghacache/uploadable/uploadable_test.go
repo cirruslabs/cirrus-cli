@@ -14,7 +14,7 @@ func TestPartsAreOrdered(t *testing.T) {
 	require.NoError(t, uploadable.AppendPart(1, "etag-1", 12))
 	require.NoError(t, uploadable.AppendPart(3, "etag-3", 46))
 
-	parts, size, err := uploadable.Finalize()
+	parts, size, err := uploadable.BuildCommitRequestParts()
 	require.NoError(t, err)
 
 	require.Equal(t, []*api.MultipartCacheUploadCommitRequest_Part{

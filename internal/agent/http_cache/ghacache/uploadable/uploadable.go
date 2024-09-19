@@ -2,7 +2,6 @@ package uploadable
 
 import (
 	"cmp"
-	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/rangetopart"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"golang.org/x/exp/slices"
@@ -17,8 +16,7 @@ type Uploadable struct {
 
 	RangeToPart *rangetopart.RangeToPart
 
-	finalized bool
-	mtx       sync.Mutex
+	mtx sync.Mutex
 }
 
 type Part struct {
@@ -50,33 +48,20 @@ func (uploadable *Uploadable) UploadID() string {
 	return uploadable.uploadID
 }
 
-func (uploadable *Uploadable) AppendPart(number uint32, etag string, size int64) error {
+func (uploadable *Uploadable) AppendPart(number uint32, etag string, size int64) {
 	uploadable.mtx.Lock()
 	defer uploadable.mtx.Unlock()
-
-	if uploadable.finalized {
-		return fmt.Errorf("cannot finalize the uploadable twice")
-	}
 
 	uploadable.parts[number] = &Part{
 		Number: number,
 		ETag:   etag,
 		Size:   size,
 	}
-
-	return nil
 }
 
-func (uploadable *Uploadable) Finalize() ([]*api.MultipartCacheUploadCommitRequest_Part, int64, error) {
+func (uploadable *Uploadable) BuildCommitRequestParts() ([]*api.MultipartCacheUploadCommitRequest_Part, int64) {
 	uploadable.mtx.Lock()
 	defer uploadable.mtx.Unlock()
-
-	if uploadable.finalized {
-		return nil, 0, fmt.Errorf("cannot finalize the uploadable twice")
-	}
-
-	// Mark the uploadable as finalized
-	uploadable.finalized = true
 
 	var parts []*api.MultipartCacheUploadCommitRequest_Part
 	var partsSize int64
@@ -94,5 +79,5 @@ func (uploadable *Uploadable) Finalize() ([]*api.MultipartCacheUploadCommitReque
 		return cmp.Compare(a.PartNumber, b.PartNumber)
 	})
 
-	return parts, partsSize, nil
+	return parts, partsSize
 }
