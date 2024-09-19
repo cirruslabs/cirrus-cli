@@ -1,6 +1,7 @@
 package ghacache
 
 import (
+	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/httprange"
@@ -11,6 +12,7 @@ import (
 	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"io"
 	"log"
 	"math"
 	"math/rand"
@@ -210,14 +212,33 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 
 	uploadPartResponse, err := http.DefaultClient.Do(uploadPartRequest)
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to upload part "+
+		status := http.StatusInternalServerError
+
+		// Cause the cache-related code in the Actions Toolkit to make a re-try[1].
+		//
+		// [1]: https://github.com/actions/toolkit/blob/6dd369c0e648ed58d0ead326cf2426906ea86401/packages/cache/src/internal/requestUtils.ts#L24-L34
+		if errors.Is(err, io.EOF) {
+			status = http.StatusBadGateway
+		}
+
+		fail(writer, request, status, "GHA cache failed to upload part "+
 			"for key %q, version %q and part %d: %v", uploadable.Key(), uploadable.Version(), partNumber, err)
 
 		return
 	}
-
+	// Cause the cache-related code in the Actions Toolkit to make a re-try[1].
+	//
+	// [1]: https://github.com/actions/toolkit/blob/6dd369c0e648ed58d0ead326cf2426906ea86401/packages/cache/src/internal/requestUtils.ts#L24-L34
 	if uploadPartResponse.StatusCode != http.StatusOK {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to upload part "+
+		status := http.StatusInternalServerError
+
+		if uploadPartResponse.StatusCode == http.StatusBadGateway ||
+			uploadPartResponse.StatusCode == http.StatusServiceUnavailable ||
+			uploadPartResponse.StatusCode == http.StatusGatewayTimeout {
+			status = uploadPartResponse.StatusCode
+		}
+
+		fail(writer, request, status, "GHA cache failed to upload part "+
 			"for key %q, version %q and part %d: got HTTP %d", uploadable.Key(), uploadable.Version(), partNumber,
 			uploadPartResponse.StatusCode)
 
