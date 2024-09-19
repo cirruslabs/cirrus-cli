@@ -210,14 +210,21 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 
 	uploadPartResponse, err := http.DefaultClient.Do(uploadPartRequest)
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to upload part "+
+		// Return HTTP 502 to cause the cache-related code in the Actions Toolkit to make a re-try[1].
+		//
+		// [1]: https://github.com/actions/toolkit/blob/6dd369c0e648ed58d0ead326cf2426906ea86401/packages/cache/src/internal/requestUtils.ts#L24-L34
+		fail(writer, request, http.StatusBadGateway, "GHA cache failed to upload part "+
 			"for key %q, version %q and part %d: %v", uploadable.Key(), uploadable.Version(), partNumber, err)
 
 		return
 	}
 
 	if uploadPartResponse.StatusCode != http.StatusOK {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to upload part "+
+		// We pass through the status code here so that the cache-related
+		// code in the Actions Toolkit will hopefully make a re-try[1].
+		//
+		// [1]: https://github.com/actions/toolkit/blob/6dd369c0e648ed58d0ead326cf2426906ea86401/packages/cache/src/internal/requestUtils.ts#L24-L34
+		fail(writer, request, uploadPartResponse.StatusCode, "GHA cache failed to upload part "+
 			"for key %q, version %q and part %d: got HTTP %d", uploadable.Key(), uploadable.Version(), partNumber,
 			uploadPartResponse.StatusCode)
 
