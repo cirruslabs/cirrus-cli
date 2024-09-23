@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	sentryhttp "github.com/getsentry/sentry-go/http"
 	"golang.org/x/sync/semaphore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -57,8 +58,10 @@ func Start() string {
 		log.Printf("Starting http cache server %s\n", address)
 
 		// GitHub Actions cache API
-		mux.Handle(ghacache.APIMountPoint+"/", http.StripPrefix(ghacache.APIMountPoint,
-			ghacache.New(address)))
+		sentryHandler := sentryhttp.New(sentryhttp.Options{})
+
+		mux.Handle(ghacache.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(ghacache.APIMountPoint,
+			ghacache.New(address))))
 
 		go http.Serve(listener, mux)
 	} else {
