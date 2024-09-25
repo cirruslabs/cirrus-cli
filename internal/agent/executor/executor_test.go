@@ -111,7 +111,7 @@ func TestVaultSpecificVariableExpansion(t *testing.T) {
 	client.InitClient(conn, "test", "test")
 
 	// Run the executor
-	executor := executor.NewExecutor(0, "", "", "", "",
+	executor := executor.NewExecutor("0", "", "", "", "",
 		t.TempDir())
 	executor.RunBuild(context.Background())
 
