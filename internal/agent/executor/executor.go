@@ -33,7 +33,8 @@ type CommandAndLogs struct {
 }
 
 type Executor struct {
-	taskIdentification   *api.TaskIdentification
+	taskId               string
+	clientToken          string
 	serverToken          string
 	backgroundCommands   []CommandAndLogs
 	httpCacheHost        string
@@ -57,19 +58,16 @@ var (
 )
 
 func NewExecutor(
-	taskId int64,
-	clientToken,
+	taskId string,
+	clientToken string,
 	serverToken string,
 	commandFrom string,
 	commandTo string,
 	preCreatedWorkingDir string,
 ) *Executor {
-	taskIdentification := &api.TaskIdentification{
-		TaskId: taskId,
-		Secret: clientToken,
-	}
 	return &Executor{
-		taskIdentification:   taskIdentification,
+		taskId:               taskId,
+		clientToken:          clientToken,
 		serverToken:          serverToken,
 		backgroundCommands:   make([]CommandAndLogs, 0),
 		httpCacheHost:        "",
@@ -79,6 +77,10 @@ func NewExecutor(
 		cacheAttempts:        NewCacheAttempts(),
 		env:                  environment.NewEmpty(),
 	}
+}
+
+func (executor *Executor) taskIdentification() *api.TaskIdentification {
+	return api.OldTaskIdentification(executor.taskId, executor.clientToken)
 }
 
 func (executor *Executor) RunBuild(ctx context.Context) {
@@ -96,7 +98,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	err = retry.Do(
 		func() error {
 			response, err = client.CirrusClient.InitialCommands(ctx, &api.InitialCommandsRequest{
-				TaskIdentification:  executor.taskIdentification,
+				TaskIdentification:  executor.taskIdentification(),
 				LocalTimestamp:      time.Now().Unix(),
 				ContinueFromCommand: executor.commandFrom,
 				Retry:               numRetries != 0,
@@ -260,7 +262,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 
 		shellEnv := append(os.Environ(), EnvMapAsSlice(executor.env.Items())...)
 
-		executor.terminalWrapper = terminalwrapper.New(timeoutCtx, executor.taskIdentification, terminalServerAddress,
+		executor.terminalWrapper = terminalwrapper.New(timeoutCtx, executor.taskIdentification(), terminalServerAddress,
 			expireIn, shellEnv)
 	}
 
@@ -285,7 +287,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			Name:   command.Name,
 			Status: api.Status_EXECUTING,
 		})
-		ub.Flush(ctx, executor.taskIdentification)
+		ub.Flush(ctx, executor.taskIdentification())
 
 		log.Printf("Executing %s...", command.Name)
 
@@ -323,7 +325,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		})
 	}
 
-	ub.Flush(ctx, executor.taskIdentification)
+	ub.Flush(ctx, executor.taskIdentification())
 
 	log.Printf("Background commands to clean up after: %d!\n", len(executor.backgroundCommands))
 	for i := 0; i < len(executor.backgroundCommands); i++ {
@@ -356,7 +358,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			message := fmt.Sprintf("Encountered an error while gathering resource utilization metrics: %v", err)
 			log.Println(message)
 			_, _ = client.CirrusClient.ReportAgentWarning(ctx, &api.ReportAgentProblemRequest{
-				TaskIdentification: executor.taskIdentification,
+				TaskIdentification: executor.taskIdentification(),
 				Message:            message,
 			})
 		}
@@ -369,7 +371,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		message := "Failed to retrieve resource utilization metrics in time"
 		log.Println(message)
 		_, _ = client.CirrusClient.ReportAgentWarning(ctx, &api.ReportAgentProblemRequest{
-			TaskIdentification: executor.taskIdentification,
+			TaskIdentification: executor.taskIdentification(),
 			Message:            message,
 		})
 	}
@@ -382,7 +384,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	})
 	if hasMultiLineSecretValues {
 		_, _ = client.CirrusClient.ReportAgentWarning(ctx, &api.ReportAgentProblemRequest{
-			TaskIdentification: executor.taskIdentification,
+			TaskIdentification: executor.taskIdentification(),
 			Message:            "Found multi-line secret values, masking them would not work",
 		})
 	}
@@ -393,7 +395,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		func() error {
 			_, err = client.CirrusClient.ReportAgentFinished(context.WithoutCancel(ctx),
 				&api.ReportAgentFinishedRequest{
-					TaskIdentification:     executor.taskIdentification,
+					TaskIdentification:     executor.taskIdentification(),
 					CacheRetrievalAttempts: executor.cacheAttempts.ToProto(),
 					ResourceUtilization:    resourceUtilization,
 					CommandResults:         ub.History(),
@@ -455,7 +457,7 @@ func getScriptEnvironment(executor *Executor, responseEnvironment map[string]str
 			// Default folder exists and we continue execution. Therefore we need to use it.
 			responseEnvironment["CIRRUS_WORKING_DIR"] = filepath.ToSlash(defaultTempDirPath)
 		} else {
-			uniqueTempDirPath, _ := os.MkdirTemp(os.TempDir(), fmt.Sprintf("cirrus-task-%d", executor.taskIdentification.TaskId))
+			uniqueTempDirPath, _ := os.MkdirTemp(os.TempDir(), fmt.Sprintf("cirrus-task-%s", executor.taskId))
 			responseEnvironment["CIRRUS_WORKING_DIR"] = filepath.ToSlash(uniqueTempDirPath)
 		}
 	}
@@ -473,7 +475,7 @@ func (executor *Executor) performStep(ctx context.Context, currentStep *api.Comm
 		message := fmt.Sprintf("Failed to initialize command %s log upload: %v", currentStep.Name, err)
 
 		_, _ = client.CirrusClient.ReportAgentWarning(ctx, &api.ReportAgentProblemRequest{
-			TaskIdentification: executor.taskIdentification,
+			TaskIdentification: executor.taskIdentification(),
 			Message:            message,
 		})
 
@@ -487,7 +489,7 @@ func (executor *Executor) performStep(ctx context.Context, currentStep *api.Comm
 		defer logUploader.Finalize()
 	}
 
-	cirrusEnv, err := cirrusenv.New(executor.taskIdentification.TaskId)
+	cirrusEnv, err := cirrusenv.New(executor.taskId)
 	if err != nil {
 		message := fmt.Sprintf("Failed initialize CIRRUS_ENV subsystem: %v", err)
 		log.Print(message)
@@ -693,7 +695,7 @@ func retryableCloneError(err error) bool {
 
 func (executor *Executor) reportError(message string) {
 	request := api.ReportAgentProblemRequest{
-		TaskIdentification: executor.taskIdentification,
+		TaskIdentification: executor.taskIdentification(),
 		Message:            message,
 	}
 	_, _ = client.CirrusClient.ReportAgentError(context.Background(), &request)

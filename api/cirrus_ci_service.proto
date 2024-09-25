@@ -155,8 +155,9 @@ message RegisterResponse {
 
 message PollRequest {
   WorkerInfo worker_info = 1;
-  repeated int64 running_tasks = 2;
+  repeated int64 old_running_tasks = 2 [deprecated = true];
   map<string, double> resources_in_use = 3;
+  repeated string running_tasks = 4;
 }
 
 message QueryRunningTasksRequest {
@@ -169,28 +170,31 @@ message QueryRunningTasksResponse {
 }
 
 message TaskFailedRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   string message = 2;
 }
 
 message PollResponse {
   message AgentAwareTask {
-    int64 task_id = 1;
+    int64 old_task_id = 1 [deprecated = true];
     string client_secret = 2;
     string server_secret = 3;
     Isolation isolation = 4;
     string agent_version = 5 [deprecated = true];
     string cli_version = 7;
     map<string, double> resources_to_use = 6;
+    string task_id = 8;
   }
 
   repeated AgentAwareTask tasks_to_start = 1;
 
-  repeated int64 tasks_to_stop = 2;
+  repeated int64 old_task_ids_to_stop = 2 [deprecated = true];
 
   uint32 poll_interval_in_seconds = 3;
 
   bool shutdown = 4;
+
+  repeated string tasks_to_stop = 5;
 }
 
 message WorkerInfo {
@@ -294,7 +298,7 @@ message MultipartCacheUploadCommitRequest {
 }
 
 message ReportTerminalAttachedRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   string locator = 2;
   string trusted_secret = 3;
 }
@@ -304,7 +308,7 @@ message ReportTerminalAttachedResponse {
 }
 
 message ReportTerminalLifecycleRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
 
   message Started {
     // empty for now
@@ -335,7 +339,7 @@ message DataChunk {
 }
 
 message InitialCommandsRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   int64 local_timestamp = 2;
   string continue_from_command = 3;
   bool retry = 4;
@@ -343,7 +347,7 @@ message InitialCommandsRequest {
 
 message LogEntry {
   message LogKey {
-    TaskIdentification task_identification = 1;
+    TaskIdentification task_identification = 1 [deprecated = true];
     string command_name = 2;
     bool raw = 3; // true to disable live updates
   }
@@ -358,7 +362,7 @@ message UploadLogsResponse {
 }
 
 message CacheKey {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   string cache_key = 2;
 }
 
@@ -375,7 +379,7 @@ message UploadCacheResponse {
 
 message ArtifactEntry {
   message ArtifactsUpload {
-    TaskIdentification task_identification = 1;
+    TaskIdentification task_identification = 1 [deprecated = true];
     string name = 2;
     string type = 3;
     string format = 4;
@@ -400,7 +404,7 @@ message ArtifactFileInfo {
 }
 
 message GenerateArtifactUploadURLsRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
 
   string name = 2;
   repeated ArtifactFileInfo files = 3;
@@ -416,7 +420,7 @@ message GenerateArtifactUploadURLsResponse {
 }
 
 message CommitUploadedArtifactsRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
 
   string name = 2;
   string type = 3;
@@ -430,7 +434,7 @@ message CommitUploadedArtifactsResponse {
 }
 
 message DownloadCacheRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   string cache_key = 2;
 }
 
@@ -444,7 +448,7 @@ message CommandsResponse {
 }
 
 message ReportCommandUpdatesRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   repeated CommandResult updates = 2;
 }
 
@@ -453,7 +457,7 @@ message ReportCommandUpdatesResponse {
 }
 
 message ReportAnnotationsCommandRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   repeated Annotation annotations = 2;
 }
 
@@ -485,14 +489,14 @@ message Annotation {
 }
 
 message HeartbeatRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
 }
 
 message HeartbeatResponse {
 }
 
 message CacheInfoRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   string cache_key = 2;
   repeated string cache_key_prefixes = 3;
 }
@@ -509,7 +513,7 @@ message CacheInfoResponse {
 }
 
 message DeleteCacheRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   string cache_key = 2;
 }
 
@@ -518,22 +522,22 @@ message DeleteCacheResponse {
 }
 
 message ReportAgentProblemRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   string message = 2;
   string stack = 3;
 }
 
 message ReportStopHookRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
 }
 
 message ReportAgentSignalRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   string signal = 2;
 }
 
 message ReportAgentLogsRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   string logs = 2;
 }
 
@@ -581,7 +585,7 @@ message CommandResult {
 }
 
 message ReportAgentFinishedRequest {
-  TaskIdentification task_identification = 1;
+  TaskIdentification task_identification = 1 [deprecated = true];
   map<string, CacheRetrievalAttempt> cacheRetrievalAttempts = 2;
   repeated CommandResult command_results = 3;
   ResourceUtilization resource_utilization = 4;

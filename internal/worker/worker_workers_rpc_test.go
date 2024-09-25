@@ -2,6 +2,7 @@ package worker_test
 
 import (
 	"context"
+	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc/codes"
@@ -19,7 +20,7 @@ type WorkersRPC struct {
 	TaskWasStarted      bool
 	TaskWasStopped      bool
 	TaskWasFailed       bool
-	TaskFailureMesage   string
+	TaskFailureMessage  string
 
 	ShouldStopTasks     bool
 	NoAutomaticShutdown bool
@@ -47,7 +48,7 @@ func (workersRPC *WorkersRPC) Poll(ctx context.Context, request *api.PollRequest
 		return &api.PollResponse{
 			TasksToStart: []*api.PollResponse_AgentAwareTask{
 				{
-					TaskId:         taskID,
+					TaskId:         fmt.Sprintf("%d", taskID),
 					ClientSecret:   clientSecret,
 					ServerSecret:   serverSecret,
 					Isolation:      workersRPC.Isolation,
@@ -65,7 +66,7 @@ func (workersRPC *WorkersRPC) Poll(ctx context.Context, request *api.PollRequest
 
 	if workersRPC.ShouldStopTasks {
 		pollResponse := &api.PollResponse{
-			TasksToStop: []int64{taskID},
+			TasksToStop: []string{fmt.Sprintf("%d", taskID)},
 		}
 
 		workersRPC.ShouldStopTasks = false
@@ -95,7 +96,7 @@ func (workersRPC *WorkersRPC) TaskStopped(ctx context.Context, request *api.Task
 func (workersRPC *WorkersRPC) TaskFailed(ctx context.Context, request *api.TaskFailedRequest) (*empty.Empty, error) {
 	if request.TaskIdentification.TaskId == taskID {
 		workersRPC.TaskWasFailed = true
-		workersRPC.TaskFailureMesage = request.Message
+		workersRPC.TaskFailureMessage = request.Message
 	}
 
 	return &empty.Empty{}, nil

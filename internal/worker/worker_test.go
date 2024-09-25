@@ -441,7 +441,7 @@ func TestWorkerResourceModifiers(t *testing.T) {
 	assert.True(t, workersRPC.TaskWasStarted)
 	assert.True(t, workersRPC.TaskWasStopped)
 	assert.True(t, workersRPC.TaskWasFailed)
-	assert.Contains(t, workersRPC.TaskFailureMesage, "unknown flag: --non-existent-argument-expected")
+	assert.Contains(t, workersRPC.TaskFailureMessage, "unknown flag: --non-existent-argument-expected")
 }
 
 func TestWorkerSecurity(t *testing.T) {
@@ -500,7 +500,7 @@ func TestWorkerSecurity(t *testing.T) {
 	server.GracefulStop()
 
 	// Make sure that the worker had failed because of the security policy
-	require.Contains(t, workersRPC.TaskFailureMesage,
+	require.Contains(t, workersRPC.TaskFailureMessage,
 		"\"none\" isolation is not allowed by this Persistent Worker's security settings")
 }
 
@@ -585,7 +585,7 @@ func TestWorkerSecurityVolumes(t *testing.T) {
 	server.GracefulStop()
 
 	// Make sure that the worker had failed because of the security policy
-	require.Contains(t, workersRPC.TaskFailureMesage,
+	require.Contains(t, workersRPC.TaskFailureMessage,
 		"volume \"/etc\" is not allowed by this Persistent Worker's security settings")
 }
 

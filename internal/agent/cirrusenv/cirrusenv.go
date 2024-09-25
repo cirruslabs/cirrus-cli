@@ -14,8 +14,8 @@ type CirrusEnv struct {
 	filepath string
 }
 
-func New(taskID int64) (*CirrusEnv, error) {
-	filename := fmt.Sprintf("cirrus-env-task-%d-%s", taskID, uuid.New().String())
+func New(taskID string) (*CirrusEnv, error) {
+	filename := fmt.Sprintf("cirrus-env-task-%s-%s", taskID, uuid.New().String())
 	filepath := filepath.Join(os.TempDir(), filename)
 
 	cirrusEnvFile, err := os.Create(filepath)

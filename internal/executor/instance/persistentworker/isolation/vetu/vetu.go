@@ -17,7 +17,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/ssh"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -159,7 +158,7 @@ func (vetu *Vetu) bootVM(
 
 func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 	if vetu.vm == nil {
-		err := vetu.bootVM(ctx, strconv.FormatInt(config.TaskID, 10), config.AdditionalEnvironment,
+		err := vetu.bootVM(ctx, config.TaskID, config.AdditionalEnvironment,
 			config.VetuOptions.LazyPull, config.Logger())
 		if err != nil {
 			return err

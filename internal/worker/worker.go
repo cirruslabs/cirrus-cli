@@ -43,8 +43,8 @@ type Worker struct {
 	userSpecifiedLabels    map[string]string
 	userSpecifiedResources map[string]float64
 
-	tasks           *xsync.MapOf[int64, *Task]
-	taskCompletions chan int64
+	tasks           *xsync.MapOf[string, *Task]
+	taskCompletions chan string
 
 	imagesCounter     metric.Int64Counter
 	tasksCounter      metric.Int64Counter
@@ -66,8 +66,8 @@ func New(opts ...Option) (*Worker, error) {
 
 		userSpecifiedLabels: make(map[string]string),
 
-		tasks:           xsync.NewMapOf[int64, *Task](),
-		taskCompletions: make(chan int64),
+		tasks:           xsync.NewMapOf[string, *Task](),
+		taskCompletions: make(chan string),
 
 		logger:        logrus.New(),
 		echelonLogger: echelon.NewLogger(echelon.TraceLevel, renderers.NewSimpleRenderer(os.Stdout, nil)),
@@ -278,9 +278,10 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 	worker.registerTaskCompletions()
 
 	request := &api.PollRequest{
-		WorkerInfo:     worker.info(upstream.WorkerName()),
-		RunningTasks:   worker.runningTasks(upstream),
-		ResourcesInUse: worker.resourcesInUse(),
+		WorkerInfo:      worker.info(upstream.WorkerName()),
+		RunningTasks:    worker.runningTasks(upstream),
+		OldRunningTasks: worker.oldRunningTasks(upstream),
+		ResourcesInUse:  worker.resourcesInUse(),
 	}
 
 	response, err := upstream.Poll(ctx, request)
@@ -290,6 +291,10 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 
 	for _, taskToStop := range response.TasksToStop {
 		worker.stopTask(taskToStop)
+	}
+
+	for _, taskToStop := range response.OldTaskIdsToStop {
+		worker.stopTask(fmt.Sprintf("%d", taskToStop))
 	}
 
 	for _, taskToStart := range response.TasksToStart {

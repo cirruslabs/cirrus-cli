@@ -38,7 +38,7 @@ type LogUploader struct {
 }
 
 func NewLogUploader(ctx context.Context, executor *Executor, commandName string) (*LogUploader, error) {
-	logClient, err := InitializeLogStreamClient(ctx, executor.taskIdentification, commandName, false)
+	logClient, err := InitializeLogStreamClient(ctx, executor.taskIdentification(), commandName, false)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func NewLogUploader(ctx context.Context, executor *Executor, commandName string)
 		return nil, err
 	}
 	logUploader := LogUploader{
-		taskIdentification: executor.taskIdentification,
+		taskIdentification: executor.taskIdentification(),
 		commandName:        commandName,
 		client:             logClient,
 		storedOutput:       file,

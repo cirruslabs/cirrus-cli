@@ -85,7 +85,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 
 			// Lowest priority: task-specific
 			environment.NodeInfo(task.LocalGroupId, int64(len(tasks))),
-			environment.TaskInfo(task.Name, task.LocalGroupId),
+			environment.TaskInfo(task.Name),
 
 			// Medium priority: task-specific
 			task.Environment,
@@ -184,7 +184,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		Endpoint:             endpoint.NewLocal(e.rpc.ContainerEndpoint(), e.rpc.DirectEndpoint()),
 		ServerSecret:         e.rpc.ServerSecret(),
 		ClientSecret:         e.rpc.ClientSecret(),
-		TaskID:               task.ID,
+		TaskID:               fmt.Sprintf("%d", task.ID),
 		DirtyMode:            e.dirtyMode,
 		ContainerOptions:     e.containerOptions,
 		TartOptions:          e.tartOptions,
