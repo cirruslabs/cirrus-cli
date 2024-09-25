@@ -36,23 +36,23 @@ func (worker *Worker) startTask(
 	upstream *upstreampkg.Upstream,
 	agentAwareTask *api.PollResponse_AgentAwareTask,
 ) {
-	taskId := agentAwareTask.TaskId
-	if taskId == "" {
-		taskId = fmt.Sprintf("%d", agentAwareTask.OldTaskId)
+	taskID := agentAwareTask.TaskId
+	if taskID == "" {
+		taskID = fmt.Sprintf("%d", agentAwareTask.OldTaskId)
 	}
-	if _, ok := worker.tasks.Load(taskId); ok {
-		worker.logger.Warnf("attempted to run task %s which is already running", taskId)
+	if _, ok := worker.tasks.Load(taskID); ok {
+		worker.logger.Warnf("attempted to run task %s which is already running", taskID)
 		return
 	}
 
 	ctx = metadata.AppendToOutgoingContext(ctx,
-		"org.cirruslabs.task-id", taskId,
+		"org.cirruslabs.task-id", taskID,
 		"org.cirruslabs.client-secret", agentAwareTask.ClientSecret,
 	)
 
 	taskCtx, cancel := context.WithCancel(ctx)
 
-	worker.tasks.Store(taskId, &Task{
+	worker.tasks.Store(taskID, &Task{
 		upstream:       upstream,
 		cancel:         cancel,
 		resourcesToUse: agentAwareTask.ResourcesToUse,
@@ -61,9 +61,9 @@ func (worker *Worker) startTask(
 
 	inst, err := worker.getInstance(taskCtx, agentAwareTask.Isolation, agentAwareTask.ResourcesToUse)
 	if err != nil {
-		worker.logger.Errorf("failed to create an instance for the task %s: %v", taskId, err)
+		worker.logger.Errorf("failed to create an instance for the task %s: %v", taskID, err)
 		_ = upstream.TaskFailed(taskCtx, &api.TaskFailedRequest{
-			TaskIdentification: api.OldTaskIdentification(taskId, agentAwareTask.ClientSecret),
+			TaskIdentification: api.OldTaskIdentification(taskID, agentAwareTask.ClientSecret),
 			Message:            err.Error(),
 		})
 
@@ -71,9 +71,9 @@ func (worker *Worker) startTask(
 	}
 
 	worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(inst.Attributes()...))
-	go worker.runTask(taskCtx, agentAwareTask, upstream, inst, taskId, agentAwareTask.ClientSecret)
+	go worker.runTask(taskCtx, agentAwareTask, upstream, inst, taskID, agentAwareTask.ClientSecret)
 
-	worker.logger.Infof("started task %s", taskId)
+	worker.logger.Infof("started task %s", taskID)
 }
 
 func (worker *Worker) getInstance(
@@ -116,7 +116,7 @@ func (worker *Worker) runTask(
 	agentAwareTask *api.PollResponse_AgentAwareTask,
 	upstream *upstreampkg.Upstream,
 	inst abstract.Instance,
-	taskId string,
+	taskID string,
 	clientSecret string,
 ) {
 	// Provide tags for Sentry: task ID and upstream worker name
@@ -155,7 +155,7 @@ func (worker *Worker) runTask(
 		worker.taskCompletions <- agentAwareTask.TaskId
 	}()
 
-	if err := upstream.TaskStarted(ctx, api.OldTaskIdentification(taskId, clientSecret)); err != nil {
+	if err := upstream.TaskStarted(ctx, api.OldTaskIdentification(taskID, clientSecret)); err != nil {
 		worker.logger.Errorf("failed to notify the server about the started task %s: %v",
 			agentAwareTask.TaskId, err)
 
@@ -205,7 +205,7 @@ func (worker *Worker) runTask(
 		})
 
 		err := upstream.TaskFailed(boundedCtx, &api.TaskFailedRequest{
-			TaskIdentification: api.OldTaskIdentification(taskId, agentAwareTask.ClientSecret),
+			TaskIdentification: api.OldTaskIdentification(taskID, agentAwareTask.ClientSecret),
 			Message:            err.Error(),
 		})
 		if err != nil {
@@ -231,7 +231,7 @@ func (worker *Worker) runTask(
 	boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
 	defer cancel()
 
-	if err = upstream.TaskStopped(boundedCtx, api.OldTaskIdentification(taskId, agentAwareTask.ClientSecret)); err != nil {
+	if err = upstream.TaskStopped(boundedCtx, api.OldTaskIdentification(taskID, agentAwareTask.ClientSecret)); err != nil {
 		worker.logger.Errorf("failed to notify the server about the stopped task %s: %v",
 			agentAwareTask.TaskId, err)
 		localHub.WithScope(func(scope *sentry.Scope) {

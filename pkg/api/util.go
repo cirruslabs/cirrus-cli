@@ -2,14 +2,14 @@ package api
 
 import "strconv"
 
-func OldTaskIdentification(taskId string, clientToken string) *TaskIdentification {
-	oldTaskId, err := strconv.ParseInt(taskId, 10, 64)
+func OldTaskIdentification(taskID string, clientToken string) *TaskIdentification {
+	oldTaskID, err := strconv.ParseInt(taskID, 10, 64)
 	if err != nil {
 		return nil
 	}
 
 	return &TaskIdentification{
-		TaskId: oldTaskId,
+		TaskId: oldTaskID,
 		Secret: clientToken,
 	}
 }
