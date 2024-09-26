@@ -72,7 +72,7 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 			"-client-token",
 			config.ClientSecret,
 			"-task-id",
-			strconv.FormatInt(config.TaskID, 10),
+			config.TaskID,
 			"-command-from",
 			params.CommandFrom,
 			"-command-to",

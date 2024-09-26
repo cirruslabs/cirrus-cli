@@ -6,7 +6,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/cirruscimock"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -23,7 +22,7 @@ func TestGHA(t *testing.T) {
 
 	ctx := context.Background()
 
-	client.InitClient(cirruscimock.ClientConn(t), &api.TaskIdentification{})
+	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
 	httpCacheURL := "http://" + http_cache.Start() + "/"
 

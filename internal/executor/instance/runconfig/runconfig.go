@@ -17,7 +17,7 @@ type RunConfig struct {
 	ProjectDir                 string
 	Endpoint                   endpoint.Endpoint
 	ServerSecret, ClientSecret string
-	TaskID                     int64
+	TaskID                     string
 	logger                     *echelon.Logger
 	DirtyMode                  bool
 	ContainerOptions           options.ContainerOptions

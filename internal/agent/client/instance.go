@@ -8,7 +8,7 @@ import (
 var CirrusClient api.CirrusCIServiceClient
 var CirrusTaskIdentification *api.TaskIdentification
 
-func InitClient(conn *grpc.ClientConn, taskIdentification *api.TaskIdentification) {
+func InitClient(conn *grpc.ClientConn, taskId string, clientToken string) {
 	CirrusClient = api.NewCirrusCIServiceClient(conn)
-	CirrusTaskIdentification = taskIdentification
+	CirrusTaskIdentification = api.OldTaskIdentification(taskId, clientToken)
 }

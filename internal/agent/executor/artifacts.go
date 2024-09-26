@@ -65,7 +65,7 @@ func (executor *Executor) UploadArtifacts(
 func (executor *Executor) uploadArtifactsWithRetries(ctx context.Context, instantiateArtifactUploader InstantiateArtifactUploaderFunc, logUploader *LogUploader, artifacts *Artifacts) (err error) {
 	err = retry.Do(
 		func() error {
-			artifactUploader, err := instantiateArtifactUploader(ctx, executor.taskIdentification, artifacts)
+			artifactUploader, err := instantiateArtifactUploader(ctx, executor.taskIdentification(), artifacts)
 			if err != nil {
 				return err
 			}
@@ -184,7 +184,7 @@ func (executor *Executor) processAndUploadAnnotations(
 	}
 	protoAnnotations := ConvertAnnotations(normalizedAnnotations)
 	reportAnnotationsCommandRequest := api.ReportAnnotationsCommandRequest{
-		TaskIdentification: executor.taskIdentification,
+		TaskIdentification: executor.taskIdentification(),
 		Annotations:        protoAnnotations,
 	}
 

@@ -3,7 +3,6 @@ package agent
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
 	"testing"
@@ -25,7 +24,7 @@ func checkEndpoint(endpoint string) error {
 
 	defer clientConn.Close()
 
-	client.InitClient(clientConn, &api.TaskIdentification{})
+	client.InitClient(clientConn, "test", "test")
 
 	return err
 }

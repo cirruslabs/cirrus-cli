@@ -8,6 +8,10 @@ linters-settings:
   exhaustive:
     default-signifies-exhaustive: true
 
+  staticcheck:
+    checks:
+      - "all"
+      - "-SA1019" # deprecated warnings which we have a lot from generated proto
   gosec:
     excludes:
       - G115

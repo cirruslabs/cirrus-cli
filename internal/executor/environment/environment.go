@@ -58,10 +58,10 @@ func NodeInfo(nodeIndex, nodeTotal int64) map[string]string {
 	}
 }
 
-func TaskInfo(taskName string, taskID int64) map[string]string {
+func TaskInfo(taskName string, taskID string) map[string]string {
 	return map[string]string{
 		"CIRRUS_TASK_NAME": taskName,
-		"CIRRUS_TASK_ID":   strconv.FormatInt(taskID, 10),
+		"CIRRUS_TASK_ID":   taskID,
 	}
 }
 

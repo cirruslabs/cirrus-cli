@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
 	"maps"
 	"net/url"
@@ -35,29 +36,34 @@ func (worker *Worker) startTask(
 	upstream *upstreampkg.Upstream,
 	agentAwareTask *api.PollResponse_AgentAwareTask,
 ) {
-	if _, ok := worker.tasks.Load(agentAwareTask.TaskId); ok {
-		worker.logger.Warnf("attempted to run task %d which is already running", agentAwareTask.TaskId)
+	taskID := agentAwareTask.TaskId
+	if taskID == "" {
+		taskID = fmt.Sprintf("%d", agentAwareTask.OldTaskId)
+	}
+	if _, ok := worker.tasks.Load(taskID); ok {
+		worker.logger.Warnf("attempted to run task %s which is already running", taskID)
 		return
 	}
 
+	ctx = metadata.AppendToOutgoingContext(ctx,
+		"org.cirruslabs.task-id", taskID,
+		"org.cirruslabs.client-secret", agentAwareTask.ClientSecret,
+	)
+
 	taskCtx, cancel := context.WithCancel(ctx)
-	worker.tasks.Store(agentAwareTask.TaskId, &Task{
+
+	worker.tasks.Store(taskID, &Task{
 		upstream:       upstream,
 		cancel:         cancel,
 		resourcesToUse: agentAwareTask.ResourcesToUse,
 	})
 	worker.tasksCounter.Add(ctx, 1)
 
-	taskIdentification := &api.TaskIdentification{
-		TaskId: agentAwareTask.TaskId,
-		Secret: agentAwareTask.ClientSecret,
-	}
-
-	inst, err := worker.getInstance(ctx, agentAwareTask.Isolation, agentAwareTask.ResourcesToUse)
+	inst, err := worker.getInstance(taskCtx, agentAwareTask.Isolation, agentAwareTask.ResourcesToUse)
 	if err != nil {
-		worker.logger.Errorf("failed to create an instance for the task %d: %v", agentAwareTask.TaskId, err)
+		worker.logger.Errorf("failed to create an instance for the task %s: %v", taskID, err)
 		_ = upstream.TaskFailed(taskCtx, &api.TaskFailedRequest{
-			TaskIdentification: taskIdentification,
+			TaskIdentification: api.OldTaskIdentification(taskID, agentAwareTask.ClientSecret),
 			Message:            err.Error(),
 		})
 
@@ -65,9 +71,9 @@ func (worker *Worker) startTask(
 	}
 
 	worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(inst.Attributes()...))
-	go worker.runTask(taskCtx, agentAwareTask, upstream, inst, taskIdentification)
+	go worker.runTask(taskCtx, agentAwareTask, upstream, inst, taskID, agentAwareTask.ClientSecret)
 
-	worker.logger.Infof("started task %d", agentAwareTask.TaskId)
+	worker.logger.Infof("started task %s", taskID)
 }
 
 func (worker *Worker) getInstance(
@@ -110,11 +116,12 @@ func (worker *Worker) runTask(
 	agentAwareTask *api.PollResponse_AgentAwareTask,
 	upstream *upstreampkg.Upstream,
 	inst abstract.Instance,
-	taskIdentification *api.TaskIdentification,
+	taskID string,
+	clientSecret string,
 ) {
 	// Provide tags for Sentry: task ID and upstream worker name
 	cirrusSentryTags := map[string]string{
-		"cirrus.task_id":              strconv.FormatInt(agentAwareTask.TaskId, 10),
+		"cirrus.task_id":              agentAwareTask.TaskId,
 		"cirrus.upstream_worker_name": upstream.WorkerName(),
 	}
 
@@ -141,15 +148,15 @@ func (worker *Worker) runTask(
 
 	defer func() {
 		if err := inst.Close(ctx); err != nil {
-			worker.logger.Errorf("failed to close persistent worker instance for task %d: %v",
+			worker.logger.Errorf("failed to close persistent worker instance for task %s: %v",
 				agentAwareTask.TaskId, err)
 		}
 
 		worker.taskCompletions <- agentAwareTask.TaskId
 	}()
 
-	if err := upstream.TaskStarted(ctx, taskIdentification); err != nil {
-		worker.logger.Errorf("failed to notify the server about the started task %d: %v",
+	if err := upstream.TaskStarted(ctx, api.OldTaskIdentification(taskID, clientSecret)); err != nil {
+		worker.logger.Errorf("failed to notify the server about the started task %s: %v",
 			agentAwareTask.TaskId, err)
 
 		return
@@ -172,13 +179,13 @@ func (worker *Worker) runTask(
 	}
 
 	if err := config.SetCLIVersionWithoutDowngrade(agentAwareTask.CliVersion); err != nil {
-		worker.logger.Warnf("failed to set CLI's version for task %d: %v", agentAwareTask.TaskId, err)
+		worker.logger.Warnf("failed to set CLI's version for task %s: %v", agentAwareTask.TaskId, err)
 	}
 
 	err := inst.Run(ctx, &config)
 
 	if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(ctx.Err(), context.Canceled) {
-		worker.logger.Errorf("failed to run task %d: %v", agentAwareTask.TaskId, err)
+		worker.logger.Errorf("failed to run task %s: %v", agentAwareTask.TaskId, err)
 
 		boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
 		defer cancel()
@@ -198,11 +205,11 @@ func (worker *Worker) runTask(
 		})
 
 		err := upstream.TaskFailed(boundedCtx, &api.TaskFailedRequest{
-			TaskIdentification: taskIdentification,
+			TaskIdentification: api.OldTaskIdentification(taskID, agentAwareTask.ClientSecret),
 			Message:            err.Error(),
 		})
 		if err != nil {
-			worker.logger.Errorf("failed to notify the server about the failed task %d: %v",
+			worker.logger.Errorf("failed to notify the server about the failed task %s: %v",
 				agentAwareTask.TaskId, err)
 			localHub.WithScope(func(scope *sentry.Scope) {
 				scope.SetTags(cirrusSentryTags)
@@ -224,8 +231,8 @@ func (worker *Worker) runTask(
 	boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
 	defer cancel()
 
-	if err = upstream.TaskStopped(boundedCtx, taskIdentification); err != nil {
-		worker.logger.Errorf("failed to notify the server about the stopped task %d: %v",
+	if err = upstream.TaskStopped(boundedCtx, api.OldTaskIdentification(taskID, agentAwareTask.ClientSecret)); err != nil {
+		worker.logger.Errorf("failed to notify the server about the stopped task %s: %v",
 			agentAwareTask.TaskId, err)
 		localHub.WithScope(func(scope *sentry.Scope) {
 			scope.SetTags(cirrusSentryTags)
@@ -236,16 +243,26 @@ func (worker *Worker) runTask(
 	}
 }
 
-func (worker *Worker) stopTask(taskID int64) {
+func (worker *Worker) stopTask(taskID string) {
 	if task, ok := worker.tasks.Load(taskID); ok {
 		task.cancel()
 	}
 
-	worker.logger.Infof("sent cancellation signal to task %d", taskID)
+	worker.logger.Infof("sent cancellation signal to task %s", taskID)
 }
 
-func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int64) {
-	worker.tasks.Range(func(taskID int64, task *Task) bool {
+func (worker *Worker) oldRunningTasks(upstream *upstreampkg.Upstream) (result []int64) {
+	for _, taskID := range worker.runningTasks(upstream) {
+		if taskIDInt, err := strconv.ParseInt(taskID, 10, 64); err == nil {
+			result = append(result, taskIDInt)
+		}
+	}
+
+	return
+}
+
+func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []string) {
+	worker.tasks.Range(func(taskID string, task *Task) bool {
 		if task.upstream == upstream {
 			result = append(result, taskID)
 		}
@@ -258,7 +275,7 @@ func (worker *Worker) runningTasks(upstream *upstreampkg.Upstream) (result []int
 func (worker *Worker) resourcesNotInUse() map[string]float64 {
 	result := maps.Clone(worker.userSpecifiedResources)
 
-	worker.tasks.Range(func(taskID int64, task *Task) bool {
+	worker.tasks.Range(func(taskID string, task *Task) bool {
 		for key, value := range task.resourcesToUse {
 			result[key] -= value
 		}
@@ -271,7 +288,7 @@ func (worker *Worker) resourcesNotInUse() map[string]float64 {
 func (worker *Worker) resourcesInUse() map[string]float64 {
 	result := map[string]float64{}
 
-	worker.tasks.Range(func(taskID int64, task *Task) bool {
+	worker.tasks.Range(func(taskID string, task *Task) bool {
 		for key, value := range task.resourcesToUse {
 			result[key] += value
 		}
@@ -298,9 +315,9 @@ func (worker *Worker) registerTaskCompletions() {
 			if task, ok := worker.tasks.Load(taskID); ok {
 				task.cancel()
 				worker.tasks.Delete(taskID)
-				worker.logger.Infof("task %d completed", taskID)
+				worker.logger.Infof("task %s completed", taskID)
 			} else {
-				worker.logger.Warnf("spurious task %d completed", taskID)
+				worker.logger.Warnf("spurious task %s completed", taskID)
 			}
 		default:
 			return

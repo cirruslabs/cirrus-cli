@@ -47,14 +47,6 @@ func Run(args []string) {
 		"working directory to use when spawned via Persistent Worker")
 	_ = flag.CommandLine.Parse(args)
 
-	// Parse task ID as an integer for backwards-compatibility with the TaskIdentification message
-	oldStyleTaskID, err := strconv.ParseInt(*taskIdPtr, 10, 64)
-	if err != nil {
-		log.Printf("Failed to parse task ID %q as an integer (%v), assuming that "+
-			"the new format of task IDs is in play", *taskIdPtr, err)
-		oldStyleTaskID = 0
-	}
-
 	// Enrich future events with Cirrus CI-specific tags
 	if tags, ok := os.LookupEnv("CIRRUS_SENTRY_TAGS"); ok {
 		sentry.ConfigureScope(func(scope *sentry.Scope) {
@@ -89,7 +81,7 @@ func Run(args []string) {
 			log.Printf("Finalizing log file, %d bytes written", logFilePos)
 
 			_ = logFile.Close()
-			uploadAgentLogs(context.Background(), logFilePath, oldStyleTaskID, *clientTokenPtr)
+			uploadAgentLogs(context.Background(), logFilePath, *taskIdPtr, *clientTokenPtr)
 		}()
 	}
 	multiWriter := io.MultiWriter(logFile, os.Stdout)
@@ -118,12 +110,9 @@ func Run(args []string) {
 		}
 
 		request := &api.ReportAgentProblemRequest{
-			TaskIdentification: &api.TaskIdentification{
-				TaskId: oldStyleTaskID,
-				Secret: *clientTokenPtr,
-			},
-			Message: fmt.Sprint(err),
-			Stack:   stack,
+			TaskIdentification: api.OldTaskIdentification(*taskIdPtr, *clientTokenPtr),
+			Message:            fmt.Sprint(err),
+			Stack:              stack,
 		}
 		_, err = client.CirrusClient.ReportAgentError(context.Background(), request)
 		if err != nil {
@@ -166,7 +155,7 @@ func Run(args []string) {
 
 			log.Printf("Captured %v...", sig)
 
-			reportSignal(context.Background(), sig, oldStyleTaskID, *clientTokenPtr)
+			reportSignal(context.Background(), sig, *taskIdPtr, *clientTokenPtr)
 		}
 	}()
 
@@ -194,10 +183,7 @@ func Run(args []string) {
 
 	log.Printf("Connected!\n")
 
-	client.InitClient(conn, &api.TaskIdentification{
-		TaskId: oldStyleTaskID,
-		Secret: *clientTokenPtr,
-	})
+	client.InitClient(conn, *taskIdPtr, *clientTokenPtr)
 
 	if *stopHook {
 		log.Printf("Stop hook!\n")
@@ -232,14 +218,14 @@ func Run(args []string) {
 		}
 	}
 
-	go runHeartbeat(oldStyleTaskID, *clientTokenPtr, conn)
+	go runHeartbeat(*taskIdPtr, *clientTokenPtr, conn)
 
-	buildExecutor := executor.NewExecutor(oldStyleTaskID, *clientTokenPtr, *serverTokenPtr, *commandFromPtr, *commandToPtr,
+	buildExecutor := executor.NewExecutor(*taskIdPtr, *clientTokenPtr, *serverTokenPtr, *commandFromPtr, *commandToPtr,
 		*preCreatedWorkingDir)
 	buildExecutor.RunBuild(ctx)
 }
 
-func uploadAgentLogs(ctx context.Context, logFilePath string, taskId int64, clientToken string) {
+func uploadAgentLogs(ctx context.Context, logFilePath string, taskId string, clientToken string) {
 	if client.CirrusClient == nil {
 		return
 	}
@@ -248,12 +234,8 @@ func uploadAgentLogs(ctx context.Context, logFilePath string, taskId int64, clie
 	if readErr != nil {
 		return
 	}
-	taskIdentification := api.TaskIdentification{
-		TaskId: taskId,
-		Secret: clientToken,
-	}
 	request := api.ReportAgentLogsRequest{
-		TaskIdentification: &taskIdentification,
+		TaskIdentification: api.OldTaskIdentification(taskId, clientToken),
 		Logs:               string(logContents),
 	}
 	_, err := client.CirrusClient.ReportAgentLogs(ctx, &request)
@@ -262,17 +244,13 @@ func uploadAgentLogs(ctx context.Context, logFilePath string, taskId int64, clie
 	}
 }
 
-func reportSignal(ctx context.Context, sig os.Signal, taskId int64, clientToken string) {
+func reportSignal(ctx context.Context, sig os.Signal, taskId string, clientToken string) {
 	if client.CirrusClient == nil {
 		return
 	}
 
-	taskIdentification := api.TaskIdentification{
-		TaskId: taskId,
-		Secret: clientToken,
-	}
 	request := api.ReportAgentSignalRequest{
-		TaskIdentification: &taskIdentification,
+		TaskIdentification: api.OldTaskIdentification(taskId, clientToken),
 		Signal:             sig.String(),
 	}
 	_, _ = client.CirrusClient.ReportAgentSignal(ctx, &request)
@@ -323,14 +301,13 @@ func metadataInterceptor(md metadata.MD) grpc.UnaryClientInterceptor {
 	}
 }
 
-func runHeartbeat(taskId int64, clientToken string, conn *grpc.ClientConn) {
-	taskIdentification := api.TaskIdentification{
-		TaskId: taskId,
-		Secret: clientToken,
-	}
+func runHeartbeat(taskId string, clientToken string, conn *grpc.ClientConn) {
 	for {
 		log.Println("Sending heartbeat...")
-		_, err := client.CirrusClient.Heartbeat(context.Background(), &api.HeartbeatRequest{TaskIdentification: &taskIdentification})
+		_, err := client.CirrusClient.Heartbeat(
+			context.Background(),
+			&api.HeartbeatRequest{TaskIdentification: api.OldTaskIdentification(taskId, clientToken)},
+		)
 		if err != nil {
 			log.Printf("Failed to send heartbeat: %v", err)
 			connectionState := conn.GetState()

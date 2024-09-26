@@ -46,7 +46,7 @@ func New(
 	// A callback that will be called once the terminal host connects and registers on the terminal server
 	locatorCallback := func(locator string) error {
 		_, err := client.CirrusClient.ReportTerminalAttached(ctx, &api.ReportTerminalAttachedRequest{
-			TaskIdentification: taskIdentification,
+			TaskIdentification: wrapper.taskIdentification,
 			Locator:            locator,
 			TrustedSecret:      trustedSecret,
 		})
