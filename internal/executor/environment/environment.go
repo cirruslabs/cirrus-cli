@@ -58,9 +58,10 @@ func NodeInfo(nodeIndex, nodeTotal int64) map[string]string {
 	}
 }
 
-func TaskInfo(taskName string) map[string]string {
+func TaskInfo(taskName string, taskID string) map[string]string {
 	return map[string]string{
 		"CIRRUS_TASK_NAME": taskName,
+		"CIRRUS_TASK_ID":   taskID,
 	}
 }
 

@@ -22,6 +22,7 @@ import (
 	"io"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -85,7 +86,7 @@ func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error
 
 			// Lowest priority: task-specific
 			environment.NodeInfo(task.LocalGroupId, int64(len(tasks))),
-			environment.TaskInfo(task.Name),
+			environment.TaskInfo(task.Name, strconv.FormatInt(task.LocalGroupId, 10)),
 
 			// Medium priority: task-specific
 			task.Environment,
