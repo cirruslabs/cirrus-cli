@@ -1,14 +1,17 @@
 package ghacache
 
 import (
+	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/httprange"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/uploadable"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/render"
 	"github.com/puzpuzpuz/xsync/v3"
 	"github.com/samber/lo"
+	"golang.org/x/exp/slog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"log"
@@ -80,7 +83,7 @@ func (cache *GHACache) get(writer http.ResponseWriter, request *http.Request) {
 		}
 
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to "+
-			"retrieve information about cache key %q: %v", keys[0], err)
+			"retrieve information about cache entry", "key", keys[0], "err", err)
 
 		return
 	}
@@ -104,7 +107,7 @@ func (cache *GHACache) reserveUploadable(writer http.ResponseWriter, request *ht
 
 	if err := render.DecodeJSON(request.Body, &jsonReq); err != nil {
 		fail(writer, request, http.StatusBadRequest, "GHA cache failed to read/decode the "+
-			"JSON passed to the reserve uploadable endpoint: %v", err)
+			"JSON passed to the reserve uploadable endpoint", "err", err)
 
 		return
 	}
@@ -121,7 +124,7 @@ func (cache *GHACache) reserveUploadable(writer http.ResponseWriter, request *ht
 	})
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to create "+
-			"multipart upload for key %q and version %q: %v", jsonReq.Key, jsonReq.Version, err)
+			"multipart upload", "key", jsonReq.Key, "version", jsonReq.Version, "err", err)
 
 		return
 	}
@@ -142,23 +145,23 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 
 	uploadable, ok := cache.uploadables.Load(id)
 	if !ok {
-		fail(writer, request, http.StatusNotFound, "GHA cache failed to find an uploadable "+
-			"with ID %d", id)
+		fail(writer, request, http.StatusNotFound, "GHA cache failed to find an uploadable",
+			"id", id)
 
 		return
 	}
 
 	httpRanges, err := httprange.ParseRange(request.Header.Get("Content-Range"), math.MaxInt64)
 	if err != nil {
-		fail(writer, request, http.StatusBadRequest, "GHA cache failed to parse Content-Range header %q: %v",
-			request.Header.Get("Content-Range"), err)
+		fail(writer, request, http.StatusBadRequest, "GHA cache failed to parse Content-Range header",
+			"header_value", request.Header.Get("Content-Range"), "err", err)
 
 		return
 	}
 
 	if len(httpRanges) != 1 {
-		fail(writer, request, http.StatusBadRequest, "GHA cache expected exactly one Content-Range value, got %d",
-			len(httpRanges))
+		fail(writer, request, http.StatusBadRequest, "GHA cache expected exactly one Content-Range value",
+			"expected", 1, "actual", len(httpRanges))
 
 		return
 	}
@@ -166,7 +169,7 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 	partNumber, err := uploadable.RangeToPart.Tell(request.Context(), httpRanges[0].Start, httpRanges[0].Length)
 	if err != nil {
 		fail(writer, request, http.StatusBadRequest, "GHA cache failed to tell the part number for "+
-			"Content-Range header %q: %v", request.Header.Get("Content-Range"), err)
+			"Content-Range header", "header_value", request.Header.Get("Content-Range"), "err", err)
 
 		return
 	}
@@ -182,8 +185,8 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 	})
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed create pre-signed "+
-			"upload part URL for key %q, version %q and part %d: %v", uploadable.Key(),
-			uploadable.Version(), partNumber, err)
+			"upload part URL", "key", uploadable.Key(), "version", uploadable.Version(),
+			"part_number", partNumber, "err", err)
 
 		return
 	}
@@ -191,7 +194,8 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 	uploadPartRequest, err := http.NewRequest(http.MethodPut, response.Url, request.Body)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to create upload part "+
-			"request for key %q, version %q and part %d: %v", uploadable.Key(), uploadable.Version(), partNumber, err)
+			"request", "key", uploadable.Key(), "version", uploadable.Version(), "part_number", partNumber,
+			"err", err)
 
 		return
 	}
@@ -213,8 +217,9 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 		// Return HTTP 502 to cause the cache-related code in the Actions Toolkit to make a re-try[1].
 		//
 		// [1]: https://github.com/actions/toolkit/blob/6dd369c0e648ed58d0ead326cf2426906ea86401/packages/cache/src/internal/requestUtils.ts#L24-L34
-		fail(writer, request, http.StatusBadGateway, "GHA cache failed to upload part "+
-			"for key %q, version %q and part %d: %v", uploadable.Key(), uploadable.Version(), partNumber, err)
+		fail(writer, request, http.StatusBadGateway, "GHA cache failed to upload part",
+			"key", uploadable.Key(), "version", uploadable.Version(), "part_number", partNumber,
+			"err", err)
 
 		return
 	}
@@ -224,17 +229,18 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 		// code in the Actions Toolkit will hopefully make a re-try[1].
 		//
 		// [1]: https://github.com/actions/toolkit/blob/6dd369c0e648ed58d0ead326cf2426906ea86401/packages/cache/src/internal/requestUtils.ts#L24-L34
-		fail(writer, request, uploadPartResponse.StatusCode, "GHA cache failed to upload part "+
-			"for key %q, version %q and part %d: got HTTP %d", uploadable.Key(), uploadable.Version(), partNumber,
-			uploadPartResponse.StatusCode)
+		fail(writer, request, uploadPartResponse.StatusCode, "GHA cache failed to upload part",
+			"key", uploadable.Key(), "version", uploadable.Version(), "part_number", partNumber,
+			"unexpected_status_code", uploadPartResponse.StatusCode)
 
 		return
 	}
 
 	err = uploadable.AppendPart(uint32(partNumber), uploadPartResponse.Header.Get("ETag"), httpRanges[0].Length)
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to append part "+
-			"for key %q, version %q and part %d: %v", uploadable.Key(), uploadable.Version(), partNumber, err)
+		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to append part",
+			"key", uploadable.Key(), "version", uploadable.Version(), "part_number", partNumber,
+			"err", err)
 
 		return
 	}
@@ -253,8 +259,8 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 
 	uploadable, ok := cache.uploadables.Load(id)
 	if !ok {
-		fail(writer, request, http.StatusNotFound, "GHA cache failed to find an uploadable "+
-			"with ID %d", id)
+		fail(writer, request, http.StatusNotFound, "GHA cache failed to find an uploadable",
+			"id", id)
 
 		return
 	}
@@ -265,7 +271,7 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 
 	if err := render.DecodeJSON(request.Body, &jsonReq); err != nil {
 		fail(writer, request, http.StatusBadRequest, "GHA cache failed to read/decode "+
-			"the JSON passed to the commit uploadable endpoint: %v", err)
+			"the JSON passed to the commit uploadable endpoint", "err", err)
 
 		return
 	}
@@ -273,15 +279,15 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 	parts, partsSize, err := uploadable.Finalize()
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to "+
-			"finalize uploadable %d: %v", id, err)
+			"finalize uploadable", "id", id, "err", err)
 
 		return
 	}
 
 	if jsonReq.Size != partsSize {
 		fail(writer, request, http.StatusBadRequest, "GHA cache detected a cache entry "+
-			"size mismatch for uploadable %d: expected %d bytes, got %d bytes",
-			id, partsSize, jsonReq.Size)
+			"size mismatch for uploadable", "id", id, "expected_bytes", partsSize,
+			"actual_bytes", jsonReq.Size)
 
 		return
 	}
@@ -295,9 +301,9 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 		Parts:    parts,
 	})
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to commit multipart upload "+
-			"for key %q, version %q and uploadable %q: %v", uploadable.Key(), uploadable.Version(),
-			uploadable.UploadID(), err)
+		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to commit multipart upload",
+			"id", uploadable.UploadID(), "key", uploadable.Key(), "version", uploadable.Version(),
+			"err", err)
 
 		return
 	}
@@ -327,11 +333,50 @@ func getID(request *http.Request) (int64, bool) {
 	return id, true
 }
 
-func fail(writer http.ResponseWriter, request *http.Request, status int, format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
+func fail(writer http.ResponseWriter, request *http.Request, status int, msg string, args ...any) {
+	// Report failure to the Sentry
+	hub := sentry.GetHubFromContext(request.Context())
 
+	hub.WithScope(func(scope *sentry.Scope) {
+		scope.AddEventProcessor(func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			// Swap the exception type and value to work around
+			// https://github.com/getsentry/sentry/issues/17837
+			savedType := event.Exception[0].Type
+			event.Exception[0].Type = event.Exception[0].Value
+			event.Exception[0].Value = savedType
+
+			return event
+		})
+
+		argsAsSentryContext := sentry.Context{}
+
+		for _, chunk := range lo.Chunk(args, 2) {
+			key := fmt.Sprintf("%v", chunk[0])
+
+			var value string
+
+			if len(chunk) > 1 {
+				value = fmt.Sprintf("%v", chunk[1])
+			}
+
+			argsAsSentryContext[key] = value
+		}
+
+		scope.SetContext("Arguments", argsAsSentryContext)
+
+		hub.CaptureException(errors.New(msg))
+	})
+
+	// Format failure message for non-structured consumers
+	var stringBuilder strings.Builder
+	logger := slog.New(slog.NewTextHandler(&stringBuilder, nil))
+	logger.Error(msg, args...)
+	message := stringBuilder.String()
+
+	// Report failure to the logger
 	log.Println(message)
 
+	// Report failure to the caller
 	writer.WriteHeader(status)
 	jsonResp := struct {
 		Message string `json:"message"`
