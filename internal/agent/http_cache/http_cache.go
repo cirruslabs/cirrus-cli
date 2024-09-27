@@ -31,7 +31,7 @@ var sem = semaphore.NewWeighted(int64(runtime.NumCPU() * activeRequestsPerLogica
 
 var httpProxyClient = &http.Client{}
 
-func Start() string {
+func Start(opts ...Option) string {
 	maxConcurrentConnections := runtime.NumCPU() * activeRequestsPerLogicalCPU
 	httpProxyClient = &http.Client{
 		Transport: &http.Transport{
@@ -44,7 +44,7 @@ func Start() string {
 	mux := http.NewServeMux()
 
 	// HTTP cache protocol
-	mux.HandleFunc("/", handler)
+	mux.HandleFunc("/{objectname}", handler)
 
 	address := "127.0.0.1:12321"
 	listener, err := net.Listen("tcp", address)
@@ -62,6 +62,11 @@ func Start() string {
 
 		mux.Handle(ghacache.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(ghacache.APIMountPoint,
 			ghacache.New(address))))
+
+		// Apply options
+		for _, opt := range opts {
+			opt(mux)
+		}
 
 		go http.Serve(listener, mux)
 	} else {

@@ -133,6 +133,25 @@ func (mock *cirrusCIMock) DownloadCache(request *api.DownloadCacheRequest, strea
 	return nil
 }
 
+func (mock *cirrusCIMock) GenerateCacheDownloadURLs(
+	_ context.Context,
+	request *api.CacheKey,
+) (*api.GenerateURLsResponse, error) {
+	uploadPartRequest, _ := mock.s3Client.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: mock.s3Bucket,
+		Key:    aws.String(request.CacheKey),
+	})
+
+	url, _, err := uploadPartRequest.PresignRequest(10 * time.Minute)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.GenerateURLsResponse{
+		Urls: []string{url},
+	}, nil
+}
+
 func (mock *cirrusCIMock) CacheInfo(ctx context.Context, request *api.CacheInfoRequest) (*api.CacheInfoResponse, error) {
 	result, err := mock.s3Client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
 		Bucket: mock.s3Bucket,

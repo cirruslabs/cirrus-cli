@@ -13,6 +13,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/updatebatcher"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/vaultunboxer"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/tuistcache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
 	"log"
@@ -206,12 +207,39 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 
 	commands := response.Commands
 
+	// Prefer the HTTP cache host passed through the OS environment variables
 	if cacheHost, ok := os.LookupEnv("CIRRUS_HTTP_CACHE_HOST"); ok {
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", cacheHost)
 	}
 
+	// Otherwise, if the HTTP cache host is not passed either through
+	// the OS environment nor through the task's environment,
+	// run our built-in cache server
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
-		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", http_cache.Start())
+		var httpCacheOpts []http_cache.Option
+		var tuistCaching bool
+
+		// Tuist caching API support
+		//
+		// Can be enabled through the OS environment variable and
+		// only works with our built-in cache server.
+		if _, ok := os.LookupEnv("CIRRUS_TUIST_CACHE_ENABLED"); ok {
+			tuistCache, err := tuistcache.New()
+			if err != nil {
+				log.Printf("Failed to initialize Tuist cache: %v", err)
+			} else {
+				httpCacheOpts = append(httpCacheOpts, http_cache.WithTuistCache(tuistCache))
+				tuistCaching = true
+			}
+		}
+
+		httpCacheHost := http_cache.Start(httpCacheOpts...)
+
+		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
+
+		if tuistCaching {
+			executor.env.Set("CIRRUS_TUIST_CACHE_URL", tuistcache.URL(httpCacheHost))
+		}
 	}
 
 	executor.httpCacheHost = executor.env.Get("CIRRUS_HTTP_CACHE_HOST")
