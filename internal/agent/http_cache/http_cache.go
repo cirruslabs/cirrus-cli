@@ -123,8 +123,10 @@ func checkCacheExists(w http.ResponseWriter, cacheKey string) {
 		log.Printf("%s cache info failed: %v\n", cacheKey, err)
 		w.WriteHeader(http.StatusNotFound)
 	} else {
-		if response.Info.CreatedByTaskId > 0 {
-			w.Header().Set(CirrusHeaderCreatedBy, strconv.FormatInt(response.Info.CreatedByTaskId, 10))
+		if response.Info.OldCreatedByTaskId > 0 {
+			w.Header().Set(CirrusHeaderCreatedBy, strconv.FormatInt(response.Info.OldCreatedByTaskId, 10))
+		} else if response.Info.CreatedByTaskId != "" {
+			w.Header().Set(CirrusHeaderCreatedBy, response.Info.CreatedByTaskId)
 		}
 		w.Header().Set("Content-Length", strconv.FormatInt(response.Info.SizeInBytes, 10))
 		w.WriteHeader(http.StatusOK)

@@ -331,7 +331,7 @@ func (worker *Worker) Pause(ctx context.Context, wait bool) error {
 			response, err := upstream.QueryRunningTasks(ctx, &api.QueryRunningTasksRequest{})
 			if err != nil {
 				return fmt.Errorf("upstream %s failed while waiting: %w", upstream.Name(), err)
-			} else if len(response.RunningTasks) == 0 {
+			} else if len(response.RunningTasks) == 0 && len(response.OldRunningTasks) == 0 {
 				// done waiting for the current upstream
 				break
 			}
