@@ -176,6 +176,15 @@ task:
   check_script: git diff --exit-code
 
 task:
+  name: Check for lacking "go generate ./..." invocation
+
+  container:
+    image: golang:latest
+
+  generate_script: go generate ./...
+  check_script: git diff --exit-code
+
+task:
   only_if: $CIRRUS_TAG != ''
   name: buf push (tagged)
 
