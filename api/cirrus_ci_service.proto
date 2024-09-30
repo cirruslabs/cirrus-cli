@@ -166,7 +166,8 @@ message QueryRunningTasksRequest {
 
 message QueryRunningTasksResponse {
   WorkerStatus status = 1;
-  repeated int64 running_tasks = 2;
+  repeated int64 old_running_tasks = 2 [deprecated = true];
+  repeated string running_tasks = 3;
 }
 
 message TaskFailedRequest {
@@ -505,7 +506,8 @@ message CacheInfo {
   string key = 1;
   int64 size_in_bytes = 2;
   int64 creation_timestamp = 3;
-  int64 created_by_task_id = 4;
+  int64 old_created_by_task_id = 4 [deprecated = true];
+  string created_by_task_id = 5;
 }
 
 message CacheInfoResponse {
