@@ -55,6 +55,8 @@ type Worker struct {
 
 	standbyConfig   *StandbyConfig
 	standbyInstance abstract.Instance
+
+	tartPrePull []string
 }
 
 func New(opts ...Option) (*Worker, error) {
@@ -231,6 +233,15 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 	// Do nothing if the standby instance is already instantiated
 	if worker.standbyInstance != nil {
 		return
+	}
+
+	// Pre-pull the configured Tart VM images first
+	for _, image := range worker.tartPrePull {
+		worker.logger.Infof("pre-pulling Tart VM image %q...", image)
+
+		if err := tart.PrePull(ctx, image, worker.echelonLogger); err != nil {
+			worker.logger.Errorf("failed to pre-pull Tart VM image %q: %v", image, err)
+		}
 	}
 
 	// Do nothing if there are tasks that are running to simplify the resource management

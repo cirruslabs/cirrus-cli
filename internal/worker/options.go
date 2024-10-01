@@ -50,3 +50,9 @@ func WithResourceModifiersManager(resourceModifiersManager *resourcemodifier.Man
 		e.resourceModifierManager = resourceModifiersManager
 	}
 }
+
+func WithTartPrePull(tartPrePull []string) Option {
+	return func(e *Worker) {
+		e.tartPrePull = tartPrePull
+	}
+}
