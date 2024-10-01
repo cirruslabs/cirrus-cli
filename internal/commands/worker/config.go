@@ -40,6 +40,8 @@ type Config struct {
 	Standby *worker.StandbyConfig `yaml:"standby"`
 
 	ResourceModifiers []*resourcemodifier.Modifier `yaml:"resource-modifiers"`
+
+	TartPrePull []string `yaml:"tart-pre-pull"`
 }
 
 type ConfigLog struct {
@@ -223,6 +225,10 @@ func buildWorker(output io.Writer) (*worker.Worker, error) {
 		opts = append(opts, worker.WithResourceModifiersManager(
 			resourcemodifier.NewManager(config.ResourceModifiers...),
 		))
+	}
+
+	if len(config.TartPrePull) != 0 {
+		opts = append(opts, worker.WithTartPrePull(config.TartPrePull))
 	}
 
 	// Instantiate worker

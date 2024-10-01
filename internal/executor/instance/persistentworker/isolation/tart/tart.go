@@ -105,6 +105,12 @@ func (tart *Tart) Warmup(
 	return tart.bootVM(ctx, ident, additionalEnvironment, "", false, logger)
 }
 
+func PrePull(ctx context.Context, image string, logger *echelon.Logger) error {
+	_, _, err := CmdWithLogger(ctx, nil, logger, "pull", image)
+
+	return err
+}
+
 func (tart *Tart) bootVM(
 	ctx context.Context,
 	ident string,
