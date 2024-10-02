@@ -3,16 +3,27 @@ package upstream
 import (
 	"context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"time"
 )
 
 // PerRPCCredentials interface implementation.
 func (upstream *Upstream) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{
+	result := map[string]string{
 		"registration-token": upstream.registrationToken,
 		"session-token":      upstream.sessionToken,
 		"worker-name":        upstream.workerName,
-	}, nil
+	}
+	// inherit any outgoing metadata
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if ok {
+		for key, values := range md {
+			if len(values) > 0 {
+				result[key] = values[0]
+			}
+		}
+	}
+	return result, nil
 }
 
 // PerRPCCredentials interface implementation.
