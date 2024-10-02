@@ -192,6 +192,10 @@ func (worker *Worker) runTask(
 		boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
 		defer cancel()
 
+		if md, ok := metadata.FromOutgoingContext(ctx); ok {
+			boundedCtx = metadata.NewOutgoingContext(boundedCtx, md)
+		}
+
 		localHub.WithScope(func(scope *sentry.Scope) {
 			scope.SetTags(cirrusSentryTags)
 
@@ -232,6 +236,10 @@ func (worker *Worker) runTask(
 
 	boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
 	defer cancel()
+
+	if md, ok := metadata.FromOutgoingContext(ctx); ok {
+		boundedCtx = metadata.NewOutgoingContext(boundedCtx, md)
+	}
 
 	if err = upstream.TaskStopped(boundedCtx, api.OldTaskIdentification(taskID, clientSecret)); err != nil {
 		worker.logger.Errorf("failed to notify the server about the stopped task %s: %v",
