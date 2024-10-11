@@ -7903,6 +7903,39 @@ func (s *OptStartPreviewsMultipartUploadReq) UnmarshalJSON(data []byte) error {
 	return s.Decode(d)
 }
 
+// Encode encodes StartPreviewsMultipartUploadReqType as json.
+func (o OptStartPreviewsMultipartUploadReqType) Encode(e *jx.Encoder) {
+	if !o.Set {
+		return
+	}
+	e.Str(string(o.Value))
+}
+
+// Decode decodes StartPreviewsMultipartUploadReqType from json.
+func (o *OptStartPreviewsMultipartUploadReqType) Decode(d *jx.Decoder) error {
+	if o == nil {
+		return errors.New("invalid: unable to decode OptStartPreviewsMultipartUploadReqType to nil")
+	}
+	o.Set = true
+	if err := o.Value.Decode(d); err != nil {
+		return err
+	}
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s OptStartPreviewsMultipartUploadReqType) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *OptStartPreviewsMultipartUploadReqType) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
 // Encode encodes string as json.
 func (o OptString) Encode(e *jx.Encoder) {
 	if !o.Set {
@@ -10228,15 +10261,36 @@ func (s *StartPreviewsMultipartUploadReq) Encode(e *jx.Encoder) {
 // encodeFields encodes fields.
 func (s *StartPreviewsMultipartUploadReq) encodeFields(e *jx.Encoder) {
 	{
+		if s.BundleIdentifier.Set {
+			e.FieldStart("bundle_identifier")
+			s.BundleIdentifier.Encode(e)
+		}
+	}
+	{
 		if s.DisplayName.Set {
 			e.FieldStart("display_name")
 			s.DisplayName.Encode(e)
 		}
 	}
+	{
+		if s.Type.Set {
+			e.FieldStart("type")
+			s.Type.Encode(e)
+		}
+	}
+	{
+		if s.Version.Set {
+			e.FieldStart("version")
+			s.Version.Encode(e)
+		}
+	}
 }
 
-var jsonFieldsNameOfStartPreviewsMultipartUploadReq = [1]string{
-	0: "display_name",
+var jsonFieldsNameOfStartPreviewsMultipartUploadReq = [4]string{
+	0: "bundle_identifier",
+	1: "display_name",
+	2: "type",
+	3: "version",
 }
 
 // Decode decodes StartPreviewsMultipartUploadReq from json.
@@ -10244,9 +10298,20 @@ func (s *StartPreviewsMultipartUploadReq) Decode(d *jx.Decoder) error {
 	if s == nil {
 		return errors.New("invalid: unable to decode StartPreviewsMultipartUploadReq to nil")
 	}
+	s.setDefaults()
 
 	if err := d.ObjBytes(func(d *jx.Decoder, k []byte) error {
 		switch string(k) {
+		case "bundle_identifier":
+			if err := func() error {
+				s.BundleIdentifier.Reset()
+				if err := s.BundleIdentifier.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"bundle_identifier\"")
+			}
 		case "display_name":
 			if err := func() error {
 				s.DisplayName.Reset()
@@ -10256,6 +10321,26 @@ func (s *StartPreviewsMultipartUploadReq) Decode(d *jx.Decoder) error {
 				return nil
 			}(); err != nil {
 				return errors.Wrap(err, "decode field \"display_name\"")
+			}
+		case "type":
+			if err := func() error {
+				s.Type.Reset()
+				if err := s.Type.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"type\"")
+			}
+		case "version":
+			if err := func() error {
+				s.Version.Reset()
+				if err := s.Version.Decode(d); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return errors.Wrap(err, "decode field \"version\"")
 			}
 		default:
 			return d.Skip()
@@ -10277,6 +10362,46 @@ func (s *StartPreviewsMultipartUploadReq) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements stdjson.Unmarshaler.
 func (s *StartPreviewsMultipartUploadReq) UnmarshalJSON(data []byte) error {
+	d := jx.DecodeBytes(data)
+	return s.Decode(d)
+}
+
+// Encode encodes StartPreviewsMultipartUploadReqType as json.
+func (s StartPreviewsMultipartUploadReqType) Encode(e *jx.Encoder) {
+	e.Str(string(s))
+}
+
+// Decode decodes StartPreviewsMultipartUploadReqType from json.
+func (s *StartPreviewsMultipartUploadReqType) Decode(d *jx.Decoder) error {
+	if s == nil {
+		return errors.New("invalid: unable to decode StartPreviewsMultipartUploadReqType to nil")
+	}
+	v, err := d.StrBytes()
+	if err != nil {
+		return err
+	}
+	// Try to use constant string.
+	switch StartPreviewsMultipartUploadReqType(v) {
+	case StartPreviewsMultipartUploadReqTypeAppBundle:
+		*s = StartPreviewsMultipartUploadReqTypeAppBundle
+	case StartPreviewsMultipartUploadReqTypeIpa:
+		*s = StartPreviewsMultipartUploadReqTypeIpa
+	default:
+		*s = StartPreviewsMultipartUploadReqType(v)
+	}
+
+	return nil
+}
+
+// MarshalJSON implements stdjson.Marshaler.
+func (s StartPreviewsMultipartUploadReqType) MarshalJSON() ([]byte, error) {
+	e := jx.Encoder{}
+	s.Encode(&e)
+	return e.Bytes(), nil
+}
+
+// UnmarshalJSON implements stdjson.Unmarshaler.
+func (s *StartPreviewsMultipartUploadReqType) UnmarshalJSON(data []byte) error {
 	d := jx.DecodeBytes(data)
 	return s.Decode(d)
 }
