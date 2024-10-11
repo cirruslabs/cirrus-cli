@@ -57,3 +57,11 @@ func (s *StartPreviewsMultipartUploadOK) setDefaults() {
 		s.Status = val
 	}
 }
+
+// setDefaults set default value of fields.
+func (s *StartPreviewsMultipartUploadReq) setDefaults() {
+	{
+		val := StartPreviewsMultipartUploadReqType("app_bundle")
+		s.Type.SetTo(val)
+	}
+}

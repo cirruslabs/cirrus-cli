@@ -2799,6 +2799,52 @@ func (o OptStartPreviewsMultipartUploadReq) Or(d StartPreviewsMultipartUploadReq
 	return d
 }
 
+// NewOptStartPreviewsMultipartUploadReqType returns new OptStartPreviewsMultipartUploadReqType with value set to v.
+func NewOptStartPreviewsMultipartUploadReqType(v StartPreviewsMultipartUploadReqType) OptStartPreviewsMultipartUploadReqType {
+	return OptStartPreviewsMultipartUploadReqType{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptStartPreviewsMultipartUploadReqType is optional StartPreviewsMultipartUploadReqType.
+type OptStartPreviewsMultipartUploadReqType struct {
+	Value StartPreviewsMultipartUploadReqType
+	Set   bool
+}
+
+// IsSet returns true if OptStartPreviewsMultipartUploadReqType was set.
+func (o OptStartPreviewsMultipartUploadReqType) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptStartPreviewsMultipartUploadReqType) Reset() {
+	var v StartPreviewsMultipartUploadReqType
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptStartPreviewsMultipartUploadReqType) SetTo(v StartPreviewsMultipartUploadReqType) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptStartPreviewsMultipartUploadReqType) Get() (v StartPreviewsMultipartUploadReqType, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptStartPreviewsMultipartUploadReqType) Or(d StartPreviewsMultipartUploadReqType) StartPreviewsMultipartUploadReqType {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -3772,8 +3818,19 @@ func (s *StartPreviewsMultipartUploadOKStatus) UnmarshalText(data []byte) error 
 }
 
 type StartPreviewsMultipartUploadReq struct {
+	// The bundle identifier of the preview.
+	BundleIdentifier OptString `json:"bundle_identifier"`
 	// The display name of the preview.
 	DisplayName OptString `json:"display_name"`
+	// The type of the preview to upload.
+	Type OptStartPreviewsMultipartUploadReqType `json:"type"`
+	// The version of the preview.
+	Version OptString `json:"version"`
+}
+
+// GetBundleIdentifier returns the value of BundleIdentifier.
+func (s *StartPreviewsMultipartUploadReq) GetBundleIdentifier() OptString {
+	return s.BundleIdentifier
 }
 
 // GetDisplayName returns the value of DisplayName.
@@ -3781,9 +3838,76 @@ func (s *StartPreviewsMultipartUploadReq) GetDisplayName() OptString {
 	return s.DisplayName
 }
 
+// GetType returns the value of Type.
+func (s *StartPreviewsMultipartUploadReq) GetType() OptStartPreviewsMultipartUploadReqType {
+	return s.Type
+}
+
+// GetVersion returns the value of Version.
+func (s *StartPreviewsMultipartUploadReq) GetVersion() OptString {
+	return s.Version
+}
+
+// SetBundleIdentifier sets the value of BundleIdentifier.
+func (s *StartPreviewsMultipartUploadReq) SetBundleIdentifier(val OptString) {
+	s.BundleIdentifier = val
+}
+
 // SetDisplayName sets the value of DisplayName.
 func (s *StartPreviewsMultipartUploadReq) SetDisplayName(val OptString) {
 	s.DisplayName = val
+}
+
+// SetType sets the value of Type.
+func (s *StartPreviewsMultipartUploadReq) SetType(val OptStartPreviewsMultipartUploadReqType) {
+	s.Type = val
+}
+
+// SetVersion sets the value of Version.
+func (s *StartPreviewsMultipartUploadReq) SetVersion(val OptString) {
+	s.Version = val
+}
+
+// The type of the preview to upload.
+type StartPreviewsMultipartUploadReqType string
+
+const (
+	StartPreviewsMultipartUploadReqTypeAppBundle StartPreviewsMultipartUploadReqType = "app_bundle"
+	StartPreviewsMultipartUploadReqTypeIpa       StartPreviewsMultipartUploadReqType = "ipa"
+)
+
+// AllValues returns all StartPreviewsMultipartUploadReqType values.
+func (StartPreviewsMultipartUploadReqType) AllValues() []StartPreviewsMultipartUploadReqType {
+	return []StartPreviewsMultipartUploadReqType{
+		StartPreviewsMultipartUploadReqTypeAppBundle,
+		StartPreviewsMultipartUploadReqTypeIpa,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s StartPreviewsMultipartUploadReqType) MarshalText() ([]byte, error) {
+	switch s {
+	case StartPreviewsMultipartUploadReqTypeAppBundle:
+		return []byte(s), nil
+	case StartPreviewsMultipartUploadReqTypeIpa:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *StartPreviewsMultipartUploadReqType) UnmarshalText(data []byte) error {
+	switch StartPreviewsMultipartUploadReqType(data) {
+	case StartPreviewsMultipartUploadReqTypeAppBundle:
+		*s = StartPreviewsMultipartUploadReqTypeAppBundle
+		return nil
+	case StartPreviewsMultipartUploadReqTypeIpa:
+		*s = StartPreviewsMultipartUploadReqTypeIpa
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 type StartPreviewsMultipartUploadUnauthorized Error
