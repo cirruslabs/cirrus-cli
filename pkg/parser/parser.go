@@ -435,12 +435,6 @@ func (p *Parser) resolveDependenciesShallow(tasks []task.ParseableTaskLike) erro
 	for _, task := range tasks {
 		var dependsOnIDs []int64
 		for _, dependsOnName := range task.DependsOnNames() {
-			// Dependency may be missing due to only_if
-			if _, ok := p.disabledTaskNamesAndAliases[dependsOnName]; ok {
-				p.registerUnbalancedOnlyIfIssue(task, dependsOnName)
-				continue
-			}
-
 			var dependencyWasFound bool
 
 			for _, subTask := range tasks {
@@ -448,6 +442,12 @@ func (p *Parser) resolveDependenciesShallow(tasks []task.ParseableTaskLike) erro
 					dependsOnIDs = append(dependsOnIDs, subTask.ID())
 					dependencyWasFound = true
 				}
+			}
+
+			// Dependency may be missing due to only_if
+			if _, ok := p.disabledTaskNamesAndAliases[dependsOnName]; ok && !dependencyWasFound {
+				p.registerUnbalancedOnlyIfIssue(task, dependsOnName)
+				continue
 			}
 
 			if !dependencyWasFound {

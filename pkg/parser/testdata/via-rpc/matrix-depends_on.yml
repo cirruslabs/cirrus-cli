@@ -1,0 +1,20 @@
+container:
+  image: alpine:latest
+
+matrix_definition: &MATRIX_DEFINITION
+  - { only_if: ($CIRRUS_BRANCH == 'master') }
+  - { only_if: ($CIRRUS_PR_LABELS =~ '.*deploy-dev.*') }
+
+task:
+  name: deploy
+  matrix:
+    <<: *MATRIX_DEFINITION
+  script: make lint
+
+task:
+  name: migration
+  depends_on:
+    - deploy
+  matrix:
+    <<: *MATRIX_DEFINITION
+  script: make build
