@@ -44,7 +44,7 @@ func Start(opts ...Option) string {
 	mux := http.NewServeMux()
 
 	// HTTP cache protocol
-	mux.HandleFunc("/{objectname}", handler)
+	mux.HandleFunc("/{objectname...}", handler)
 
 	address := "127.0.0.1:12321"
 	listener, err := net.Listen("tcp", address)

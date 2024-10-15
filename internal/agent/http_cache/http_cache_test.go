@@ -18,7 +18,7 @@ func TestHTTPCache(t *testing.T) {
 
 	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
-	httpCacheObjectURL := "http://" + http_cache.Start() + "/" + uuid.NewString()
+	httpCacheObjectURL := "http://" + http_cache.Start() + "/cache/" + uuid.NewString() + "/test.txt"
 
 	// Ensure that the cache entry does not exist
 	resp, err := http.Get(httpCacheObjectURL)
