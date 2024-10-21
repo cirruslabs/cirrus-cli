@@ -125,8 +125,9 @@ func (tc *TuistCache) GenerateCacheArtifactMultipartUploadURL(
 			TaskIdentification: client.CirrusTaskIdentification,
 			CacheKey:           cacheKey,
 		},
-		UploadId:   params.UploadID,
-		PartNumber: uint32(params.PartNumber),
+		UploadId:      params.UploadID,
+		PartNumber:    uint32(params.PartNumber),
+		ContentLength: uint64(params.ContentLength.Or(0)),
 	})
 	if err != nil {
 		return nil, err

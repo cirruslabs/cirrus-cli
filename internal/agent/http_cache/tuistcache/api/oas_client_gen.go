@@ -2913,6 +2913,23 @@ func (c *Client) sendGenerateCacheArtifactMultipartUploadURL(ctx context.Context
 		}
 	}
 	{
+		// Encode "content_length" parameter.
+		cfg := uri.QueryParameterEncodingConfig{
+			Name:    "content_length",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.EncodeParam(cfg, func(e uri.Encoder) error {
+			if val, ok := params.ContentLength.Get(); ok {
+				return e.EncodeValue(conv.IntToString(val))
+			}
+			return nil
+		}); err != nil {
+			return res, errors.Wrap(err, "encode query")
+		}
+	}
+	{
 		// Encode "project_id" parameter.
 		cfg := uri.QueryParameterEncodingConfig{
 			Name:    "project_id",
