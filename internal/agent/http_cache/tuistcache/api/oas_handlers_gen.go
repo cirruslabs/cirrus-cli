@@ -3287,6 +3287,10 @@ func (s *Server) handleGenerateCacheArtifactMultipartUploadURLRequest(args [0]st
 					In:   "query",
 				}: params.CacheCategory,
 				{
+					Name: "content_length",
+					In:   "query",
+				}: params.ContentLength,
+				{
 					Name: "project_id",
 					In:   "query",
 				}: params.ProjectID,

@@ -1712,6 +1712,8 @@ func decodeGenerateAnalyticsArtifactMultipartUploadURLParams(args [1]string, arg
 type GenerateCacheArtifactMultipartUploadURLParams struct {
 	// The category of the cache. It's used to differentiate between different types of caches.
 	CacheCategory OptCacheCategory
+	// The size in bytes of the part that will be uploaded. It's used to generate the signed URL.
+	ContentLength OptInt
 	// The project identifier '{account_name}/{project_name}'.
 	ProjectID string
 	// The hash that uniquely identifies the artifact in the cache.
@@ -1732,6 +1734,15 @@ func unpackGenerateCacheArtifactMultipartUploadURLParams(packed middleware.Param
 		}
 		if v, ok := packed[key]; ok {
 			params.CacheCategory = v.(OptCacheCategory)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "content_length",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.ContentLength = v.(OptInt)
 		}
 	}
 	{
@@ -1831,6 +1842,47 @@ func decodeGenerateCacheArtifactMultipartUploadURLParams(args [0]string, argsEsc
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "cache_category",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: content_length.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "content_length",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotContentLengthVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotContentLengthVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.ContentLength.SetTo(paramsDotContentLengthVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "content_length",
 			In:   "query",
 			Err:  err,
 		}
