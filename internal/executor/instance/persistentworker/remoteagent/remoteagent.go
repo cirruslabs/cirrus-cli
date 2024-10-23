@@ -85,6 +85,8 @@ func WaitForAgent(
 			ErrFailed, err)
 	}
 
+	ctx, span = tracer.Start(ctx, "run-agent")
+	defer span.End()
 	sess, err := cli.NewSession()
 	if err != nil {
 		return fmt.Errorf("%w: failed to open SSH session: %v", ErrFailed, err)
@@ -237,9 +239,6 @@ func connectViaSSH(
 	sshUser string,
 	sshPassword string,
 ) (*ssh.Client, error) {
-	ctx, span := tracer.Start(ctx, "connect-via-ssh")
-	defer span.End()
-
 	// Connect to the VM and upload the agent
 
 	logger.Debugf("connecting via SSH to %s...", addr)
@@ -261,6 +260,8 @@ func WaitForSSH(
 	sshPassword string,
 	logger logger.Lightweight,
 ) (*ssh.Client, error) {
+	ctx, span := tracer.Start(ctx, "wait-for-ssh")
+	defer span.End()
 	var sshConn ssh.Conn
 	var chans <-chan ssh.NewChannel
 	var reqs <-chan *ssh.Request
