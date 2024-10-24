@@ -102,7 +102,22 @@ func (tart *Tart) Warmup(
 	additionalEnvironment map[string]string,
 	logger *echelon.Logger,
 ) error {
-	return tart.bootVM(ctx, ident, additionalEnvironment, "", false, logger)
+	err := tart.bootVM(ctx, ident, additionalEnvironment, "", false, logger)
+	if err != nil {
+		return err
+	}
+	ip, err := tart.vm.RetrieveIP(ctx)
+	if err != nil {
+		return err
+	}
+
+	sshClient, err := remoteagent.WaitForSSH(ctx, fmt.Sprintf("%s:%d", ip, tart.sshPort), tart.sshUser,
+		tart.sshPassword, tart.logger)
+	if err != nil {
+		return err
+	}
+	_ = sshClient.Close()
+	return err
 }
 
 func PrePull(ctx context.Context, image string, logger *echelon.Logger) error {
@@ -207,13 +222,6 @@ func (tart *Tart) bootVM(
 	}
 
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
-
-	sshClient, err := remoteagent.WaitForSSH(ipCtx, fmt.Sprintf("%s:%d", ip, tart.sshPort), tart.sshUser,
-		tart.sshPassword, tart.logger)
-	if err != nil {
-		return err
-	}
-	_ = sshClient.Close()
 
 	bootLogger.Finish(true)
 
