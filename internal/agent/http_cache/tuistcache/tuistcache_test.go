@@ -52,7 +52,13 @@ func TestTuistCache(t *testing.T) {
 		Name:      name,
 	})
 	require.NoError(t, err)
-	require.IsType(t, &tuistapi.DownloadCacheArtifactNotFound{}, downloadCacheArtifactResp)
+
+	require.IsType(t, &tuistapi.CacheArtifactDownloadURL{}, downloadCacheArtifactResp)
+	cacheArtifactDownloadUrl := downloadCacheArtifactResp.(*tuistapi.CacheArtifactDownloadURL)
+
+	cacheArtifactDownloadUrlResp, err := http.Get(cacheArtifactDownloadUrl.Data.URL)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusNotFound, cacheArtifactDownloadUrlResp.StatusCode)
 
 	// Create the cache entry
 	startCacheArtifactMultipartUploadResp, err := tuistCacheClient.StartCacheArtifactMultipartUpload(
