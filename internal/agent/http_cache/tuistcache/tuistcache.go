@@ -55,18 +55,6 @@ func (tc *TuistCache) DownloadCacheArtifact(
 ) (tuistapi.DownloadCacheArtifactRes, error) {
 	cacheKey := getCacheKey(params.CacheCategory, params.ProjectID, params.Hash, params.Name)
 
-	_, err := client.CirrusClient.CacheInfo(ctx, &api.CacheInfoRequest{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           cacheKey,
-	})
-	if err != nil {
-		if status, ok := status.FromError(err); ok && status.Code() == codes.NotFound {
-			return &tuistapi.DownloadCacheArtifactNotFound{}, nil
-		}
-
-		return nil, err
-	}
-
 	generateCacheUploadURLResponse, err := client.CirrusClient.GenerateCacheDownloadURLs(ctx, &api.CacheKey{
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
