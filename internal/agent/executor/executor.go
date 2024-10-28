@@ -220,10 +220,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		var tuistCaching bool
 
 		// Tuist caching API support
-		//
-		// Can be enabled through the OS environment variable and
-		// only works with our built-in cache server.
-		if _, ok := os.LookupEnv("CIRRUS_TUIST_CACHE_ENABLED"); ok {
+		if _, ok := executor.env.Lookup("CIRRUS_TUIST_CACHE_ENABLED"); ok {
 			tuistCache, err := tuistcache.New()
 			if err != nil {
 				log.Printf("Failed to initialize Tuist cache: %v", err)
