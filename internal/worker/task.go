@@ -35,14 +35,14 @@ func (worker *Worker) startTask(
 	ctx context.Context,
 	upstream *upstreampkg.Upstream,
 	agentAwareTask *api.PollResponse_AgentAwareTask,
-) {
+) (string, error) {
 	taskID := agentAwareTask.TaskId
 	if taskID == "" {
 		taskID = fmt.Sprintf("%d", agentAwareTask.OldTaskId)
 	}
 	if _, ok := worker.tasks.Load(taskID); ok {
 		worker.logger.Warnf("attempted to run task %s which is already running", taskID)
-		return
+		return "", fmt.Errorf("task %s already running", taskID)
 	}
 
 	ctx = metadata.AppendToOutgoingContext(ctx,
@@ -67,7 +67,7 @@ func (worker *Worker) startTask(
 			Message:            err.Error(),
 		})
 
-		return
+		return "", fmt.Errorf("failed to create an instance for task: %v", err)
 	}
 
 	worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(inst.Attributes()...))
@@ -75,6 +75,8 @@ func (worker *Worker) startTask(
 		taskID, agentAwareTask.ClientSecret, agentAwareTask.ServerSecret)
 
 	worker.logger.Infof("started task %s", taskID)
+
+	return taskID, nil
 }
 
 func (worker *Worker) getInstance(
