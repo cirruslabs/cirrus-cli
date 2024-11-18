@@ -129,6 +129,9 @@ func (tart *Tart) Warmup(
 
 	logger.Infof("running warm-up script...")
 
+	ctx, prepareInstanceSpan := tracer.Start(ctx, "warmup-script")
+	defer prepareInstanceSpan.End()
+
 	// Work around x/crypto/ssh not being context.Context-friendly (e.g. https://github.com/golang/go/issues/20288)
 	var monitorCtx context.Context
 	var monitorCancel context.CancelFunc
