@@ -94,6 +94,8 @@ func (vetu *Vetu) Warmup(
 	ctx context.Context,
 	ident string,
 	env map[string]string,
+	_ string,
+	_ time.Duration,
 	logger *echelon.Logger,
 ) error {
 	return vetu.bootVM(ctx, ident, env, false, logger)

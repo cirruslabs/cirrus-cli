@@ -23,7 +23,7 @@ aliases_test:
   <<: *defaults
 `
 
-	actual, err := node.NewFromText(config)
+	actual, err := node.NewFromText(config, node.WithoutYAMLNode())
 	if err != nil {
 		t.Fatal(err)
 	}

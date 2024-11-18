@@ -11,6 +11,10 @@ import (
 
 var ErrFailedToMarshal = errors.New("failed to marshal to YAML")
 
+type config struct {
+	withoutYAMLNode bool
+}
+
 func (node *Node) MarshalYAML() (*yaml.Node, error) {
 	switch obj := node.Value.(type) {
 	case *MapValue:
@@ -45,11 +49,11 @@ func (node *Node) MarshalYAML() (*yaml.Node, error) {
 	}
 }
 
-func NewFromText(text string) (*Node, error) {
-	return NewFromTextWithMergeExemptions(text, []nameable.Nameable{})
+func NewFromText(text string, opts ...Option) (*Node, error) {
+	return NewFromTextWithMergeExemptions(text, []nameable.Nameable{}, opts...)
 }
 
-func NewFromTextWithMergeExemptions(text string, mergeExemptions []nameable.Nameable) (*Node, error) {
+func NewFromTextWithMergeExemptions(text string, mergeExemptions []nameable.Nameable, opts ...Option) (*Node, error) {
 	var yamlNode yaml.Node
 
 	// Unmarshal YAML
@@ -57,10 +61,14 @@ func NewFromTextWithMergeExemptions(text string, mergeExemptions []nameable.Name
 		return nil, err
 	}
 
-	return NewFromNodeWithMergeExemptions(yamlNode, mergeExemptions)
+	return NewFromNodeWithMergeExemptions(yamlNode, mergeExemptions, opts...)
 }
 
-func NewFromNodeWithMergeExemptions(yamlNode yaml.Node, mergeExemptions []nameable.Nameable) (*Node, error) {
+func NewFromNodeWithMergeExemptions(
+	yamlNode yaml.Node,
+	mergeExemptions []nameable.Nameable,
+	opts ...Option,
+) (*Node, error) {
 	// Empty document
 	if yamlNode.Kind == 0 || len(yamlNode.Content) == 0 {
 		return &Node{Name: "root"}, nil
@@ -83,11 +91,18 @@ func NewFromNodeWithMergeExemptions(yamlNode yaml.Node, mergeExemptions []nameab
 			" as it top-level element, but found %s", yamlKindToString(yamlNode.Kind))
 	}
 
-	return convert(nil, "root", yamlNode.Content[0], yamlNode.Line, yamlNode.Column, mergeExemptions)
+	config := &config{}
+
+	for _, opt := range opts {
+		opt(config)
+	}
+
+	return convert(config, nil, "root", yamlNode.Content[0], yamlNode.Line, yamlNode.Column, mergeExemptions)
 }
 
 //nolint:gocognit // splitting this into multiple functions would probably make this even less comprehensible
 func convert(
+	config *config,
 	parent *Node,
 	name string,
 	yamlNode *yaml.Node,
@@ -102,6 +117,10 @@ func convert(
 		Column: column,
 	}
 
+	if !config.withoutYAMLNode {
+		result.YAMLNode = yamlNode
+	}
+
 	switch yamlNode.Kind {
 	case yaml.SequenceNode:
 		result.Value = &ListValue{}
@@ -114,7 +133,7 @@ func convert(
 				continue
 			}
 
-			listSubtree, err := convert(result, "", item, item.Line, item.Column, mergeExemptions)
+			listSubtree, err := convert(config, result, "", item, item.Line, item.Column, mergeExemptions)
 			if err != nil {
 				return nil, err
 			}
@@ -134,7 +153,7 @@ func convert(
 
 			// Handle "<<" keys
 			if key.Tag == "!!merge" {
-				if err := result.merge(yamlNode, key, value, mergeExemptions); err != nil {
+				if err := result.merge(config, yamlNode, key, value, mergeExemptions); err != nil {
 					return nil, err
 				}
 
@@ -146,7 +165,7 @@ func convert(
 				return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "map key is not a string")
 			}
 
-			mapSubtree, err := convert(result, key.Value, value, key.Line, key.Column, mergeExemptions)
+			mapSubtree, err := convert(config, result, key.Value, value, key.Line, key.Column, mergeExemptions)
 			if err != nil {
 				return nil, err
 			}
@@ -159,7 +178,7 @@ func convert(
 		// YAML aliases generally don't need line and column helper values
 		// since they are merged into some other data structure afterwards
 		// and this helps to find bugs easier in the future
-		resolvedAlias, err := convert(parent, name, yamlNode.Alias, 0, 0, mergeExemptions)
+		resolvedAlias, err := convert(config, parent, name, yamlNode.Alias, 0, 0, mergeExemptions)
 		if err != nil {
 			return nil, err
 		}
@@ -173,11 +192,17 @@ func convert(
 	return result, nil
 }
 
-func (node *Node) merge(parent *yaml.Node, _ *yaml.Node, value *yaml.Node, mergeExemptions []nameable.Nameable) error {
+func (node *Node) merge(
+	config *config,
+	parent *yaml.Node,
+	_ *yaml.Node,
+	value *yaml.Node,
+	mergeExemptions []nameable.Nameable,
+) error {
 	// YAML aliases generally don't need line and column helper values
 	// since they are merged into some other data structure afterwards
 	// and this helps to find bugs easier in the future
-	aliasValue, err := convert(node, "", value, 0, 0, mergeExemptions)
+	aliasValue, err := convert(config, node, "", value, 0, 0, mergeExemptions)
 	if err != nil {
 		return err
 	}

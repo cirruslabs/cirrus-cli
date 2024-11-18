@@ -3,6 +3,7 @@ package node
 import (
 	"fmt"
 	"github.com/samber/lo"
+	"gopkg.in/yaml.v3"
 	"reflect"
 	"strings"
 )
@@ -15,6 +16,8 @@ type Node struct {
 
 	Line   int
 	Column int
+
+	YAMLNode *yaml.Node
 }
 
 type MapValue struct{}
