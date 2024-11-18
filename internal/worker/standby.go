@@ -11,12 +11,18 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"gopkg.in/yaml.v3"
 	"strconv"
+	"time"
 )
 
 type StandbyConfig struct {
-	Isolation    *api.Isolation     `yaml:"isolation"`
-	Resources    map[string]float64 `yaml:"resources"`
-	WarmupScript string             `yaml:"warmup_script"`
+	Isolation *api.Isolation     `yaml:"isolation"`
+	Resources map[string]float64 `yaml:"resources"`
+	Warmup    Warmup             `yaml:"warmup"`
+}
+
+type Warmup struct {
+	Script  string        `yaml:"script"`
+	Timeout time.Duration `yaml:"timeout"`
 }
 
 var ErrIsolationMissing = errors.New("isolation configuration is required for standby")
@@ -75,14 +81,10 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 		}
 	}
 
-	if warmupScriptNode := documentNode.FindChild("warmup_script"); warmupScriptNode != nil {
-		warmupScript, ok := warmupScriptNode.Value.(*node.ScalarValue)
-		if !ok {
-			return fmt.Errorf("\"startup_script\" should be a string, got %T",
-				warmupScriptNode.Value)
+	if warmupNode := documentNode.FindChild("warmup"); warmupNode != nil {
+		if err := warmupNode.YAMLNode.Decode(&standby.Warmup); err != nil {
+			return err
 		}
-
-		standby.WarmupScript = warmupScript.Value
 	}
 
 	return nil

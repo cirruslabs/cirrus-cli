@@ -104,6 +104,7 @@ func (tart *Tart) Warmup(
 	ident string,
 	additionalEnvironment map[string]string,
 	warmupScript string,
+	warmupTimeout time.Duration,
 	logger *echelon.Logger,
 ) error {
 	err := tart.bootVM(ctx, ident, additionalEnvironment, "", false, logger)
@@ -126,10 +127,10 @@ func (tart *Tart) Warmup(
 		return nil
 	}
 
-	logger.Infof("running warmup script...")
+	logger.Infof("running warm-up script...")
 
 	// Work around x/crypto/ssh not being context.Context-friendly (e.g. https://github.com/golang/go/issues/20288)
-	monitorCtx, monitorCancel := context.WithCancel(ctx)
+	monitorCtx, monitorCancel := context.WithTimeoutCause(ctx, warmupTimeout, abstract.ErrWarmupTimeout)
 	go func() {
 		<-monitorCtx.Done()
 		_ = sshClient.Close()
@@ -178,6 +179,12 @@ func (tart *Tart) Warmup(
 	if err := sshSess.Wait(); err != nil {
 		// Work around x/crypto/ssh not being context.Context-friendly (e.g. https://github.com/golang/go/issues/20288)
 		if err := monitorCtx.Err(); err != nil {
+			if errors.Is(context.Cause(monitorCtx), abstract.ErrWarmupTimeout) {
+				logger.Warnf("%v, ignoring...", context.Cause(monitorCtx))
+
+				return nil
+			}
+
 			return err
 		}
 

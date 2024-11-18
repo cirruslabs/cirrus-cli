@@ -9,7 +9,7 @@ import (
 
 func TestGetExpandedStringValue(t *testing.T) {
 	tree, err := node.NewFromText(`name: Batched $VALUE-${I}
-`)
+`, node.WithoutYAMLNode())
 	if err != nil {
 		t.Fatal(err)
 	}
