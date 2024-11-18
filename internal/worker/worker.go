@@ -46,15 +46,18 @@ type Worker struct {
 	tasks           *xsync.MapOf[string, *Task]
 	taskCompletions chan string
 
-	imagesCounter     metric.Int64Counter
-	tasksCounter      metric.Int64Counter
-	standbyHitCounter metric.Int64Counter
+	imagesCounter               metric.Int64Counter
+	tasksCounter                metric.Int64Counter
+	taskExecutionTimeHistogram  metric.Float64Histogram
+	standbyHitCounter           metric.Int64Counter
+	standbyInstanceAgeHistogram metric.Float64Histogram
 
 	logger        logrus.FieldLogger
 	echelonLogger *echelon.Logger
 
-	standbyConfig   *StandbyConfig
-	standbyInstance abstract.Instance
+	standbyConfig            *StandbyConfig
+	standbyInstance          abstract.Instance
+	standbyInstanceStartedAt time.Time
 
 	tartPrePull []string
 }
@@ -149,6 +152,15 @@ func (worker *Worker) Run(ctx context.Context) error {
 		return err
 	}
 
+	worker.taskExecutionTimeHistogram, err = meter.Float64Histogram(
+		"org.cirruslabs.persistent_worker.tasks.execution_time",
+		metric.WithDescription("Task execution time."),
+		metric.WithUnit("s"),
+	)
+	if err != nil {
+		return err
+	}
+
 	// Resource-related metrics
 	_, err = meter.Float64ObservableGauge("org.cirruslabs.persistent_worker.resources.unused_count",
 		metric.WithDescription("Amount of resources available for use on the Persistent Worker."),
@@ -180,6 +192,15 @@ func (worker *Worker) Run(ctx context.Context) error {
 
 	// standby-related metrics
 	worker.standbyHitCounter, err = meter.Int64Counter("org.cirruslabs.persistent_worker.standby.hit")
+	if err != nil {
+		return err
+	}
+
+	worker.standbyInstanceAgeHistogram, err = meter.Float64Histogram(
+		"org.cirruslabs.persistent_worker.standby.age",
+		metric.WithDescription("Standby instance age at the moment of relinquishing the ownership."),
+		metric.WithUnit("s"),
+	)
 	if err != nil {
 		return err
 	}
@@ -261,7 +282,8 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 
 	worker.logger.Debugf("warming-up the standby instance")
 
-	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil, worker.echelonLogger); err != nil {
+	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil,
+		worker.standbyConfig.WarmupScript, worker.echelonLogger); err != nil {
 		worker.logger.Errorf("failed to warm-up a standby instance: %v", err)
 
 		if err := standbyInstance.Close(ctx); err != nil {
@@ -275,6 +297,7 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 	worker.logger.Debugf("standby instance had successfully warmed-up")
 
 	worker.standbyInstance = standbyInstance
+	worker.standbyInstanceStartedAt = time.Now()
 }
 
 func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstreampkg.Upstream) error {

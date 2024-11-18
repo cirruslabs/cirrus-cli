@@ -14,15 +14,16 @@ import (
 )
 
 type StandbyConfig struct {
-	Isolation *api.Isolation
-	Resources map[string]float64
+	Isolation    *api.Isolation     `yaml:"isolation"`
+	Resources    map[string]float64 `yaml:"resources"`
+	WarmupScript string             `yaml:"warmup_script"`
 }
 
 var ErrIsolationMissing = errors.New("isolation configuration is required for standby")
 var ErrUnsupportedIsolation = errors.New("only Tart and Vetu instances are currently supported for standby")
 
 func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
-	node, err := node.NewFromNodeWithMergeExemptions(yaml.Node{
+	documentNode, err := node.NewFromNodeWithMergeExemptions(yaml.Node{
 		Kind: yaml.DocumentNode,
 		Content: []*yaml.Node{
 			value,
@@ -32,7 +33,7 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 		return err
 	}
 
-	isolationNode := node.FindChild("isolation")
+	isolationNode := documentNode.FindChild("isolation")
 	if isolationNode == nil {
 		return ErrIsolationMissing
 	}
@@ -60,7 +61,7 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 
 	// Parse resources
 	standby.Resources = make(map[string]float64)
-	if resourcesNode := node.FindChild("resources"); resourcesNode != nil {
+	if resourcesNode := documentNode.FindChild("resources"); resourcesNode != nil {
 		for _, resourceNode := range resourcesNode.Children {
 			resourceValueRaw, err := resourceNode.FlattenedValue()
 			if err != nil {
@@ -72,6 +73,16 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 			}
 			standby.Resources[resourceNode.Name] = resourceValue
 		}
+	}
+
+	if warmupScriptNode := documentNode.FindChild("warmup_script"); warmupScriptNode != nil {
+		warmupScript, ok := warmupScriptNode.Value.(*node.ScalarValue)
+		if !ok {
+			return fmt.Errorf("\"startup_script\" should be a string, got %T",
+				warmupScriptNode.Value)
+		}
+
+		standby.WarmupScript = warmupScript.Value
 	}
 
 	return nil

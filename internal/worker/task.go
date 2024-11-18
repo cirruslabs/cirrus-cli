@@ -83,9 +83,13 @@ func (worker *Worker) getInstance(
 	resourcesToUse map[string]float64,
 ) (abstract.Instance, error) {
 	if standbyInstance := worker.standbyInstance; standbyInstance != nil {
+		// Record standby instance age before relinquishing the ownership
+		worker.standbyInstanceAgeHistogram.Record(ctx, time.Since(worker.standbyInstanceStartedAt).Seconds())
+
 		// Relinquish our ownership of the standby instance since
 		// we'll either return it to the task or terminate it
 		worker.standbyInstance = nil
+		worker.standbyInstanceStartedAt = time.Time{}
 
 		// Return the standby instance if matches the isolation required by the task
 		if proto.Equal(worker.standbyConfig.Isolation, isolation) {
@@ -184,9 +188,16 @@ func (worker *Worker) runTask(
 		worker.logger.Warnf("failed to set CLI's version for task %s: %v", taskID, err)
 	}
 
+	startedAt := time.Now()
 	err := inst.Run(ctx, &config)
+	stoppedAt := time.Now()
+
+	var taskExecutionAttributes []attribute.KeyValue
 
 	if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(ctx.Err(), context.Canceled) {
+		// Update task execution attributes
+		taskExecutionAttributes = append(taskExecutionAttributes, attribute.String("status", "failed"))
+
 		worker.logger.Errorf("failed to run task %s: %v", taskID, err)
 
 		boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
@@ -232,10 +243,17 @@ func (worker *Worker) runTask(
 				localHub.CaptureMessage(fmt.Sprintf("failed to notify the server about the failed task: %v", err))
 			})
 		}
+	} else {
+		// Update task execution attributes
+		taskExecutionAttributes = append(taskExecutionAttributes, attribute.String("status", "succeeded"))
 	}
 
 	boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
 	defer cancel()
+
+	// Record task execution time
+	worker.taskExecutionTimeHistogram.Record(boundedCtx, stoppedAt.Sub(startedAt).Seconds(),
+		metric.WithAttributes(taskExecutionAttributes...))
 
 	if md, ok := metadata.FromOutgoingContext(ctx); ok {
 		boundedCtx = metadata.NewOutgoingContext(boundedCtx, md)

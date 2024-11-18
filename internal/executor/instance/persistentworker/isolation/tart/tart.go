@@ -1,9 +1,11 @@
 package tart
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/projectdirsyncer"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
@@ -17,6 +19,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/ssh"
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -100,6 +103,7 @@ func (tart *Tart) Warmup(
 	ctx context.Context,
 	ident string,
 	additionalEnvironment map[string]string,
+	warmupScript string,
 	logger *echelon.Logger,
 ) error {
 	err := tart.bootVM(ctx, ident, additionalEnvironment, "", false, logger)
@@ -116,8 +120,71 @@ func (tart *Tart) Warmup(
 	if err != nil {
 		return err
 	}
-	_ = sshClient.Close()
-	return err
+	defer func() { _ = sshClient.Close() }()
+
+	if warmupScript == "" {
+		return nil
+	}
+
+	logger.Infof("running warmup script...")
+
+	// Work around x/crypto/ssh not being context.Context-friendly (e.g. https://github.com/golang/go/issues/20288)
+	monitorCtx, monitorCancel := context.WithCancel(ctx)
+	go func() {
+		<-monitorCtx.Done()
+		_ = sshClient.Close()
+	}()
+	defer monitorCancel()
+
+	sshSess, err := sshClient.NewSession()
+	if err != nil {
+		return fmt.Errorf("%w: failed to create new SSH session: %v", abstract.ErrWarmupScriptFailed, err)
+	}
+
+	// Log output from the virtual machine
+	stdout, err := sshSess.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("%w: failed to open SSH session stdout pipe: %v", abstract.ErrWarmupScriptFailed, err)
+	}
+	stderr, err := sshSess.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("%w: failed to open SSH session stderr pipe: %v", abstract.ErrWarmupScriptFailed, err)
+	}
+	go func() {
+		output := io.MultiReader(stdout, stderr)
+
+		scanner := bufio.NewScanner(output)
+
+		for scanner.Scan() {
+			logger.Debugf("VM: %s", scanner.Text())
+		}
+	}()
+
+	stdinBuf, err := sshSess.StdinPipe()
+	if err != nil {
+		return fmt.Errorf("%w: failed to open SSH session stdin pipe: %v", abstract.ErrWarmupScriptFailed, err)
+	}
+
+	if err := sshSess.Shell(); err != nil {
+		return fmt.Errorf("%w: failed to invoke SSH shell on the VM: %v", abstract.ErrWarmupScriptFailed, err)
+	}
+
+	_, err = stdinBuf.Write([]byte(warmupScript + "\nexit\n"))
+	if err != nil {
+		return fmt.Errorf("%w: failed to write the warm-up script to the shell: %v",
+			abstract.ErrWarmupScriptFailed, err)
+	}
+
+	if err := sshSess.Wait(); err != nil {
+		// Work around x/crypto/ssh not being context.Context-friendly (e.g. https://github.com/golang/go/issues/20288)
+		if err := monitorCtx.Err(); err != nil {
+			return err
+		}
+
+		return fmt.Errorf("%w: failed to execute the warm-up script: %v", abstract.ErrWarmupScriptFailed, err)
+	}
+
+	return nil
 }
 
 func PrePull(ctx context.Context, image string, logger *echelon.Logger) error {
