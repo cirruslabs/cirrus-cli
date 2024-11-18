@@ -130,7 +130,13 @@ func (tart *Tart) Warmup(
 	logger.Infof("running warm-up script...")
 
 	// Work around x/crypto/ssh not being context.Context-friendly (e.g. https://github.com/golang/go/issues/20288)
-	monitorCtx, monitorCancel := context.WithTimeoutCause(ctx, warmupTimeout, abstract.ErrWarmupTimeout)
+	var monitorCtx context.Context
+	var monitorCancel context.CancelFunc
+	if warmupTimeout != 0 {
+		monitorCtx, monitorCancel = context.WithTimeoutCause(ctx, warmupTimeout, abstract.ErrWarmupTimeout)
+	} else {
+		monitorCtx, monitorCancel = context.WithCancel(ctx)
+	}
 	go func() {
 		<-monitorCtx.Done()
 		_ = sshClient.Close()
