@@ -12,6 +12,20 @@ import (
 
 type Function func(arguments ...interface{}) interface{}
 
+func (f Function) WithExpandedArguments(env map[string]string) Function {
+	return func(arguments ...interface{}) interface{} {
+		expandedArguments := make([]interface{}, len(arguments))
+		for i, argument := range arguments {
+			if argumentString, ok := argument.(string); ok {
+				expandedArguments[i] = expander.ExpandEnvironmentVariables(argumentString, env)
+			} else {
+				expandedArguments[i] = argument
+			}
+		}
+		return f(expandedArguments...)
+	}
+}
+
 type Boolevator struct {
 	functions map[string]Function
 }
@@ -116,7 +130,7 @@ func (boolevator *Boolevator) Eval(expr string, env map[string]string) (bool, er
 
 	// Functions
 	for name, function := range boolevator.functions {
-		languageBases = append(languageBases, gval.Function(name, function))
+		languageBases = append(languageBases, gval.Function(name, function.WithExpandedArguments(localEnv)))
 	}
 
 	result, err := gval.NewLanguage(languageBases...).Evaluate(expr, nil)
