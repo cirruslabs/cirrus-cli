@@ -96,6 +96,9 @@ func StartAndConnect(ctx context.Context) error {
 func Serve(ctx context.Context, fd int) error {
 	// Convert file descriptor number to *os.File
 	file := os.NewFile(uintptr(fd), "")
+	defer func() {
+		_ = file.Close()
+	}()
 
 	// Convert *os.File to net.Conn
 	conn, err := net.FileConn(file)
