@@ -8,7 +8,7 @@ import (
 	"syscall"
 )
 
-var ErrFailed = errors.New("failed to drop privileges")
+var ErrFailed = errors.New("failed to initialize privilege dropping")
 
 var Credential *syscall.Credential
 
