@@ -84,6 +84,12 @@ func StartAndConnect(ctx context.Context) error {
 
 	SSHClient = ssh.NewClient(c, chans, reqs)
 
+	// Now that the helper process is started,
+	// we can close our end of the socketpair(2)
+	if err := helperFile.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
