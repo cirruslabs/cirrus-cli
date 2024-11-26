@@ -48,7 +48,7 @@ func NewRunCmd() *cobra.Command {
 	// [1]: https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy#macOS-considerations
 	if runtime.GOOS == "darwin" {
 		cmd.Flags().StringVar(&username, "user", "", "user name to drop privileges to"+
-			" when running external programs (e.g. Tart, Vetu, etc.)")
+			" when running external programs (only Tart, Parallels and unset isolation are currently supported)")
 	}
 
 	attachFlags(cmd)
