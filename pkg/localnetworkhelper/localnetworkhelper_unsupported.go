@@ -8,6 +8,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+const CommandName = "doesn't matter"
+
 var SSHClient *ssh.Client
 
 func StartAndConnect(ctx context.Context) error {
