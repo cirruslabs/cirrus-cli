@@ -10,9 +10,17 @@ import (
 	"syscall"
 )
 
+type Chown struct {
+	UID int
+	GID int
+}
+
 var ErrFailed = errors.New("failed to initialize privilege dropping")
 
-var SysProcAttr *syscall.SysProcAttr
+var (
+	SysProcAttr *syscall.SysProcAttr
+	ChownTo     *Chown
+)
 
 func Initialize(username string) error {
 	user, err := userpkg.Lookup(username)
@@ -38,6 +46,10 @@ func Initialize(username string) error {
 			Uid: uint32(uid),
 			Gid: uint32(gid),
 		},
+	}
+	ChownTo = &Chown{
+		UID: uid,
+		GID: gid,
 	}
 
 	return nil
