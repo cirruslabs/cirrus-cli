@@ -14,7 +14,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"syscall"
 	"time"
 )
 
@@ -83,10 +82,8 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.
 	)
 
 	// Drop privileges for the spawned process, if requested
-	if credential := privdrop.Credential; credential != nil {
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Credential: credential,
-		}
+	if sysProcAttr := privdrop.SysProcAttr; sysProcAttr != nil {
+		cmd.SysProcAttr = sysProcAttr
 	}
 
 	// Determine the working directory for the agent

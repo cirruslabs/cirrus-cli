@@ -10,7 +10,6 @@ import (
 	"io"
 	"os/exec"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -63,10 +62,8 @@ func CmdWithLogger(
 	cmd := exec.CommandContext(ctx, tartCommandName, args...)
 
 	// Drop privileges for the spawned process, if requested
-	if credential := privdrop.Credential; credential != nil {
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Credential: credential,
-		}
+	if sysProcAttr := privdrop.SysProcAttr; sysProcAttr != nil {
+		cmd.SysProcAttr = sysProcAttr
 	}
 
 	// Work around https://github.com/golang/go/issues/23019,

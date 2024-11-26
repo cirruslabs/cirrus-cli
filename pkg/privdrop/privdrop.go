@@ -12,7 +12,7 @@ import (
 
 var ErrFailed = errors.New("failed to initialize privilege dropping")
 
-var Credential *syscall.Credential
+var SysProcAttr *syscall.SysProcAttr
 
 func Initialize(username string) error {
 	user, err := userpkg.Lookup(username)
@@ -33,9 +33,11 @@ func Initialize(username string) error {
 			ErrFailed, user.Name, user.Uid, err)
 	}
 
-	Credential = &syscall.Credential{
-		Uid: uint32(uid),
-		Gid: uint32(gid),
+	SysProcAttr = &syscall.SysProcAttr{
+		Credential: &syscall.Credential{
+			Uid: uint32(uid),
+			Gid: uint32(gid),
+		},
 	}
 
 	return nil
