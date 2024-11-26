@@ -58,7 +58,9 @@ func WaitForAgent(
 	ctx, span := tracer.Start(ctx, "upload-and-wait-for-agent")
 	defer span.End()
 
-	cli, err := connectViaSSH(ctx, logger, addr, sshUser, sshPassword)
+	logger.Debugf("connecting via SSH to %s...", addr)
+
+	cli, err := WaitForSSH(ctx, addr, sshUser, sshPassword, logger)
 	if err != nil {
 		return err
 	}
@@ -230,27 +232,6 @@ func forwardViaSSH(vmListener net.Listener, logger logger.Lightweight, endpoint 
 			_, _ = io.Copy(localConn, vmConn)
 		}()
 	}
-}
-
-func connectViaSSH(
-	ctx context.Context,
-	logger logger.Lightweight,
-	addr string,
-	sshUser string,
-	sshPassword string,
-) (*ssh.Client, error) {
-	// Connect to the VM and upload the agent
-
-	logger.Debugf("connecting via SSH to %s...", addr)
-
-	sshClient, err := WaitForSSH(ctx, addr, sshUser, sshPassword, logger)
-	if err != nil {
-		return nil, err
-	}
-
-	logger.Debugf("creating new SSH client...")
-
-	return sshClient, nil
 }
 
 func WaitForSSH(
