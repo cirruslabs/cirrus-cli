@@ -116,6 +116,25 @@ func TestFunction(t *testing.T) {
 	assert.True(t, evaluation)
 }
 
+func TestFunctionEnv(t *testing.T) {
+	functions := map[string]boolevator.Function{
+		"first": func(arguments ...interface{}) interface{} {
+			return arguments[0]
+		},
+	}
+
+	env := map[string]string{
+		"FOO": "true",
+	}
+
+	evaluation, err := boolevator.New(boolevator.WithFunctions(functions)).Eval("first(\"$FOO\") == 'true'", env)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.True(t, evaluation)
+}
+
 func TestLongExpression(t *testing.T) {
 	env := map[string]string{
 		"CIRRUS_USER_COLLABORATOR": "false",
