@@ -10,11 +10,6 @@ import (
 	"syscall"
 )
 
-type Chown struct {
-	UID int
-	GID int
-}
-
 var ErrFailed = errors.New("failed to initialize privilege dropping")
 
 var (

@@ -7,7 +7,10 @@ import (
 	"syscall"
 )
 
-var SysProcAttr *syscall.SysProcAttr
+var (
+	SysProcAttr *syscall.SysProcAttr
+	ChownTo     *Chown
+)
 
 func Initialize(username string) error {
 	return fmt.Errorf("privilege dropping is not supported on this platform")
