@@ -23,7 +23,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestLocalNetworkHelper(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Start the local network helper process and connect to it
 	require.NoError(t, localnetworkhelper.StartAndConnect(ctx))
