@@ -24,6 +24,7 @@ func NewRootCmd() *cobra.Command {
 		newServeCmd(),
 		internal.NewRootCmd(),
 		worker.NewRootCmd(),
+		newLocalNetworkHelperCmd(),
 	}
 
 	return helpers.ConsumeSubCommands(cmd, commands)

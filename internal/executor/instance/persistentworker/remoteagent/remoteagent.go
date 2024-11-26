@@ -9,6 +9,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/cirrus-cli/pkg/localnetworkhelper"
 	"go.opentelemetry.io/otel"
 	"golang.org/x/crypto/ssh"
 	"io"
@@ -248,11 +249,18 @@ func WaitForSSH(
 	var reqs <-chan *ssh.Request
 
 	if err := retry.Do(func() error {
-		dialer := net.Dialer{
-			Timeout: time.Second,
-		}
+		var netConn net.Conn
+		var err error
 
-		netConn, err := dialer.DialContext(ctx, "tcp", addr)
+		if sshClient := localnetworkhelper.SSHClient; sshClient != nil {
+			netConn, err = sshClient.DialContext(ctx, "tcp", addr)
+		} else {
+			dialer := net.Dialer{
+				Timeout: time.Second,
+			}
+
+			netConn, err = dialer.DialContext(ctx, "tcp", addr)
+		}
 		if err != nil {
 			logger.Debugf("failed to dial %s: %v", addr, err)
 
