@@ -1,3 +1,5 @@
+//go:build !windows
+
 package localnetworkhelper_test
 
 import (
