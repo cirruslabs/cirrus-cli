@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/pwdir"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/cirrus-cli/pkg/privdrop"
 	"github.com/otiai10/copy"
 	"go.opentelemetry.io/otel/attribute"
 	"os"
@@ -79,6 +80,11 @@ func (pwi *PersistentWorkerInstance) Run(ctx context.Context, config *runconfig.
 		"-pre-created-working-dir",
 		pwi.tempDir,
 	)
+
+	// Drop privileges for the spawned process, if requested
+	if sysProcAttr := privdrop.SysProcAttr; sysProcAttr != nil {
+		cmd.SysProcAttr = sysProcAttr
+	}
 
 	// Determine the working directory for the agent
 	if config.DirtyMode {

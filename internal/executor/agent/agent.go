@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/pkg/privdrop"
 	"io"
 	"net/http"
 	"os"
@@ -77,8 +78,16 @@ func RetrieveBinary(
 	}
 
 	// Make the agent binary executable
-	if err := os.Chmod(tmpAgentFile.Name(), 0500); err != nil {
+	if err := tmpAgentFile.Chmod(0500); err != nil {
 		return "", err
+	}
+
+	// Make sure that the agent binary belongs to the privilege-dropped
+	// user and group, in case privilege dropping was requested
+	if chownTo := privdrop.ChownTo; chownTo != nil {
+		if err := tmpAgentFile.Chown(chownTo.UID, chownTo.GID); err != nil {
+			return "", err
+		}
 	}
 
 	if err := tmpAgentFile.Close(); err != nil {

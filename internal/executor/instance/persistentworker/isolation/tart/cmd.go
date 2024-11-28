@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/pkg/privdrop"
 	"github.com/cirruslabs/echelon"
 	"io"
 	"os/exec"
@@ -59,6 +60,11 @@ func CmdWithLogger(
 	args = append([]string{name}, args...)
 
 	cmd := exec.CommandContext(ctx, tartCommandName, args...)
+
+	// Drop privileges for the spawned process, if requested
+	if sysProcAttr := privdrop.SysProcAttr; sysProcAttr != nil {
+		cmd.SysProcAttr = sysProcAttr
+	}
 
 	// Work around https://github.com/golang/go/issues/23019,
 	// most likely happens when running with --net-softnet

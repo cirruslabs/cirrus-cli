@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/pkg/privdrop"
 	"os/exec"
 	"strings"
 )
@@ -16,6 +17,11 @@ var (
 
 func runParallelsCommand(ctx context.Context, commandName string, args ...string) (string, string, error) {
 	cmd := exec.CommandContext(ctx, commandName, args...)
+
+	// Drop privileges for the spawned process, if requested
+	if sysProcAttr := privdrop.SysProcAttr; sysProcAttr != nil {
+		cmd.SysProcAttr = sysProcAttr
+	}
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
