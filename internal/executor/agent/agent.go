@@ -26,7 +26,7 @@ func RetrieveBinary(
 
 	agentCacheDir := filepath.Join(cacheDir, "cirrus", "agent")
 
-	if err := os.MkdirAll(agentCacheDir, 0700); err != nil {
+	if err := os.MkdirAll(agentCacheDir, 0755); err != nil {
 		return "", err
 	}
 
@@ -78,7 +78,7 @@ func RetrieveBinary(
 	}
 
 	// Make the agent binary executable
-	if err := tmpAgentFile.Chmod(0500); err != nil {
+	if err := tmpAgentFile.Chmod(0544); err != nil {
 		return "", err
 	}
 
