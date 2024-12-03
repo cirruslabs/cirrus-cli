@@ -28,6 +28,18 @@ Note that persistent worker's name should be unique within a pool.
 
 Note that by default a persistent worker has the privileges of the user that invoked it. Read more [about isolation](#isolation) below to learn how to limit or extend persistent worker privileges.
 
+### Ephemeral Mode
+
+The worker can be started in ephemeral mode with:
+
+```
+cirrus worker run --token <poll registration token> --ephemeral
+```
+
+After having completed a single task, the worker process will exit. This can be used in ephemeral setups where the enviroment should be cleaned after each run.
+
+Note that users of `--ephemeral` need to take care of cleaning the enviroment and caching build inputs themselves.
+
 ## Configuration
 
 Path to the YAML configuration can be specified via the `--file` (or `-f` for short version) command-line flag.
@@ -38,6 +50,7 @@ Example configuration:
 token: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
 name: "MacMini-Rack-1-Slot-2"
+ephemeral: false
 
 labels:
   connected-device: iPhone12ProMax
