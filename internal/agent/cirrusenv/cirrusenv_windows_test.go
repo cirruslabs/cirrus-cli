@@ -9,7 +9,7 @@ import (
 )
 
 func TestCirrusEnvConcurrentAccess(t *testing.T) {
-	ce, err := cirrusenv.New(42)
+	ce, err := cirrusenv.New("42")
 	require.NoError(t, err)
 	defer ce.Close()
 
