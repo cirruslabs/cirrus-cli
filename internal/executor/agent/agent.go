@@ -24,10 +24,23 @@ func RetrieveBinary(
 		return "", err
 	}
 
-	agentCacheDir := filepath.Join(cacheDir, "cirrus", "agent")
+	cirrusCacheDir := filepath.Join(cacheDir, "cirrus")
+	agentCacheDir := filepath.Join(cirrusCacheDir, "agent")
 
 	if err := os.MkdirAll(agentCacheDir, 0755); err != nil {
 		return "", err
+	}
+
+	// Make sure that the cache directories belong to the privilege-dropped
+	// user and group, in case privilege dropping was requested
+	if chownTo := privdrop.ChownTo; chownTo != nil {
+		if err := os.Chown(cirrusCacheDir, chownTo.UID, chownTo.GID); err != nil {
+			return "", err
+		}
+
+		if err := os.Chown(agentCacheDir, chownTo.UID, chownTo.GID); err != nil {
+			return "", err
+		}
 	}
 
 	var agentSuffix string
