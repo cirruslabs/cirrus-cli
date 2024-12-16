@@ -70,4 +70,13 @@ func TestRestrictForceSoftnet(t *testing.T) {
 	require.NoError(t, err)
 
 	require.True(t, config.Security.AllowedIsolations.Tart.ForceSoftnet)
+	// ephemeral is not set, it should default to false
+	require.False(t, config.Ephemeral)
+}
+
+func TestEphemeral(t *testing.T) {
+	config, err := parseConfig(filepath.Join("testdata", "ephemeral.yml"))
+	require.NoError(t, err)
+
+	require.True(t, config.Ephemeral)
 }
