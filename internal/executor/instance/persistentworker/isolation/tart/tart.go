@@ -96,6 +96,7 @@ func (tart *Tart) Attributes() []attribute.KeyValue {
 	return []attribute.KeyValue{
 		attribute.String("image", tart.Image()),
 		attribute.String("instance_type", "tart"),
+		attribute.Float64("instance_cpus", float64(tart.cpu)),
 	}
 }
 

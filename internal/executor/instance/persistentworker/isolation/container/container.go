@@ -43,6 +43,7 @@ func (cont *Container) Attributes() []attribute.KeyValue {
 	return []attribute.KeyValue{
 		attribute.String("image", cont.instance.Image),
 		attribute.String("instance_type", "container"),
+		attribute.Float64("instance_cpus", float64(cont.instance.CPU)),
 	}
 }
 

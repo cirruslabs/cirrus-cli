@@ -87,6 +87,7 @@ func (vetu *Vetu) Attributes() []attribute.KeyValue {
 	return []attribute.KeyValue{
 		attribute.String("image", vetu.Image()),
 		attribute.String("instance_type", "vetu"),
+		attribute.Float64("instance_cpus", float64(vetu.cpu)),
 	}
 }
 
