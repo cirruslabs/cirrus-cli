@@ -50,6 +50,7 @@ type Worker struct {
 	tasksCounter                metric.Int64Counter
 	taskExecutionTimeHistogram  metric.Float64Histogram
 	standbyHitCounter           metric.Int64Counter
+	standbyMissCounter          metric.Int64Counter
 	standbyInstanceAgeHistogram metric.Float64Histogram
 
 	logger        logrus.FieldLogger
@@ -192,6 +193,10 @@ func (worker *Worker) Run(ctx context.Context) error {
 
 	// standby-related metrics
 	worker.standbyHitCounter, err = meter.Int64Counter("org.cirruslabs.persistent_worker.standby.hit")
+	if err != nil {
+		return err
+	}
+	worker.standbyMissCounter, err = meter.Int64Counter("org.cirruslabs.persistent_worker.standby.miss")
 	if err != nil {
 		return err
 	}

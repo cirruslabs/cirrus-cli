@@ -95,10 +95,11 @@ func (worker *Worker) getInstance(
 		if proto.Equal(worker.standbyConfig.Isolation, isolation) {
 			worker.logger.Debugf("standby instance matches the task's isolation configuration, " +
 				"yielding it to the task")
-			worker.standbyHitCounter.Add(ctx, 1)
+			worker.standbyHitCounter.Add(ctx, 1, metric.WithAttributes(standbyInstance.Attributes()...))
 
 			return standbyInstance, nil
 		}
+		worker.standbyMissCounter.Add(ctx, 1, metric.WithAttributes(standbyInstance.Attributes()...))
 
 		// Otherwise terminate the standby instance to simplify the resource management
 		worker.logger.Debugf("standby instance does not match the task's isolation configuration, " +
