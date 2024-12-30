@@ -56,3 +56,9 @@ func WithTartPrePull(tartPrePull []string) Option {
 		e.tartPrePull = tartPrePull
 	}
 }
+
+func WithEphemeral(ephemeral bool) Option {
+	return func(e *Worker) {
+		e.ephemeral = ephemeral
+	}
+}
