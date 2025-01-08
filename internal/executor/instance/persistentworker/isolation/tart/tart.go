@@ -104,11 +104,12 @@ func (tart *Tart) Warmup(
 	ctx context.Context,
 	ident string,
 	additionalEnvironment map[string]string,
+	lazyPull bool,
 	warmupScript string,
 	warmupTimeout time.Duration,
 	logger *echelon.Logger,
 ) error {
-	err := tart.bootVM(ctx, ident, additionalEnvironment, "", false, logger)
+	err := tart.bootVM(ctx, ident, additionalEnvironment, "", lazyPull, logger)
 	if err != nil {
 		return err
 	}

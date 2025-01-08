@@ -95,11 +95,12 @@ func (vetu *Vetu) Warmup(
 	ctx context.Context,
 	ident string,
 	env map[string]string,
+	lazyPull bool,
 	_ string,
 	_ time.Duration,
 	logger *echelon.Logger,
 ) error {
-	return vetu.bootVM(ctx, ident, env, false, logger)
+	return vetu.bootVM(ctx, ident, env, lazyPull, logger)
 }
 
 func (vetu *Vetu) bootVM(
