@@ -278,20 +278,24 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 
 	lazyPull := false
 
-	if worker.tartPrePull != nil && worker.tartPrePull.NeedsPrePull() {
+	if worker.tartPrePull != nil {
 		// Pre-pull the configured Tart VM images first
 		for _, image := range worker.tartPrePull.Images {
+			for _, attr := range standbyInstance.Attributes() {
+				if attr.Key == "image" && attr.Value.AsString() == image {
+					lazyPull = true
+				}
+			}
+
+			if !worker.tartPrePull.NeedsPrePull() {
+				continue
+			}
+
 			worker.logger.Infof("pre-pulling Tart VM image %q...", image)
 
 			if err := tart.PrePull(ctx, image, worker.echelonLogger); err != nil {
 				worker.logger.Errorf("failed to pre-pull Tart VM image %q: %v", image, err)
 				continue
-			}
-
-			for _, attr := range standbyInstance.Attributes() {
-				if attr.Key == "image" && attr.Value.AsString() == image {
-					lazyPull = true
-				}
 			}
 		}
 		worker.tartPrePull.LastCheck = time.Now()
