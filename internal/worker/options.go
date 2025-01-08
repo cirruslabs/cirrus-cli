@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"github.com/cirruslabs/cirrus-cli/internal/commands/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
@@ -52,7 +51,7 @@ func WithResourceModifiersManager(resourceModifiersManager *resourcemodifier.Man
 	}
 }
 
-func WithTartPrePull(tartPrePull *worker.ConfigTartPrePull) Option {
+func WithTartPrePull(tartPrePull *TartPrePull) Option {
 	return func(e *Worker) {
 		e.tartPrePull = tartPrePull
 	}

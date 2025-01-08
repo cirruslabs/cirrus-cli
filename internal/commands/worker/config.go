@@ -18,7 +18,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 var ErrConfiguration = errors.New("configuration error")
@@ -42,7 +41,7 @@ type Config struct {
 
 	ResourceModifiers []*resourcemodifier.Modifier `yaml:"resource-modifiers"`
 
-	TartPrePull *ConfigTartPrePull `yaml:"tart-pre-pull"`
+	TartPrePull *worker.TartPrePull `yaml:"tart-pre-pull"`
 }
 
 type ConfigLog struct {
@@ -59,20 +58,6 @@ type ConfigRPC struct {
 type ConfigUpstream struct {
 	Token    string `yaml:"token"`
 	Endpoint string `yaml:"endpoint"`
-}
-
-type ConfigTartPrePull struct {
-	Images        []string      `yaml:"images"`
-	CheckInterval time.Duration `yaml:"check-interval"`
-	LastCheck     time.Time
-}
-
-func (pull ConfigTartPrePull) NeedsPrePull() bool {
-	if pull.CheckInterval == 0 {
-		return true
-	}
-
-	return time.Now().After(pull.LastCheck.Add(pull.CheckInterval))
 }
 
 var (

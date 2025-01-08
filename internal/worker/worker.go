@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/commands/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
@@ -61,7 +60,7 @@ type Worker struct {
 	standbyInstance          abstract.Instance
 	standbyInstanceStartedAt time.Time
 
-	tartPrePull *worker.ConfigTartPrePull
+	tartPrePull *TartPrePull
 }
 
 func New(opts ...Option) (*Worker, error) {
