@@ -27,6 +27,7 @@ type WarmableInstance interface {
 		ctx context.Context,
 		ident string,
 		env map[string]string,
+		lazyPull bool,
 		warmupScript string,
 		warmupTimeout time.Duration,
 		logger *echelon.Logger,

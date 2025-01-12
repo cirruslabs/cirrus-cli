@@ -60,7 +60,7 @@ type Worker struct {
 	standbyInstance          abstract.Instance
 	standbyInstanceStartedAt time.Time
 
-	tartPrePull []string
+	tartPrePull *TartPrePull
 }
 
 func New(opts ...Option) (*Worker, error) {
@@ -266,15 +266,6 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 		return
 	}
 
-	// Pre-pull the configured Tart VM images first
-	for _, image := range worker.tartPrePull {
-		worker.logger.Infof("pre-pulling Tart VM image %q...", image)
-
-		if err := tart.PrePull(ctx, image, worker.echelonLogger); err != nil {
-			worker.logger.Errorf("failed to pre-pull Tart VM image %q: %v", image, err)
-		}
-	}
-
 	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyConfig.Isolation)
 
 	standbyInstance, err := persistentworker.New(worker.standbyConfig.Isolation, worker.security,
@@ -285,9 +276,34 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 		return
 	}
 
+	lazyPull := false
+
+	if worker.tartPrePull != nil {
+		// Pre-pull the configured Tart VM images first
+		for _, image := range worker.tartPrePull.Images {
+			for _, attr := range standbyInstance.Attributes() {
+				if attr.Key == "image" && attr.Value.AsString() == image {
+					lazyPull = true
+				}
+			}
+
+			if !worker.tartPrePull.NeedsPrePull() {
+				continue
+			}
+
+			worker.logger.Infof("pre-pulling Tart VM image %q...", image)
+
+			if err := tart.PrePull(ctx, image, worker.echelonLogger); err != nil {
+				worker.logger.Errorf("failed to pre-pull Tart VM image %q: %v", image, err)
+				continue
+			}
+		}
+		worker.tartPrePull.LastCheck = time.Now()
+	}
+
 	worker.logger.Debugf("warming-up the standby instance")
 
-	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil,
+	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil, lazyPull,
 		worker.standbyConfig.Warmup.Script, worker.standbyConfig.Warmup.Timeout, worker.echelonLogger); err != nil {
 		worker.logger.Errorf("failed to warm-up a standby instance: %v", err)
 

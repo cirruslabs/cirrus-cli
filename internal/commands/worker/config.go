@@ -41,7 +41,7 @@ type Config struct {
 
 	ResourceModifiers []*resourcemodifier.Modifier `yaml:"resource-modifiers"`
 
-	TartPrePull []string `yaml:"tart-pre-pull"`
+	TartPrePull *worker.TartPrePull `yaml:"tart-pre-pull"`
 }
 
 type ConfigLog struct {
@@ -227,7 +227,7 @@ func buildWorker(output io.Writer) (*worker.Worker, error) {
 		))
 	}
 
-	if len(config.TartPrePull) != 0 {
+	if config.TartPrePull != nil {
 		opts = append(opts, worker.WithTartPrePull(config.TartPrePull))
 	}
 
