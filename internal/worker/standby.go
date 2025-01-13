@@ -38,13 +38,13 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 		Boolevator:    boolevator.New(),
 		IssueRegistry: issue.NewRegistry(),
 	}
-	instanceParser := instance.NewStandbyParameters(nil, parserKit)
-	if err := instanceParser.Parse(documentNode, parserKit); err != nil {
+	parametersParser := instance.NewStandbyParameters(nil, parserKit)
+	if err := parametersParser.Parse(documentNode, parserKit); err != nil {
 		return err
 	}
 
 	// Only allow Tart and Vetu to be configured as standby
-	switch isolationType := instanceParser.Proto().Isolation.Type.(type) {
+	switch isolationType := parametersParser.Proto().Isolation.Type.(type) {
 	case *api.Isolation_Tart_:
 		// OK
 	case *api.Isolation_Vetu_:
@@ -53,7 +53,7 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 		return fmt.Errorf("%w, got %T", ErrUnsupportedIsolation, isolationType)
 	}
 
-	standby.StandbyInstanceParameters = instanceParser.Proto()
+	standby.StandbyInstanceParameters = parametersParser.Proto()
 
 	return nil
 }
