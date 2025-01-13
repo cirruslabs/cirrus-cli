@@ -281,7 +281,7 @@ func TestWorkerStandByTart(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	standbyConfig := &worker.StandbyConfig{
+	standbyParameters := &api.StandbyInstanceParameters{
 		Isolation: isolation,
 	}
 
@@ -290,7 +290,7 @@ func TestWorkerStandByTart(t *testing.T) {
 			"[[ \"$CIRRUS_VM_ID\" = cirrus-cli-standby* ]]",
 		},
 		worker.WithUpstream(upstream),
-		worker.WithStandby(standbyConfig),
+		worker.WithStandby(standbyParameters),
 	)
 }
 
@@ -331,7 +331,7 @@ func TestWorkerStandByVetu(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	standbyConfig := &worker.StandbyConfig{
+	standbyParameters := &api.StandbyInstanceParameters{
 		Isolation: isolation,
 	}
 
@@ -340,7 +340,7 @@ func TestWorkerStandByVetu(t *testing.T) {
 			"[[ \"$CIRRUS_VM_ID\" = cirrus-cli-standby* ]]",
 		},
 		worker.WithUpstream(upstream),
-		worker.WithStandby(standbyConfig),
+		worker.WithStandby(standbyParameters),
 	)
 }
 
