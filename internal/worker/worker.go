@@ -342,9 +342,11 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 	}
 
 	if worker.standbyInstance != nil {
-		request.AvailableStandbyInstanceInformation = &api.StandbyInstanceInformation{
-			Parameters: worker.standbyParameters,
-			AgeSeconds: uint64(time.Since(worker.standbyInstanceStartedAt).Seconds()),
+		request.AvailableStandbyInstancesInformation = []*api.StandbyInstanceInformation{
+			{
+				Parameters: worker.standbyParameters,
+				AgeSeconds: uint64(time.Since(worker.standbyInstanceStartedAt).Seconds()),
+			},
 		}
 	}
 
@@ -372,8 +374,8 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 		return ErrShutdown
 	}
 
-	if response.UpdatedStandbyInstanceParameters != nil {
-		worker.UpdateStandby(ctx, response.UpdatedStandbyInstanceParameters)
+	if len(response.UpdatedStandbyInstances) > 0 {
+		worker.UpdateStandby(ctx, response.UpdatedStandbyInstances[0])
 	}
 
 	return nil
