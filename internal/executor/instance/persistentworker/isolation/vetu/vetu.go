@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
@@ -96,8 +97,7 @@ func (vetu *Vetu) Warmup(
 	ident string,
 	env map[string]string,
 	lazyPull bool,
-	_ string,
-	_ time.Duration,
+	_ *api.StandbyInstanceParameters_Warmup,
 	logger *echelon.Logger,
 ) error {
 	return vetu.bootVM(ctx, ident, env, lazyPull, logger)

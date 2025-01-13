@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/echelon"
 	"go.opentelemetry.io/otel/attribute"
-	"time"
 )
 
 type Instance interface {
@@ -28,8 +28,7 @@ type WarmableInstance interface {
 		ident string,
 		env map[string]string,
 		lazyPull bool,
-		warmupScript string,
-		warmupTimeout time.Duration,
+		warmup *api.StandbyInstanceParameters_Warmup,
 		logger *echelon.Logger,
 	) error
 }

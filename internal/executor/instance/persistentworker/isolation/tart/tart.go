@@ -105,8 +105,7 @@ func (tart *Tart) Warmup(
 	ident string,
 	additionalEnvironment map[string]string,
 	lazyPull bool,
-	warmupScript string,
-	warmupTimeout time.Duration,
+	warmup *api.StandbyInstanceParameters_Warmup,
 	logger *echelon.Logger,
 ) error {
 	err := tart.bootVM(ctx, ident, additionalEnvironment, "", lazyPull, logger)
@@ -125,7 +124,7 @@ func (tart *Tart) Warmup(
 	}
 	defer func() { _ = sshClient.Close() }()
 
-	if warmupScript == "" {
+	if warmup == nil {
 		return nil
 	}
 
@@ -137,8 +136,8 @@ func (tart *Tart) Warmup(
 	// Work around x/crypto/ssh not being context.Context-friendly (e.g. https://github.com/golang/go/issues/20288)
 	var monitorCtx context.Context
 	var monitorCancel context.CancelFunc
-	if warmupTimeout != 0 {
-		monitorCtx, monitorCancel = context.WithTimeoutCause(ctx, warmupTimeout, abstract.ErrWarmupTimeout)
+	if warmup.TimeoutSeconds != 0 {
+		monitorCtx, monitorCancel = context.WithTimeoutCause(ctx, time.Duration(warmup.TimeoutSeconds)*time.Second, abstract.ErrWarmupTimeout)
 	} else {
 		monitorCtx, monitorCancel = context.WithCancel(ctx)
 	}
@@ -181,7 +180,7 @@ func (tart *Tart) Warmup(
 		return fmt.Errorf("%w: failed to invoke SSH shell on the VM: %v", abstract.ErrWarmupScriptFailed, err)
 	}
 
-	_, err = stdinBuf.Write([]byte(warmupScript + "\nexit\n"))
+	_, err = stdinBuf.Write([]byte(warmup.Script + "\nexit\n"))
 	if err != nil {
 		return fmt.Errorf("%w: failed to write the warm-up script to the shell: %v",
 			abstract.ErrWarmupScriptFailed, err)

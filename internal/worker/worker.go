@@ -304,9 +304,8 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 
 	worker.logger.Debugf("warming-up the standby instance")
 
-	warmUpTimeout := time.Duration(worker.standbyParameters.Warmup.TimeoutSeconds) * time.Second
 	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil, lazyPull,
-		worker.standbyParameters.Warmup.Script, warmUpTimeout, worker.echelonLogger); err != nil {
+		worker.standbyParameters.Warmup, worker.echelonLogger); err != nil {
 		worker.logger.Errorf("failed to warm-up a standby instance: %v", err)
 
 		if err := standbyInstance.Close(ctx); err != nil {
