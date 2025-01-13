@@ -217,7 +217,7 @@ func buildWorker(output io.Writer) (*worker.Worker, error) {
 
 	// Configure standby
 	if standby := config.Standby; standby != nil {
-		opts = append(opts, worker.WithStandby(standby))
+		opts = append(opts, worker.WithStandby(standby.StandbyInstanceParameters))
 	}
 
 	// Configure resource modifiers

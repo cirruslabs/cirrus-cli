@@ -56,7 +56,7 @@ type Worker struct {
 	logger        logrus.FieldLogger
 	echelonLogger *echelon.Logger
 
-	standbyConfig            *StandbyConfig
+	standbyParameters        *api.StandbyInstanceParameters
 	standbyInstance          abstract.Instance
 	standbyInstanceStartedAt time.Time
 
@@ -252,7 +252,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 
 func (worker *Worker) tryCreateStandby(ctx context.Context) {
 	// Do nothing if no standby instance is configured
-	if worker.standbyConfig == nil {
+	if worker.standbyParameters == nil {
 		return
 	}
 
@@ -262,14 +262,14 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 	}
 
 	// Do nothing if there are tasks that are running to simplify the resource management
-	if !worker.canFitResources(worker.standbyConfig.Resources) {
+	if !worker.canFitResources(worker.standbyParameters.Resources) {
 		return
 	}
 
-	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyConfig.Isolation)
+	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyParameters.Isolation)
 
-	standbyInstance, err := persistentworker.New(worker.standbyConfig.Isolation, worker.security,
-		worker.resourceModifierManager.Acquire(worker.standbyConfig.Resources), worker.logger)
+	standbyInstance, err := persistentworker.New(worker.standbyParameters.Isolation, worker.security,
+		worker.resourceModifierManager.Acquire(worker.standbyParameters.Resources), worker.logger)
 	if err != nil {
 		worker.logger.Errorf("failed to create a standby instance: %v", err)
 
@@ -303,8 +303,9 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 
 	worker.logger.Debugf("warming-up the standby instance")
 
+	warmUpTimeout := time.Duration(worker.standbyParameters.Warmup.TimeoutSeconds) * time.Second
 	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil, lazyPull,
-		worker.standbyConfig.Warmup.Script, worker.standbyConfig.Warmup.Timeout, worker.echelonLogger); err != nil {
+		worker.standbyParameters.Warmup.Script, warmUpTimeout, worker.echelonLogger); err != nil {
 		worker.logger.Errorf("failed to warm-up a standby instance: %v", err)
 
 		if err := standbyInstance.Close(ctx); err != nil {

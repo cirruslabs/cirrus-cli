@@ -198,6 +198,17 @@ message PollResponse {
   repeated string tasks_to_stop = 5;
 }
 
+message StandbyInstanceParameters {
+  message Warmup {
+    string script = 1;
+    uint64 timeout_seconds = 2;
+  }
+
+  Isolation isolation = 1;
+  map<string, double> resources = 2;
+  Warmup warmup = 3;
+}
+
 message WorkerInfo {
   /*
    * Well-Known Labels:

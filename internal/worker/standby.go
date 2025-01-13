@@ -5,24 +5,15 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/boolevator"
-	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/isolation"
+	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/issue"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/node"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"gopkg.in/yaml.v3"
-	"strconv"
-	"time"
 )
 
 type StandbyConfig struct {
-	Isolation *api.Isolation     `yaml:"isolation"`
-	Resources map[string]float64 `yaml:"resources"`
-	Warmup    Warmup             `yaml:"warmup"`
-}
-
-type Warmup struct {
-	Script  string        `yaml:"script"`
-	Timeout time.Duration `yaml:"timeout"`
+	*api.StandbyInstanceParameters
 }
 
 var ErrIsolationMissing = errors.New("isolation configuration is required for standby")
@@ -39,8 +30,7 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 		return err
 	}
 
-	isolationNode := documentNode.FindChild("isolation")
-	if isolationNode == nil {
+	if isolationNode := documentNode.FindChild("isolation"); isolationNode == nil {
 		return ErrIsolationMissing
 	}
 	// Parse isolation
@@ -48,13 +38,13 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 		Boolevator:    boolevator.New(),
 		IssueRegistry: issue.NewRegistry(),
 	}
-	isolationParser := isolation.NewIsolation(nil, parserKit)
-	if err := isolationParser.Parse(isolationNode, parserKit); err != nil {
+	instanceParser := instance.NewStandbyParameters(nil, parserKit)
+	if err := instanceParser.Parse(documentNode, parserKit); err != nil {
 		return err
 	}
 
 	// Only allow Tart and Vetu to be configured as standby
-	switch isolationType := isolationParser.Proto().Type.(type) {
+	switch isolationType := instanceParser.Proto().Isolation.Type.(type) {
 	case *api.Isolation_Tart_:
 		// OK
 	case *api.Isolation_Vetu_:
@@ -63,29 +53,7 @@ func (standby *StandbyConfig) UnmarshalYAML(value *yaml.Node) error {
 		return fmt.Errorf("%w, got %T", ErrUnsupportedIsolation, isolationType)
 	}
 
-	standby.Isolation = isolationParser.Proto()
-
-	// Parse resources
-	standby.Resources = make(map[string]float64)
-	if resourcesNode := documentNode.FindChild("resources"); resourcesNode != nil {
-		for _, resourceNode := range resourcesNode.Children {
-			resourceValueRaw, err := resourceNode.FlattenedValue()
-			if err != nil {
-				return err
-			}
-			resourceValue, err := strconv.ParseFloat(resourceValueRaw, 64)
-			if err != nil {
-				return err
-			}
-			standby.Resources[resourceNode.Name] = resourceValue
-		}
-	}
-
-	if warmupNode := documentNode.FindChild("warmup"); warmupNode != nil {
-		if err := warmupNode.YAMLNode.Decode(&standby.Warmup); err != nil {
-			return err
-		}
-	}
+	standby.StandbyInstanceParameters = instanceParser.Proto()
 
 	return nil
 }
