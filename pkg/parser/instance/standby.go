@@ -33,6 +33,18 @@ func NewStandbyParameters(mergedEnv map[string]string, parserKit *parserkit.Pars
 		return nil
 	})
 
+	resourcesSchema := schema.Map("Resources to reserve for standby instance.")
+	config.OptionalField(nameable.NewSimpleNameable("resources"), resourcesSchema, func(node *node.Node) error {
+		resources, err := node.GetFloat64Mapping(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		config.proto.Resources = resources
+
+		return nil
+	})
+
 	warmupSchema := NewWarmup(mergedEnv, parserKit).Schema()
 	config.OptionalField(nameable.NewSimpleNameable("warmup"), warmupSchema, func(node *node.Node) error {
 		warmup := NewWarmup(mergedEnv, parserKit)
