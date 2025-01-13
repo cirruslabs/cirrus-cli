@@ -13,5 +13,6 @@ task:
         ebs:
           volume_size: 100
   dh_script: df -h
-  lsblk_script: lsblk
-  sleep_script: sleep 600
+  lsblk1_script: lsblk
+  resize_script: sudo resize2fs /dev/xvda1
+  lsblk2_script: lsblk
