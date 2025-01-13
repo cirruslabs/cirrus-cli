@@ -20,6 +20,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
+	"google.golang.org/protobuf/proto"
 	"math"
 	"os"
 	"runtime"
@@ -340,6 +341,13 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 		ResourcesInUse:  worker.resourcesInUse(),
 	}
 
+	if worker.standbyInstance != nil {
+		request.AvailableStandbyInstanceInformation = &api.StandbyInstanceInformation{
+			Parameters: worker.standbyParameters,
+			AgeSeconds: uint64(time.Since(worker.standbyInstanceStartedAt).Seconds()),
+		}
+	}
+
 	response, err := upstream.Poll(ctx, request)
 	if err != nil {
 		return err
@@ -362,6 +370,10 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 			upstream.Name())
 
 		return ErrShutdown
+	}
+
+	if response.UpdatedStandbyInstanceParameters != nil {
+		worker.UpdateStandby(ctx, response.UpdatedStandbyInstanceParameters)
 	}
 
 	return nil
@@ -426,4 +438,19 @@ func (worker *Worker) pollIntervalSeconds() uint32 {
 	}
 
 	return result
+}
+
+func (worker *Worker) UpdateStandby(ctx context.Context, parameters *api.StandbyInstanceParameters) {
+	if worker.standbyInstance != nil && !proto.Equal(worker.standbyParameters, parameters) {
+		worker.logger.Infof("terminating the standby instance since the parameters have changed")
+
+		if err := worker.standbyInstance.Close(ctx); err != nil {
+			worker.logger.Errorf("failed to terminate the standby instance: %v", err)
+		}
+
+		worker.standbyInstance = nil
+		worker.standbyInstanceStartedAt = time.Time{}
+	}
+
+	worker.standbyParameters = parameters
 }

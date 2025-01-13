@@ -278,7 +278,7 @@ func (x Annotation_Level) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Annotation_Level.Descriptor instead.
 func (Annotation_Level) EnumDescriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{50, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{51, 0}
 }
 
 type Annotation_Type int32
@@ -330,7 +330,7 @@ func (x Annotation_Type) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Annotation_Type.Descriptor instead.
 func (Annotation_Type) EnumDescriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{50, 1}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{51, 1}
 }
 
 type Command_CommandExecutionBehavior int32
@@ -382,7 +382,7 @@ func (x Command_CommandExecutionBehavior) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Command_CommandExecutionBehavior.Descriptor instead.
 func (Command_CommandExecutionBehavior) EnumDescriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{69, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{70, 0}
 }
 
 type CapabilitiesRequest struct {
@@ -1252,11 +1252,12 @@ type PollRequest struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	WorkerInfo *WorkerInfo            `protobuf:"bytes,1,opt,name=worker_info,json=workerInfo,proto3" json:"worker_info,omitempty"`
 	// Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
-	OldRunningTasks []int64            `protobuf:"varint,2,rep,packed,name=old_running_tasks,json=oldRunningTasks,proto3" json:"old_running_tasks,omitempty"`
-	ResourcesInUse  map[string]float64 `protobuf:"bytes,3,rep,name=resources_in_use,json=resourcesInUse,proto3" json:"resources_in_use,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"fixed64,2,opt,name=value"`
-	RunningTasks    []string           `protobuf:"bytes,4,rep,name=running_tasks,json=runningTasks,proto3" json:"running_tasks,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	OldRunningTasks                     []int64                     `protobuf:"varint,2,rep,packed,name=old_running_tasks,json=oldRunningTasks,proto3" json:"old_running_tasks,omitempty"`
+	ResourcesInUse                      map[string]float64          `protobuf:"bytes,3,rep,name=resources_in_use,json=resourcesInUse,proto3" json:"resources_in_use,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"fixed64,2,opt,name=value"`
+	RunningTasks                        []string                    `protobuf:"bytes,4,rep,name=running_tasks,json=runningTasks,proto3" json:"running_tasks,omitempty"`
+	AvailableStandbyInstanceInformation *StandbyInstanceInformation `protobuf:"bytes,5,opt,name=availableStandbyInstanceInformation,proto3" json:"availableStandbyInstanceInformation,omitempty"`
+	unknownFields                       protoimpl.UnknownFields
+	sizeCache                           protoimpl.SizeCache
 }
 
 func (x *PollRequest) Reset() {
@@ -1314,6 +1315,13 @@ func (x *PollRequest) GetResourcesInUse() map[string]float64 {
 func (x *PollRequest) GetRunningTasks() []string {
 	if x != nil {
 		return x.RunningTasks
+	}
+	return nil
+}
+
+func (x *PollRequest) GetAvailableStandbyInstanceInformation() *StandbyInstanceInformation {
+	if x != nil {
+		return x.AvailableStandbyInstanceInformation
 	}
 	return nil
 }
@@ -1482,12 +1490,13 @@ type PollResponse struct {
 	state        protoimpl.MessageState         `protogen:"open.v1"`
 	TasksToStart []*PollResponse_AgentAwareTask `protobuf:"bytes,1,rep,name=tasks_to_start,json=tasksToStart,proto3" json:"tasks_to_start,omitempty"`
 	// Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
-	OldTaskIdsToStop      []int64  `protobuf:"varint,2,rep,packed,name=old_task_ids_to_stop,json=oldTaskIdsToStop,proto3" json:"old_task_ids_to_stop,omitempty"`
-	PollIntervalInSeconds uint32   `protobuf:"varint,3,opt,name=poll_interval_in_seconds,json=pollIntervalInSeconds,proto3" json:"poll_interval_in_seconds,omitempty"`
-	Shutdown              bool     `protobuf:"varint,4,opt,name=shutdown,proto3" json:"shutdown,omitempty"`
-	TasksToStop           []string `protobuf:"bytes,5,rep,name=tasks_to_stop,json=tasksToStop,proto3" json:"tasks_to_stop,omitempty"`
-	unknownFields         protoimpl.UnknownFields
-	sizeCache             protoimpl.SizeCache
+	OldTaskIdsToStop                 []int64                    `protobuf:"varint,2,rep,packed,name=old_task_ids_to_stop,json=oldTaskIdsToStop,proto3" json:"old_task_ids_to_stop,omitempty"`
+	PollIntervalInSeconds            uint32                     `protobuf:"varint,3,opt,name=poll_interval_in_seconds,json=pollIntervalInSeconds,proto3" json:"poll_interval_in_seconds,omitempty"`
+	Shutdown                         bool                       `protobuf:"varint,4,opt,name=shutdown,proto3" json:"shutdown,omitempty"`
+	TasksToStop                      []string                   `protobuf:"bytes,5,rep,name=tasks_to_stop,json=tasksToStop,proto3" json:"tasks_to_stop,omitempty"`
+	UpdatedStandbyInstanceParameters *StandbyInstanceParameters `protobuf:"bytes,6,opt,name=updated_standby_instance_parameters,json=updatedStandbyInstanceParameters,proto3" json:"updated_standby_instance_parameters,omitempty"`
+	unknownFields                    protoimpl.UnknownFields
+	sizeCache                        protoimpl.SizeCache
 }
 
 func (x *PollResponse) Reset() {
@@ -1556,6 +1565,65 @@ func (x *PollResponse) GetTasksToStop() []string {
 	return nil
 }
 
+func (x *PollResponse) GetUpdatedStandbyInstanceParameters() *StandbyInstanceParameters {
+	if x != nil {
+		return x.UpdatedStandbyInstanceParameters
+	}
+	return nil
+}
+
+type StandbyInstanceInformation struct {
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	Parameters    *StandbyInstanceParameters `protobuf:"bytes,1,opt,name=parameters,proto3" json:"parameters,omitempty"`
+	AgeSeconds    uint64                     `protobuf:"varint,2,opt,name=age_seconds,json=ageSeconds,proto3" json:"age_seconds,omitempty"` // since warming up
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StandbyInstanceInformation) Reset() {
+	*x = StandbyInstanceInformation{}
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StandbyInstanceInformation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StandbyInstanceInformation) ProtoMessage() {}
+
+func (x *StandbyInstanceInformation) ProtoReflect() protoreflect.Message {
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StandbyInstanceInformation.ProtoReflect.Descriptor instead.
+func (*StandbyInstanceInformation) Descriptor() ([]byte, []int) {
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *StandbyInstanceInformation) GetParameters() *StandbyInstanceParameters {
+	if x != nil {
+		return x.Parameters
+	}
+	return nil
+}
+
+func (x *StandbyInstanceInformation) GetAgeSeconds() uint64 {
+	if x != nil {
+		return x.AgeSeconds
+	}
+	return 0
+}
+
 type StandbyInstanceParameters struct {
 	state         protoimpl.MessageState            `protogen:"open.v1"`
 	Isolation     *Isolation                        `protobuf:"bytes,1,opt,name=isolation,proto3" json:"isolation,omitempty"`
@@ -1567,7 +1635,7 @@ type StandbyInstanceParameters struct {
 
 func (x *StandbyInstanceParameters) Reset() {
 	*x = StandbyInstanceParameters{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[19]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1579,7 +1647,7 @@ func (x *StandbyInstanceParameters) String() string {
 func (*StandbyInstanceParameters) ProtoMessage() {}
 
 func (x *StandbyInstanceParameters) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[19]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1592,7 +1660,7 @@ func (x *StandbyInstanceParameters) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StandbyInstanceParameters.ProtoReflect.Descriptor instead.
 func (*StandbyInstanceParameters) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{19}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *StandbyInstanceParameters) GetIsolation() *Isolation {
@@ -1632,7 +1700,7 @@ type WorkerInfo struct {
 
 func (x *WorkerInfo) Reset() {
 	*x = WorkerInfo{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[20]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1644,7 +1712,7 @@ func (x *WorkerInfo) String() string {
 func (*WorkerInfo) ProtoMessage() {}
 
 func (x *WorkerInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[20]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1657,7 +1725,7 @@ func (x *WorkerInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkerInfo.ProtoReflect.Descriptor instead.
 func (*WorkerInfo) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{20}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *WorkerInfo) GetLabels() map[string]string {
@@ -1683,7 +1751,7 @@ type UpdateStatusRequest struct {
 
 func (x *UpdateStatusRequest) Reset() {
 	*x = UpdateStatusRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[21]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1695,7 +1763,7 @@ func (x *UpdateStatusRequest) String() string {
 func (*UpdateStatusRequest) ProtoMessage() {}
 
 func (x *UpdateStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[21]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1708,7 +1776,7 @@ func (x *UpdateStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateStatusRequest.ProtoReflect.Descriptor instead.
 func (*UpdateStatusRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{21}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *UpdateStatusRequest) GetDisabled() bool {
@@ -1727,7 +1795,7 @@ type WorkerStatus struct {
 
 func (x *WorkerStatus) Reset() {
 	*x = WorkerStatus{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[22]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1739,7 +1807,7 @@ func (x *WorkerStatus) String() string {
 func (*WorkerStatus) ProtoMessage() {}
 
 func (x *WorkerStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[22]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1752,7 +1820,7 @@ func (x *WorkerStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkerStatus.ProtoReflect.Descriptor instead.
 func (*WorkerStatus) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{22}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *WorkerStatus) GetDisabled() bool {
@@ -1771,7 +1839,7 @@ type MultipartCacheUploadCreateResponse struct {
 
 func (x *MultipartCacheUploadCreateResponse) Reset() {
 	*x = MultipartCacheUploadCreateResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[23]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1783,7 +1851,7 @@ func (x *MultipartCacheUploadCreateResponse) String() string {
 func (*MultipartCacheUploadCreateResponse) ProtoMessage() {}
 
 func (x *MultipartCacheUploadCreateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[23]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1796,7 +1864,7 @@ func (x *MultipartCacheUploadCreateResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use MultipartCacheUploadCreateResponse.ProtoReflect.Descriptor instead.
 func (*MultipartCacheUploadCreateResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{23}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *MultipartCacheUploadCreateResponse) GetUploadId() string {
@@ -1818,7 +1886,7 @@ type MultipartCacheUploadPartRequest struct {
 
 func (x *MultipartCacheUploadPartRequest) Reset() {
 	*x = MultipartCacheUploadPartRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[24]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1830,7 +1898,7 @@ func (x *MultipartCacheUploadPartRequest) String() string {
 func (*MultipartCacheUploadPartRequest) ProtoMessage() {}
 
 func (x *MultipartCacheUploadPartRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[24]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1843,7 +1911,7 @@ func (x *MultipartCacheUploadPartRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MultipartCacheUploadPartRequest.ProtoReflect.Descriptor instead.
 func (*MultipartCacheUploadPartRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{24}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *MultipartCacheUploadPartRequest) GetCacheKey() *CacheKey {
@@ -1885,7 +1953,7 @@ type MultipartCacheUploadCommitRequest struct {
 
 func (x *MultipartCacheUploadCommitRequest) Reset() {
 	*x = MultipartCacheUploadCommitRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[25]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1897,7 +1965,7 @@ func (x *MultipartCacheUploadCommitRequest) String() string {
 func (*MultipartCacheUploadCommitRequest) ProtoMessage() {}
 
 func (x *MultipartCacheUploadCommitRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[25]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1910,7 +1978,7 @@ func (x *MultipartCacheUploadCommitRequest) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use MultipartCacheUploadCommitRequest.ProtoReflect.Descriptor instead.
 func (*MultipartCacheUploadCommitRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{25}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *MultipartCacheUploadCommitRequest) GetCacheKey() *CacheKey {
@@ -1946,7 +2014,7 @@ type ReportTerminalAttachedRequest struct {
 
 func (x *ReportTerminalAttachedRequest) Reset() {
 	*x = ReportTerminalAttachedRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[26]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1958,7 +2026,7 @@ func (x *ReportTerminalAttachedRequest) String() string {
 func (*ReportTerminalAttachedRequest) ProtoMessage() {}
 
 func (x *ReportTerminalAttachedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[26]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1971,7 +2039,7 @@ func (x *ReportTerminalAttachedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportTerminalAttachedRequest.ProtoReflect.Descriptor instead.
 func (*ReportTerminalAttachedRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{26}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{27}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -2004,7 +2072,7 @@ type ReportTerminalAttachedResponse struct {
 
 func (x *ReportTerminalAttachedResponse) Reset() {
 	*x = ReportTerminalAttachedResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[27]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2016,7 +2084,7 @@ func (x *ReportTerminalAttachedResponse) String() string {
 func (*ReportTerminalAttachedResponse) ProtoMessage() {}
 
 func (x *ReportTerminalAttachedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[27]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2029,7 +2097,7 @@ func (x *ReportTerminalAttachedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportTerminalAttachedResponse.ProtoReflect.Descriptor instead.
 func (*ReportTerminalAttachedResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{27}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{28}
 }
 
 type ReportTerminalLifecycleRequest struct {
@@ -2047,7 +2115,7 @@ type ReportTerminalLifecycleRequest struct {
 
 func (x *ReportTerminalLifecycleRequest) Reset() {
 	*x = ReportTerminalLifecycleRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[28]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2059,7 +2127,7 @@ func (x *ReportTerminalLifecycleRequest) String() string {
 func (*ReportTerminalLifecycleRequest) ProtoMessage() {}
 
 func (x *ReportTerminalLifecycleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[28]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2072,7 +2140,7 @@ func (x *ReportTerminalLifecycleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportTerminalLifecycleRequest.ProtoReflect.Descriptor instead.
 func (*ReportTerminalLifecycleRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{28}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{29}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -2132,7 +2200,7 @@ type ReportTerminalLifecycleResponse struct {
 
 func (x *ReportTerminalLifecycleResponse) Reset() {
 	*x = ReportTerminalLifecycleResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[29]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2144,7 +2212,7 @@ func (x *ReportTerminalLifecycleResponse) String() string {
 func (*ReportTerminalLifecycleResponse) ProtoMessage() {}
 
 func (x *ReportTerminalLifecycleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[29]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2157,7 +2225,7 @@ func (x *ReportTerminalLifecycleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportTerminalLifecycleResponse.ProtoReflect.Descriptor instead.
 func (*ReportTerminalLifecycleResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{29}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{30}
 }
 
 type TaskIdentification struct {
@@ -2170,7 +2238,7 @@ type TaskIdentification struct {
 
 func (x *TaskIdentification) Reset() {
 	*x = TaskIdentification{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[30]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2182,7 +2250,7 @@ func (x *TaskIdentification) String() string {
 func (*TaskIdentification) ProtoMessage() {}
 
 func (x *TaskIdentification) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[30]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2195,7 +2263,7 @@ func (x *TaskIdentification) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TaskIdentification.ProtoReflect.Descriptor instead.
 func (*TaskIdentification) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{30}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *TaskIdentification) GetTaskId() int64 {
@@ -2222,7 +2290,7 @@ type DataChunk struct {
 
 func (x *DataChunk) Reset() {
 	*x = DataChunk{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[31]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2234,7 +2302,7 @@ func (x *DataChunk) String() string {
 func (*DataChunk) ProtoMessage() {}
 
 func (x *DataChunk) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[31]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2247,7 +2315,7 @@ func (x *DataChunk) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DataChunk.ProtoReflect.Descriptor instead.
 func (*DataChunk) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{31}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *DataChunk) GetData() []byte {
@@ -2277,7 +2345,7 @@ type InitialCommandsRequest struct {
 
 func (x *InitialCommandsRequest) Reset() {
 	*x = InitialCommandsRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[32]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2289,7 +2357,7 @@ func (x *InitialCommandsRequest) String() string {
 func (*InitialCommandsRequest) ProtoMessage() {}
 
 func (x *InitialCommandsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[32]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2302,7 +2370,7 @@ func (x *InitialCommandsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InitialCommandsRequest.ProtoReflect.Descriptor instead.
 func (*InitialCommandsRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{32}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{33}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -2347,7 +2415,7 @@ type LogEntry struct {
 
 func (x *LogEntry) Reset() {
 	*x = LogEntry{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[33]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2359,7 +2427,7 @@ func (x *LogEntry) String() string {
 func (*LogEntry) ProtoMessage() {}
 
 func (x *LogEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[33]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2372,7 +2440,7 @@ func (x *LogEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogEntry.ProtoReflect.Descriptor instead.
 func (*LogEntry) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{33}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *LogEntry) GetValue() isLogEntry_Value {
@@ -2425,7 +2493,7 @@ type UploadLogsResponse struct {
 
 func (x *UploadLogsResponse) Reset() {
 	*x = UploadLogsResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[34]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2437,7 +2505,7 @@ func (x *UploadLogsResponse) String() string {
 func (*UploadLogsResponse) ProtoMessage() {}
 
 func (x *UploadLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[34]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2450,7 +2518,7 @@ func (x *UploadLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadLogsResponse.ProtoReflect.Descriptor instead.
 func (*UploadLogsResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{34}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *UploadLogsResponse) GetBytesLogged() int64 {
@@ -2471,7 +2539,7 @@ type CacheKey struct {
 
 func (x *CacheKey) Reset() {
 	*x = CacheKey{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[35]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2483,7 +2551,7 @@ func (x *CacheKey) String() string {
 func (*CacheKey) ProtoMessage() {}
 
 func (x *CacheKey) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[35]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2496,7 +2564,7 @@ func (x *CacheKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CacheKey.ProtoReflect.Descriptor instead.
 func (*CacheKey) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{35}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{36}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -2527,7 +2595,7 @@ type CacheEntry struct {
 
 func (x *CacheEntry) Reset() {
 	*x = CacheEntry{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[36]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2539,7 +2607,7 @@ func (x *CacheEntry) String() string {
 func (*CacheEntry) ProtoMessage() {}
 
 func (x *CacheEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[36]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2552,7 +2620,7 @@ func (x *CacheEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CacheEntry.ProtoReflect.Descriptor instead.
 func (*CacheEntry) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{36}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *CacheEntry) GetValue() isCacheEntry_Value {
@@ -2605,7 +2673,7 @@ type UploadCacheResponse struct {
 
 func (x *UploadCacheResponse) Reset() {
 	*x = UploadCacheResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[37]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2617,7 +2685,7 @@ func (x *UploadCacheResponse) String() string {
 func (*UploadCacheResponse) ProtoMessage() {}
 
 func (x *UploadCacheResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[37]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2630,7 +2698,7 @@ func (x *UploadCacheResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadCacheResponse.ProtoReflect.Descriptor instead.
 func (*UploadCacheResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{37}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *UploadCacheResponse) GetBytesSaved() int64 {
@@ -2653,7 +2721,7 @@ type ArtifactEntry struct {
 
 func (x *ArtifactEntry) Reset() {
 	*x = ArtifactEntry{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[38]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2665,7 +2733,7 @@ func (x *ArtifactEntry) String() string {
 func (*ArtifactEntry) ProtoMessage() {}
 
 func (x *ArtifactEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[38]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2678,7 +2746,7 @@ func (x *ArtifactEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArtifactEntry.ProtoReflect.Descriptor instead.
 func (*ArtifactEntry) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{38}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *ArtifactEntry) GetValue() isArtifactEntry_Value {
@@ -2731,7 +2799,7 @@ type UploadArtifactsResponse struct {
 
 func (x *UploadArtifactsResponse) Reset() {
 	*x = UploadArtifactsResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[39]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2743,7 +2811,7 @@ func (x *UploadArtifactsResponse) String() string {
 func (*UploadArtifactsResponse) ProtoMessage() {}
 
 func (x *UploadArtifactsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[39]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2756,7 +2824,7 @@ func (x *UploadArtifactsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadArtifactsResponse.ProtoReflect.Descriptor instead.
 func (*UploadArtifactsResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{39}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *UploadArtifactsResponse) GetBytesSaved() int64 {
@@ -2776,7 +2844,7 @@ type ArtifactFileInfo struct {
 
 func (x *ArtifactFileInfo) Reset() {
 	*x = ArtifactFileInfo{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[40]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2788,7 +2856,7 @@ func (x *ArtifactFileInfo) String() string {
 func (*ArtifactFileInfo) ProtoMessage() {}
 
 func (x *ArtifactFileInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[40]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2801,7 +2869,7 @@ func (x *ArtifactFileInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArtifactFileInfo.ProtoReflect.Descriptor instead.
 func (*ArtifactFileInfo) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{40}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *ArtifactFileInfo) GetPath() string {
@@ -2830,7 +2898,7 @@ type GenerateArtifactUploadURLsRequest struct {
 
 func (x *GenerateArtifactUploadURLsRequest) Reset() {
 	*x = GenerateArtifactUploadURLsRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[41]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2842,7 +2910,7 @@ func (x *GenerateArtifactUploadURLsRequest) String() string {
 func (*GenerateArtifactUploadURLsRequest) ProtoMessage() {}
 
 func (x *GenerateArtifactUploadURLsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[41]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2855,7 +2923,7 @@ func (x *GenerateArtifactUploadURLsRequest) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use GenerateArtifactUploadURLsRequest.ProtoReflect.Descriptor instead.
 func (*GenerateArtifactUploadURLsRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{41}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{42}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -2889,7 +2957,7 @@ type GenerateArtifactUploadURLsResponse struct {
 
 func (x *GenerateArtifactUploadURLsResponse) Reset() {
 	*x = GenerateArtifactUploadURLsResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[42]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2901,7 +2969,7 @@ func (x *GenerateArtifactUploadURLsResponse) String() string {
 func (*GenerateArtifactUploadURLsResponse) ProtoMessage() {}
 
 func (x *GenerateArtifactUploadURLsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[42]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2914,7 +2982,7 @@ func (x *GenerateArtifactUploadURLsResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use GenerateArtifactUploadURLsResponse.ProtoReflect.Descriptor instead.
 func (*GenerateArtifactUploadURLsResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{42}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *GenerateArtifactUploadURLsResponse) GetUrls() []*GenerateArtifactUploadURLsResponse_UploadURL {
@@ -2938,7 +3006,7 @@ type CommitUploadedArtifactsRequest struct {
 
 func (x *CommitUploadedArtifactsRequest) Reset() {
 	*x = CommitUploadedArtifactsRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[43]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2950,7 +3018,7 @@ func (x *CommitUploadedArtifactsRequest) String() string {
 func (*CommitUploadedArtifactsRequest) ProtoMessage() {}
 
 func (x *CommitUploadedArtifactsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[43]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2963,7 +3031,7 @@ func (x *CommitUploadedArtifactsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommitUploadedArtifactsRequest.ProtoReflect.Descriptor instead.
 func (*CommitUploadedArtifactsRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{43}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{44}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3010,7 +3078,7 @@ type CommitUploadedArtifactsResponse struct {
 
 func (x *CommitUploadedArtifactsResponse) Reset() {
 	*x = CommitUploadedArtifactsResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[44]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3022,7 +3090,7 @@ func (x *CommitUploadedArtifactsResponse) String() string {
 func (*CommitUploadedArtifactsResponse) ProtoMessage() {}
 
 func (x *CommitUploadedArtifactsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[44]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3035,7 +3103,7 @@ func (x *CommitUploadedArtifactsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommitUploadedArtifactsResponse.ProtoReflect.Descriptor instead.
 func (*CommitUploadedArtifactsResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{44}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{45}
 }
 
 type DownloadCacheRequest struct {
@@ -3049,7 +3117,7 @@ type DownloadCacheRequest struct {
 
 func (x *DownloadCacheRequest) Reset() {
 	*x = DownloadCacheRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[45]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3061,7 +3129,7 @@ func (x *DownloadCacheRequest) String() string {
 func (*DownloadCacheRequest) ProtoMessage() {}
 
 func (x *DownloadCacheRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[45]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3074,7 +3142,7 @@ func (x *DownloadCacheRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DownloadCacheRequest.ProtoReflect.Descriptor instead.
 func (*DownloadCacheRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{45}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{46}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3106,7 +3174,7 @@ type CommandsResponse struct {
 
 func (x *CommandsResponse) Reset() {
 	*x = CommandsResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[46]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3118,7 +3186,7 @@ func (x *CommandsResponse) String() string {
 func (*CommandsResponse) ProtoMessage() {}
 
 func (x *CommandsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[46]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3131,7 +3199,7 @@ func (x *CommandsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommandsResponse.ProtoReflect.Descriptor instead.
 func (*CommandsResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{46}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *CommandsResponse) GetEnvironment() map[string]string {
@@ -3187,7 +3255,7 @@ type ReportCommandUpdatesRequest struct {
 
 func (x *ReportCommandUpdatesRequest) Reset() {
 	*x = ReportCommandUpdatesRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[47]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3199,7 +3267,7 @@ func (x *ReportCommandUpdatesRequest) String() string {
 func (*ReportCommandUpdatesRequest) ProtoMessage() {}
 
 func (x *ReportCommandUpdatesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[47]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3212,7 +3280,7 @@ func (x *ReportCommandUpdatesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportCommandUpdatesRequest.ProtoReflect.Descriptor instead.
 func (*ReportCommandUpdatesRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{47}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{48}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3238,7 +3306,7 @@ type ReportCommandUpdatesResponse struct {
 
 func (x *ReportCommandUpdatesResponse) Reset() {
 	*x = ReportCommandUpdatesResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[48]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3250,7 +3318,7 @@ func (x *ReportCommandUpdatesResponse) String() string {
 func (*ReportCommandUpdatesResponse) ProtoMessage() {}
 
 func (x *ReportCommandUpdatesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[48]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3263,7 +3331,7 @@ func (x *ReportCommandUpdatesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportCommandUpdatesResponse.ProtoReflect.Descriptor instead.
 func (*ReportCommandUpdatesResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{48}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{49}
 }
 
 type ReportAnnotationsCommandRequest struct {
@@ -3277,7 +3345,7 @@ type ReportAnnotationsCommandRequest struct {
 
 func (x *ReportAnnotationsCommandRequest) Reset() {
 	*x = ReportAnnotationsCommandRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[49]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3289,7 +3357,7 @@ func (x *ReportAnnotationsCommandRequest) String() string {
 func (*ReportAnnotationsCommandRequest) ProtoMessage() {}
 
 func (x *ReportAnnotationsCommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[49]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3302,7 +3370,7 @@ func (x *ReportAnnotationsCommandRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportAnnotationsCommandRequest.ProtoReflect.Descriptor instead.
 func (*ReportAnnotationsCommandRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{49}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{50}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3334,7 +3402,7 @@ type Annotation struct {
 
 func (x *Annotation) Reset() {
 	*x = Annotation{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[50]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3346,7 +3414,7 @@ func (x *Annotation) String() string {
 func (*Annotation) ProtoMessage() {}
 
 func (x *Annotation) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[50]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3359,7 +3427,7 @@ func (x *Annotation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Annotation.ProtoReflect.Descriptor instead.
 func (*Annotation) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{50}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *Annotation) GetType() Annotation_Type {
@@ -3414,7 +3482,7 @@ type HeartbeatRequest struct {
 
 func (x *HeartbeatRequest) Reset() {
 	*x = HeartbeatRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[51]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3426,7 +3494,7 @@ func (x *HeartbeatRequest) String() string {
 func (*HeartbeatRequest) ProtoMessage() {}
 
 func (x *HeartbeatRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[51]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3439,7 +3507,7 @@ func (x *HeartbeatRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatRequest.ProtoReflect.Descriptor instead.
 func (*HeartbeatRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{51}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{52}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3458,7 +3526,7 @@ type HeartbeatResponse struct {
 
 func (x *HeartbeatResponse) Reset() {
 	*x = HeartbeatResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[52]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3470,7 +3538,7 @@ func (x *HeartbeatResponse) String() string {
 func (*HeartbeatResponse) ProtoMessage() {}
 
 func (x *HeartbeatResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[52]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3483,7 +3551,7 @@ func (x *HeartbeatResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatResponse.ProtoReflect.Descriptor instead.
 func (*HeartbeatResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{52}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{53}
 }
 
 type CacheInfoRequest struct {
@@ -3498,7 +3566,7 @@ type CacheInfoRequest struct {
 
 func (x *CacheInfoRequest) Reset() {
 	*x = CacheInfoRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[53]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3510,7 +3578,7 @@ func (x *CacheInfoRequest) String() string {
 func (*CacheInfoRequest) ProtoMessage() {}
 
 func (x *CacheInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[53]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3523,7 +3591,7 @@ func (x *CacheInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CacheInfoRequest.ProtoReflect.Descriptor instead.
 func (*CacheInfoRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{53}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{54}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3562,7 +3630,7 @@ type CacheInfo struct {
 
 func (x *CacheInfo) Reset() {
 	*x = CacheInfo{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[54]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3574,7 +3642,7 @@ func (x *CacheInfo) String() string {
 func (*CacheInfo) ProtoMessage() {}
 
 func (x *CacheInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[54]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3587,7 +3655,7 @@ func (x *CacheInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CacheInfo.ProtoReflect.Descriptor instead.
 func (*CacheInfo) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{54}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *CacheInfo) GetKey() string {
@@ -3635,7 +3703,7 @@ type CacheInfoResponse struct {
 
 func (x *CacheInfoResponse) Reset() {
 	*x = CacheInfoResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[55]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3647,7 +3715,7 @@ func (x *CacheInfoResponse) String() string {
 func (*CacheInfoResponse) ProtoMessage() {}
 
 func (x *CacheInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[55]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3660,7 +3728,7 @@ func (x *CacheInfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CacheInfoResponse.ProtoReflect.Descriptor instead.
 func (*CacheInfoResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{55}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *CacheInfoResponse) GetInfo() *CacheInfo {
@@ -3681,7 +3749,7 @@ type DeleteCacheRequest struct {
 
 func (x *DeleteCacheRequest) Reset() {
 	*x = DeleteCacheRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[56]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3693,7 +3761,7 @@ func (x *DeleteCacheRequest) String() string {
 func (*DeleteCacheRequest) ProtoMessage() {}
 
 func (x *DeleteCacheRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[56]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3706,7 +3774,7 @@ func (x *DeleteCacheRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCacheRequest.ProtoReflect.Descriptor instead.
 func (*DeleteCacheRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{56}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{57}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3732,7 +3800,7 @@ type DeleteCacheResponse struct {
 
 func (x *DeleteCacheResponse) Reset() {
 	*x = DeleteCacheResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[57]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3744,7 +3812,7 @@ func (x *DeleteCacheResponse) String() string {
 func (*DeleteCacheResponse) ProtoMessage() {}
 
 func (x *DeleteCacheResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[57]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3757,7 +3825,7 @@ func (x *DeleteCacheResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteCacheResponse.ProtoReflect.Descriptor instead.
 func (*DeleteCacheResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{57}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{58}
 }
 
 type ReportAgentProblemRequest struct {
@@ -3772,7 +3840,7 @@ type ReportAgentProblemRequest struct {
 
 func (x *ReportAgentProblemRequest) Reset() {
 	*x = ReportAgentProblemRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[58]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3784,7 +3852,7 @@ func (x *ReportAgentProblemRequest) String() string {
 func (*ReportAgentProblemRequest) ProtoMessage() {}
 
 func (x *ReportAgentProblemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[58]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3797,7 +3865,7 @@ func (x *ReportAgentProblemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportAgentProblemRequest.ProtoReflect.Descriptor instead.
 func (*ReportAgentProblemRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{58}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{59}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3832,7 +3900,7 @@ type ReportStopHookRequest struct {
 
 func (x *ReportStopHookRequest) Reset() {
 	*x = ReportStopHookRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[59]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3844,7 +3912,7 @@ func (x *ReportStopHookRequest) String() string {
 func (*ReportStopHookRequest) ProtoMessage() {}
 
 func (x *ReportStopHookRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[59]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3857,7 +3925,7 @@ func (x *ReportStopHookRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportStopHookRequest.ProtoReflect.Descriptor instead.
 func (*ReportStopHookRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{59}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{60}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3879,7 +3947,7 @@ type ReportAgentSignalRequest struct {
 
 func (x *ReportAgentSignalRequest) Reset() {
 	*x = ReportAgentSignalRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[60]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3891,7 +3959,7 @@ func (x *ReportAgentSignalRequest) String() string {
 func (*ReportAgentSignalRequest) ProtoMessage() {}
 
 func (x *ReportAgentSignalRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[60]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3904,7 +3972,7 @@ func (x *ReportAgentSignalRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportAgentSignalRequest.ProtoReflect.Descriptor instead.
 func (*ReportAgentSignalRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{60}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{61}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3933,7 +4001,7 @@ type ReportAgentLogsRequest struct {
 
 func (x *ReportAgentLogsRequest) Reset() {
 	*x = ReportAgentLogsRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[61]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3945,7 +4013,7 @@ func (x *ReportAgentLogsRequest) String() string {
 func (*ReportAgentLogsRequest) ProtoMessage() {}
 
 func (x *ReportAgentLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[61]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3958,7 +4026,7 @@ func (x *ReportAgentLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportAgentLogsRequest.ProtoReflect.Descriptor instead.
 func (*ReportAgentLogsRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{61}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{62}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -3990,7 +4058,7 @@ type CacheRetrievalAttempt struct {
 
 func (x *CacheRetrievalAttempt) Reset() {
 	*x = CacheRetrievalAttempt{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[62]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4002,7 +4070,7 @@ func (x *CacheRetrievalAttempt) String() string {
 func (*CacheRetrievalAttempt) ProtoMessage() {}
 
 func (x *CacheRetrievalAttempt) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[62]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4015,7 +4083,7 @@ func (x *CacheRetrievalAttempt) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CacheRetrievalAttempt.ProtoReflect.Descriptor instead.
 func (*CacheRetrievalAttempt) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{62}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *CacheRetrievalAttempt) GetError() string {
@@ -4078,7 +4146,7 @@ type ResourceUtilization struct {
 
 func (x *ResourceUtilization) Reset() {
 	*x = ResourceUtilization{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[63]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4090,7 +4158,7 @@ func (x *ResourceUtilization) String() string {
 func (*ResourceUtilization) ProtoMessage() {}
 
 func (x *ResourceUtilization) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[63]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4103,7 +4171,7 @@ func (x *ResourceUtilization) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResourceUtilization.ProtoReflect.Descriptor instead.
 func (*ResourceUtilization) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{63}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *ResourceUtilization) GetCpuChart() []*ChartPoint {
@@ -4144,7 +4212,7 @@ type ChartPoint struct {
 
 func (x *ChartPoint) Reset() {
 	*x = ChartPoint{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[64]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4156,7 +4224,7 @@ func (x *ChartPoint) String() string {
 func (*ChartPoint) ProtoMessage() {}
 
 func (x *ChartPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[64]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4169,7 +4237,7 @@ func (x *ChartPoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChartPoint.ProtoReflect.Descriptor instead.
 func (*ChartPoint) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{64}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *ChartPoint) GetSecondsFromStart() uint32 {
@@ -4200,7 +4268,7 @@ type CommandResult struct {
 
 func (x *CommandResult) Reset() {
 	*x = CommandResult{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[65]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4212,7 +4280,7 @@ func (x *CommandResult) String() string {
 func (*CommandResult) ProtoMessage() {}
 
 func (x *CommandResult) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[65]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4225,7 +4293,7 @@ func (x *CommandResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommandResult.ProtoReflect.Descriptor instead.
 func (*CommandResult) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{65}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *CommandResult) GetName() string {
@@ -4277,7 +4345,7 @@ type ReportAgentFinishedRequest struct {
 
 func (x *ReportAgentFinishedRequest) Reset() {
 	*x = ReportAgentFinishedRequest{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[66]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4289,7 +4357,7 @@ func (x *ReportAgentFinishedRequest) String() string {
 func (*ReportAgentFinishedRequest) ProtoMessage() {}
 
 func (x *ReportAgentFinishedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[66]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4302,7 +4370,7 @@ func (x *ReportAgentFinishedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportAgentFinishedRequest.ProtoReflect.Descriptor instead.
 func (*ReportAgentFinishedRequest) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{66}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{67}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -4342,7 +4410,7 @@ type ReportAgentFinishedResponse struct {
 
 func (x *ReportAgentFinishedResponse) Reset() {
 	*x = ReportAgentFinishedResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[67]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4354,7 +4422,7 @@ func (x *ReportAgentFinishedResponse) String() string {
 func (*ReportAgentFinishedResponse) ProtoMessage() {}
 
 func (x *ReportAgentFinishedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[67]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4367,7 +4435,7 @@ func (x *ReportAgentFinishedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReportAgentFinishedResponse.ProtoReflect.Descriptor instead.
 func (*ReportAgentFinishedResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{67}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{68}
 }
 
 type Task struct {
@@ -4386,7 +4454,7 @@ type Task struct {
 
 func (x *Task) Reset() {
 	*x = Task{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[68]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4398,7 +4466,7 @@ func (x *Task) String() string {
 func (*Task) ProtoMessage() {}
 
 func (x *Task) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[68]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4411,7 +4479,7 @@ func (x *Task) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Task.ProtoReflect.Descriptor instead.
 func (*Task) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{68}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *Task) GetLocalGroupId() int64 {
@@ -4493,7 +4561,7 @@ type Command struct {
 
 func (x *Command) Reset() {
 	*x = Command{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[69]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4505,7 +4573,7 @@ func (x *Command) String() string {
 func (*Command) ProtoMessage() {}
 
 func (x *Command) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[69]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4518,7 +4586,7 @@ func (x *Command) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Command.ProtoReflect.Descriptor instead.
 func (*Command) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{69}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *Command) GetName() string {
@@ -4696,7 +4764,7 @@ type ExitInstruction struct {
 
 func (x *ExitInstruction) Reset() {
 	*x = ExitInstruction{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[70]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4708,7 +4776,7 @@ func (x *ExitInstruction) String() string {
 func (*ExitInstruction) ProtoMessage() {}
 
 func (x *ExitInstruction) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[70]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4721,7 +4789,7 @@ func (x *ExitInstruction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExitInstruction.ProtoReflect.Descriptor instead.
 func (*ExitInstruction) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{70}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{71}
 }
 
 type ScriptInstruction struct {
@@ -4733,7 +4801,7 @@ type ScriptInstruction struct {
 
 func (x *ScriptInstruction) Reset() {
 	*x = ScriptInstruction{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[71]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4745,7 +4813,7 @@ func (x *ScriptInstruction) String() string {
 func (*ScriptInstruction) ProtoMessage() {}
 
 func (x *ScriptInstruction) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[71]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4758,7 +4826,7 @@ func (x *ScriptInstruction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScriptInstruction.ProtoReflect.Descriptor instead.
 func (*ScriptInstruction) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{71}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *ScriptInstruction) GetScripts() []string {
@@ -4777,7 +4845,7 @@ type BackgroundScriptInstruction struct {
 
 func (x *BackgroundScriptInstruction) Reset() {
 	*x = BackgroundScriptInstruction{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[72]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4789,7 +4857,7 @@ func (x *BackgroundScriptInstruction) String() string {
 func (*BackgroundScriptInstruction) ProtoMessage() {}
 
 func (x *BackgroundScriptInstruction) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[72]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4802,7 +4870,7 @@ func (x *BackgroundScriptInstruction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BackgroundScriptInstruction.ProtoReflect.Descriptor instead.
 func (*BackgroundScriptInstruction) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{72}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *BackgroundScriptInstruction) GetScripts() []string {
@@ -4831,7 +4899,7 @@ type CacheInstruction struct {
 
 func (x *CacheInstruction) Reset() {
 	*x = CacheInstruction{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[73]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4843,7 +4911,7 @@ func (x *CacheInstruction) String() string {
 func (*CacheInstruction) ProtoMessage() {}
 
 func (x *CacheInstruction) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[73]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4856,7 +4924,7 @@ func (x *CacheInstruction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CacheInstruction.ProtoReflect.Descriptor instead.
 func (*CacheInstruction) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{73}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *CacheInstruction) GetFolder() string {
@@ -4910,7 +4978,7 @@ type UploadCacheInstruction struct {
 
 func (x *UploadCacheInstruction) Reset() {
 	*x = UploadCacheInstruction{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[74]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4922,7 +4990,7 @@ func (x *UploadCacheInstruction) String() string {
 func (*UploadCacheInstruction) ProtoMessage() {}
 
 func (x *UploadCacheInstruction) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[74]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4935,7 +5003,7 @@ func (x *UploadCacheInstruction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadCacheInstruction.ProtoReflect.Descriptor instead.
 func (*UploadCacheInstruction) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{74}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *UploadCacheInstruction) GetCacheName() string {
@@ -4953,7 +5021,7 @@ type CloneInstruction struct {
 
 func (x *CloneInstruction) Reset() {
 	*x = CloneInstruction{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[75]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4965,7 +5033,7 @@ func (x *CloneInstruction) String() string {
 func (*CloneInstruction) ProtoMessage() {}
 
 func (x *CloneInstruction) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[75]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4978,7 +5046,7 @@ func (x *CloneInstruction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloneInstruction.ProtoReflect.Descriptor instead.
 func (*CloneInstruction) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{75}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{76}
 }
 
 type FileInstruction struct {
@@ -4995,7 +5063,7 @@ type FileInstruction struct {
 
 func (x *FileInstruction) Reset() {
 	*x = FileInstruction{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[76]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5007,7 +5075,7 @@ func (x *FileInstruction) String() string {
 func (*FileInstruction) ProtoMessage() {}
 
 func (x *FileInstruction) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[76]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5020,7 +5088,7 @@ func (x *FileInstruction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileInstruction.ProtoReflect.Descriptor instead.
 func (*FileInstruction) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{76}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{77}
 }
 
 func (x *FileInstruction) GetDestinationPath() string {
@@ -5082,7 +5150,7 @@ type ArtifactsInstruction struct {
 
 func (x *ArtifactsInstruction) Reset() {
 	*x = ArtifactsInstruction{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[77]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5094,7 +5162,7 @@ func (x *ArtifactsInstruction) String() string {
 func (*ArtifactsInstruction) ProtoMessage() {}
 
 func (x *ArtifactsInstruction) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[77]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5107,7 +5175,7 @@ func (x *ArtifactsInstruction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArtifactsInstruction.ProtoReflect.Descriptor instead.
 func (*ArtifactsInstruction) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{77}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{78}
 }
 
 func (x *ArtifactsInstruction) GetPaths() []string {
@@ -5140,7 +5208,7 @@ type WaitForTerminalInstruction struct {
 
 func (x *WaitForTerminalInstruction) Reset() {
 	*x = WaitForTerminalInstruction{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[78]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5152,7 +5220,7 @@ func (x *WaitForTerminalInstruction) String() string {
 func (*WaitForTerminalInstruction) ProtoMessage() {}
 
 func (x *WaitForTerminalInstruction) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[78]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5165,7 +5233,7 @@ func (x *WaitForTerminalInstruction) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WaitForTerminalInstruction.ProtoReflect.Descriptor instead.
 func (*WaitForTerminalInstruction) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{78}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{79}
 }
 
 func (x *WaitForTerminalInstruction) GetTerminalServerAddress() string {
@@ -5185,7 +5253,7 @@ type PipeInstance struct {
 
 func (x *PipeInstance) Reset() {
 	*x = PipeInstance{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[79]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5197,7 +5265,7 @@ func (x *PipeInstance) String() string {
 func (*PipeInstance) ProtoMessage() {}
 
 func (x *PipeInstance) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[79]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5210,7 +5278,7 @@ func (x *PipeInstance) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PipeInstance.ProtoReflect.Descriptor instead.
 func (*PipeInstance) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{79}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *PipeInstance) GetCpu() float32 {
@@ -5248,7 +5316,7 @@ type ContainerInstance struct {
 
 func (x *ContainerInstance) Reset() {
 	*x = ContainerInstance{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[80]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5260,7 +5328,7 @@ func (x *ContainerInstance) String() string {
 func (*ContainerInstance) ProtoMessage() {}
 
 func (x *ContainerInstance) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[80]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5273,7 +5341,7 @@ func (x *ContainerInstance) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContainerInstance.ProtoReflect.Descriptor instead.
 func (*ContainerInstance) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{80}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *ContainerInstance) GetImage() string {
@@ -5377,7 +5445,7 @@ type PortMapping struct {
 
 func (x *PortMapping) Reset() {
 	*x = PortMapping{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[81]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5389,7 +5457,7 @@ func (x *PortMapping) String() string {
 func (*PortMapping) ProtoMessage() {}
 
 func (x *PortMapping) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[81]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5402,7 +5470,7 @@ func (x *PortMapping) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PortMapping.ProtoReflect.Descriptor instead.
 func (*PortMapping) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{81}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{82}
 }
 
 func (x *PortMapping) GetContainerPort() uint32 {
@@ -5438,7 +5506,7 @@ type AdditionalContainer struct {
 
 func (x *AdditionalContainer) Reset() {
 	*x = AdditionalContainer{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[82]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5450,7 +5518,7 @@ func (x *AdditionalContainer) String() string {
 func (*AdditionalContainer) ProtoMessage() {}
 
 func (x *AdditionalContainer) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[82]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5463,7 +5531,7 @@ func (x *AdditionalContainer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdditionalContainer.ProtoReflect.Descriptor instead.
 func (*AdditionalContainer) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{82}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{83}
 }
 
 func (x *AdditionalContainer) GetName() string {
@@ -5556,7 +5624,7 @@ type PrebuiltImageInstance struct {
 
 func (x *PrebuiltImageInstance) Reset() {
 	*x = PrebuiltImageInstance{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[83]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5568,7 +5636,7 @@ func (x *PrebuiltImageInstance) String() string {
 func (*PrebuiltImageInstance) ProtoMessage() {}
 
 func (x *PrebuiltImageInstance) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[83]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5581,7 +5649,7 @@ func (x *PrebuiltImageInstance) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrebuiltImageInstance.ProtoReflect.Descriptor instead.
 func (*PrebuiltImageInstance) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{83}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{84}
 }
 
 func (x *PrebuiltImageInstance) GetRepository() string {
@@ -5630,7 +5698,7 @@ type Volume struct {
 
 func (x *Volume) Reset() {
 	*x = Volume{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[84]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5642,7 +5710,7 @@ func (x *Volume) String() string {
 func (*Volume) ProtoMessage() {}
 
 func (x *Volume) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[84]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5655,7 +5723,7 @@ func (x *Volume) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Volume.ProtoReflect.Descriptor instead.
 func (*Volume) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{84}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{85}
 }
 
 func (x *Volume) GetSource() string {
@@ -5695,7 +5763,7 @@ type Isolation struct {
 
 func (x *Isolation) Reset() {
 	*x = Isolation{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[85]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5707,7 +5775,7 @@ func (x *Isolation) String() string {
 func (*Isolation) ProtoMessage() {}
 
 func (x *Isolation) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[85]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5720,7 +5788,7 @@ func (x *Isolation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Isolation.ProtoReflect.Descriptor instead.
 func (*Isolation) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{85}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{86}
 }
 
 func (x *Isolation) GetType() isIsolation_Type {
@@ -5820,7 +5888,7 @@ type PersistentWorkerInstance struct {
 
 func (x *PersistentWorkerInstance) Reset() {
 	*x = PersistentWorkerInstance{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[86]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5832,7 +5900,7 @@ func (x *PersistentWorkerInstance) String() string {
 func (*PersistentWorkerInstance) ProtoMessage() {}
 
 func (x *PersistentWorkerInstance) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[86]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5845,7 +5913,7 @@ func (x *PersistentWorkerInstance) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PersistentWorkerInstance.ProtoReflect.Descriptor instead.
 func (*PersistentWorkerInstance) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{86}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{87}
 }
 
 func (x *PersistentWorkerInstance) GetLabels() map[string]string {
@@ -5882,7 +5950,7 @@ type MacOSInstance struct {
 
 func (x *MacOSInstance) Reset() {
 	*x = MacOSInstance{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[87]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5894,7 +5962,7 @@ func (x *MacOSInstance) String() string {
 func (*MacOSInstance) ProtoMessage() {}
 
 func (x *MacOSInstance) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[87]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5907,7 +5975,7 @@ func (x *MacOSInstance) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MacOSInstance.ProtoReflect.Descriptor instead.
 func (*MacOSInstance) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{87}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{88}
 }
 
 func (x *MacOSInstance) GetImage() string {
@@ -5955,7 +6023,7 @@ type DockerBuilder struct {
 
 func (x *DockerBuilder) Reset() {
 	*x = DockerBuilder{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[88]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5967,7 +6035,7 @@ func (x *DockerBuilder) String() string {
 func (*DockerBuilder) ProtoMessage() {}
 
 func (x *DockerBuilder) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[88]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5980,7 +6048,7 @@ func (x *DockerBuilder) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DockerBuilder.ProtoReflect.Descriptor instead.
 func (*DockerBuilder) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{88}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{89}
 }
 
 func (x *DockerBuilder) GetPlatform() Platform {
@@ -6007,7 +6075,7 @@ type GenerateURLResponse struct {
 
 func (x *GenerateURLResponse) Reset() {
 	*x = GenerateURLResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[89]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6019,7 +6087,7 @@ func (x *GenerateURLResponse) String() string {
 func (*GenerateURLResponse) ProtoMessage() {}
 
 func (x *GenerateURLResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[89]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6032,7 +6100,7 @@ func (x *GenerateURLResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateURLResponse.ProtoReflect.Descriptor instead.
 func (*GenerateURLResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{89}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{90}
 }
 
 func (x *GenerateURLResponse) GetUrl() string {
@@ -6058,7 +6126,7 @@ type GenerateURLsResponse struct {
 
 func (x *GenerateURLsResponse) Reset() {
 	*x = GenerateURLsResponse{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[90]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6070,7 +6138,7 @@ func (x *GenerateURLsResponse) String() string {
 func (*GenerateURLsResponse) ProtoMessage() {}
 
 func (x *GenerateURLsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[90]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6083,7 +6151,7 @@ func (x *GenerateURLsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateURLsResponse.ProtoReflect.Descriptor instead.
 func (*GenerateURLsResponse) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{90}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{91}
 }
 
 func (x *GenerateURLsResponse) GetUrls() []string {
@@ -6102,7 +6170,7 @@ type FileSystem_Memory struct {
 
 func (x *FileSystem_Memory) Reset() {
 	*x = FileSystem_Memory{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[93]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6114,7 +6182,7 @@ func (x *FileSystem_Memory) String() string {
 func (*FileSystem_Memory) ProtoMessage() {}
 
 func (x *FileSystem_Memory) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[93]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6149,7 +6217,7 @@ type FileSystem_Github struct {
 
 func (x *FileSystem_Github) Reset() {
 	*x = FileSystem_Github{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[94]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6161,7 +6229,7 @@ func (x *FileSystem_Github) String() string {
 func (*FileSystem_Github) ProtoMessage() {}
 
 func (x *FileSystem_Github) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[94]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6223,7 +6291,7 @@ type PollResponse_AgentAwareTask struct {
 
 func (x *PollResponse_AgentAwareTask) Reset() {
 	*x = PollResponse_AgentAwareTask{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[98]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[99]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6235,7 +6303,7 @@ func (x *PollResponse_AgentAwareTask) String() string {
 func (*PollResponse_AgentAwareTask) ProtoMessage() {}
 
 func (x *PollResponse_AgentAwareTask) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[98]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[99]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6319,7 +6387,7 @@ type StandbyInstanceParameters_Warmup struct {
 
 func (x *StandbyInstanceParameters_Warmup) Reset() {
 	*x = StandbyInstanceParameters_Warmup{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[100]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[101]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6331,7 +6399,7 @@ func (x *StandbyInstanceParameters_Warmup) String() string {
 func (*StandbyInstanceParameters_Warmup) ProtoMessage() {}
 
 func (x *StandbyInstanceParameters_Warmup) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[100]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[101]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6344,7 +6412,7 @@ func (x *StandbyInstanceParameters_Warmup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StandbyInstanceParameters_Warmup.ProtoReflect.Descriptor instead.
 func (*StandbyInstanceParameters_Warmup) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{19, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{20, 0}
 }
 
 func (x *StandbyInstanceParameters_Warmup) GetScript() string {
@@ -6371,7 +6439,7 @@ type MultipartCacheUploadCommitRequest_Part struct {
 
 func (x *MultipartCacheUploadCommitRequest_Part) Reset() {
 	*x = MultipartCacheUploadCommitRequest_Part{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[104]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[105]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6383,7 +6451,7 @@ func (x *MultipartCacheUploadCommitRequest_Part) String() string {
 func (*MultipartCacheUploadCommitRequest_Part) ProtoMessage() {}
 
 func (x *MultipartCacheUploadCommitRequest_Part) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[104]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[105]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6396,7 +6464,7 @@ func (x *MultipartCacheUploadCommitRequest_Part) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use MultipartCacheUploadCommitRequest_Part.ProtoReflect.Descriptor instead.
 func (*MultipartCacheUploadCommitRequest_Part) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{25, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{26, 0}
 }
 
 func (x *MultipartCacheUploadCommitRequest_Part) GetPartNumber() uint32 {
@@ -6421,7 +6489,7 @@ type ReportTerminalLifecycleRequest_Started struct {
 
 func (x *ReportTerminalLifecycleRequest_Started) Reset() {
 	*x = ReportTerminalLifecycleRequest_Started{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[105]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6433,7 +6501,7 @@ func (x *ReportTerminalLifecycleRequest_Started) String() string {
 func (*ReportTerminalLifecycleRequest_Started) ProtoMessage() {}
 
 func (x *ReportTerminalLifecycleRequest_Started) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[105]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6446,7 +6514,7 @@ func (x *ReportTerminalLifecycleRequest_Started) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use ReportTerminalLifecycleRequest_Started.ProtoReflect.Descriptor instead.
 func (*ReportTerminalLifecycleRequest_Started) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{28, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{29, 0}
 }
 
 type ReportTerminalLifecycleRequest_Expiring struct {
@@ -6457,7 +6525,7 @@ type ReportTerminalLifecycleRequest_Expiring struct {
 
 func (x *ReportTerminalLifecycleRequest_Expiring) Reset() {
 	*x = ReportTerminalLifecycleRequest_Expiring{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[106]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[107]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6469,7 +6537,7 @@ func (x *ReportTerminalLifecycleRequest_Expiring) String() string {
 func (*ReportTerminalLifecycleRequest_Expiring) ProtoMessage() {}
 
 func (x *ReportTerminalLifecycleRequest_Expiring) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[106]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[107]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6482,7 +6550,7 @@ func (x *ReportTerminalLifecycleRequest_Expiring) ProtoReflect() protoreflect.Me
 
 // Deprecated: Use ReportTerminalLifecycleRequest_Expiring.ProtoReflect.Descriptor instead.
 func (*ReportTerminalLifecycleRequest_Expiring) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{28, 1}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{29, 1}
 }
 
 type LogEntry_LogKey struct {
@@ -6497,7 +6565,7 @@ type LogEntry_LogKey struct {
 
 func (x *LogEntry_LogKey) Reset() {
 	*x = LogEntry_LogKey{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[107]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[108]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6509,7 +6577,7 @@ func (x *LogEntry_LogKey) String() string {
 func (*LogEntry_LogKey) ProtoMessage() {}
 
 func (x *LogEntry_LogKey) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[107]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[108]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6522,7 +6590,7 @@ func (x *LogEntry_LogKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogEntry_LogKey.ProtoReflect.Descriptor instead.
 func (*LogEntry_LogKey) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{33, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{34, 0}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -6560,7 +6628,7 @@ type ArtifactEntry_ArtifactsUpload struct {
 
 func (x *ArtifactEntry_ArtifactsUpload) Reset() {
 	*x = ArtifactEntry_ArtifactsUpload{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[108]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[109]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6572,7 +6640,7 @@ func (x *ArtifactEntry_ArtifactsUpload) String() string {
 func (*ArtifactEntry_ArtifactsUpload) ProtoMessage() {}
 
 func (x *ArtifactEntry_ArtifactsUpload) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[108]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[109]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6585,7 +6653,7 @@ func (x *ArtifactEntry_ArtifactsUpload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArtifactEntry_ArtifactsUpload.ProtoReflect.Descriptor instead.
 func (*ArtifactEntry_ArtifactsUpload) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{38, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{39, 0}
 }
 
 // Deprecated: Marked as deprecated in api/cirrus_ci_service.proto.
@@ -6627,7 +6695,7 @@ type ArtifactEntry_ArtifactChunk struct {
 
 func (x *ArtifactEntry_ArtifactChunk) Reset() {
 	*x = ArtifactEntry_ArtifactChunk{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[109]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[110]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6639,7 +6707,7 @@ func (x *ArtifactEntry_ArtifactChunk) String() string {
 func (*ArtifactEntry_ArtifactChunk) ProtoMessage() {}
 
 func (x *ArtifactEntry_ArtifactChunk) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[109]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[110]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6652,7 +6720,7 @@ func (x *ArtifactEntry_ArtifactChunk) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArtifactEntry_ArtifactChunk.ProtoReflect.Descriptor instead.
 func (*ArtifactEntry_ArtifactChunk) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{38, 1}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{39, 1}
 }
 
 func (x *ArtifactEntry_ArtifactChunk) GetArtifactPath() string {
@@ -6679,7 +6747,7 @@ type GenerateArtifactUploadURLsResponse_UploadURL struct {
 
 func (x *GenerateArtifactUploadURLsResponse_UploadURL) Reset() {
 	*x = GenerateArtifactUploadURLsResponse_UploadURL{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[110]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[111]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6691,7 +6759,7 @@ func (x *GenerateArtifactUploadURLsResponse_UploadURL) String() string {
 func (*GenerateArtifactUploadURLsResponse_UploadURL) ProtoMessage() {}
 
 func (x *GenerateArtifactUploadURLsResponse_UploadURL) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[110]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[111]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6704,7 +6772,7 @@ func (x *GenerateArtifactUploadURLsResponse_UploadURL) ProtoReflect() protorefle
 
 // Deprecated: Use GenerateArtifactUploadURLsResponse_UploadURL.ProtoReflect.Descriptor instead.
 func (*GenerateArtifactUploadURLsResponse_UploadURL) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{42, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{43, 0}
 }
 
 func (x *GenerateArtifactUploadURLsResponse_UploadURL) GetUrl() string {
@@ -6734,7 +6802,7 @@ type Annotation_FileLocation struct {
 
 func (x *Annotation_FileLocation) Reset() {
 	*x = Annotation_FileLocation{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[113]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[114]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6746,7 +6814,7 @@ func (x *Annotation_FileLocation) String() string {
 func (*Annotation_FileLocation) ProtoMessage() {}
 
 func (x *Annotation_FileLocation) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[113]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[114]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6759,7 +6827,7 @@ func (x *Annotation_FileLocation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Annotation_FileLocation.ProtoReflect.Descriptor instead.
 func (*Annotation_FileLocation) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{50, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{51, 0}
 }
 
 func (x *Annotation_FileLocation) GetPath() string {
@@ -6808,7 +6876,7 @@ type CacheRetrievalAttempt_Hit struct {
 
 func (x *CacheRetrievalAttempt_Hit) Reset() {
 	*x = CacheRetrievalAttempt_Hit{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[114]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[115]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6820,7 +6888,7 @@ func (x *CacheRetrievalAttempt_Hit) String() string {
 func (*CacheRetrievalAttempt_Hit) ProtoMessage() {}
 
 func (x *CacheRetrievalAttempt_Hit) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[114]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[115]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6833,7 +6901,7 @@ func (x *CacheRetrievalAttempt_Hit) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CacheRetrievalAttempt_Hit.ProtoReflect.Descriptor instead.
 func (*CacheRetrievalAttempt_Hit) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{62, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{63, 0}
 }
 
 func (x *CacheRetrievalAttempt_Hit) GetSizeBytes() uint64 {
@@ -6869,7 +6937,7 @@ type CacheRetrievalAttempt_Miss struct {
 
 func (x *CacheRetrievalAttempt_Miss) Reset() {
 	*x = CacheRetrievalAttempt_Miss{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[115]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[116]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6881,7 +6949,7 @@ func (x *CacheRetrievalAttempt_Miss) String() string {
 func (*CacheRetrievalAttempt_Miss) ProtoMessage() {}
 
 func (x *CacheRetrievalAttempt_Miss) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[115]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[116]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6894,7 +6962,7 @@ func (x *CacheRetrievalAttempt_Miss) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CacheRetrievalAttempt_Miss.ProtoReflect.Descriptor instead.
 func (*CacheRetrievalAttempt_Miss) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{62, 1}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{63, 1}
 }
 
 func (x *CacheRetrievalAttempt_Miss) GetSizeBytes() uint64 {
@@ -6935,7 +7003,7 @@ type Task_Metadata struct {
 
 func (x *Task_Metadata) Reset() {
 	*x = Task_Metadata{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[117]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[118]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6947,7 +7015,7 @@ func (x *Task_Metadata) String() string {
 func (*Task_Metadata) ProtoMessage() {}
 
 func (x *Task_Metadata) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[117]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[118]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6960,7 +7028,7 @@ func (x *Task_Metadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Task_Metadata.ProtoReflect.Descriptor instead.
 func (*Task_Metadata) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{68, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{69, 0}
 }
 
 func (x *Task_Metadata) GetUniqueLabels() []string {
@@ -6985,7 +7053,7 @@ type Isolation_None struct {
 
 func (x *Isolation_None) Reset() {
 	*x = Isolation_None{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[124]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[125]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6997,7 +7065,7 @@ func (x *Isolation_None) String() string {
 func (*Isolation_None) ProtoMessage() {}
 
 func (x *Isolation_None) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[124]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[125]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7010,7 +7078,7 @@ func (x *Isolation_None) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Isolation_None.ProtoReflect.Descriptor instead.
 func (*Isolation_None) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{85, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{86, 0}
 }
 
 type Isolation_Parallels struct {
@@ -7025,7 +7093,7 @@ type Isolation_Parallels struct {
 
 func (x *Isolation_Parallels) Reset() {
 	*x = Isolation_Parallels{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[125]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[126]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7037,7 +7105,7 @@ func (x *Isolation_Parallels) String() string {
 func (*Isolation_Parallels) ProtoMessage() {}
 
 func (x *Isolation_Parallels) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[125]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[126]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7050,7 +7118,7 @@ func (x *Isolation_Parallels) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Isolation_Parallels.ProtoReflect.Descriptor instead.
 func (*Isolation_Parallels) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{85, 1}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{86, 1}
 }
 
 func (x *Isolation_Parallels) GetImage() string {
@@ -7096,7 +7164,7 @@ type Isolation_Container struct {
 
 func (x *Isolation_Container) Reset() {
 	*x = Isolation_Container{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[126]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[127]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7108,7 +7176,7 @@ func (x *Isolation_Container) String() string {
 func (*Isolation_Container) ProtoMessage() {}
 
 func (x *Isolation_Container) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[126]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[127]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7121,7 +7189,7 @@ func (x *Isolation_Container) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Isolation_Container.ProtoReflect.Descriptor instead.
 func (*Isolation_Container) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{85, 2}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{86, 2}
 }
 
 func (x *Isolation_Container) GetImage() string {
@@ -7200,7 +7268,7 @@ type Isolation_Tart struct {
 
 func (x *Isolation_Tart) Reset() {
 	*x = Isolation_Tart{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[127]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[128]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7212,7 +7280,7 @@ func (x *Isolation_Tart) String() string {
 func (*Isolation_Tart) ProtoMessage() {}
 
 func (x *Isolation_Tart) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[127]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[128]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7225,7 +7293,7 @@ func (x *Isolation_Tart) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Isolation_Tart.ProtoReflect.Descriptor instead.
 func (*Isolation_Tart) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{85, 3}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{86, 3}
 }
 
 func (x *Isolation_Tart) GetImage() string {
@@ -7325,7 +7393,7 @@ type Isolation_Vetu struct {
 
 func (x *Isolation_Vetu) Reset() {
 	*x = Isolation_Vetu{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[128]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[129]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7337,7 +7405,7 @@ func (x *Isolation_Vetu) String() string {
 func (*Isolation_Vetu) ProtoMessage() {}
 
 func (x *Isolation_Vetu) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[128]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[129]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7350,7 +7418,7 @@ func (x *Isolation_Vetu) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Isolation_Vetu.ProtoReflect.Descriptor instead.
 func (*Isolation_Vetu) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{85, 4}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{86, 4}
 }
 
 func (x *Isolation_Vetu) GetImage() string {
@@ -7456,7 +7524,7 @@ type Isolation_Tart_Volume struct {
 
 func (x *Isolation_Tart_Volume) Reset() {
 	*x = Isolation_Tart_Volume{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[130]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[131]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7468,7 +7536,7 @@ func (x *Isolation_Tart_Volume) String() string {
 func (*Isolation_Tart_Volume) ProtoMessage() {}
 
 func (x *Isolation_Tart_Volume) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[130]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[131]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7481,7 +7549,7 @@ func (x *Isolation_Tart_Volume) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Isolation_Tart_Volume.ProtoReflect.Descriptor instead.
 func (*Isolation_Tart_Volume) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{85, 3, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{86, 3, 0}
 }
 
 func (x *Isolation_Tart_Volume) GetName() string {
@@ -7528,7 +7596,7 @@ type Isolation_Vetu_Bridged struct {
 
 func (x *Isolation_Vetu_Bridged) Reset() {
 	*x = Isolation_Vetu_Bridged{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[131]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[132]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7540,7 +7608,7 @@ func (x *Isolation_Vetu_Bridged) String() string {
 func (*Isolation_Vetu_Bridged) ProtoMessage() {}
 
 func (x *Isolation_Vetu_Bridged) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[131]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[132]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7553,7 +7621,7 @@ func (x *Isolation_Vetu_Bridged) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Isolation_Vetu_Bridged.ProtoReflect.Descriptor instead.
 func (*Isolation_Vetu_Bridged) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{85, 4, 0}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{86, 4, 0}
 }
 
 func (x *Isolation_Vetu_Bridged) GetInterface() string {
@@ -7571,7 +7639,7 @@ type Isolation_Vetu_Host struct {
 
 func (x *Isolation_Vetu_Host) Reset() {
 	*x = Isolation_Vetu_Host{}
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[132]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[133]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7583,7 +7651,7 @@ func (x *Isolation_Vetu_Host) String() string {
 func (*Isolation_Vetu_Host) ProtoMessage() {}
 
 func (x *Isolation_Vetu_Host) ProtoReflect() protoreflect.Message {
-	mi := &file_api_cirrus_ci_service_proto_msgTypes[132]
+	mi := &file_api_cirrus_ci_service_proto_msgTypes[133]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7596,7 +7664,7 @@ func (x *Isolation_Vetu_Host) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Isolation_Vetu_Host.ProtoReflect.Descriptor instead.
 func (*Isolation_Vetu_Host) Descriptor() ([]byte, []int) {
-	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{85, 4, 1}
+	return file_api_cirrus_ci_service_proto_rawDescGZIP(), []int{86, 4, 1}
 }
 
 var File_api_cirrus_ci_service_proto protoreflect.FileDescriptor
@@ -7816,8 +7884,8 @@ var file_api_cirrus_ci_service_proto_rawDesc = []byte{
 	0x72, 0x49, 0x6e, 0x66, 0x6f, 0x22, 0x37, 0x0a, 0x10, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65,
 	0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x23, 0x0a, 0x0d, 0x73, 0x65, 0x73,
 	0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x0c, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x22, 0xef,
-	0x02, 0x0a, 0x0b, 0x50, 0x6f, 0x6c, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x54,
+	0x52, 0x0c, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x22, 0x87,
+	0x04, 0x0a, 0x0b, 0x50, 0x6f, 0x6c, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x54,
 	0x0a, 0x0b, 0x77, 0x6f, 0x72, 0x6b, 0x65, 0x72, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20,
 	0x01, 0x28, 0x0b, 0x32, 0x33, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73,
 	0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73,
@@ -7835,91 +7903,120 @@ var file_api_cirrus_ci_service_proto_rawDesc = []byte{
 	0x55, 0x73, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72,
 	0x63, 0x65, 0x73, 0x49, 0x6e, 0x55, 0x73, 0x65, 0x12, 0x23, 0x0a, 0x0d, 0x72, 0x75, 0x6e, 0x6e,
 	0x69, 0x6e, 0x67, 0x5f, 0x74, 0x61, 0x73, 0x6b, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x09, 0x52,
-	0x0c, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x54, 0x61, 0x73, 0x6b, 0x73, 0x1a, 0x41, 0x0a,
-	0x13, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x49, 0x6e, 0x55, 0x73, 0x65, 0x45,
-	0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x01, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01,
-	0x22, 0x63, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67,
-	0x54, 0x61, 0x73, 0x6b, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x47, 0x0a, 0x04,
-	0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x33, 0x2e, 0x6f, 0x72, 0x67,
-	0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73,
-	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69,
-	0x67, 0x72, 0x70, 0x63, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52,
-	0x04, 0x69, 0x6e, 0x66, 0x6f, 0x22, 0xbf, 0x01, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52,
-	0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x54, 0x61, 0x73, 0x6b, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x4d, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x35, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73,
-	0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73,
-	0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x57, 0x6f,
-	0x72, 0x6b, 0x65, 0x72, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74,
-	0x75, 0x73, 0x12, 0x2e, 0x0a, 0x11, 0x6f, 0x6c, 0x64, 0x5f, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e,
-	0x67, 0x5f, 0x74, 0x61, 0x73, 0x6b, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x03, 0x42, 0x02, 0x18,
-	0x01, 0x52, 0x0f, 0x6f, 0x6c, 0x64, 0x52, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x54, 0x61, 0x73,
-	0x6b, 0x73, 0x12, 0x23, 0x0a, 0x0d, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x5f, 0x74, 0x61,
-	0x73, 0x6b, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0c, 0x72, 0x75, 0x6e, 0x6e, 0x69,
-	0x6e, 0x67, 0x54, 0x61, 0x73, 0x6b, 0x73, 0x22, 0x9f, 0x01, 0x0a, 0x11, 0x54, 0x61, 0x73, 0x6b,
-	0x46, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x70, 0x0a,
-	0x13, 0x74, 0x61, 0x73, 0x6b, 0x5f, 0x69, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x3b, 0x2e, 0x6f, 0x72, 0x67,
-	0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73,
-	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69,
-	0x67, 0x72, 0x70, 0x63, 0x2e, 0x54, 0x61, 0x73, 0x6b, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66,
-	0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x02, 0x18, 0x01, 0x52, 0x12, 0x74, 0x61, 0x73,
-	0x6b, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12,
-	0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0xa5, 0x06, 0x0a, 0x0c, 0x50, 0x6f,
-	0x6c, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6a, 0x0a, 0x0e, 0x74, 0x61,
-	0x73, 0x6b, 0x73, 0x5f, 0x74, 0x6f, 0x5f, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x01, 0x20, 0x03,
-	0x28, 0x0b, 0x32, 0x44, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c,
-	0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e,
-	0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x50, 0x6f, 0x6c,
-	0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2e, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x41,
-	0x77, 0x61, 0x72, 0x65, 0x54, 0x61, 0x73, 0x6b, 0x52, 0x0c, 0x74, 0x61, 0x73, 0x6b, 0x73, 0x54,
-	0x6f, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x32, 0x0a, 0x14, 0x6f, 0x6c, 0x64, 0x5f, 0x74, 0x61,
-	0x73, 0x6b, 0x5f, 0x69, 0x64, 0x73, 0x5f, 0x74, 0x6f, 0x5f, 0x73, 0x74, 0x6f, 0x70, 0x18, 0x02,
-	0x20, 0x03, 0x28, 0x03, 0x42, 0x02, 0x18, 0x01, 0x52, 0x10, 0x6f, 0x6c, 0x64, 0x54, 0x61, 0x73,
-	0x6b, 0x49, 0x64, 0x73, 0x54, 0x6f, 0x53, 0x74, 0x6f, 0x70, 0x12, 0x37, 0x0a, 0x18, 0x70, 0x6f,
-	0x6c, 0x6c, 0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x5f, 0x69, 0x6e, 0x5f, 0x73,
-	0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x15, 0x70, 0x6f,
-	0x6c, 0x6c, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x49, 0x6e, 0x53, 0x65, 0x63, 0x6f,
-	0x6e, 0x64, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x68, 0x75, 0x74, 0x64, 0x6f, 0x77, 0x6e, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x73, 0x68, 0x75, 0x74, 0x64, 0x6f, 0x77, 0x6e, 0x12,
-	0x22, 0x0a, 0x0d, 0x74, 0x61, 0x73, 0x6b, 0x73, 0x5f, 0x74, 0x6f, 0x5f, 0x73, 0x74, 0x6f, 0x70,
-	0x18, 0x05, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0b, 0x74, 0x61, 0x73, 0x6b, 0x73, 0x54, 0x6f, 0x53,
-	0x74, 0x6f, 0x70, 0x1a, 0xfb, 0x03, 0x0a, 0x0e, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x41, 0x77, 0x61,
-	0x72, 0x65, 0x54, 0x61, 0x73, 0x6b, 0x12, 0x22, 0x0a, 0x0b, 0x6f, 0x6c, 0x64, 0x5f, 0x74, 0x61,
-	0x73, 0x6b, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x42, 0x02, 0x18, 0x01, 0x52,
-	0x09, 0x6f, 0x6c, 0x64, 0x54, 0x61, 0x73, 0x6b, 0x49, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x63, 0x6c,
-	0x69, 0x65, 0x6e, 0x74, 0x5f, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x0c, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x12,
-	0x23, 0x0a, 0x0d, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x53, 0x65,
-	0x63, 0x72, 0x65, 0x74, 0x12, 0x50, 0x0a, 0x09, 0x69, 0x73, 0x6f, 0x6c, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x32, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x63, 0x69,
-	0x72, 0x72, 0x75, 0x73, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73, 0x65, 0x72, 0x76,
-	0x69, 0x63, 0x65, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69, 0x67, 0x72, 0x70,
-	0x63, 0x2e, 0x49, 0x73, 0x6f, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x09, 0x69, 0x73, 0x6f,
-	0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x27, 0x0a, 0x0d, 0x61, 0x67, 0x65, 0x6e, 0x74, 0x5f,
-	0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x42, 0x02, 0x18,
-	0x01, 0x52, 0x0c, 0x61, 0x67, 0x65, 0x6e, 0x74, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12,
-	0x1f, 0x0a, 0x0b, 0x63, 0x6c, 0x69, 0x5f, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x07,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x63, 0x6c, 0x69, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
-	0x12, 0x82, 0x01, 0x0a, 0x10, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x5f, 0x74,
-	0x6f, 0x5f, 0x75, 0x73, 0x65, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x58, 0x2e, 0x6f, 0x72,
+	0x0c, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x54, 0x61, 0x73, 0x6b, 0x73, 0x12, 0x95, 0x01,
+	0x0a, 0x23, 0x61, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x53, 0x74, 0x61, 0x6e, 0x64,
+	0x62, 0x79, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x72, 0x6d,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x43, 0x2e, 0x6f, 0x72,
 	0x67, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e,
 	0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63,
-	0x69, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x50, 0x6f, 0x6c, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x2e, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x41, 0x77, 0x61, 0x72, 0x65, 0x54, 0x61, 0x73,
-	0x6b, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x54, 0x6f, 0x55, 0x73, 0x65,
-	0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73,
-	0x54, 0x6f, 0x55, 0x73, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x74, 0x61, 0x73, 0x6b, 0x5f, 0x69, 0x64,
-	0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x61, 0x73, 0x6b, 0x49, 0x64, 0x1a, 0x41,
-	0x0a, 0x13, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x54, 0x6f, 0x55, 0x73, 0x65,
-	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x01, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38,
-	0x01, 0x22, 0xca, 0x03, 0x0a, 0x19, 0x53, 0x74, 0x61, 0x6e, 0x64, 0x62, 0x79, 0x49, 0x6e, 0x73,
+	0x69, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x53, 0x74, 0x61, 0x6e, 0x64, 0x62, 0x79, 0x49, 0x6e, 0x73,
+	0x74, 0x61, 0x6e, 0x63, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x52, 0x23, 0x61, 0x76, 0x61, 0x69, 0x6c, 0x61, 0x62, 0x6c, 0x65, 0x53, 0x74, 0x61, 0x6e, 0x64,
+	0x62, 0x79, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x72, 0x6d,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x41, 0x0a, 0x13, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63,
+	0x65, 0x73, 0x49, 0x6e, 0x55, 0x73, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03,
+	0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14,
+	0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x01, 0x52, 0x05, 0x76,
+	0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x63, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x52, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x54, 0x61, 0x73, 0x6b, 0x73, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x47, 0x0a, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x33, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c,
+	0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e,
+	0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x57, 0x6f, 0x72,
+	0x6b, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x22, 0xbf, 0x01,
+	0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x54, 0x61,
+	0x73, 0x6b, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4d, 0x0a, 0x06, 0x73,
+	0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x35, 0x2e, 0x6f, 0x72,
+	0x67, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e,
+	0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63,
+	0x69, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x57, 0x6f, 0x72, 0x6b, 0x65, 0x72, 0x53, 0x74, 0x61, 0x74,
+	0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x2e, 0x0a, 0x11, 0x6f, 0x6c,
+	0x64, 0x5f, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x5f, 0x74, 0x61, 0x73, 0x6b, 0x73, 0x18,
+	0x02, 0x20, 0x03, 0x28, 0x03, 0x42, 0x02, 0x18, 0x01, 0x52, 0x0f, 0x6f, 0x6c, 0x64, 0x52, 0x75,
+	0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x54, 0x61, 0x73, 0x6b, 0x73, 0x12, 0x23, 0x0a, 0x0d, 0x72, 0x75,
+	0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x5f, 0x74, 0x61, 0x73, 0x6b, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28,
+	0x09, 0x52, 0x0c, 0x72, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x54, 0x61, 0x73, 0x6b, 0x73, 0x22,
+	0x9f, 0x01, 0x0a, 0x11, 0x54, 0x61, 0x73, 0x6b, 0x46, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x70, 0x0a, 0x13, 0x74, 0x61, 0x73, 0x6b, 0x5f, 0x69, 0x64,
+	0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x3b, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c,
+	0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e,
+	0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x54, 0x61, 0x73,
+	0x6b, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42,
+	0x02, 0x18, 0x01, 0x52, 0x12, 0x74, 0x61, 0x73, 0x6b, 0x49, 0x64, 0x65, 0x6e, 0x74, 0x69, 0x66,
+	0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61,
+	0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67,
+	0x65, 0x22, 0xb9, 0x07, 0x0a, 0x0c, 0x50, 0x6f, 0x6c, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x6a, 0x0a, 0x0e, 0x74, 0x61, 0x73, 0x6b, 0x73, 0x5f, 0x74, 0x6f, 0x5f, 0x73,
+	0x74, 0x61, 0x72, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x44, 0x2e, 0x6f, 0x72, 0x67,
+	0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73,
+	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69,
+	0x67, 0x72, 0x70, 0x63, 0x2e, 0x50, 0x6f, 0x6c, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x2e, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x41, 0x77, 0x61, 0x72, 0x65, 0x54, 0x61, 0x73, 0x6b,
+	0x52, 0x0c, 0x74, 0x61, 0x73, 0x6b, 0x73, 0x54, 0x6f, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x32,
+	0x0a, 0x14, 0x6f, 0x6c, 0x64, 0x5f, 0x74, 0x61, 0x73, 0x6b, 0x5f, 0x69, 0x64, 0x73, 0x5f, 0x74,
+	0x6f, 0x5f, 0x73, 0x74, 0x6f, 0x70, 0x18, 0x02, 0x20, 0x03, 0x28, 0x03, 0x42, 0x02, 0x18, 0x01,
+	0x52, 0x10, 0x6f, 0x6c, 0x64, 0x54, 0x61, 0x73, 0x6b, 0x49, 0x64, 0x73, 0x54, 0x6f, 0x53, 0x74,
+	0x6f, 0x70, 0x12, 0x37, 0x0a, 0x18, 0x70, 0x6f, 0x6c, 0x6c, 0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72,
+	0x76, 0x61, 0x6c, 0x5f, 0x69, 0x6e, 0x5f, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0d, 0x52, 0x15, 0x70, 0x6f, 0x6c, 0x6c, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x76,
+	0x61, 0x6c, 0x49, 0x6e, 0x53, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x73,
+	0x68, 0x75, 0x74, 0x64, 0x6f, 0x77, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x73,
+	0x68, 0x75, 0x74, 0x64, 0x6f, 0x77, 0x6e, 0x12, 0x22, 0x0a, 0x0d, 0x74, 0x61, 0x73, 0x6b, 0x73,
+	0x5f, 0x74, 0x6f, 0x5f, 0x73, 0x74, 0x6f, 0x70, 0x18, 0x05, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0b,
+	0x74, 0x61, 0x73, 0x6b, 0x73, 0x54, 0x6f, 0x53, 0x74, 0x6f, 0x70, 0x12, 0x91, 0x01, 0x0a, 0x23,
+	0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x73, 0x74, 0x61, 0x6e, 0x64, 0x62, 0x79, 0x5f,
+	0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74,
+	0x65, 0x72, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x42, 0x2e, 0x6f, 0x72, 0x67, 0x2e,
+	0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73, 0x65,
+	0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69, 0x67,
+	0x72, 0x70, 0x63, 0x2e, 0x53, 0x74, 0x61, 0x6e, 0x64, 0x62, 0x79, 0x49, 0x6e, 0x73, 0x74, 0x61,
+	0x6e, 0x63, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x52, 0x20, 0x75,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x53, 0x74, 0x61, 0x6e, 0x64, 0x62, 0x79, 0x49, 0x6e, 0x73,
+	0x74, 0x61, 0x6e, 0x63, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x1a,
+	0xfb, 0x03, 0x0a, 0x0e, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x41, 0x77, 0x61, 0x72, 0x65, 0x54, 0x61,
+	0x73, 0x6b, 0x12, 0x22, 0x0a, 0x0b, 0x6f, 0x6c, 0x64, 0x5f, 0x74, 0x61, 0x73, 0x6b, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x42, 0x02, 0x18, 0x01, 0x52, 0x09, 0x6f, 0x6c, 0x64,
+	0x54, 0x61, 0x73, 0x6b, 0x49, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74,
+	0x5f, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x63,
+	0x6c, 0x69, 0x65, 0x6e, 0x74, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74, 0x12, 0x23, 0x0a, 0x0d, 0x73,
+	0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x0c, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x53, 0x65, 0x63, 0x72, 0x65, 0x74,
+	0x12, 0x50, 0x0a, 0x09, 0x69, 0x73, 0x6f, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x32, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73,
+	0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73,
+	0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x49, 0x73,
+	0x6f, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x09, 0x69, 0x73, 0x6f, 0x6c, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x12, 0x27, 0x0a, 0x0d, 0x61, 0x67, 0x65, 0x6e, 0x74, 0x5f, 0x76, 0x65, 0x72, 0x73,
+	0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x42, 0x02, 0x18, 0x01, 0x52, 0x0c, 0x61,
+	0x67, 0x65, 0x6e, 0x74, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x1f, 0x0a, 0x0b, 0x63,
+	0x6c, 0x69, 0x5f, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0a, 0x63, 0x6c, 0x69, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x82, 0x01, 0x0a,
+	0x10, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x5f, 0x74, 0x6f, 0x5f, 0x75, 0x73,
+	0x65, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x58, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x63, 0x69,
+	0x72, 0x72, 0x75, 0x73, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73, 0x65, 0x72, 0x76,
+	0x69, 0x63, 0x65, 0x73, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x63, 0x69, 0x67, 0x72, 0x70,
+	0x63, 0x2e, 0x50, 0x6f, 0x6c, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2e, 0x41,
+	0x67, 0x65, 0x6e, 0x74, 0x41, 0x77, 0x61, 0x72, 0x65, 0x54, 0x61, 0x73, 0x6b, 0x2e, 0x52, 0x65,
+	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x54, 0x6f, 0x55, 0x73, 0x65, 0x45, 0x6e, 0x74, 0x72,
+	0x79, 0x52, 0x0e, 0x72, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x54, 0x6f, 0x55, 0x73,
+	0x65, 0x12, 0x17, 0x0a, 0x07, 0x74, 0x61, 0x73, 0x6b, 0x5f, 0x69, 0x64, 0x18, 0x08, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x06, 0x74, 0x61, 0x73, 0x6b, 0x49, 0x64, 0x1a, 0x41, 0x0a, 0x13, 0x52, 0x65,
+	0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x73, 0x54, 0x6f, 0x55, 0x73, 0x65, 0x45, 0x6e, 0x74, 0x72,
+	0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03,
+	0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x01, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0xa1, 0x01,
+	0x0a, 0x1a, 0x53, 0x74, 0x61, 0x6e, 0x64, 0x62, 0x79, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63,
+	0x65, 0x49, 0x6e, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x62, 0x0a, 0x0a,
+	0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x42, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c, 0x61, 0x62,
+	0x73, 0x2e, 0x63, 0x69, 0x2e, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2e, 0x63, 0x69,
+	0x72, 0x72, 0x75, 0x73, 0x63, 0x69, 0x67, 0x72, 0x70, 0x63, 0x2e, 0x53, 0x74, 0x61, 0x6e, 0x64,
+	0x62, 0x79, 0x49, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65,
+	0x74, 0x65, 0x72, 0x73, 0x52, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73,
+	0x12, 0x1f, 0x0a, 0x0b, 0x61, 0x67, 0x65, 0x5f, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0a, 0x61, 0x67, 0x65, 0x53, 0x65, 0x63, 0x6f, 0x6e, 0x64,
+	0x73, 0x22, 0xca, 0x03, 0x0a, 0x19, 0x53, 0x74, 0x61, 0x6e, 0x64, 0x62, 0x79, 0x49, 0x6e, 0x73,
 	0x74, 0x61, 0x6e, 0x63, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x12,
 	0x50, 0x0a, 0x09, 0x69, 0x73, 0x6f, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x0b, 0x32, 0x32, 0x2e, 0x6f, 0x72, 0x67, 0x2e, 0x63, 0x69, 0x72, 0x72, 0x75, 0x73, 0x6c,
@@ -9408,7 +9505,7 @@ func file_api_cirrus_ci_service_proto_rawDescGZIP() []byte {
 }
 
 var file_api_cirrus_ci_service_proto_enumTypes = make([]protoimpl.EnumInfo, 7)
-var file_api_cirrus_ci_service_proto_msgTypes = make([]protoimpl.MessageInfo, 136)
+var file_api_cirrus_ci_service_proto_msgTypes = make([]protoimpl.MessageInfo, 137)
 var file_api_cirrus_ci_service_proto_goTypes = []any{
 	(Status)(0),                                          // 0: org.cirruslabs.ci.services.cirruscigrpc.Status
 	(Platform)(0),                                        // 1: org.cirruslabs.ci.services.cirruscigrpc.Platform
@@ -9436,335 +9533,339 @@ var file_api_cirrus_ci_service_proto_goTypes = []any{
 	(*QueryRunningTasksResponse)(nil),                    // 23: org.cirruslabs.ci.services.cirruscigrpc.QueryRunningTasksResponse
 	(*TaskFailedRequest)(nil),                            // 24: org.cirruslabs.ci.services.cirruscigrpc.TaskFailedRequest
 	(*PollResponse)(nil),                                 // 25: org.cirruslabs.ci.services.cirruscigrpc.PollResponse
-	(*StandbyInstanceParameters)(nil),                    // 26: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters
-	(*WorkerInfo)(nil),                                   // 27: org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo
-	(*UpdateStatusRequest)(nil),                          // 28: org.cirruslabs.ci.services.cirruscigrpc.UpdateStatusRequest
-	(*WorkerStatus)(nil),                                 // 29: org.cirruslabs.ci.services.cirruscigrpc.WorkerStatus
-	(*MultipartCacheUploadCreateResponse)(nil),           // 30: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCreateResponse
-	(*MultipartCacheUploadPartRequest)(nil),              // 31: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadPartRequest
-	(*MultipartCacheUploadCommitRequest)(nil),            // 32: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest
-	(*ReportTerminalAttachedRequest)(nil),                // 33: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalAttachedRequest
-	(*ReportTerminalAttachedResponse)(nil),               // 34: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalAttachedResponse
-	(*ReportTerminalLifecycleRequest)(nil),               // 35: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest
-	(*ReportTerminalLifecycleResponse)(nil),              // 36: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleResponse
-	(*TaskIdentification)(nil),                           // 37: org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	(*DataChunk)(nil),                                    // 38: org.cirruslabs.ci.services.cirruscigrpc.DataChunk
-	(*InitialCommandsRequest)(nil),                       // 39: org.cirruslabs.ci.services.cirruscigrpc.InitialCommandsRequest
-	(*LogEntry)(nil),                                     // 40: org.cirruslabs.ci.services.cirruscigrpc.LogEntry
-	(*UploadLogsResponse)(nil),                           // 41: org.cirruslabs.ci.services.cirruscigrpc.UploadLogsResponse
-	(*CacheKey)(nil),                                     // 42: org.cirruslabs.ci.services.cirruscigrpc.CacheKey
-	(*CacheEntry)(nil),                                   // 43: org.cirruslabs.ci.services.cirruscigrpc.CacheEntry
-	(*UploadCacheResponse)(nil),                          // 44: org.cirruslabs.ci.services.cirruscigrpc.UploadCacheResponse
-	(*ArtifactEntry)(nil),                                // 45: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry
-	(*UploadArtifactsResponse)(nil),                      // 46: org.cirruslabs.ci.services.cirruscigrpc.UploadArtifactsResponse
-	(*ArtifactFileInfo)(nil),                             // 47: org.cirruslabs.ci.services.cirruscigrpc.ArtifactFileInfo
-	(*GenerateArtifactUploadURLsRequest)(nil),            // 48: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsRequest
-	(*GenerateArtifactUploadURLsResponse)(nil),           // 49: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse
-	(*CommitUploadedArtifactsRequest)(nil),               // 50: org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsRequest
-	(*CommitUploadedArtifactsResponse)(nil),              // 51: org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsResponse
-	(*DownloadCacheRequest)(nil),                         // 52: org.cirruslabs.ci.services.cirruscigrpc.DownloadCacheRequest
-	(*CommandsResponse)(nil),                             // 53: org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse
-	(*ReportCommandUpdatesRequest)(nil),                  // 54: org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesRequest
-	(*ReportCommandUpdatesResponse)(nil),                 // 55: org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesResponse
-	(*ReportAnnotationsCommandRequest)(nil),              // 56: org.cirruslabs.ci.services.cirruscigrpc.ReportAnnotationsCommandRequest
-	(*Annotation)(nil),                                   // 57: org.cirruslabs.ci.services.cirruscigrpc.Annotation
-	(*HeartbeatRequest)(nil),                             // 58: org.cirruslabs.ci.services.cirruscigrpc.HeartbeatRequest
-	(*HeartbeatResponse)(nil),                            // 59: org.cirruslabs.ci.services.cirruscigrpc.HeartbeatResponse
-	(*CacheInfoRequest)(nil),                             // 60: org.cirruslabs.ci.services.cirruscigrpc.CacheInfoRequest
-	(*CacheInfo)(nil),                                    // 61: org.cirruslabs.ci.services.cirruscigrpc.CacheInfo
-	(*CacheInfoResponse)(nil),                            // 62: org.cirruslabs.ci.services.cirruscigrpc.CacheInfoResponse
-	(*DeleteCacheRequest)(nil),                           // 63: org.cirruslabs.ci.services.cirruscigrpc.DeleteCacheRequest
-	(*DeleteCacheResponse)(nil),                          // 64: org.cirruslabs.ci.services.cirruscigrpc.DeleteCacheResponse
-	(*ReportAgentProblemRequest)(nil),                    // 65: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentProblemRequest
-	(*ReportStopHookRequest)(nil),                        // 66: org.cirruslabs.ci.services.cirruscigrpc.ReportStopHookRequest
-	(*ReportAgentSignalRequest)(nil),                     // 67: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentSignalRequest
-	(*ReportAgentLogsRequest)(nil),                       // 68: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentLogsRequest
-	(*CacheRetrievalAttempt)(nil),                        // 69: org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt
-	(*ResourceUtilization)(nil),                          // 70: org.cirruslabs.ci.services.cirruscigrpc.ResourceUtilization
-	(*ChartPoint)(nil),                                   // 71: org.cirruslabs.ci.services.cirruscigrpc.ChartPoint
-	(*CommandResult)(nil),                                // 72: org.cirruslabs.ci.services.cirruscigrpc.CommandResult
-	(*ReportAgentFinishedRequest)(nil),                   // 73: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest
-	(*ReportAgentFinishedResponse)(nil),                  // 74: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedResponse
-	(*Task)(nil),                                         // 75: org.cirruslabs.ci.services.cirruscigrpc.Task
-	(*Command)(nil),                                      // 76: org.cirruslabs.ci.services.cirruscigrpc.Command
-	(*ExitInstruction)(nil),                              // 77: org.cirruslabs.ci.services.cirruscigrpc.ExitInstruction
-	(*ScriptInstruction)(nil),                            // 78: org.cirruslabs.ci.services.cirruscigrpc.ScriptInstruction
-	(*BackgroundScriptInstruction)(nil),                  // 79: org.cirruslabs.ci.services.cirruscigrpc.BackgroundScriptInstruction
-	(*CacheInstruction)(nil),                             // 80: org.cirruslabs.ci.services.cirruscigrpc.CacheInstruction
-	(*UploadCacheInstruction)(nil),                       // 81: org.cirruslabs.ci.services.cirruscigrpc.UploadCacheInstruction
-	(*CloneInstruction)(nil),                             // 82: org.cirruslabs.ci.services.cirruscigrpc.CloneInstruction
-	(*FileInstruction)(nil),                              // 83: org.cirruslabs.ci.services.cirruscigrpc.FileInstruction
-	(*ArtifactsInstruction)(nil),                         // 84: org.cirruslabs.ci.services.cirruscigrpc.ArtifactsInstruction
-	(*WaitForTerminalInstruction)(nil),                   // 85: org.cirruslabs.ci.services.cirruscigrpc.WaitForTerminalInstruction
-	(*PipeInstance)(nil),                                 // 86: org.cirruslabs.ci.services.cirruscigrpc.PipeInstance
-	(*ContainerInstance)(nil),                            // 87: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance
-	(*PortMapping)(nil),                                  // 88: org.cirruslabs.ci.services.cirruscigrpc.PortMapping
-	(*AdditionalContainer)(nil),                          // 89: org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer
-	(*PrebuiltImageInstance)(nil),                        // 90: org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance
-	(*Volume)(nil),                                       // 91: org.cirruslabs.ci.services.cirruscigrpc.Volume
-	(*Isolation)(nil),                                    // 92: org.cirruslabs.ci.services.cirruscigrpc.Isolation
-	(*PersistentWorkerInstance)(nil),                     // 93: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance
-	(*MacOSInstance)(nil),                                // 94: org.cirruslabs.ci.services.cirruscigrpc.MacOSInstance
-	(*DockerBuilder)(nil),                                // 95: org.cirruslabs.ci.services.cirruscigrpc.DockerBuilder
-	(*GenerateURLResponse)(nil),                          // 96: org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse
-	(*GenerateURLsResponse)(nil),                         // 97: org.cirruslabs.ci.services.cirruscigrpc.GenerateURLsResponse
-	nil,                                                  // 98: org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo.InstancesEntry
-	nil,                                                  // 99: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest.EnvironmentEntry
-	(*FileSystem_Memory)(nil),                            // 100: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Memory
-	(*FileSystem_Github)(nil),                            // 101: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Github
-	nil,                                                  // 102: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Memory.FilesContentsEntry
-	nil,                                                  // 103: org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest.EnvironmentEntry
-	nil,                                                  // 104: org.cirruslabs.ci.services.cirruscigrpc.PollRequest.ResourcesInUseEntry
-	(*PollResponse_AgentAwareTask)(nil),                  // 105: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask
-	nil,                                                  // 106: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask.ResourcesToUseEntry
-	(*StandbyInstanceParameters_Warmup)(nil),             // 107: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.Warmup
-	nil,                                                  // 108: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.ResourcesEntry
-	nil,                                                  // 109: org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.LabelsEntry
-	nil,                                                  // 110: org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.ResourcesTotalEntry
-	(*MultipartCacheUploadCommitRequest_Part)(nil),       // 111: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest.Part
-	(*ReportTerminalLifecycleRequest_Started)(nil),       // 112: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.Started
-	(*ReportTerminalLifecycleRequest_Expiring)(nil),      // 113: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.Expiring
-	(*LogEntry_LogKey)(nil),                              // 114: org.cirruslabs.ci.services.cirruscigrpc.LogEntry.LogKey
-	(*ArtifactEntry_ArtifactsUpload)(nil),                // 115: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.ArtifactsUpload
-	(*ArtifactEntry_ArtifactChunk)(nil),                  // 116: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.ArtifactChunk
-	(*GenerateArtifactUploadURLsResponse_UploadURL)(nil), // 117: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.UploadURL
-	nil,                                    // 118: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.UploadURL.HeadersEntry
-	nil,                                    // 119: org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse.EnvironmentEntry
-	(*Annotation_FileLocation)(nil),        // 120: org.cirruslabs.ci.services.cirruscigrpc.Annotation.FileLocation
-	(*CacheRetrievalAttempt_Hit)(nil),      // 121: org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.Hit
-	(*CacheRetrievalAttempt_Miss)(nil),     // 122: org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.Miss
-	nil,                                    // 123: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.CacheRetrievalAttemptsEntry
-	(*Task_Metadata)(nil),                  // 124: org.cirruslabs.ci.services.cirruscigrpc.Task.Metadata
-	nil,                                    // 125: org.cirruslabs.ci.services.cirruscigrpc.Task.EnvironmentEntry
-	nil,                                    // 126: org.cirruslabs.ci.services.cirruscigrpc.Task.Metadata.PropertiesEntry
-	nil,                                    // 127: org.cirruslabs.ci.services.cirruscigrpc.Command.PropertiesEntry
-	nil,                                    // 128: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.DockerArgumentsEntry
-	nil,                                    // 129: org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer.EnvironmentEntry
-	nil,                                    // 130: org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance.ArgumentsEntry
-	(*Isolation_None)(nil),                 // 131: org.cirruslabs.ci.services.cirruscigrpc.Isolation.None
-	(*Isolation_Parallels)(nil),            // 132: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Parallels
-	(*Isolation_Container)(nil),            // 133: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container
-	(*Isolation_Tart)(nil),                 // 134: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Tart
-	(*Isolation_Vetu)(nil),                 // 135: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu
-	nil,                                    // 136: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container.DockerArgumentsEntry
-	(*Isolation_Tart_Volume)(nil),          // 137: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Tart.Volume
-	(*Isolation_Vetu_Bridged)(nil),         // 138: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.Bridged
-	(*Isolation_Vetu_Host)(nil),            // 139: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.Host
-	nil,                                    // 140: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.LabelsEntry
-	nil,                                    // 141: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.ResourcesEntry
-	nil,                                    // 142: org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse.ExtraHeadersEntry
-	(*descriptorpb.FileDescriptorSet)(nil), // 143: google.protobuf.FileDescriptorSet
-	(*descriptorpb.FieldDescriptorProto)(nil), // 144: google.protobuf.FieldDescriptorProto
-	(*structpb.ListValue)(nil),                // 145: google.protobuf.ListValue
-	(*structpb.Value)(nil),                    // 146: google.protobuf.Value
-	(*anypb.Any)(nil),                         // 147: google.protobuf.Any
-	(*emptypb.Empty)(nil),                     // 148: google.protobuf.Empty
+	(*StandbyInstanceInformation)(nil),                   // 26: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceInformation
+	(*StandbyInstanceParameters)(nil),                    // 27: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters
+	(*WorkerInfo)(nil),                                   // 28: org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo
+	(*UpdateStatusRequest)(nil),                          // 29: org.cirruslabs.ci.services.cirruscigrpc.UpdateStatusRequest
+	(*WorkerStatus)(nil),                                 // 30: org.cirruslabs.ci.services.cirruscigrpc.WorkerStatus
+	(*MultipartCacheUploadCreateResponse)(nil),           // 31: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCreateResponse
+	(*MultipartCacheUploadPartRequest)(nil),              // 32: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadPartRequest
+	(*MultipartCacheUploadCommitRequest)(nil),            // 33: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest
+	(*ReportTerminalAttachedRequest)(nil),                // 34: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalAttachedRequest
+	(*ReportTerminalAttachedResponse)(nil),               // 35: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalAttachedResponse
+	(*ReportTerminalLifecycleRequest)(nil),               // 36: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest
+	(*ReportTerminalLifecycleResponse)(nil),              // 37: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleResponse
+	(*TaskIdentification)(nil),                           // 38: org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	(*DataChunk)(nil),                                    // 39: org.cirruslabs.ci.services.cirruscigrpc.DataChunk
+	(*InitialCommandsRequest)(nil),                       // 40: org.cirruslabs.ci.services.cirruscigrpc.InitialCommandsRequest
+	(*LogEntry)(nil),                                     // 41: org.cirruslabs.ci.services.cirruscigrpc.LogEntry
+	(*UploadLogsResponse)(nil),                           // 42: org.cirruslabs.ci.services.cirruscigrpc.UploadLogsResponse
+	(*CacheKey)(nil),                                     // 43: org.cirruslabs.ci.services.cirruscigrpc.CacheKey
+	(*CacheEntry)(nil),                                   // 44: org.cirruslabs.ci.services.cirruscigrpc.CacheEntry
+	(*UploadCacheResponse)(nil),                          // 45: org.cirruslabs.ci.services.cirruscigrpc.UploadCacheResponse
+	(*ArtifactEntry)(nil),                                // 46: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry
+	(*UploadArtifactsResponse)(nil),                      // 47: org.cirruslabs.ci.services.cirruscigrpc.UploadArtifactsResponse
+	(*ArtifactFileInfo)(nil),                             // 48: org.cirruslabs.ci.services.cirruscigrpc.ArtifactFileInfo
+	(*GenerateArtifactUploadURLsRequest)(nil),            // 49: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsRequest
+	(*GenerateArtifactUploadURLsResponse)(nil),           // 50: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse
+	(*CommitUploadedArtifactsRequest)(nil),               // 51: org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsRequest
+	(*CommitUploadedArtifactsResponse)(nil),              // 52: org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsResponse
+	(*DownloadCacheRequest)(nil),                         // 53: org.cirruslabs.ci.services.cirruscigrpc.DownloadCacheRequest
+	(*CommandsResponse)(nil),                             // 54: org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse
+	(*ReportCommandUpdatesRequest)(nil),                  // 55: org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesRequest
+	(*ReportCommandUpdatesResponse)(nil),                 // 56: org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesResponse
+	(*ReportAnnotationsCommandRequest)(nil),              // 57: org.cirruslabs.ci.services.cirruscigrpc.ReportAnnotationsCommandRequest
+	(*Annotation)(nil),                                   // 58: org.cirruslabs.ci.services.cirruscigrpc.Annotation
+	(*HeartbeatRequest)(nil),                             // 59: org.cirruslabs.ci.services.cirruscigrpc.HeartbeatRequest
+	(*HeartbeatResponse)(nil),                            // 60: org.cirruslabs.ci.services.cirruscigrpc.HeartbeatResponse
+	(*CacheInfoRequest)(nil),                             // 61: org.cirruslabs.ci.services.cirruscigrpc.CacheInfoRequest
+	(*CacheInfo)(nil),                                    // 62: org.cirruslabs.ci.services.cirruscigrpc.CacheInfo
+	(*CacheInfoResponse)(nil),                            // 63: org.cirruslabs.ci.services.cirruscigrpc.CacheInfoResponse
+	(*DeleteCacheRequest)(nil),                           // 64: org.cirruslabs.ci.services.cirruscigrpc.DeleteCacheRequest
+	(*DeleteCacheResponse)(nil),                          // 65: org.cirruslabs.ci.services.cirruscigrpc.DeleteCacheResponse
+	(*ReportAgentProblemRequest)(nil),                    // 66: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentProblemRequest
+	(*ReportStopHookRequest)(nil),                        // 67: org.cirruslabs.ci.services.cirruscigrpc.ReportStopHookRequest
+	(*ReportAgentSignalRequest)(nil),                     // 68: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentSignalRequest
+	(*ReportAgentLogsRequest)(nil),                       // 69: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentLogsRequest
+	(*CacheRetrievalAttempt)(nil),                        // 70: org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt
+	(*ResourceUtilization)(nil),                          // 71: org.cirruslabs.ci.services.cirruscigrpc.ResourceUtilization
+	(*ChartPoint)(nil),                                   // 72: org.cirruslabs.ci.services.cirruscigrpc.ChartPoint
+	(*CommandResult)(nil),                                // 73: org.cirruslabs.ci.services.cirruscigrpc.CommandResult
+	(*ReportAgentFinishedRequest)(nil),                   // 74: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest
+	(*ReportAgentFinishedResponse)(nil),                  // 75: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedResponse
+	(*Task)(nil),                                         // 76: org.cirruslabs.ci.services.cirruscigrpc.Task
+	(*Command)(nil),                                      // 77: org.cirruslabs.ci.services.cirruscigrpc.Command
+	(*ExitInstruction)(nil),                              // 78: org.cirruslabs.ci.services.cirruscigrpc.ExitInstruction
+	(*ScriptInstruction)(nil),                            // 79: org.cirruslabs.ci.services.cirruscigrpc.ScriptInstruction
+	(*BackgroundScriptInstruction)(nil),                  // 80: org.cirruslabs.ci.services.cirruscigrpc.BackgroundScriptInstruction
+	(*CacheInstruction)(nil),                             // 81: org.cirruslabs.ci.services.cirruscigrpc.CacheInstruction
+	(*UploadCacheInstruction)(nil),                       // 82: org.cirruslabs.ci.services.cirruscigrpc.UploadCacheInstruction
+	(*CloneInstruction)(nil),                             // 83: org.cirruslabs.ci.services.cirruscigrpc.CloneInstruction
+	(*FileInstruction)(nil),                              // 84: org.cirruslabs.ci.services.cirruscigrpc.FileInstruction
+	(*ArtifactsInstruction)(nil),                         // 85: org.cirruslabs.ci.services.cirruscigrpc.ArtifactsInstruction
+	(*WaitForTerminalInstruction)(nil),                   // 86: org.cirruslabs.ci.services.cirruscigrpc.WaitForTerminalInstruction
+	(*PipeInstance)(nil),                                 // 87: org.cirruslabs.ci.services.cirruscigrpc.PipeInstance
+	(*ContainerInstance)(nil),                            // 88: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance
+	(*PortMapping)(nil),                                  // 89: org.cirruslabs.ci.services.cirruscigrpc.PortMapping
+	(*AdditionalContainer)(nil),                          // 90: org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer
+	(*PrebuiltImageInstance)(nil),                        // 91: org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance
+	(*Volume)(nil),                                       // 92: org.cirruslabs.ci.services.cirruscigrpc.Volume
+	(*Isolation)(nil),                                    // 93: org.cirruslabs.ci.services.cirruscigrpc.Isolation
+	(*PersistentWorkerInstance)(nil),                     // 94: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance
+	(*MacOSInstance)(nil),                                // 95: org.cirruslabs.ci.services.cirruscigrpc.MacOSInstance
+	(*DockerBuilder)(nil),                                // 96: org.cirruslabs.ci.services.cirruscigrpc.DockerBuilder
+	(*GenerateURLResponse)(nil),                          // 97: org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse
+	(*GenerateURLsResponse)(nil),                         // 98: org.cirruslabs.ci.services.cirruscigrpc.GenerateURLsResponse
+	nil,                                                  // 99: org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo.InstancesEntry
+	nil,                                                  // 100: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest.EnvironmentEntry
+	(*FileSystem_Memory)(nil),                            // 101: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Memory
+	(*FileSystem_Github)(nil),                            // 102: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Github
+	nil,                                                  // 103: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Memory.FilesContentsEntry
+	nil,                                                  // 104: org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest.EnvironmentEntry
+	nil,                                                  // 105: org.cirruslabs.ci.services.cirruscigrpc.PollRequest.ResourcesInUseEntry
+	(*PollResponse_AgentAwareTask)(nil),                  // 106: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask
+	nil,                                                  // 107: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask.ResourcesToUseEntry
+	(*StandbyInstanceParameters_Warmup)(nil),             // 108: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.Warmup
+	nil,                                                  // 109: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.ResourcesEntry
+	nil,                                                  // 110: org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.LabelsEntry
+	nil,                                                  // 111: org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.ResourcesTotalEntry
+	(*MultipartCacheUploadCommitRequest_Part)(nil),       // 112: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest.Part
+	(*ReportTerminalLifecycleRequest_Started)(nil),       // 113: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.Started
+	(*ReportTerminalLifecycleRequest_Expiring)(nil),      // 114: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.Expiring
+	(*LogEntry_LogKey)(nil),                              // 115: org.cirruslabs.ci.services.cirruscigrpc.LogEntry.LogKey
+	(*ArtifactEntry_ArtifactsUpload)(nil),                // 116: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.ArtifactsUpload
+	(*ArtifactEntry_ArtifactChunk)(nil),                  // 117: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.ArtifactChunk
+	(*GenerateArtifactUploadURLsResponse_UploadURL)(nil), // 118: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.UploadURL
+	nil,                                    // 119: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.UploadURL.HeadersEntry
+	nil,                                    // 120: org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse.EnvironmentEntry
+	(*Annotation_FileLocation)(nil),        // 121: org.cirruslabs.ci.services.cirruscigrpc.Annotation.FileLocation
+	(*CacheRetrievalAttempt_Hit)(nil),      // 122: org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.Hit
+	(*CacheRetrievalAttempt_Miss)(nil),     // 123: org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.Miss
+	nil,                                    // 124: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.CacheRetrievalAttemptsEntry
+	(*Task_Metadata)(nil),                  // 125: org.cirruslabs.ci.services.cirruscigrpc.Task.Metadata
+	nil,                                    // 126: org.cirruslabs.ci.services.cirruscigrpc.Task.EnvironmentEntry
+	nil,                                    // 127: org.cirruslabs.ci.services.cirruscigrpc.Task.Metadata.PropertiesEntry
+	nil,                                    // 128: org.cirruslabs.ci.services.cirruscigrpc.Command.PropertiesEntry
+	nil,                                    // 129: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.DockerArgumentsEntry
+	nil,                                    // 130: org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer.EnvironmentEntry
+	nil,                                    // 131: org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance.ArgumentsEntry
+	(*Isolation_None)(nil),                 // 132: org.cirruslabs.ci.services.cirruscigrpc.Isolation.None
+	(*Isolation_Parallels)(nil),            // 133: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Parallels
+	(*Isolation_Container)(nil),            // 134: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container
+	(*Isolation_Tart)(nil),                 // 135: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Tart
+	(*Isolation_Vetu)(nil),                 // 136: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu
+	nil,                                    // 137: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container.DockerArgumentsEntry
+	(*Isolation_Tart_Volume)(nil),          // 138: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Tart.Volume
+	(*Isolation_Vetu_Bridged)(nil),         // 139: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.Bridged
+	(*Isolation_Vetu_Host)(nil),            // 140: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.Host
+	nil,                                    // 141: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.LabelsEntry
+	nil,                                    // 142: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.ResourcesEntry
+	nil,                                    // 143: org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse.ExtraHeadersEntry
+	(*descriptorpb.FileDescriptorSet)(nil), // 144: google.protobuf.FileDescriptorSet
+	(*descriptorpb.FieldDescriptorProto)(nil), // 145: google.protobuf.FieldDescriptorProto
+	(*structpb.ListValue)(nil),                // 146: google.protobuf.ListValue
+	(*structpb.Value)(nil),                    // 147: google.protobuf.Value
+	(*anypb.Any)(nil),                         // 148: google.protobuf.Any
+	(*emptypb.Empty)(nil),                     // 149: google.protobuf.Empty
 }
 var file_api_cirrus_ci_service_proto_depIdxs = []int32{
 	9,   // 0: org.cirruslabs.ci.services.cirruscigrpc.CapabilitiesResponse.supported_instances:type_name -> org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo
-	98,  // 1: org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo.instances:type_name -> org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo.InstancesEntry
-	143, // 2: org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo.descriptor_set:type_name -> google.protobuf.FileDescriptorSet
-	99,  // 3: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest.environment:type_name -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest.EnvironmentEntry
+	99,  // 1: org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo.instances:type_name -> org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo.InstancesEntry
+	144, // 2: org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo.descriptor_set:type_name -> google.protobuf.FileDescriptorSet
+	100, // 3: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest.environment:type_name -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest.EnvironmentEntry
 	9,   // 4: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest.additional_instances_info:type_name -> org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo
-	144, // 5: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest.additional_task_properties:type_name -> google.protobuf.FieldDescriptorProto
+	145, // 5: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest.additional_task_properties:type_name -> google.protobuf.FieldDescriptorProto
 	11,  // 6: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest.fs:type_name -> org.cirruslabs.ci.services.cirruscigrpc.FileSystem
-	100, // 7: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.memory:type_name -> org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Memory
-	101, // 8: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.github:type_name -> org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Github
-	75,  // 9: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigResponse.tasks:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Task
+	101, // 7: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.memory:type_name -> org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Memory
+	102, // 8: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.github:type_name -> org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Github
+	76,  // 9: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigResponse.tasks:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Task
 	14,  // 10: org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigResponse.issues:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Issue
 	3,   // 11: org.cirruslabs.ci.services.cirruscigrpc.Issue.level:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Issue.Level
 	9,   // 12: org.cirruslabs.ci.services.cirruscigrpc.JSONSchemaRequest.additional_instances_info:type_name -> org.cirruslabs.ci.services.cirruscigrpc.AdditionalInstancesInfo
-	145, // 13: org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest.arguments:type_name -> google.protobuf.ListValue
-	103, // 14: org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest.environment:type_name -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest.EnvironmentEntry
+	146, // 13: org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest.arguments:type_name -> google.protobuf.ListValue
+	104, // 14: org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest.environment:type_name -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest.EnvironmentEntry
 	11,  // 15: org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest.fs:type_name -> org.cirruslabs.ci.services.cirruscigrpc.FileSystem
-	146, // 16: org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionResponse.result:type_name -> google.protobuf.Value
-	27,  // 17: org.cirruslabs.ci.services.cirruscigrpc.RegisterRequest.worker_info:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo
-	27,  // 18: org.cirruslabs.ci.services.cirruscigrpc.PollRequest.worker_info:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo
-	104, // 19: org.cirruslabs.ci.services.cirruscigrpc.PollRequest.resources_in_use:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PollRequest.ResourcesInUseEntry
-	27,  // 20: org.cirruslabs.ci.services.cirruscigrpc.QueryRunningTasksRequest.info:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo
-	29,  // 21: org.cirruslabs.ci.services.cirruscigrpc.QueryRunningTasksResponse.status:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerStatus
-	37,  // 22: org.cirruslabs.ci.services.cirruscigrpc.TaskFailedRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	105, // 23: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.tasks_to_start:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask
-	92,  // 24: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.isolation:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation
-	108, // 25: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.resources:type_name -> org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.ResourcesEntry
-	107, // 26: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.warmup:type_name -> org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.Warmup
-	109, // 27: org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.labels:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.LabelsEntry
-	110, // 28: org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.resources_total:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.ResourcesTotalEntry
-	42,  // 29: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadPartRequest.cache_key:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
-	42,  // 30: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest.cache_key:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
-	111, // 31: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest.parts:type_name -> org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest.Part
-	37,  // 32: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalAttachedRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	37,  // 33: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	112, // 34: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.started:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.Started
-	113, // 35: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.expiring:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.Expiring
-	37,  // 36: org.cirruslabs.ci.services.cirruscigrpc.InitialCommandsRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	114, // 37: org.cirruslabs.ci.services.cirruscigrpc.LogEntry.key:type_name -> org.cirruslabs.ci.services.cirruscigrpc.LogEntry.LogKey
-	38,  // 38: org.cirruslabs.ci.services.cirruscigrpc.LogEntry.chunk:type_name -> org.cirruslabs.ci.services.cirruscigrpc.DataChunk
-	37,  // 39: org.cirruslabs.ci.services.cirruscigrpc.CacheKey.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	42,  // 40: org.cirruslabs.ci.services.cirruscigrpc.CacheEntry.key:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
-	38,  // 41: org.cirruslabs.ci.services.cirruscigrpc.CacheEntry.chunk:type_name -> org.cirruslabs.ci.services.cirruscigrpc.DataChunk
-	115, // 42: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.artifacts_upload:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.ArtifactsUpload
-	116, // 43: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.chunk:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.ArtifactChunk
-	37,  // 44: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	47,  // 45: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsRequest.files:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactFileInfo
-	117, // 46: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.urls:type_name -> org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.UploadURL
-	37,  // 47: org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	47,  // 48: org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsRequest.files:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactFileInfo
-	37,  // 49: org.cirruslabs.ci.services.cirruscigrpc.DownloadCacheRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	119, // 50: org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse.environment:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse.EnvironmentEntry
-	76,  // 51: org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse.commands:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Command
-	37,  // 52: org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	72,  // 53: org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesRequest.updates:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CommandResult
-	37,  // 54: org.cirruslabs.ci.services.cirruscigrpc.ReportAnnotationsCommandRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	57,  // 55: org.cirruslabs.ci.services.cirruscigrpc.ReportAnnotationsCommandRequest.annotations:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Annotation
-	5,   // 56: org.cirruslabs.ci.services.cirruscigrpc.Annotation.type:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Annotation.Type
-	4,   // 57: org.cirruslabs.ci.services.cirruscigrpc.Annotation.level:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Annotation.Level
-	120, // 58: org.cirruslabs.ci.services.cirruscigrpc.Annotation.file_location:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Annotation.FileLocation
-	37,  // 59: org.cirruslabs.ci.services.cirruscigrpc.HeartbeatRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	37,  // 60: org.cirruslabs.ci.services.cirruscigrpc.CacheInfoRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	61,  // 61: org.cirruslabs.ci.services.cirruscigrpc.CacheInfoResponse.info:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheInfo
-	37,  // 62: org.cirruslabs.ci.services.cirruscigrpc.DeleteCacheRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	37,  // 63: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentProblemRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	37,  // 64: org.cirruslabs.ci.services.cirruscigrpc.ReportStopHookRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	37,  // 65: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentSignalRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	37,  // 66: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentLogsRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	121, // 67: org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.hit:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.Hit
-	122, // 68: org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.miss:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.Miss
-	71,  // 69: org.cirruslabs.ci.services.cirruscigrpc.ResourceUtilization.cpu_chart:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ChartPoint
-	71,  // 70: org.cirruslabs.ci.services.cirruscigrpc.ResourceUtilization.memory_chart:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ChartPoint
-	0,   // 71: org.cirruslabs.ci.services.cirruscigrpc.CommandResult.status:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Status
-	37,  // 72: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	123, // 73: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.cacheRetrievalAttempts:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.CacheRetrievalAttemptsEntry
-	72,  // 74: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.command_results:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CommandResult
-	70,  // 75: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.resource_utilization:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ResourceUtilization
-	0,   // 76: org.cirruslabs.ci.services.cirruscigrpc.Task.status:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Status
-	125, // 77: org.cirruslabs.ci.services.cirruscigrpc.Task.environment:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Task.EnvironmentEntry
-	124, // 78: org.cirruslabs.ci.services.cirruscigrpc.Task.metadata:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Task.Metadata
-	76,  // 79: org.cirruslabs.ci.services.cirruscigrpc.Task.commands:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Command
-	147, // 80: org.cirruslabs.ci.services.cirruscigrpc.Task.instance:type_name -> google.protobuf.Any
-	77,  // 81: org.cirruslabs.ci.services.cirruscigrpc.Command.exit_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ExitInstruction
-	78,  // 82: org.cirruslabs.ci.services.cirruscigrpc.Command.script_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ScriptInstruction
-	79,  // 83: org.cirruslabs.ci.services.cirruscigrpc.Command.background_script_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.BackgroundScriptInstruction
-	80,  // 84: org.cirruslabs.ci.services.cirruscigrpc.Command.cache_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheInstruction
-	81,  // 85: org.cirruslabs.ci.services.cirruscigrpc.Command.upload_cache_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.UploadCacheInstruction
-	82,  // 86: org.cirruslabs.ci.services.cirruscigrpc.Command.clone_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CloneInstruction
-	83,  // 87: org.cirruslabs.ci.services.cirruscigrpc.Command.file_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.FileInstruction
-	84,  // 88: org.cirruslabs.ci.services.cirruscigrpc.Command.artifacts_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactsInstruction
-	85,  // 89: org.cirruslabs.ci.services.cirruscigrpc.Command.wait_for_terminal_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WaitForTerminalInstruction
-	6,   // 90: org.cirruslabs.ci.services.cirruscigrpc.Command.execution_behaviour:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Command.CommandExecutionBehavior
-	127, // 91: org.cirruslabs.ci.services.cirruscigrpc.Command.properties:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Command.PropertiesEntry
-	89,  // 92: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.additional_containers:type_name -> org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer
-	1,   // 93: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.platform:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Platform
-	128, // 94: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.docker_arguments:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.DockerArgumentsEntry
-	2,   // 95: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.architecture:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Architecture
-	129, // 96: org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer.environment:type_name -> org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer.EnvironmentEntry
-	88,  // 97: org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer.ports:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PortMapping
-	1,   // 98: org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance.platform:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Platform
-	130, // 99: org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance.arguments:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance.ArgumentsEntry
-	131, // 100: org.cirruslabs.ci.services.cirruscigrpc.Isolation.none:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.None
-	132, // 101: org.cirruslabs.ci.services.cirruscigrpc.Isolation.parallels:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Parallels
-	133, // 102: org.cirruslabs.ci.services.cirruscigrpc.Isolation.container:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container
-	134, // 103: org.cirruslabs.ci.services.cirruscigrpc.Isolation.tart:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Tart
-	135, // 104: org.cirruslabs.ci.services.cirruscigrpc.Isolation.vetu:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu
-	140, // 105: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.labels:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.LabelsEntry
-	92,  // 106: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.isolation:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation
-	141, // 107: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.resources:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.ResourcesEntry
-	1,   // 108: org.cirruslabs.ci.services.cirruscigrpc.DockerBuilder.platform:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Platform
-	142, // 109: org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse.extra_headers:type_name -> org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse.ExtraHeadersEntry
-	102, // 110: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Memory.filesContents:type_name -> org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Memory.FilesContentsEntry
-	92,  // 111: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask.isolation:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation
-	106, // 112: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask.resources_to_use:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask.ResourcesToUseEntry
-	37,  // 113: org.cirruslabs.ci.services.cirruscigrpc.LogEntry.LogKey.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	37,  // 114: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.ArtifactsUpload.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	118, // 115: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.UploadURL.headers:type_name -> org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.UploadURL.HeadersEntry
-	69,  // 116: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.CacheRetrievalAttemptsEntry.value:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt
-	126, // 117: org.cirruslabs.ci.services.cirruscigrpc.Task.Metadata.properties:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Task.Metadata.PropertiesEntry
-	1,   // 118: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Parallels.platform:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Platform
-	91,  // 119: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container.volumes:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Volume
-	136, // 120: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container.docker_arguments:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container.DockerArgumentsEntry
-	1,   // 121: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container.platform:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Platform
-	137, // 122: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Tart.volumes:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Tart.Volume
-	138, // 123: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.bridged:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.Bridged
-	139, // 124: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.host:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.Host
-	10,  // 125: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.EvaluateConfig:input_type -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest
-	15,  // 126: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.JSONSchema:input_type -> org.cirruslabs.ci.services.cirruscigrpc.JSONSchemaRequest
-	17,  // 127: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.EvaluateFunction:input_type -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest
-	7,   // 128: org.cirruslabs.ci.services.cirruscigrpc.CirrusRemoteExecutorService.Capabilities:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CapabilitiesRequest
-	19,  // 129: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.Register:input_type -> org.cirruslabs.ci.services.cirruscigrpc.RegisterRequest
-	21,  // 130: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.Poll:input_type -> org.cirruslabs.ci.services.cirruscigrpc.PollRequest
-	37,  // 131: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskStarted:input_type -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	24,  // 132: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskFailed:input_type -> org.cirruslabs.ci.services.cirruscigrpc.TaskFailedRequest
-	37,  // 133: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskStopped:input_type -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
-	28,  // 134: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.UpdateStatus:input_type -> org.cirruslabs.ci.services.cirruscigrpc.UpdateStatusRequest
-	22,  // 135: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.QueryRunningTasks:input_type -> org.cirruslabs.ci.services.cirruscigrpc.QueryRunningTasksRequest
-	39,  // 136: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.InitialCommands:input_type -> org.cirruslabs.ci.services.cirruscigrpc.InitialCommandsRequest
-	54,  // 137: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportCommandUpdates:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesRequest
-	56,  // 138: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAnnotations:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAnnotationsCommandRequest
-	40,  // 139: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.StreamLogs:input_type -> org.cirruslabs.ci.services.cirruscigrpc.LogEntry
-	40,  // 140: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.SaveLogs:input_type -> org.cirruslabs.ci.services.cirruscigrpc.LogEntry
-	43,  // 141: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.UploadCache:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheEntry
-	45,  // 142: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.UploadArtifacts:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry
-	48,  // 143: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateArtifactUploadURLs:input_type -> org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsRequest
-	50,  // 144: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.CommitUploadedArtifacts:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsRequest
-	52,  // 145: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.DownloadCache:input_type -> org.cirruslabs.ci.services.cirruscigrpc.DownloadCacheRequest
-	60,  // 146: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.CacheInfo:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheInfoRequest
-	63,  // 147: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.DeleteCache:input_type -> org.cirruslabs.ci.services.cirruscigrpc.DeleteCacheRequest
-	58,  // 148: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.Heartbeat:input_type -> org.cirruslabs.ci.services.cirruscigrpc.HeartbeatRequest
-	66,  // 149: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportStopHook:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportStopHookRequest
-	65,  // 150: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentError:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentProblemRequest
-	65,  // 151: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentWarning:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentProblemRequest
-	67,  // 152: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentSignal:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentSignalRequest
-	68,  // 153: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentLogs:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentLogsRequest
-	73,  // 154: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentFinished:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest
-	33,  // 155: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportTerminalAttached:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalAttachedRequest
-	35,  // 156: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportTerminalLifecycle:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest
-	42,  // 157: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateCacheUploadURL:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
-	42,  // 158: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateCacheDownloadURLs:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
-	42,  // 159: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadCreate:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
-	31,  // 160: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadPart:input_type -> org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadPartRequest
-	32,  // 161: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadCommit:input_type -> org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest
-	12,  // 162: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.EvaluateConfig:output_type -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigResponse
-	16,  // 163: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.JSONSchema:output_type -> org.cirruslabs.ci.services.cirruscigrpc.JSONSchemaResponse
-	18,  // 164: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.EvaluateFunction:output_type -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionResponse
-	8,   // 165: org.cirruslabs.ci.services.cirruscigrpc.CirrusRemoteExecutorService.Capabilities:output_type -> org.cirruslabs.ci.services.cirruscigrpc.CapabilitiesResponse
-	20,  // 166: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.Register:output_type -> org.cirruslabs.ci.services.cirruscigrpc.RegisterResponse
-	25,  // 167: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.Poll:output_type -> org.cirruslabs.ci.services.cirruscigrpc.PollResponse
-	148, // 168: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskStarted:output_type -> google.protobuf.Empty
-	148, // 169: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskFailed:output_type -> google.protobuf.Empty
-	148, // 170: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskStopped:output_type -> google.protobuf.Empty
-	29,  // 171: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.UpdateStatus:output_type -> org.cirruslabs.ci.services.cirruscigrpc.WorkerStatus
-	23,  // 172: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.QueryRunningTasks:output_type -> org.cirruslabs.ci.services.cirruscigrpc.QueryRunningTasksResponse
-	53,  // 173: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.InitialCommands:output_type -> org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse
-	55,  // 174: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportCommandUpdates:output_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesResponse
-	148, // 175: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAnnotations:output_type -> google.protobuf.Empty
-	41,  // 176: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.StreamLogs:output_type -> org.cirruslabs.ci.services.cirruscigrpc.UploadLogsResponse
-	41,  // 177: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.SaveLogs:output_type -> org.cirruslabs.ci.services.cirruscigrpc.UploadLogsResponse
-	44,  // 178: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.UploadCache:output_type -> org.cirruslabs.ci.services.cirruscigrpc.UploadCacheResponse
-	46,  // 179: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.UploadArtifacts:output_type -> org.cirruslabs.ci.services.cirruscigrpc.UploadArtifactsResponse
-	49,  // 180: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateArtifactUploadURLs:output_type -> org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse
-	51,  // 181: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.CommitUploadedArtifacts:output_type -> org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsResponse
-	38,  // 182: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.DownloadCache:output_type -> org.cirruslabs.ci.services.cirruscigrpc.DataChunk
-	62,  // 183: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.CacheInfo:output_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheInfoResponse
-	64,  // 184: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.DeleteCache:output_type -> org.cirruslabs.ci.services.cirruscigrpc.DeleteCacheResponse
-	59,  // 185: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.Heartbeat:output_type -> org.cirruslabs.ci.services.cirruscigrpc.HeartbeatResponse
-	148, // 186: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportStopHook:output_type -> google.protobuf.Empty
-	148, // 187: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentError:output_type -> google.protobuf.Empty
-	148, // 188: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentWarning:output_type -> google.protobuf.Empty
-	148, // 189: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentSignal:output_type -> google.protobuf.Empty
-	148, // 190: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentLogs:output_type -> google.protobuf.Empty
-	74,  // 191: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentFinished:output_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedResponse
-	34,  // 192: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportTerminalAttached:output_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalAttachedResponse
-	36,  // 193: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportTerminalLifecycle:output_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleResponse
-	96,  // 194: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateCacheUploadURL:output_type -> org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse
-	97,  // 195: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateCacheDownloadURLs:output_type -> org.cirruslabs.ci.services.cirruscigrpc.GenerateURLsResponse
-	30,  // 196: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadCreate:output_type -> org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCreateResponse
-	96,  // 197: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadPart:output_type -> org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse
-	148, // 198: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadCommit:output_type -> google.protobuf.Empty
-	162, // [162:199] is the sub-list for method output_type
-	125, // [125:162] is the sub-list for method input_type
-	125, // [125:125] is the sub-list for extension type_name
-	125, // [125:125] is the sub-list for extension extendee
-	0,   // [0:125] is the sub-list for field type_name
+	147, // 16: org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionResponse.result:type_name -> google.protobuf.Value
+	28,  // 17: org.cirruslabs.ci.services.cirruscigrpc.RegisterRequest.worker_info:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo
+	28,  // 18: org.cirruslabs.ci.services.cirruscigrpc.PollRequest.worker_info:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo
+	105, // 19: org.cirruslabs.ci.services.cirruscigrpc.PollRequest.resources_in_use:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PollRequest.ResourcesInUseEntry
+	26,  // 20: org.cirruslabs.ci.services.cirruscigrpc.PollRequest.availableStandbyInstanceInformation:type_name -> org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceInformation
+	28,  // 21: org.cirruslabs.ci.services.cirruscigrpc.QueryRunningTasksRequest.info:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo
+	30,  // 22: org.cirruslabs.ci.services.cirruscigrpc.QueryRunningTasksResponse.status:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerStatus
+	38,  // 23: org.cirruslabs.ci.services.cirruscigrpc.TaskFailedRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	106, // 24: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.tasks_to_start:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask
+	27,  // 25: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.updated_standby_instance_parameters:type_name -> org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters
+	27,  // 26: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceInformation.parameters:type_name -> org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters
+	93,  // 27: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.isolation:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation
+	109, // 28: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.resources:type_name -> org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.ResourcesEntry
+	108, // 29: org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.warmup:type_name -> org.cirruslabs.ci.services.cirruscigrpc.StandbyInstanceParameters.Warmup
+	110, // 30: org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.labels:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.LabelsEntry
+	111, // 31: org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.resources_total:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WorkerInfo.ResourcesTotalEntry
+	43,  // 32: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadPartRequest.cache_key:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
+	43,  // 33: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest.cache_key:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
+	112, // 34: org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest.parts:type_name -> org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest.Part
+	38,  // 35: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalAttachedRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	38,  // 36: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	113, // 37: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.started:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.Started
+	114, // 38: org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.expiring:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest.Expiring
+	38,  // 39: org.cirruslabs.ci.services.cirruscigrpc.InitialCommandsRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	115, // 40: org.cirruslabs.ci.services.cirruscigrpc.LogEntry.key:type_name -> org.cirruslabs.ci.services.cirruscigrpc.LogEntry.LogKey
+	39,  // 41: org.cirruslabs.ci.services.cirruscigrpc.LogEntry.chunk:type_name -> org.cirruslabs.ci.services.cirruscigrpc.DataChunk
+	38,  // 42: org.cirruslabs.ci.services.cirruscigrpc.CacheKey.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	43,  // 43: org.cirruslabs.ci.services.cirruscigrpc.CacheEntry.key:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
+	39,  // 44: org.cirruslabs.ci.services.cirruscigrpc.CacheEntry.chunk:type_name -> org.cirruslabs.ci.services.cirruscigrpc.DataChunk
+	116, // 45: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.artifacts_upload:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.ArtifactsUpload
+	117, // 46: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.chunk:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.ArtifactChunk
+	38,  // 47: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	48,  // 48: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsRequest.files:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactFileInfo
+	118, // 49: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.urls:type_name -> org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.UploadURL
+	38,  // 50: org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	48,  // 51: org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsRequest.files:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactFileInfo
+	38,  // 52: org.cirruslabs.ci.services.cirruscigrpc.DownloadCacheRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	120, // 53: org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse.environment:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse.EnvironmentEntry
+	77,  // 54: org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse.commands:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Command
+	38,  // 55: org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	73,  // 56: org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesRequest.updates:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CommandResult
+	38,  // 57: org.cirruslabs.ci.services.cirruscigrpc.ReportAnnotationsCommandRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	58,  // 58: org.cirruslabs.ci.services.cirruscigrpc.ReportAnnotationsCommandRequest.annotations:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Annotation
+	5,   // 59: org.cirruslabs.ci.services.cirruscigrpc.Annotation.type:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Annotation.Type
+	4,   // 60: org.cirruslabs.ci.services.cirruscigrpc.Annotation.level:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Annotation.Level
+	121, // 61: org.cirruslabs.ci.services.cirruscigrpc.Annotation.file_location:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Annotation.FileLocation
+	38,  // 62: org.cirruslabs.ci.services.cirruscigrpc.HeartbeatRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	38,  // 63: org.cirruslabs.ci.services.cirruscigrpc.CacheInfoRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	62,  // 64: org.cirruslabs.ci.services.cirruscigrpc.CacheInfoResponse.info:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheInfo
+	38,  // 65: org.cirruslabs.ci.services.cirruscigrpc.DeleteCacheRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	38,  // 66: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentProblemRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	38,  // 67: org.cirruslabs.ci.services.cirruscigrpc.ReportStopHookRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	38,  // 68: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentSignalRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	38,  // 69: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentLogsRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	122, // 70: org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.hit:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.Hit
+	123, // 71: org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.miss:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt.Miss
+	72,  // 72: org.cirruslabs.ci.services.cirruscigrpc.ResourceUtilization.cpu_chart:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ChartPoint
+	72,  // 73: org.cirruslabs.ci.services.cirruscigrpc.ResourceUtilization.memory_chart:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ChartPoint
+	0,   // 74: org.cirruslabs.ci.services.cirruscigrpc.CommandResult.status:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Status
+	38,  // 75: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	124, // 76: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.cacheRetrievalAttempts:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.CacheRetrievalAttemptsEntry
+	73,  // 77: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.command_results:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CommandResult
+	71,  // 78: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.resource_utilization:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ResourceUtilization
+	0,   // 79: org.cirruslabs.ci.services.cirruscigrpc.Task.status:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Status
+	126, // 80: org.cirruslabs.ci.services.cirruscigrpc.Task.environment:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Task.EnvironmentEntry
+	125, // 81: org.cirruslabs.ci.services.cirruscigrpc.Task.metadata:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Task.Metadata
+	77,  // 82: org.cirruslabs.ci.services.cirruscigrpc.Task.commands:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Command
+	148, // 83: org.cirruslabs.ci.services.cirruscigrpc.Task.instance:type_name -> google.protobuf.Any
+	78,  // 84: org.cirruslabs.ci.services.cirruscigrpc.Command.exit_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ExitInstruction
+	79,  // 85: org.cirruslabs.ci.services.cirruscigrpc.Command.script_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ScriptInstruction
+	80,  // 86: org.cirruslabs.ci.services.cirruscigrpc.Command.background_script_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.BackgroundScriptInstruction
+	81,  // 87: org.cirruslabs.ci.services.cirruscigrpc.Command.cache_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheInstruction
+	82,  // 88: org.cirruslabs.ci.services.cirruscigrpc.Command.upload_cache_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.UploadCacheInstruction
+	83,  // 89: org.cirruslabs.ci.services.cirruscigrpc.Command.clone_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CloneInstruction
+	84,  // 90: org.cirruslabs.ci.services.cirruscigrpc.Command.file_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.FileInstruction
+	85,  // 91: org.cirruslabs.ci.services.cirruscigrpc.Command.artifacts_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactsInstruction
+	86,  // 92: org.cirruslabs.ci.services.cirruscigrpc.Command.wait_for_terminal_instruction:type_name -> org.cirruslabs.ci.services.cirruscigrpc.WaitForTerminalInstruction
+	6,   // 93: org.cirruslabs.ci.services.cirruscigrpc.Command.execution_behaviour:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Command.CommandExecutionBehavior
+	128, // 94: org.cirruslabs.ci.services.cirruscigrpc.Command.properties:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Command.PropertiesEntry
+	90,  // 95: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.additional_containers:type_name -> org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer
+	1,   // 96: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.platform:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Platform
+	129, // 97: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.docker_arguments:type_name -> org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.DockerArgumentsEntry
+	2,   // 98: org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance.architecture:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Architecture
+	130, // 99: org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer.environment:type_name -> org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer.EnvironmentEntry
+	89,  // 100: org.cirruslabs.ci.services.cirruscigrpc.AdditionalContainer.ports:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PortMapping
+	1,   // 101: org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance.platform:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Platform
+	131, // 102: org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance.arguments:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance.ArgumentsEntry
+	132, // 103: org.cirruslabs.ci.services.cirruscigrpc.Isolation.none:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.None
+	133, // 104: org.cirruslabs.ci.services.cirruscigrpc.Isolation.parallels:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Parallels
+	134, // 105: org.cirruslabs.ci.services.cirruscigrpc.Isolation.container:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container
+	135, // 106: org.cirruslabs.ci.services.cirruscigrpc.Isolation.tart:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Tart
+	136, // 107: org.cirruslabs.ci.services.cirruscigrpc.Isolation.vetu:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu
+	141, // 108: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.labels:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.LabelsEntry
+	93,  // 109: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.isolation:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation
+	142, // 110: org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.resources:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PersistentWorkerInstance.ResourcesEntry
+	1,   // 111: org.cirruslabs.ci.services.cirruscigrpc.DockerBuilder.platform:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Platform
+	143, // 112: org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse.extra_headers:type_name -> org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse.ExtraHeadersEntry
+	103, // 113: org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Memory.filesContents:type_name -> org.cirruslabs.ci.services.cirruscigrpc.FileSystem.Memory.FilesContentsEntry
+	93,  // 114: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask.isolation:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation
+	107, // 115: org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask.resources_to_use:type_name -> org.cirruslabs.ci.services.cirruscigrpc.PollResponse.AgentAwareTask.ResourcesToUseEntry
+	38,  // 116: org.cirruslabs.ci.services.cirruscigrpc.LogEntry.LogKey.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	38,  // 117: org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry.ArtifactsUpload.task_identification:type_name -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	119, // 118: org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.UploadURL.headers:type_name -> org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse.UploadURL.HeadersEntry
+	70,  // 119: org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest.CacheRetrievalAttemptsEntry.value:type_name -> org.cirruslabs.ci.services.cirruscigrpc.CacheRetrievalAttempt
+	127, // 120: org.cirruslabs.ci.services.cirruscigrpc.Task.Metadata.properties:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Task.Metadata.PropertiesEntry
+	1,   // 121: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Parallels.platform:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Platform
+	92,  // 122: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container.volumes:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Volume
+	137, // 123: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container.docker_arguments:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container.DockerArgumentsEntry
+	1,   // 124: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Container.platform:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Platform
+	138, // 125: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Tart.volumes:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Tart.Volume
+	139, // 126: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.bridged:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.Bridged
+	140, // 127: org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.host:type_name -> org.cirruslabs.ci.services.cirruscigrpc.Isolation.Vetu.Host
+	10,  // 128: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.EvaluateConfig:input_type -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigRequest
+	15,  // 129: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.JSONSchema:input_type -> org.cirruslabs.ci.services.cirruscigrpc.JSONSchemaRequest
+	17,  // 130: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.EvaluateFunction:input_type -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionRequest
+	7,   // 131: org.cirruslabs.ci.services.cirruscigrpc.CirrusRemoteExecutorService.Capabilities:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CapabilitiesRequest
+	19,  // 132: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.Register:input_type -> org.cirruslabs.ci.services.cirruscigrpc.RegisterRequest
+	21,  // 133: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.Poll:input_type -> org.cirruslabs.ci.services.cirruscigrpc.PollRequest
+	38,  // 134: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskStarted:input_type -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	24,  // 135: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskFailed:input_type -> org.cirruslabs.ci.services.cirruscigrpc.TaskFailedRequest
+	38,  // 136: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskStopped:input_type -> org.cirruslabs.ci.services.cirruscigrpc.TaskIdentification
+	29,  // 137: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.UpdateStatus:input_type -> org.cirruslabs.ci.services.cirruscigrpc.UpdateStatusRequest
+	22,  // 138: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.QueryRunningTasks:input_type -> org.cirruslabs.ci.services.cirruscigrpc.QueryRunningTasksRequest
+	40,  // 139: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.InitialCommands:input_type -> org.cirruslabs.ci.services.cirruscigrpc.InitialCommandsRequest
+	55,  // 140: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportCommandUpdates:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesRequest
+	57,  // 141: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAnnotations:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAnnotationsCommandRequest
+	41,  // 142: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.StreamLogs:input_type -> org.cirruslabs.ci.services.cirruscigrpc.LogEntry
+	41,  // 143: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.SaveLogs:input_type -> org.cirruslabs.ci.services.cirruscigrpc.LogEntry
+	44,  // 144: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.UploadCache:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheEntry
+	46,  // 145: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.UploadArtifacts:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ArtifactEntry
+	49,  // 146: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateArtifactUploadURLs:input_type -> org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsRequest
+	51,  // 147: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.CommitUploadedArtifacts:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsRequest
+	53,  // 148: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.DownloadCache:input_type -> org.cirruslabs.ci.services.cirruscigrpc.DownloadCacheRequest
+	61,  // 149: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.CacheInfo:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheInfoRequest
+	64,  // 150: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.DeleteCache:input_type -> org.cirruslabs.ci.services.cirruscigrpc.DeleteCacheRequest
+	59,  // 151: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.Heartbeat:input_type -> org.cirruslabs.ci.services.cirruscigrpc.HeartbeatRequest
+	67,  // 152: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportStopHook:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportStopHookRequest
+	66,  // 153: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentError:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentProblemRequest
+	66,  // 154: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentWarning:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentProblemRequest
+	68,  // 155: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentSignal:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentSignalRequest
+	69,  // 156: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentLogs:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentLogsRequest
+	74,  // 157: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentFinished:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedRequest
+	34,  // 158: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportTerminalAttached:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalAttachedRequest
+	36,  // 159: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportTerminalLifecycle:input_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleRequest
+	43,  // 160: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateCacheUploadURL:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
+	43,  // 161: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateCacheDownloadURLs:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
+	43,  // 162: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadCreate:input_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheKey
+	32,  // 163: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadPart:input_type -> org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadPartRequest
+	33,  // 164: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadCommit:input_type -> org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCommitRequest
+	12,  // 165: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.EvaluateConfig:output_type -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateConfigResponse
+	16,  // 166: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.JSONSchema:output_type -> org.cirruslabs.ci.services.cirruscigrpc.JSONSchemaResponse
+	18,  // 167: org.cirruslabs.ci.services.cirruscigrpc.CirrusConfigurationEvaluatorService.EvaluateFunction:output_type -> org.cirruslabs.ci.services.cirruscigrpc.EvaluateFunctionResponse
+	8,   // 168: org.cirruslabs.ci.services.cirruscigrpc.CirrusRemoteExecutorService.Capabilities:output_type -> org.cirruslabs.ci.services.cirruscigrpc.CapabilitiesResponse
+	20,  // 169: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.Register:output_type -> org.cirruslabs.ci.services.cirruscigrpc.RegisterResponse
+	25,  // 170: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.Poll:output_type -> org.cirruslabs.ci.services.cirruscigrpc.PollResponse
+	149, // 171: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskStarted:output_type -> google.protobuf.Empty
+	149, // 172: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskFailed:output_type -> google.protobuf.Empty
+	149, // 173: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.TaskStopped:output_type -> google.protobuf.Empty
+	30,  // 174: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.UpdateStatus:output_type -> org.cirruslabs.ci.services.cirruscigrpc.WorkerStatus
+	23,  // 175: org.cirruslabs.ci.services.cirruscigrpc.CirrusWorkersService.QueryRunningTasks:output_type -> org.cirruslabs.ci.services.cirruscigrpc.QueryRunningTasksResponse
+	54,  // 176: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.InitialCommands:output_type -> org.cirruslabs.ci.services.cirruscigrpc.CommandsResponse
+	56,  // 177: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportCommandUpdates:output_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportCommandUpdatesResponse
+	149, // 178: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAnnotations:output_type -> google.protobuf.Empty
+	42,  // 179: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.StreamLogs:output_type -> org.cirruslabs.ci.services.cirruscigrpc.UploadLogsResponse
+	42,  // 180: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.SaveLogs:output_type -> org.cirruslabs.ci.services.cirruscigrpc.UploadLogsResponse
+	45,  // 181: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.UploadCache:output_type -> org.cirruslabs.ci.services.cirruscigrpc.UploadCacheResponse
+	47,  // 182: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.UploadArtifacts:output_type -> org.cirruslabs.ci.services.cirruscigrpc.UploadArtifactsResponse
+	50,  // 183: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateArtifactUploadURLs:output_type -> org.cirruslabs.ci.services.cirruscigrpc.GenerateArtifactUploadURLsResponse
+	52,  // 184: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.CommitUploadedArtifacts:output_type -> org.cirruslabs.ci.services.cirruscigrpc.CommitUploadedArtifactsResponse
+	39,  // 185: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.DownloadCache:output_type -> org.cirruslabs.ci.services.cirruscigrpc.DataChunk
+	63,  // 186: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.CacheInfo:output_type -> org.cirruslabs.ci.services.cirruscigrpc.CacheInfoResponse
+	65,  // 187: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.DeleteCache:output_type -> org.cirruslabs.ci.services.cirruscigrpc.DeleteCacheResponse
+	60,  // 188: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.Heartbeat:output_type -> org.cirruslabs.ci.services.cirruscigrpc.HeartbeatResponse
+	149, // 189: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportStopHook:output_type -> google.protobuf.Empty
+	149, // 190: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentError:output_type -> google.protobuf.Empty
+	149, // 191: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentWarning:output_type -> google.protobuf.Empty
+	149, // 192: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentSignal:output_type -> google.protobuf.Empty
+	149, // 193: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentLogs:output_type -> google.protobuf.Empty
+	75,  // 194: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportAgentFinished:output_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportAgentFinishedResponse
+	35,  // 195: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportTerminalAttached:output_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalAttachedResponse
+	37,  // 196: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.ReportTerminalLifecycle:output_type -> org.cirruslabs.ci.services.cirruscigrpc.ReportTerminalLifecycleResponse
+	97,  // 197: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateCacheUploadURL:output_type -> org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse
+	98,  // 198: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.GenerateCacheDownloadURLs:output_type -> org.cirruslabs.ci.services.cirruscigrpc.GenerateURLsResponse
+	31,  // 199: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadCreate:output_type -> org.cirruslabs.ci.services.cirruscigrpc.MultipartCacheUploadCreateResponse
+	97,  // 200: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadPart:output_type -> org.cirruslabs.ci.services.cirruscigrpc.GenerateURLResponse
+	149, // 201: org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService.MultipartCacheUploadCommit:output_type -> google.protobuf.Empty
+	165, // [165:202] is the sub-list for method output_type
+	128, // [128:165] is the sub-list for method input_type
+	128, // [128:128] is the sub-list for extension type_name
+	128, // [128:128] is the sub-list for extension extendee
+	0,   // [0:128] is the sub-list for field type_name
 }
 
 func init() { file_api_cirrus_ci_service_proto_init() }
@@ -9776,27 +9877,27 @@ func file_api_cirrus_ci_service_proto_init() {
 		(*FileSystem_Memory_)(nil),
 		(*FileSystem_Github_)(nil),
 	}
-	file_api_cirrus_ci_service_proto_msgTypes[28].OneofWrappers = []any{
+	file_api_cirrus_ci_service_proto_msgTypes[29].OneofWrappers = []any{
 		(*ReportTerminalLifecycleRequest_Started_)(nil),
 		(*ReportTerminalLifecycleRequest_Expiring_)(nil),
 	}
-	file_api_cirrus_ci_service_proto_msgTypes[33].OneofWrappers = []any{
+	file_api_cirrus_ci_service_proto_msgTypes[34].OneofWrappers = []any{
 		(*LogEntry_Key)(nil),
 		(*LogEntry_Chunk)(nil),
 	}
-	file_api_cirrus_ci_service_proto_msgTypes[36].OneofWrappers = []any{
+	file_api_cirrus_ci_service_proto_msgTypes[37].OneofWrappers = []any{
 		(*CacheEntry_Key)(nil),
 		(*CacheEntry_Chunk)(nil),
 	}
-	file_api_cirrus_ci_service_proto_msgTypes[38].OneofWrappers = []any{
+	file_api_cirrus_ci_service_proto_msgTypes[39].OneofWrappers = []any{
 		(*ArtifactEntry_ArtifactsUpload_)(nil),
 		(*ArtifactEntry_Chunk)(nil),
 	}
-	file_api_cirrus_ci_service_proto_msgTypes[62].OneofWrappers = []any{
+	file_api_cirrus_ci_service_proto_msgTypes[63].OneofWrappers = []any{
 		(*CacheRetrievalAttempt_Hit_)(nil),
 		(*CacheRetrievalAttempt_Miss_)(nil),
 	}
-	file_api_cirrus_ci_service_proto_msgTypes[69].OneofWrappers = []any{
+	file_api_cirrus_ci_service_proto_msgTypes[70].OneofWrappers = []any{
 		(*Command_ExitInstruction)(nil),
 		(*Command_ScriptInstruction)(nil),
 		(*Command_BackgroundScriptInstruction)(nil),
@@ -9807,18 +9908,18 @@ func file_api_cirrus_ci_service_proto_init() {
 		(*Command_ArtifactsInstruction)(nil),
 		(*Command_WaitForTerminalInstruction)(nil),
 	}
-	file_api_cirrus_ci_service_proto_msgTypes[76].OneofWrappers = []any{
+	file_api_cirrus_ci_service_proto_msgTypes[77].OneofWrappers = []any{
 		(*FileInstruction_FromEnvironmentVariable)(nil),
 		(*FileInstruction_FromContents)(nil),
 	}
-	file_api_cirrus_ci_service_proto_msgTypes[85].OneofWrappers = []any{
+	file_api_cirrus_ci_service_proto_msgTypes[86].OneofWrappers = []any{
 		(*Isolation_None_)(nil),
 		(*Isolation_Parallels_)(nil),
 		(*Isolation_Container_)(nil),
 		(*Isolation_Tart_)(nil),
 		(*Isolation_Vetu_)(nil),
 	}
-	file_api_cirrus_ci_service_proto_msgTypes[128].OneofWrappers = []any{
+	file_api_cirrus_ci_service_proto_msgTypes[129].OneofWrappers = []any{
 		(*Isolation_Vetu_Bridged_)(nil),
 		(*Isolation_Vetu_Host_)(nil),
 	}
@@ -9828,7 +9929,7 @@ func file_api_cirrus_ci_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_cirrus_ci_service_proto_rawDesc,
 			NumEnums:      7,
-			NumMessages:   136,
+			NumMessages:   137,
 			NumExtensions: 0,
 			NumServices:   4,
 		},
