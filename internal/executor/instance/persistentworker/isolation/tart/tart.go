@@ -137,7 +137,8 @@ func (tart *Tart) Warmup(
 	var monitorCtx context.Context
 	var monitorCancel context.CancelFunc
 	if warmup.TimeoutSeconds != 0 {
-		monitorCtx, monitorCancel = context.WithTimeoutCause(ctx, time.Duration(warmup.TimeoutSeconds)*time.Second, abstract.ErrWarmupTimeout)
+		duration := time.Duration(warmup.TimeoutSeconds) * time.Second
+		monitorCtx, monitorCancel = context.WithTimeoutCause(ctx, duration, abstract.ErrWarmupTimeout)
 	} else {
 		monitorCtx, monitorCancel = context.WithCancel(ctx)
 	}
