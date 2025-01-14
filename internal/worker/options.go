@@ -4,6 +4,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/sirupsen/logrus"
 )
 
@@ -39,9 +40,9 @@ func WithSecurity(security *security.Security) Option {
 	}
 }
 
-func WithStandby(standby *StandbyConfig) Option {
+func WithStandby(standby *api.StandbyInstanceParameters) Option {
 	return func(e *Worker) {
-		e.standbyConfig = standby
+		e.standbyParameters = standby
 	}
 }
 

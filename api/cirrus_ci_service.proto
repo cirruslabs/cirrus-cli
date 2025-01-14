@@ -158,6 +158,7 @@ message PollRequest {
   repeated int64 old_running_tasks = 2 [deprecated = true];
   map<string, double> resources_in_use = 3;
   repeated string running_tasks = 4;
+  repeated StandbyInstanceInformation available_standby_instances_information = 5;
 }
 
 message QueryRunningTasksRequest {
@@ -196,6 +197,24 @@ message PollResponse {
   bool shutdown = 4;
 
   repeated string tasks_to_stop = 5;
+
+  repeated StandbyInstanceParameters updated_standby_instances = 6;
+}
+
+message StandbyInstanceInformation {
+  StandbyInstanceParameters parameters = 1;
+  uint64 age_seconds = 2; // since warming up
+}
+
+message StandbyInstanceParameters {
+  message Warmup {
+    string script = 1;
+    uint64 timeout_seconds = 2;
+  }
+
+  Isolation isolation = 1;
+  map<string, double> resources = 2;
+  Warmup warmup = 3;
 }
 
 message WorkerInfo {

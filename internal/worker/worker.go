@@ -20,6 +20,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
+	"google.golang.org/protobuf/proto"
 	"math"
 	"os"
 	"runtime"
@@ -56,7 +57,7 @@ type Worker struct {
 	logger        logrus.FieldLogger
 	echelonLogger *echelon.Logger
 
-	standbyConfig            *StandbyConfig
+	standbyParameters        *api.StandbyInstanceParameters
 	standbyInstance          abstract.Instance
 	standbyInstanceStartedAt time.Time
 
@@ -252,7 +253,7 @@ func (worker *Worker) Run(ctx context.Context) error {
 
 func (worker *Worker) tryCreateStandby(ctx context.Context) {
 	// Do nothing if no standby instance is configured
-	if worker.standbyConfig == nil {
+	if worker.standbyParameters == nil {
 		return
 	}
 
@@ -262,14 +263,14 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 	}
 
 	// Do nothing if there are tasks that are running to simplify the resource management
-	if !worker.canFitResources(worker.standbyConfig.Resources) {
+	if !worker.canFitResources(worker.standbyParameters.Resources) {
 		return
 	}
 
-	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyConfig.Isolation)
+	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyParameters.Isolation)
 
-	standbyInstance, err := persistentworker.New(worker.standbyConfig.Isolation, worker.security,
-		worker.resourceModifierManager.Acquire(worker.standbyConfig.Resources), worker.logger)
+	standbyInstance, err := persistentworker.New(worker.standbyParameters.Isolation, worker.security,
+		worker.resourceModifierManager.Acquire(worker.standbyParameters.Resources), worker.logger)
 	if err != nil {
 		worker.logger.Errorf("failed to create a standby instance: %v", err)
 
@@ -304,7 +305,7 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 	worker.logger.Debugf("warming-up the standby instance")
 
 	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil, lazyPull,
-		worker.standbyConfig.Warmup.Script, worker.standbyConfig.Warmup.Timeout, worker.echelonLogger); err != nil {
+		worker.standbyParameters.Warmup, worker.echelonLogger); err != nil {
 		worker.logger.Errorf("failed to warm-up a standby instance: %v", err)
 
 		if err := standbyInstance.Close(ctx); err != nil {
@@ -339,6 +340,15 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 		ResourcesInUse:  worker.resourcesInUse(),
 	}
 
+	if worker.standbyInstance != nil {
+		request.AvailableStandbyInstancesInformation = []*api.StandbyInstanceInformation{
+			{
+				Parameters: worker.standbyParameters,
+				AgeSeconds: uint64(time.Since(worker.standbyInstanceStartedAt).Seconds()),
+			},
+		}
+	}
+
 	response, err := upstream.Poll(ctx, request)
 	if err != nil {
 		return err
@@ -361,6 +371,10 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 			upstream.Name())
 
 		return ErrShutdown
+	}
+
+	if len(response.UpdatedStandbyInstances) > 0 {
+		worker.UpdateStandby(ctx, response.UpdatedStandbyInstances[0])
 	}
 
 	return nil
@@ -425,4 +439,19 @@ func (worker *Worker) pollIntervalSeconds() uint32 {
 	}
 
 	return result
+}
+
+func (worker *Worker) UpdateStandby(ctx context.Context, parameters *api.StandbyInstanceParameters) {
+	if worker.standbyInstance != nil && !proto.Equal(worker.standbyParameters, parameters) {
+		worker.logger.Infof("terminating the standby instance since the parameters have changed")
+
+		if err := worker.standbyInstance.Close(ctx); err != nil {
+			worker.logger.Errorf("failed to terminate the standby instance: %v", err)
+		}
+
+		worker.standbyInstance = nil
+		worker.standbyInstanceStartedAt = time.Time{}
+	}
+
+	worker.standbyParameters = parameters
 }

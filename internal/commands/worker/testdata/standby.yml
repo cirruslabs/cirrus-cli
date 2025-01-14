@@ -1,0 +1,25 @@
+token: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+name: "MacMini-Rack-1-Slot-2"
+
+tart-pre-pull:
+  check-interval: 3h
+  images:
+    - ghcr.io/cirruslabs/macos-runner:sonoma
+    - ghcr.io/cirruslabs/macos-runner:sequoia
+
+standby:
+  resources:
+    tart-vms: 1
+  isolation:
+    tart:
+      image: ghcr.io/cirruslabs/macos-runner:sonoma
+      user: admin
+      password: admin
+      display: 1920x1080
+      softnet: true
+      cpu: 4
+      memory: 16384
+  warmup:
+    script: xcrun simctl list || true
+    timeout: 10m
