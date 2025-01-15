@@ -5,22 +5,21 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
+	"go.opentelemetry.io/otel/trace"
 	"strconv"
 	"strings"
 	"sync"
 )
 
 type VM struct {
-	ident string
-
-	env map[string]string
-
-	resourceModifier *resourcemodifier.Modifier
-
-	runningVMCtx       context.Context
-	runningVMCtxCancel context.CancelFunc
-	wg                 sync.WaitGroup
-	errChan            chan error
+	ident                 string
+	env                   map[string]string
+	resourceModifier      *resourcemodifier.Modifier
+	backgroundCtxWithSpan context.Context
+	runningVMCtx          context.Context
+	runningVMCtxCancel    context.CancelFunc
+	wg                    sync.WaitGroup
+	errChan               chan error
 }
 
 func NewVMClonedFrom(
@@ -32,15 +31,18 @@ func NewVMClonedFrom(
 	resourceModifier *resourcemodifier.Modifier,
 	logger *echelon.Logger,
 ) (*VM, error) {
-	runningVMCtx, runningVMCtxCancel := context.WithCancel(context.Background())
+	backgroundCtxWithSpan := trace.ContextWithSpan(context.Background(), trace.SpanFromContext(ctx))
+
+	runningVMCtx, runningVMCtxCancel := context.WithCancel(backgroundCtxWithSpan)
 
 	vm := &VM{
-		ident:              to,
-		env:                env,
-		resourceModifier:   resourceModifier,
-		runningVMCtx:       runningVMCtx,
-		runningVMCtxCancel: runningVMCtxCancel,
-		errChan:            make(chan error, 1),
+		ident:                 to,
+		env:                   env,
+		resourceModifier:      resourceModifier,
+		backgroundCtxWithSpan: backgroundCtxWithSpan,
+		runningVMCtx:          runningVMCtx,
+		runningVMCtxCancel:    runningVMCtxCancel,
+		errChan:               make(chan error, 1),
 	}
 
 	pullLogger := logger.Scoped("pull virtual machine")
@@ -173,16 +175,14 @@ func (vm *VM) RetrieveIP(ctx context.Context) (string, error) {
 }
 
 func (vm *VM) Close() error {
-	ctx := context.Background()
-
 	// Try to gracefully terminate the VM
 	//nolint:dogsled // not interested in the output for now
-	_, _, _ = Cmd(ctx, vm.env, "stop", "--timeout", "5", vm.ident)
+	_, _, _ = Cmd(vm.backgroundCtxWithSpan, vm.env, "stop", "--timeout", "5", vm.ident)
 
 	vm.runningVMCtxCancel()
 	vm.wg.Wait()
 
-	_, _, err := Cmd(ctx, vm.env, "delete", vm.ident)
+	_, _, err := Cmd(vm.backgroundCtxWithSpan, vm.env, "delete", vm.ident)
 
 	return err
 }

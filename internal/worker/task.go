@@ -150,6 +150,8 @@ func (worker *Worker) runTask(
 		trace.WithAttributes(otelAttributes...))
 	defer span.End()
 
+	backgroundCtxWithSpan := trace.ContextWithSpan(context.Background(), trace.SpanFromContext(ctx))
+
 	localHub := sentry.CurrentHub().Clone()
 	ctx = sentry.SetHubOnContext(ctx, localHub)
 
@@ -201,7 +203,7 @@ func (worker *Worker) runTask(
 
 		worker.logger.Errorf("failed to run task %s: %v", taskID, err)
 
-		boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
+		boundedCtx, cancel := context.WithTimeout(backgroundCtxWithSpan, perCallTimeout)
 		defer cancel()
 
 		if md, ok := metadata.FromOutgoingContext(ctx); ok {
@@ -249,7 +251,7 @@ func (worker *Worker) runTask(
 		taskExecutionAttributes = append(taskExecutionAttributes, attribute.String("status", "succeeded"))
 	}
 
-	boundedCtx, cancel := context.WithTimeout(context.Background(), perCallTimeout)
+	boundedCtx, cancel := context.WithTimeout(backgroundCtxWithSpan, perCallTimeout)
 	defer cancel()
 
 	// Record task execution time
