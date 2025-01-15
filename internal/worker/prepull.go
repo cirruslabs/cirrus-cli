@@ -21,7 +21,7 @@ func (pull TartPrePull) NeedsPrePull() bool {
 
 	if jitterNanoseconds := pull.Jitter.Nanoseconds(); jitterNanoseconds > 0 {
 		//nolint:gosec // G404 is not applicable as we don't need cryptographically secure numbers here
-		nextPullAt.Add(time.Duration(rand.Int64N(jitterNanoseconds)))
+		nextPullAt = nextPullAt.Add(time.Duration(rand.Int64N(jitterNanoseconds)))
 	}
 
 	return time.Now().After(nextPullAt)
