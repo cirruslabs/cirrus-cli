@@ -6,16 +6,15 @@ import (
 	"fmt"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
+	"go.opentelemetry.io/otel/trace"
 	"strconv"
 	"strings"
 	"sync"
 )
 
 type VM struct {
-	ident string
-
-	env map[string]string
-
+	ident              string
+	env                map[string]string
 	runningVMCtx       context.Context
 	runningVMCtxCancel context.CancelFunc
 	wg                 sync.WaitGroup
@@ -41,7 +40,9 @@ func NewVMClonedFrom(
 	env map[string]string,
 	logger *echelon.Logger,
 ) (*VM, error) {
-	runningVMCtx, runningVMCtxCancel := context.WithCancel(context.Background())
+	runningVMCtx, runningVMCtxCancel := context.WithCancel(
+		trace.ContextWithSpan(context.Background(), trace.SpanFromContext(ctx)),
+	)
 
 	vm := &VM{
 		ident:              to,
@@ -224,7 +225,7 @@ func (vm *VM) Info(ctx context.Context) (*Info, error) {
 }
 
 func (vm *VM) Close() error {
-	ctx := context.Background()
+	ctx := trace.ContextWithSpan(context.Background(), trace.SpanFromContext(vm.runningVMCtx))
 
 	// Try to gracefully terminate the VM
 	//nolint:dogsled // not interested in the output for now

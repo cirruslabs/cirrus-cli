@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/pkg/privdrop"
 	"github.com/cirruslabs/echelon"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapio"
 	"io"
 	"os/exec"
 	"strings"
@@ -80,14 +82,34 @@ func CmdWithLogger(
 
 	var stdout, stderr bytes.Buffer
 
+	zapFields := []zap.Field{
+		// "Field value of type context.Context is used as context when emitting log records."[1]
+		//
+		// [1]: https://pkg.go.dev/go.opentelemetry.io/contrib/bridges/otelzap
+		zap.Any("context", ctx),
+		zap.String("command", strings.Join(append([]string{cmd.Path}, cmd.Args...), " ")),
+	}
+
+	zapInfoWriter := &zapio.Writer{
+		Log:   zap.L().With(zapFields...),
+		Level: zap.InfoLevel,
+	}
+	defer zapInfoWriter.Close()
+
+	zapErrorWriter := &zapio.Writer{
+		Log:   zap.L().With(zapFields...),
+		Level: zap.WarnLevel,
+	}
+	defer zapErrorWriter.Close()
+
 	cmd.Stdout = io.MultiWriter(&stdout, &loggerAsWriter{
 		level:    echelon.InfoLevel,
 		delegate: logger,
-	})
+	}, zapInfoWriter)
 	cmd.Stderr = io.MultiWriter(&stderr, &loggerAsWriter{
 		level:    echelon.WarnLevel,
 		delegate: logger,
-	})
+	}, zapErrorWriter)
 
 	err := cmd.Run()
 	if err != nil {
