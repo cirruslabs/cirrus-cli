@@ -275,6 +275,16 @@ func TestEnvironmentAutomaticVariables(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestEnvironmentVariablesFile(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
+	dir := testutil.TempDirPopulatedWith(t, "testdata/environment-variables-file")
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
+}
+
 // TestDockerPipe ensures that the Docker Pipe commands can communicate through the shared volume.
 func TestDockerPipe(t *testing.T) {
 	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {

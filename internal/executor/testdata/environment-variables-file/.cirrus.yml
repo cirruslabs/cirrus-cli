@@ -1,0 +1,11 @@
+container:
+  image: debian:latest
+
+task:
+  env:
+    FOO_TOKEN: foo-token
+  initial_check_script: test "$FOO_TOKEN" = "foo-token"
+  try_unset_script: unset FOO_TOKEN
+  still_set_check_script: test "$FOO_TOKEN" = "foo-token"
+  unset_via_file_script: echo "FOO_TOKEN=" >> $CIRRUS_ENV
+  final_check_script: test "$FOO_TOKEN" = ""
