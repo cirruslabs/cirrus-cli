@@ -388,20 +388,6 @@ func (s *AuthenticationTokens) SetRefreshToken(val string) {
 func (*AuthenticationTokens) authenticateRes() {}
 func (*AuthenticationTokens) refreshTokenRes() {}
 
-type Authorization struct {
-	Token string
-}
-
-// GetToken returns the value of Token.
-func (s *Authorization) GetToken() string {
-	return s.Token
-}
-
-// SetToken sets the value of Token.
-func (s *Authorization) SetToken(val string) {
-	s.Token = val
-}
-
 // Represents an action item stored in the cache.
 // Ref: #/components/schemas/CacheActionItem
 type CacheActionItem struct {
@@ -1095,20 +1081,6 @@ func (s *CompletePreviewsMultipartUploadReq) SetPreviewID(val string) {
 type CompletePreviewsMultipartUploadUnauthorized Error
 
 func (*CompletePreviewsMultipartUploadUnauthorized) completePreviewsMultipartUploadRes() {}
-
-type Cookie struct {
-	APIKey string
-}
-
-// GetAPIKey returns the value of APIKey.
-func (s *Cookie) GetAPIKey() string {
-	return s.APIKey
-}
-
-// SetAPIKey sets the value of APIKey.
-func (s *Cookie) SetAPIKey(val string) {
-	s.APIKey = val
-}
 
 type CreateAccountTokenForbidden Error
 

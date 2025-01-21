@@ -17,7 +17,6 @@ import (
 
 	"github.com/ogen-go/ogen/conv"
 	ht "github.com/ogen-go/ogen/http"
-	"github.com/ogen-go/ogen/ogenerrors"
 	"github.com/ogen-go/ogen/otelogen"
 	"github.com/ogen-go/ogen/uri"
 )
@@ -301,7 +300,6 @@ type Invoker interface {
 // Client implements OAS client.
 type Client struct {
 	serverURL *url.URL
-	sec       SecuritySource
 	baseClient
 }
 
@@ -315,7 +313,7 @@ func trimTrailingSlashes(u *url.URL) {
 }
 
 // NewClient initializes new Client defined by OAS.
-func NewClient(serverURL string, sec SecuritySource, opts ...ClientOption) (*Client, error) {
+func NewClient(serverURL string, opts ...ClientOption) (*Client, error) {
 	u, err := url.Parse(serverURL)
 	if err != nil {
 		return nil, err
@@ -328,7 +326,6 @@ func NewClient(serverURL string, sec SecuritySource, opts ...ClientOption) (*Cli
 	}
 	return &Client{
 		serverURL:  u,
-		sec:        sec,
 		baseClient: c,
 	}, nil
 }
@@ -405,51 +402,6 @@ func (c *Client) sendAuthenticate(ctx context.Context, request OptAuthenticateRe
 	}
 	if err := encodeAuthenticateRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "Authenticate", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "Authenticate", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -590,51 +542,6 @@ func (c *Client) sendCacheArtifactExists(ctx context.Context, params CacheArtifa
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CacheArtifactExists", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CacheArtifactExists", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -727,51 +634,6 @@ func (c *Client) sendCancelInvitation(ctx context.Context, request OptCancelInvi
 	}
 	if err := encodeCancelInvitationRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CancelInvitation", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CancelInvitation", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -884,51 +746,6 @@ func (c *Client) sendCleanCache(ctx context.Context, params CleanCacheParams) (r
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CleanCache", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CleanCache", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -1024,51 +841,6 @@ func (c *Client) sendCompleteAnalyticsArtifactMultipartUpload(ctx context.Contex
 		return res, errors.Wrap(err, "encode request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CompleteAnalyticsArtifactMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CompleteAnalyticsArtifactMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -1162,51 +934,6 @@ func (c *Client) sendCompleteAnalyticsArtifactsUploads(ctx context.Context, requ
 	}
 	if err := encodeCompleteAnalyticsArtifactsUploadsRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CompleteAnalyticsArtifactsUploads", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CompleteAnalyticsArtifactsUploads", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -1362,51 +1089,6 @@ func (c *Client) sendCompleteCacheArtifactMultipartUpload(ctx context.Context, r
 		return res, errors.Wrap(err, "encode request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CompleteCacheArtifactMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CompleteCacheArtifactMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -1521,51 +1203,6 @@ func (c *Client) sendCompletePreviewsMultipartUpload(ctx context.Context, reques
 		return res, errors.Wrap(err, "encode request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CompletePreviewsMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CompletePreviewsMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -1660,51 +1297,6 @@ func (c *Client) sendCreateAccountToken(ctx context.Context, request OptCreateAc
 		return res, errors.Wrap(err, "encode request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CreateAccountToken", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CreateAccountToken", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -1796,51 +1388,6 @@ func (c *Client) sendCreateCommandEvent(ctx context.Context, request OptCreateCo
 	}
 	if err := encodeCreateCommandEventRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CreateCommandEvent", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CreateCommandEvent", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -1937,51 +1484,6 @@ func (c *Client) sendCreateInvitation(ctx context.Context, request OptCreateInvi
 		return res, errors.Wrap(err, "encode request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CreateInvitation", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CreateInvitation", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -2057,51 +1559,6 @@ func (c *Client) sendCreateOrganization(ctx context.Context, request OptCreateOr
 		return res, errors.Wrap(err, "encode request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CreateOrganization", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CreateOrganization", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -2175,51 +1632,6 @@ func (c *Client) sendCreateProject(ctx context.Context, request OptCreateProject
 	}
 	if err := encodeCreateProjectRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CreateProject", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CreateProject", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -2332,51 +1744,6 @@ func (c *Client) sendCreateProjectToken(ctx context.Context, params CreateProjec
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "CreateProjectToken", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "CreateProjectToken", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -2467,51 +1834,6 @@ func (c *Client) sendDeleteOrganization(ctx context.Context, params DeleteOrgani
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "DeleteOrganization", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "DeleteOrganization", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -2600,51 +1922,6 @@ func (c *Client) sendDeleteProject(ctx context.Context, params DeleteProjectPara
 	r, err := ht.NewRequest(ctx, "DELETE", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "DeleteProject", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "DeleteProject", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -2782,51 +2059,6 @@ func (c *Client) sendDownloadCacheArtifact(ctx context.Context, params DownloadC
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "DownloadCacheArtifact", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "DownloadCacheArtifact", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -2955,51 +2187,6 @@ func (c *Client) sendDownloadPreview(ctx context.Context, params DownloadPreview
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "DownloadPreview", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "DownloadPreview", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -3093,51 +2280,6 @@ func (c *Client) sendGenerateAnalyticsArtifactMultipartUploadURL(ctx context.Con
 	}
 	if err := encodeGenerateAnalyticsArtifactMultipartUploadURLRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "GenerateAnalyticsArtifactMultipartUploadURL", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "GenerateAnalyticsArtifactMultipartUploadURL", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -3321,51 +2463,6 @@ func (c *Client) sendGenerateCacheArtifactMultipartUploadURL(ctx context.Context
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "GenerateCacheArtifactMultipartUploadURL", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "GenerateCacheArtifactMultipartUploadURL", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -3478,51 +2575,6 @@ func (c *Client) sendGeneratePreviewsMultipartUploadURL(ctx context.Context, req
 	}
 	if err := encodeGeneratePreviewsMultipartUploadURLRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "GeneratePreviewsMultipartUploadURL", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "GeneratePreviewsMultipartUploadURL", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -3653,51 +2705,6 @@ func (c *Client) sendGetCacheActionItem(ctx context.Context, params GetCacheActi
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "GetCacheActionItem", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "GetCacheActionItem", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -3788,51 +2795,6 @@ func (c *Client) sendGetDeviceCode(ctx context.Context, params GetDeviceCodePara
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "GetDeviceCode", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "GetDeviceCode", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -3903,51 +2865,6 @@ func (c *Client) sendListOrganizations(ctx context.Context) (res ListOrganizatio
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "ListOrganizations", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "ListOrganizations", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -4175,51 +3092,6 @@ func (c *Client) sendListPreviews(ctx context.Context, params ListPreviewsParams
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "ListPreviews", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "ListPreviews", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -4330,51 +3202,6 @@ func (c *Client) sendListProjectTokens(ctx context.Context, params ListProjectTo
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "ListProjectTokens", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "ListProjectTokens", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -4445,51 +3272,6 @@ func (c *Client) sendListProjects(ctx context.Context) (res ListProjectsRes, err
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "ListProjects", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "ListProjects", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -4708,51 +3490,6 @@ func (c *Client) sendListRuns(ctx context.Context, params ListRunsParams) (res L
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "ListRuns", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "ListRuns", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -4826,51 +3563,6 @@ func (c *Client) sendRefreshToken(ctx context.Context, request OptRefreshTokenRe
 	}
 	if err := encodeRefreshTokenRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "RefreshToken", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "RefreshToken", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -5001,51 +3693,6 @@ func (c *Client) sendRevokeProjectToken(ctx context.Context, params RevokeProjec
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "RevokeProjectToken", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "RevokeProjectToken", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -5134,51 +3781,6 @@ func (c *Client) sendShowOrganization(ctx context.Context, params ShowOrganizati
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "ShowOrganization", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "ShowOrganization", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -5270,51 +3872,6 @@ func (c *Client) sendShowOrganizationUsage(ctx context.Context, params ShowOrgan
 	r, err := ht.NewRequest(ctx, "GET", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "ShowOrganizationUsage", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "ShowOrganizationUsage", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -5426,51 +3983,6 @@ func (c *Client) sendShowProject(ctx context.Context, params ShowProjectParams) 
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "ShowProject", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "ShowProject", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -5564,51 +4076,6 @@ func (c *Client) sendStartAnalyticsArtifactMultipartUpload(ctx context.Context, 
 	}
 	if err := encodeStartAnalyticsArtifactMultipartUploadRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "StartAnalyticsArtifactMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "StartAnalyticsArtifactMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -5747,51 +4214,6 @@ func (c *Client) sendStartCacheArtifactMultipartUpload(ctx context.Context, para
 		return res, errors.Wrap(err, "create request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "StartCacheArtifactMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "StartCacheArtifactMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -5906,51 +4328,6 @@ func (c *Client) sendStartPreviewsMultipartUpload(ctx context.Context, request O
 		return res, errors.Wrap(err, "encode request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "StartPreviewsMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "StartPreviewsMultipartUpload", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -6042,51 +4419,6 @@ func (c *Client) sendUpdateAccount(ctx context.Context, request OptUpdateAccount
 	}
 	if err := encodeUpdateAccountRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "UpdateAccount", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "UpdateAccount", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -6182,51 +4514,6 @@ func (c *Client) sendUpdateOrganization(ctx context.Context, request OptUpdateOr
 		return res, errors.Wrap(err, "encode request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "UpdateOrganization", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "UpdateOrganization", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -6318,51 +4605,6 @@ func (c *Client) sendUpdateOrganization2(ctx context.Context, request OptUpdateO
 	}
 	if err := encodeUpdateOrganization2Request(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "UpdateOrganization2", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "UpdateOrganization2", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -6477,51 +4719,6 @@ func (c *Client) sendUpdateOrganizationMember(ctx context.Context, request OptUp
 		return res, errors.Wrap(err, "encode request")
 	}
 
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "UpdateOrganizationMember", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "UpdateOrganizationMember", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
-	}
-
 	stage = "SendRequest"
 	resp, err := c.cfg.Client.Do(r)
 	if err != nil {
@@ -6632,51 +4829,6 @@ func (c *Client) sendUpdateProject(ctx context.Context, request OptUpdateProject
 	}
 	if err := encodeUpdateProjectRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "UpdateProject", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "UpdateProject", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -6791,51 +4943,6 @@ func (c *Client) sendUploadCacheActionItem(ctx context.Context, request OptUploa
 	}
 	if err := encodeUploadCacheActionItemRequest(request, r); err != nil {
 		return res, errors.Wrap(err, "encode request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "UploadCacheActionItem", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "UploadCacheActionItem", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"
@@ -6965,51 +5072,6 @@ func (c *Client) sendUploadPreviewIcon(ctx context.Context, params UploadPreview
 	r, err := ht.NewRequest(ctx, "POST", u)
 	if err != nil {
 		return res, errors.Wrap(err, "create request")
-	}
-
-	{
-		type bitset = [1]uint8
-		var satisfied bitset
-		{
-			stage = "Security:Authorization"
-			switch err := c.securityAuthorization(ctx, "UploadPreviewIcon", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 0
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Authorization\"")
-			}
-		}
-		{
-			stage = "Security:Cookie"
-			switch err := c.securityCookie(ctx, "UploadPreviewIcon", r); {
-			case err == nil: // if NO error
-				satisfied[0] |= 1 << 1
-			case errors.Is(err, ogenerrors.ErrSkipClientSecurity):
-				// Skip this security.
-			default:
-				return res, errors.Wrap(err, "security \"Cookie\"")
-			}
-		}
-
-		if ok := func() bool {
-		nextRequirement:
-			for _, requirement := range []bitset{
-				{0b00000001},
-				{0b00000010},
-			} {
-				for i, mask := range requirement {
-					if satisfied[i]&mask != mask {
-						continue nextRequirement
-					}
-				}
-				return true
-			}
-			return false
-		}(); !ok {
-			return res, ogenerrors.ErrSecurityRequirementIsNotSatisfied
-		}
 	}
 
 	stage = "SendRequest"

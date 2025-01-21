@@ -984,17 +984,6 @@
         "title": "CacheActionItem",
         "type": "object"
       }
-    },
-    "securitySchemes": {
-      "authorization": {
-        "scheme": "bearer",
-        "type": "http"
-      },
-      "cookie": {
-        "in": "cookie",
-        "name": "_tuist_cloud_key",
-        "type": "apiKey"
-      }
     }
   },
   "info": {
@@ -5041,14 +5030,6 @@
       }
     }
   },
-  "security": [
-    {
-      "authorization": []
-    },
-    {
-      "cookie": []
-    }
-  ],
   "servers": [
     {
       "url": "https://tuist.dev",
