@@ -9,6 +9,10 @@ type CacheArtifactExistsRes interface {
 	cacheArtifactExistsRes()
 }
 
+type CancelInvitationRes interface {
+	cancelInvitationRes()
+}
+
 type CleanCacheRes interface {
 	cleanCacheRes()
 }
@@ -27,6 +31,10 @@ type CompleteCacheArtifactMultipartUploadRes interface {
 
 type CompletePreviewsMultipartUploadRes interface {
 	completePreviewsMultipartUploadRes()
+}
+
+type CreateAccountTokenRes interface {
+	createAccountTokenRes()
 }
 
 type CreateCommandEventRes interface {
@@ -89,12 +97,20 @@ type ListOrganizationsRes interface {
 	listOrganizationsRes()
 }
 
+type ListPreviewsRes interface {
+	listPreviewsRes()
+}
+
 type ListProjectTokensRes interface {
 	listProjectTokensRes()
 }
 
 type ListProjectsRes interface {
 	listProjectsRes()
+}
+
+type ListRunsRes interface {
+	listRunsRes()
 }
 
 type RefreshTokenRes interface {
@@ -129,6 +145,10 @@ type StartPreviewsMultipartUploadRes interface {
 	startPreviewsMultipartUploadRes()
 }
 
+type UpdateAccountRes interface {
+	updateAccountRes()
+}
+
 type UpdateOrganization2Res interface {
 	updateOrganization2Res()
 }
@@ -147,4 +167,8 @@ type UpdateProjectRes interface {
 
 type UploadCacheActionItemRes interface {
 	uploadCacheActionItemRes()
+}
+
+type UploadPreviewIconRes interface {
+	uploadPreviewIconRes()
 }

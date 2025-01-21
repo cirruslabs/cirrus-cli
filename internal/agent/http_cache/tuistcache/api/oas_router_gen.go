@@ -73,6 +73,62 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				switch elem[0] {
+				case 'c': // Prefix: "ccounts/"
+					origElem := elem
+					if l := len("ccounts/"); len(elem) >= l && elem[0:l] == "ccounts/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "account_handle"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
+					if len(elem) == 0 {
+						switch r.Method {
+						case "PATCH":
+							s.handleUpdateAccountRequest([1]string{
+								args[0],
+							}, elemIsEscaped, w, r)
+						default:
+							s.notAllowed(w, r, "PATCH")
+						}
+
+						return
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/tokens"
+						origElem := elem
+						if l := len("/tokens"); len(elem) >= l && elem[0:l] == "/tokens" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch r.Method {
+							case "POST":
+								s.handleCreateAccountTokenRequest([1]string{
+									args[0],
+								}, elemIsEscaped, w, r)
+							default:
+								s.notAllowed(w, r, "POST")
+							}
+
+							return
+						}
+
+						elem = origElem
+					}
+
+					elem = origElem
 				case 'n': // Prefix: "nalytics"
 					origElem := elem
 					if l := len("nalytics"); len(elem) >= l && elem[0:l] == "nalytics" {
@@ -405,12 +461,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							if len(elem) == 0 {
 								// Leaf node.
 								switch r.Method {
+								case "DELETE":
+									s.handleCancelInvitationRequest([1]string{
+										args[0],
+									}, elemIsEscaped, w, r)
 								case "POST":
 									s.handleCreateInvitationRequest([1]string{
 										args[0],
 									}, elemIsEscaped, w, r)
 								default:
-									s.notAllowed(w, r, "POST")
+									s.notAllowed(w, r, "DELETE,POST")
 								}
 
 								return
@@ -671,104 +731,183 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 								}
 
 								elem = origElem
-							case 'p': // Prefix: "previews/"
+							case 'p': // Prefix: "previews"
 								origElem := elem
-								if l := len("previews/"); len(elem) >= l && elem[0:l] == "previews/" {
+								if l := len("previews"); len(elem) >= l && elem[0:l] == "previews" {
 									elem = elem[l:]
 								} else {
 									break
 								}
 
 								if len(elem) == 0 {
-									break
+									switch r.Method {
+									case "GET":
+										s.handleListPreviewsRequest([2]string{
+											args[0],
+											args[1],
+										}, elemIsEscaped, w, r)
+									default:
+										s.notAllowed(w, r, "GET")
+									}
+
+									return
 								}
 								switch elem[0] {
-								case 'c': // Prefix: "complete"
+								case '/': // Prefix: "/"
 									origElem := elem
-									if l := len("complete"); len(elem) >= l && elem[0:l] == "complete" {
+									if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 										elem = elem[l:]
 									} else {
 										break
 									}
 
 									if len(elem) == 0 {
-										// Leaf node.
-										switch r.Method {
-										case "POST":
-											s.handleCompletePreviewsMultipartUploadRequest([2]string{
-												args[0],
-												args[1],
-											}, elemIsEscaped, w, r)
-										default:
-											s.notAllowed(w, r, "POST")
-										}
-
-										return
-									}
-
-									elem = origElem
-								case 'g': // Prefix: "generate-url"
-									origElem := elem
-									if l := len("generate-url"); len(elem) >= l && elem[0:l] == "generate-url" {
-										elem = elem[l:]
-									} else {
 										break
 									}
+									switch elem[0] {
+									case 'c': // Prefix: "complete"
+										origElem := elem
+										if l := len("complete"); len(elem) >= l && elem[0:l] == "complete" {
+											elem = elem[l:]
+										} else {
+											break
+										}
+
+										if len(elem) == 0 {
+											// Leaf node.
+											switch r.Method {
+											case "POST":
+												s.handleCompletePreviewsMultipartUploadRequest([2]string{
+													args[0],
+													args[1],
+												}, elemIsEscaped, w, r)
+											default:
+												s.notAllowed(w, r, "POST")
+											}
+
+											return
+										}
+
+										elem = origElem
+									case 'g': // Prefix: "generate-url"
+										origElem := elem
+										if l := len("generate-url"); len(elem) >= l && elem[0:l] == "generate-url" {
+											elem = elem[l:]
+										} else {
+											break
+										}
+
+										if len(elem) == 0 {
+											// Leaf node.
+											switch r.Method {
+											case "POST":
+												s.handleGeneratePreviewsMultipartUploadURLRequest([2]string{
+													args[0],
+													args[1],
+												}, elemIsEscaped, w, r)
+											default:
+												s.notAllowed(w, r, "POST")
+											}
+
+											return
+										}
+
+										elem = origElem
+									case 's': // Prefix: "start"
+										origElem := elem
+										if l := len("start"); len(elem) >= l && elem[0:l] == "start" {
+											elem = elem[l:]
+										} else {
+											break
+										}
+
+										if len(elem) == 0 {
+											// Leaf node.
+											switch r.Method {
+											case "POST":
+												s.handleStartPreviewsMultipartUploadRequest([2]string{
+													args[0],
+													args[1],
+												}, elemIsEscaped, w, r)
+											default:
+												s.notAllowed(w, r, "POST")
+											}
+
+											return
+										}
+
+										elem = origElem
+									}
+									// Param: "preview_id"
+									// Match until "/"
+									idx := strings.IndexByte(elem, '/')
+									if idx < 0 {
+										idx = len(elem)
+									}
+									args[2] = elem[:idx]
+									elem = elem[idx:]
 
 									if len(elem) == 0 {
-										// Leaf node.
 										switch r.Method {
-										case "POST":
-											s.handleGeneratePreviewsMultipartUploadURLRequest([2]string{
+										case "GET":
+											s.handleDownloadPreviewRequest([3]string{
 												args[0],
 												args[1],
+												args[2],
 											}, elemIsEscaped, w, r)
 										default:
-											s.notAllowed(w, r, "POST")
+											s.notAllowed(w, r, "GET")
 										}
 
 										return
 									}
-
-									elem = origElem
-								case 's': // Prefix: "start"
-									origElem := elem
-									if l := len("start"); len(elem) >= l && elem[0:l] == "start" {
-										elem = elem[l:]
-									} else {
-										break
-									}
-
-									if len(elem) == 0 {
-										// Leaf node.
-										switch r.Method {
-										case "POST":
-											s.handleStartPreviewsMultipartUploadRequest([2]string{
-												args[0],
-												args[1],
-											}, elemIsEscaped, w, r)
-										default:
-											s.notAllowed(w, r, "POST")
+									switch elem[0] {
+									case '/': // Prefix: "/icons"
+										origElem := elem
+										if l := len("/icons"); len(elem) >= l && elem[0:l] == "/icons" {
+											elem = elem[l:]
+										} else {
+											break
 										}
 
-										return
+										if len(elem) == 0 {
+											// Leaf node.
+											switch r.Method {
+											case "POST":
+												s.handleUploadPreviewIconRequest([3]string{
+													args[0],
+													args[1],
+													args[2],
+												}, elemIsEscaped, w, r)
+											default:
+												s.notAllowed(w, r, "POST")
+											}
+
+											return
+										}
+
+										elem = origElem
 									}
 
 									elem = origElem
 								}
-								// Param: "preview_id"
-								// Leaf parameter
-								args[2] = elem
-								elem = ""
+
+								elem = origElem
+							case 'r': // Prefix: "runs"
+								origElem := elem
+								if l := len("runs"); len(elem) >= l && elem[0:l] == "runs" {
+									elem = elem[l:]
+								} else {
+									break
+								}
 
 								if len(elem) == 0 {
 									// Leaf node.
 									switch r.Method {
 									case "GET":
-										s.handleDownloadPreviewRequest([3]string{
+										s.handleListRunsRequest([2]string{
 											args[0],
 											args[1],
-											args[2],
 										}, elemIsEscaped, w, r)
 									default:
 										s.notAllowed(w, r, "GET")
@@ -1089,6 +1228,66 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 					break
 				}
 				switch elem[0] {
+				case 'c': // Prefix: "ccounts/"
+					origElem := elem
+					if l := len("ccounts/"); len(elem) >= l && elem[0:l] == "ccounts/" {
+						elem = elem[l:]
+					} else {
+						break
+					}
+
+					// Param: "account_handle"
+					// Match until "/"
+					idx := strings.IndexByte(elem, '/')
+					if idx < 0 {
+						idx = len(elem)
+					}
+					args[0] = elem[:idx]
+					elem = elem[idx:]
+
+					if len(elem) == 0 {
+						switch method {
+						case "PATCH":
+							r.name = "UpdateAccount"
+							r.summary = "Update account"
+							r.operationID = "updateAccount"
+							r.pathPattern = "/api/accounts/{account_handle}"
+							r.args = args
+							r.count = 1
+							return r, true
+						default:
+							return
+						}
+					}
+					switch elem[0] {
+					case '/': // Prefix: "/tokens"
+						origElem := elem
+						if l := len("/tokens"); len(elem) >= l && elem[0:l] == "/tokens" {
+							elem = elem[l:]
+						} else {
+							break
+						}
+
+						if len(elem) == 0 {
+							// Leaf node.
+							switch method {
+							case "POST":
+								r.name = "CreateAccountToken"
+								r.summary = "Create a new account token."
+								r.operationID = "createAccountToken"
+								r.pathPattern = "/api/accounts/{account_handle}/tokens"
+								r.args = args
+								r.count = 1
+								return r, true
+							default:
+								return
+							}
+						}
+
+						elem = origElem
+					}
+
+					elem = origElem
 				case 'n': // Prefix: "nalytics"
 					origElem := elem
 					if l := len("nalytics"); len(elem) >= l && elem[0:l] == "nalytics" {
@@ -1479,6 +1678,14 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 							if len(elem) == 0 {
 								// Leaf node.
 								switch method {
+								case "DELETE":
+									r.name = "CancelInvitation"
+									r.summary = "Cancels an invitation"
+									r.operationID = "cancelInvitation"
+									r.pathPattern = "/api/organizations/{organization_name}/invitations"
+									r.args = args
+									r.count = 1
+									return r, true
 								case "POST":
 									r.name = "CreateInvitation"
 									r.summary = "Creates an invitation"
@@ -1768,109 +1975,190 @@ func (s *Server) FindPath(method string, u *url.URL) (r Route, _ bool) {
 								}
 
 								elem = origElem
-							case 'p': // Prefix: "previews/"
+							case 'p': // Prefix: "previews"
 								origElem := elem
-								if l := len("previews/"); len(elem) >= l && elem[0:l] == "previews/" {
+								if l := len("previews"); len(elem) >= l && elem[0:l] == "previews" {
 									elem = elem[l:]
 								} else {
 									break
 								}
 
 								if len(elem) == 0 {
-									break
+									switch method {
+									case "GET":
+										r.name = "ListPreviews"
+										r.summary = "List previews."
+										r.operationID = "listPreviews"
+										r.pathPattern = "/api/projects/{account_handle}/{project_handle}/previews"
+										r.args = args
+										r.count = 2
+										return r, true
+									default:
+										return
+									}
 								}
 								switch elem[0] {
-								case 'c': // Prefix: "complete"
+								case '/': // Prefix: "/"
 									origElem := elem
-									if l := len("complete"); len(elem) >= l && elem[0:l] == "complete" {
+									if l := len("/"); len(elem) >= l && elem[0:l] == "/" {
 										elem = elem[l:]
 									} else {
 										break
 									}
 
 									if len(elem) == 0 {
-										// Leaf node.
-										switch method {
-										case "POST":
-											r.name = "CompletePreviewsMultipartUpload"
-											r.summary = "It completes a multi-part upload."
-											r.operationID = "completePreviewsMultipartUpload"
-											r.pathPattern = "/api/projects/{account_handle}/{project_handle}/previews/complete"
-											r.args = args
-											r.count = 2
-											return r, true
-										default:
-											return
-										}
-									}
-
-									elem = origElem
-								case 'g': // Prefix: "generate-url"
-									origElem := elem
-									if l := len("generate-url"); len(elem) >= l && elem[0:l] == "generate-url" {
-										elem = elem[l:]
-									} else {
 										break
 									}
+									switch elem[0] {
+									case 'c': // Prefix: "complete"
+										origElem := elem
+										if l := len("complete"); len(elem) >= l && elem[0:l] == "complete" {
+											elem = elem[l:]
+										} else {
+											break
+										}
+
+										if len(elem) == 0 {
+											// Leaf node.
+											switch method {
+											case "POST":
+												r.name = "CompletePreviewsMultipartUpload"
+												r.summary = "It completes a multi-part upload."
+												r.operationID = "completePreviewsMultipartUpload"
+												r.pathPattern = "/api/projects/{account_handle}/{project_handle}/previews/complete"
+												r.args = args
+												r.count = 2
+												return r, true
+											default:
+												return
+											}
+										}
+
+										elem = origElem
+									case 'g': // Prefix: "generate-url"
+										origElem := elem
+										if l := len("generate-url"); len(elem) >= l && elem[0:l] == "generate-url" {
+											elem = elem[l:]
+										} else {
+											break
+										}
+
+										if len(elem) == 0 {
+											// Leaf node.
+											switch method {
+											case "POST":
+												r.name = "GeneratePreviewsMultipartUploadURL"
+												r.summary = "It generates a signed URL for uploading a part."
+												r.operationID = "generatePreviewsMultipartUploadURL"
+												r.pathPattern = "/api/projects/{account_handle}/{project_handle}/previews/generate-url"
+												r.args = args
+												r.count = 2
+												return r, true
+											default:
+												return
+											}
+										}
+
+										elem = origElem
+									case 's': // Prefix: "start"
+										origElem := elem
+										if l := len("start"); len(elem) >= l && elem[0:l] == "start" {
+											elem = elem[l:]
+										} else {
+											break
+										}
+
+										if len(elem) == 0 {
+											// Leaf node.
+											switch method {
+											case "POST":
+												r.name = "StartPreviewsMultipartUpload"
+												r.summary = "It initiates a multipart upload for a preview artifact."
+												r.operationID = "startPreviewsMultipartUpload"
+												r.pathPattern = "/api/projects/{account_handle}/{project_handle}/previews/start"
+												r.args = args
+												r.count = 2
+												return r, true
+											default:
+												return
+											}
+										}
+
+										elem = origElem
+									}
+									// Param: "preview_id"
+									// Match until "/"
+									idx := strings.IndexByte(elem, '/')
+									if idx < 0 {
+										idx = len(elem)
+									}
+									args[2] = elem[:idx]
+									elem = elem[idx:]
 
 									if len(elem) == 0 {
-										// Leaf node.
 										switch method {
-										case "POST":
-											r.name = "GeneratePreviewsMultipartUploadURL"
-											r.summary = "It generates a signed URL for uploading a part."
-											r.operationID = "generatePreviewsMultipartUploadURL"
-											r.pathPattern = "/api/projects/{account_handle}/{project_handle}/previews/generate-url"
+										case "GET":
+											r.name = "DownloadPreview"
+											r.summary = "Returns a preview with a given id."
+											r.operationID = "downloadPreview"
+											r.pathPattern = "/api/projects/{account_handle}/{project_handle}/previews/{preview_id}"
 											r.args = args
-											r.count = 2
+											r.count = 3
 											return r, true
 										default:
 											return
 										}
 									}
-
-									elem = origElem
-								case 's': // Prefix: "start"
-									origElem := elem
-									if l := len("start"); len(elem) >= l && elem[0:l] == "start" {
-										elem = elem[l:]
-									} else {
-										break
-									}
-
-									if len(elem) == 0 {
-										// Leaf node.
-										switch method {
-										case "POST":
-											r.name = "StartPreviewsMultipartUpload"
-											r.summary = "It initiates a multipart upload for a preview artifact."
-											r.operationID = "startPreviewsMultipartUpload"
-											r.pathPattern = "/api/projects/{account_handle}/{project_handle}/previews/start"
-											r.args = args
-											r.count = 2
-											return r, true
-										default:
-											return
+									switch elem[0] {
+									case '/': // Prefix: "/icons"
+										origElem := elem
+										if l := len("/icons"); len(elem) >= l && elem[0:l] == "/icons" {
+											elem = elem[l:]
+										} else {
+											break
 										}
+
+										if len(elem) == 0 {
+											// Leaf node.
+											switch method {
+											case "POST":
+												r.name = "UploadPreviewIcon"
+												r.summary = "Uploads a preview icon."
+												r.operationID = "uploadPreviewIcon"
+												r.pathPattern = "/api/projects/{account_handle}/{project_handle}/previews/{preview_id}/icons"
+												r.args = args
+												r.count = 3
+												return r, true
+											default:
+												return
+											}
+										}
+
+										elem = origElem
 									}
 
 									elem = origElem
 								}
-								// Param: "preview_id"
-								// Leaf parameter
-								args[2] = elem
-								elem = ""
+
+								elem = origElem
+							case 'r': // Prefix: "runs"
+								origElem := elem
+								if l := len("runs"); len(elem) >= l && elem[0:l] == "runs" {
+									elem = elem[l:]
+								} else {
+									break
+								}
 
 								if len(elem) == 0 {
 									// Leaf node.
 									switch method {
 									case "GET":
-										r.name = "DownloadPreview"
-										r.summary = "Downloads a preview."
-										r.operationID = "downloadPreview"
-										r.pathPattern = "/api/projects/{account_handle}/{project_handle}/previews/{preview_id}"
+										r.name = "ListRuns"
+										r.summary = "List runs associated with a given project."
+										r.operationID = "listRuns"
+										r.pathPattern = "/api/projects/{account_handle}/{project_handle}/runs"
 										r.args = args
-										r.count = 3
+										r.count = 2
 										return r, true
 									default:
 										return

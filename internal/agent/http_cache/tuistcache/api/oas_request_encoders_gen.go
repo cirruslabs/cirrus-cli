@@ -31,6 +31,26 @@ func encodeAuthenticateRequest(
 	return nil
 }
 
+func encodeCancelInvitationRequest(
+	req OptCancelInvitationReq,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	if !req.Set {
+		// Keep request with empty body if value is not set.
+		return nil
+	}
+	e := new(jx.Encoder)
+	{
+		if req.Set {
+			req.Encode(e)
+		}
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
 func encodeCompleteAnalyticsArtifactMultipartUploadRequest(
 	req OptCompleteAnalyticsArtifactMultipartUploadReq,
 	r *http.Request,
@@ -93,6 +113,26 @@ func encodeCompleteCacheArtifactMultipartUploadRequest(
 
 func encodeCompletePreviewsMultipartUploadRequest(
 	req OptCompletePreviewsMultipartUploadReq,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	if !req.Set {
+		// Keep request with empty body if value is not set.
+		return nil
+	}
+	e := new(jx.Encoder)
+	{
+		if req.Set {
+			req.Encode(e)
+		}
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeCreateAccountTokenRequest(
+	req OptCreateAccountTokenReq,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
@@ -252,13 +292,19 @@ func encodeRefreshTokenRequest(
 }
 
 func encodeStartAnalyticsArtifactMultipartUploadRequest(
-	req CommandEventArtifact,
+	req OptCommandEventArtifact,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"
+	if !req.Set {
+		// Keep request with empty body if value is not set.
+		return nil
+	}
 	e := new(jx.Encoder)
 	{
-		req.Encode(e)
+		if req.Set {
+			req.Encode(e)
+		}
 	}
 	encoded := e.Bytes()
 	ht.SetBody(r, bytes.NewReader(encoded), contentType)
@@ -267,6 +313,26 @@ func encodeStartAnalyticsArtifactMultipartUploadRequest(
 
 func encodeStartPreviewsMultipartUploadRequest(
 	req OptStartPreviewsMultipartUploadReq,
+	r *http.Request,
+) error {
+	const contentType = "application/json"
+	if !req.Set {
+		// Keep request with empty body if value is not set.
+		return nil
+	}
+	e := new(jx.Encoder)
+	{
+		if req.Set {
+			req.Encode(e)
+		}
+	}
+	encoded := e.Bytes()
+	ht.SetBody(r, bytes.NewReader(encoded), contentType)
+	return nil
+}
+
+func encodeUpdateAccountRequest(
+	req OptUpdateAccountReq,
 	r *http.Request,
 ) error {
 	const contentType = "application/json"

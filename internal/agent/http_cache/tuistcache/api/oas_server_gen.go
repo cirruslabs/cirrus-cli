@@ -23,6 +23,12 @@ type Handler interface {
 	//
 	// GET /api/cache/exists
 	CacheArtifactExists(ctx context.Context, params CacheArtifactExistsParams) (CacheArtifactExistsRes, error)
+	// CancelInvitation implements cancelInvitation operation.
+	//
+	// Cancels an invitation for a given invitee email and an organization.
+	//
+	// DELETE /api/organizations/{organization_name}/invitations
+	CancelInvitation(ctx context.Context, req OptCancelInvitationReq, params CancelInvitationParams) (CancelInvitationRes, error)
 	// CleanCache implements cleanCache operation.
 	//
 	// Cleans cache for a given project.
@@ -57,6 +63,12 @@ type Handler interface {
 	//
 	// POST /api/projects/{account_handle}/{project_handle}/previews/complete
 	CompletePreviewsMultipartUpload(ctx context.Context, req OptCompletePreviewsMultipartUploadReq, params CompletePreviewsMultipartUploadParams) (CompletePreviewsMultipartUploadRes, error)
+	// CreateAccountToken implements createAccountToken operation.
+	//
+	// This endpoint returns a new account token.
+	//
+	// POST /api/accounts/{account_handle}/tokens
+	CreateAccountToken(ctx context.Context, req OptCreateAccountTokenReq, params CreateAccountTokenParams) (CreateAccountTokenRes, error)
 	// CreateCommandEvent implements createCommandEvent operation.
 	//
 	// Create a a new command analytics event.
@@ -107,7 +119,7 @@ type Handler interface {
 	DownloadCacheArtifact(ctx context.Context, params DownloadCacheArtifactParams) (DownloadCacheArtifactRes, error)
 	// DownloadPreview implements downloadPreview operation.
 	//
-	// This endpoint returns a signed URL that can be used to download a preview.
+	// This endpoint returns a preview with a given id, including the url to download the preview.
 	//
 	// GET /api/projects/{account_handle}/{project_handle}/previews/{preview_id}
 	DownloadPreview(ctx context.Context, params DownloadPreviewParams) (DownloadPreviewRes, error)
@@ -150,6 +162,12 @@ type Handler interface {
 	//
 	// GET /api/organizations
 	ListOrganizations(ctx context.Context) (ListOrganizationsRes, error)
+	// ListPreviews implements listPreviews operation.
+	//
+	// This endpoint returns a list of previews for a given project.
+	//
+	// GET /api/projects/{account_handle}/{project_handle}/previews
+	ListPreviews(ctx context.Context, params ListPreviewsParams) (ListPreviewsRes, error)
 	// ListProjectTokens implements listProjectTokens operation.
 	//
 	// This endpoint returns all tokens for a given project.
@@ -162,6 +180,12 @@ type Handler interface {
 	//
 	// GET /api/projects
 	ListProjects(ctx context.Context) (ListProjectsRes, error)
+	// ListRuns implements listRuns operation.
+	//
+	// List runs associated with a given project.
+	//
+	// GET /api/projects/{account_handle}/{project_handle}/runs
+	ListRuns(ctx context.Context, params ListRunsParams) (ListRunsRes, error)
 	// RefreshToken implements refreshToken operation.
 	//
 	// This endpoint returns new tokens for a given refresh token if the refresh token is valid.
@@ -198,7 +222,7 @@ type Handler interface {
 	// complete the upload.
 	//
 	// POST /api/runs/{run_id}/start
-	StartAnalyticsArtifactMultipartUpload(ctx context.Context, req CommandEventArtifact, params StartAnalyticsArtifactMultipartUploadParams) (StartAnalyticsArtifactMultipartUploadRes, error)
+	StartAnalyticsArtifactMultipartUpload(ctx context.Context, req OptCommandEventArtifact, params StartAnalyticsArtifactMultipartUploadParams) (StartAnalyticsArtifactMultipartUploadRes, error)
 	// StartCacheArtifactMultipartUpload implements startCacheArtifactMultipartUpload operation.
 	//
 	// The endpoint returns an upload ID that can be used to generate URLs for the individual parts and
@@ -213,6 +237,12 @@ type Handler interface {
 	//
 	// POST /api/projects/{account_handle}/{project_handle}/previews/start
 	StartPreviewsMultipartUpload(ctx context.Context, req OptStartPreviewsMultipartUploadReq, params StartPreviewsMultipartUploadParams) (StartPreviewsMultipartUploadRes, error)
+	// UpdateAccount implements updateAccount operation.
+	//
+	// Updates the given account.
+	//
+	// PATCH /api/accounts/{account_handle}
+	UpdateAccount(ctx context.Context, req OptUpdateAccountReq, params UpdateAccountParams) (UpdateAccountRes, error)
 	// UpdateOrganization implements updateOrganization operation.
 	//
 	// Updates an organization with given parameters.
@@ -244,6 +274,12 @@ type Handler interface {
 	//
 	// POST /api/projects/{account_handle}/{project_handle}/cache/ac
 	UploadCacheActionItem(ctx context.Context, req OptUploadCacheActionItemReq, params UploadCacheActionItemParams) (UploadCacheActionItemRes, error)
+	// UploadPreviewIcon implements uploadPreviewIcon operation.
+	//
+	// The endpoint uploads a preview icon.
+	//
+	// POST /api/projects/{account_handle}/{project_handle}/previews/{preview_id}/icons
+	UploadPreviewIcon(ctx context.Context, params UploadPreviewIconParams) (UploadPreviewIconRes, error)
 }
 
 // Server implements http server based on OpenAPI v3 specification and

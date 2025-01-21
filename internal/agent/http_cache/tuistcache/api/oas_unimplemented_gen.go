@@ -34,6 +34,15 @@ func (UnimplementedHandler) CacheArtifactExists(ctx context.Context, params Cach
 	return r, ht.ErrNotImplemented
 }
 
+// CancelInvitation implements cancelInvitation operation.
+//
+// Cancels an invitation for a given invitee email and an organization.
+//
+// DELETE /api/organizations/{organization_name}/invitations
+func (UnimplementedHandler) CancelInvitation(ctx context.Context, req OptCancelInvitationReq, params CancelInvitationParams) (r CancelInvitationRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // CleanCache implements cleanCache operation.
 //
 // Cleans cache for a given project.
@@ -80,6 +89,15 @@ func (UnimplementedHandler) CompleteCacheArtifactMultipartUpload(ctx context.Con
 //
 // POST /api/projects/{account_handle}/{project_handle}/previews/complete
 func (UnimplementedHandler) CompletePreviewsMultipartUpload(ctx context.Context, req OptCompletePreviewsMultipartUploadReq, params CompletePreviewsMultipartUploadParams) (r CompletePreviewsMultipartUploadRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// CreateAccountToken implements createAccountToken operation.
+//
+// This endpoint returns a new account token.
+//
+// POST /api/accounts/{account_handle}/tokens
+func (UnimplementedHandler) CreateAccountToken(ctx context.Context, req OptCreateAccountTokenReq, params CreateAccountTokenParams) (r CreateAccountTokenRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -157,7 +175,7 @@ func (UnimplementedHandler) DownloadCacheArtifact(ctx context.Context, params Do
 
 // DownloadPreview implements downloadPreview operation.
 //
-// This endpoint returns a signed URL that can be used to download a preview.
+// This endpoint returns a preview with a given id, including the url to download the preview.
 //
 // GET /api/projects/{account_handle}/{project_handle}/previews/{preview_id}
 func (UnimplementedHandler) DownloadPreview(ctx context.Context, params DownloadPreviewParams) (r DownloadPreviewRes, _ error) {
@@ -221,6 +239,15 @@ func (UnimplementedHandler) ListOrganizations(ctx context.Context) (r ListOrgani
 	return r, ht.ErrNotImplemented
 }
 
+// ListPreviews implements listPreviews operation.
+//
+// This endpoint returns a list of previews for a given project.
+//
+// GET /api/projects/{account_handle}/{project_handle}/previews
+func (UnimplementedHandler) ListPreviews(ctx context.Context, params ListPreviewsParams) (r ListPreviewsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
 // ListProjectTokens implements listProjectTokens operation.
 //
 // This endpoint returns all tokens for a given project.
@@ -236,6 +263,15 @@ func (UnimplementedHandler) ListProjectTokens(ctx context.Context, params ListPr
 //
 // GET /api/projects
 func (UnimplementedHandler) ListProjects(ctx context.Context) (r ListProjectsRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// ListRuns implements listRuns operation.
+//
+// List runs associated with a given project.
+//
+// GET /api/projects/{account_handle}/{project_handle}/runs
+func (UnimplementedHandler) ListRuns(ctx context.Context, params ListRunsParams) (r ListRunsRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -290,7 +326,7 @@ func (UnimplementedHandler) ShowProject(ctx context.Context, params ShowProjectP
 // complete the upload.
 //
 // POST /api/runs/{run_id}/start
-func (UnimplementedHandler) StartAnalyticsArtifactMultipartUpload(ctx context.Context, req CommandEventArtifact, params StartAnalyticsArtifactMultipartUploadParams) (r StartAnalyticsArtifactMultipartUploadRes, _ error) {
+func (UnimplementedHandler) StartAnalyticsArtifactMultipartUpload(ctx context.Context, req OptCommandEventArtifact, params StartAnalyticsArtifactMultipartUploadParams) (r StartAnalyticsArtifactMultipartUploadRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -311,6 +347,15 @@ func (UnimplementedHandler) StartCacheArtifactMultipartUpload(ctx context.Contex
 //
 // POST /api/projects/{account_handle}/{project_handle}/previews/start
 func (UnimplementedHandler) StartPreviewsMultipartUpload(ctx context.Context, req OptStartPreviewsMultipartUploadReq, params StartPreviewsMultipartUploadParams) (r StartPreviewsMultipartUploadRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UpdateAccount implements updateAccount operation.
+//
+// Updates the given account.
+//
+// PATCH /api/accounts/{account_handle}
+func (UnimplementedHandler) UpdateAccount(ctx context.Context, req OptUpdateAccountReq, params UpdateAccountParams) (r UpdateAccountRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
 
@@ -357,5 +402,14 @@ func (UnimplementedHandler) UpdateProject(ctx context.Context, req OptUpdateProj
 //
 // POST /api/projects/{account_handle}/{project_handle}/cache/ac
 func (UnimplementedHandler) UploadCacheActionItem(ctx context.Context, req OptUploadCacheActionItemReq, params UploadCacheActionItemParams) (r UploadCacheActionItemRes, _ error) {
+	return r, ht.ErrNotImplemented
+}
+
+// UploadPreviewIcon implements uploadPreviewIcon operation.
+//
+// The endpoint uploads a preview icon.
+//
+// POST /api/projects/{account_handle}/{project_handle}/previews/{preview_id}/icons
+func (UnimplementedHandler) UploadPreviewIcon(ctx context.Context, params UploadPreviewIconParams) (r UploadPreviewIconRes, _ error) {
 	return r, ht.ErrNotImplemented
 }
