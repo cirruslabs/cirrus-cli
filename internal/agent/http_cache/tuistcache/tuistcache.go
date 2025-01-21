@@ -16,16 +16,6 @@ import (
 
 const APIMountPoint = "/tuistcache"
 
-type NoSecurity struct{}
-
-func (NoSecurity) HandleAuthorization(ctx context.Context, _ string, _ tuistapi.Authorization) (context.Context, error) {
-	return ctx, nil
-}
-
-func (NoSecurity) HandleCookie(ctx context.Context, _ string, _ tuistapi.Cookie) (context.Context, error) {
-	return ctx, nil
-}
-
 type TuistCache struct {
 	server *tuistapi.Server
 
@@ -35,7 +25,7 @@ type TuistCache struct {
 func New() (*TuistCache, error) {
 	tc := &TuistCache{}
 
-	server, err := tuistapi.NewServer(tc, NoSecurity{})
+	server, err := tuistapi.NewServer(tc)
 	if err != nil {
 		return nil, err
 	}
