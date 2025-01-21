@@ -10,6 +10,29 @@ import (
 	"github.com/ogen-go/ogen/validate"
 )
 
+func (s *Account) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.ID)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "id",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
 func (s *ArtifactMultipartUploadParts) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
@@ -202,12 +225,59 @@ func (s *CommandEvent) Validate() error {
 	return nil
 }
 
+func (s *CommandEventArtifact) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.Type.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "type",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s CommandEventArtifactType) Validate() error {
+	switch s {
+	case "result_bundle":
+		return nil
+	case "invocation_record":
+		return nil
+	case "result_bundle_object":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s *CompleteAnalyticsArtifactMultipartUploadReq) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
 
 	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.CommandEventArtifact.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "command_event_artifact",
+			Error: err,
+		})
+	}
 	if err := func() error {
 		if err := s.MultipartUploadParts.Validate(); err != nil {
 			return err
@@ -310,6 +380,55 @@ func (s *CompletePreviewsMultipartUploadReq) Validate() error {
 	return nil
 }
 
+func (s *CreateAccountTokenReq) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Scopes == nil {
+			return errors.New("nil is invalid value")
+		}
+		var failures []validate.FieldError
+		for i, elem := range s.Scopes {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "scopes",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s CreateAccountTokenReqScopesItem) Validate() error {
+	switch s {
+	case "account_registry_read":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s *CreateCommandEventReq) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
@@ -360,6 +479,29 @@ func (s CreateCommandEventReqStatus) Validate() error {
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}
+}
+
+func (s *GenerateAnalyticsArtifactMultipartUploadURLReq) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if err := s.CommandEventArtifact.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "command_event_artifact",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
 }
 
 func (s *Invitation) Validate() error {
@@ -447,6 +589,38 @@ func (s *ListOrganizationsOK) Validate() error {
 	return nil
 }
 
+func (s ListPreviewsDistinctField) Validate() error {
+	switch s {
+	case "bundle_identifier":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s *ListPreviewsOK) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Previews == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "previews",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
 func (s *ListProjectTokensOK) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
@@ -501,6 +675,46 @@ func (s *ListProjectsOK) Validate() error {
 	}(); err != nil {
 		failures = append(failures, validate.FieldError{
 			Name:  "projects",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s *ListRunsOK) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.Runs == nil {
+			return errors.New("nil is invalid value")
+		}
+		var failures []validate.FieldError
+		for i, elem := range s.Runs {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "runs",
 			Error: err,
 		})
 	}
@@ -682,6 +896,8 @@ func (s OrganizationSSOProvider) Validate() error {
 	switch s {
 	case "google":
 		return nil
+	case "okta":
+		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)
 	}
@@ -710,12 +926,104 @@ func (s *OrganizationUsage) Validate() error {
 	return nil
 }
 
+func (s PreviewSupportedPlatform) Validate() error {
+	switch s {
+	case "ios":
+		return nil
+	case "ios_simulator":
+		return nil
+	case "tvos":
+		return nil
+	case "tvos_simulator":
+		return nil
+	case "watchos":
+		return nil
+	case "watchos_simulator":
+		return nil
+	case "visionos":
+		return nil
+	case "visionos_simulator":
+		return nil
+	case "macos":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
 func (s *Project) Validate() error {
 	if s == nil {
 		return validate.ErrNilPointer
 	}
 
 	var failures []validate.FieldError
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.ID)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "id",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := s.Visibility.Validate(); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "visibility",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s ProjectVisibility) Validate() error {
+	switch s {
+	case "private":
+		return nil
+	case "public":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s *Run) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if s.CommandArguments == nil {
+			return errors.New("nil is invalid value")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "command_arguments",
+			Error: err,
+		})
+	}
+	if err := func() error {
+		if err := (validate.Float{}).Validate(float64(s.Duration)); err != nil {
+			return errors.Wrap(err, "float")
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "duration",
+			Error: err,
+		})
+	}
 	if err := func() error {
 		if err := (validate.Float{}).Validate(float64(s.ID)); err != nil {
 			return errors.Wrap(err, "float")
@@ -771,6 +1079,31 @@ func (s *StartPreviewsMultipartUploadReq) Validate() error {
 	}
 
 	var failures []validate.FieldError
+	if err := func() error {
+		var failures []validate.FieldError
+		for i, elem := range s.SupportedPlatforms {
+			if err := func() error {
+				if err := elem.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				failures = append(failures, validate.FieldError{
+					Name:  fmt.Sprintf("[%d]", i),
+					Error: err,
+				})
+			}
+		}
+		if len(failures) > 0 {
+			return &validate.Error{Fields: failures}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "supported_platforms",
+			Error: err,
+		})
+	}
 	if err := func() error {
 		if value, ok := s.Type.Get(); ok {
 			if err := func() error {
@@ -839,6 +1172,8 @@ func (s *UpdateOrganization2Req) Validate() error {
 func (s UpdateOrganization2ReqSSOProvider) Validate() error {
 	switch s {
 	case "google":
+		return nil
+	case "okta":
 		return nil
 	case "none":
 		return nil
@@ -915,7 +1250,50 @@ func (s UpdateOrganizationReqSSOProvider) Validate() error {
 	switch s {
 	case "google":
 		return nil
+	case "okta":
+		return nil
 	case "none":
+		return nil
+	default:
+		return errors.Errorf("invalid value: %v", s)
+	}
+}
+
+func (s *UpdateProjectReq) Validate() error {
+	if s == nil {
+		return validate.ErrNilPointer
+	}
+
+	var failures []validate.FieldError
+	if err := func() error {
+		if value, ok := s.Visibility.Get(); ok {
+			if err := func() error {
+				if err := value.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		failures = append(failures, validate.FieldError{
+			Name:  "visibility",
+			Error: err,
+		})
+	}
+	if len(failures) > 0 {
+		return &validate.Error{Fields: failures}
+	}
+	return nil
+}
+
+func (s UpdateProjectReqVisibility) Validate() error {
+	switch s {
+	case "public":
+		return nil
+	case "private":
 		return nil
 	default:
 		return errors.Errorf("invalid value: %v", s)

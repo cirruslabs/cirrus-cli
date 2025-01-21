@@ -16,16 +16,6 @@ import (
 	"testing"
 )
 
-type NoSecurity struct{}
-
-func (NoSecurity) Authorization(_ context.Context, _ string) (tuistapi.Authorization, error) {
-	return tuistapi.Authorization{}, nil
-}
-
-func (NoSecurity) Cookie(_ context.Context, _ string) (tuistapi.Cookie, error) {
-	return tuistapi.Cookie{}, nil
-}
-
 func TestTuistCache(t *testing.T) {
 	testutil.NeedsContainerization(t)
 
@@ -38,7 +28,7 @@ func TestTuistCache(t *testing.T) {
 
 	tuistCacheURL := tuistcache.URL(http_cache.Start(http_cache.WithTuistCache(tuistCache)))
 
-	tuistCacheClient, err := tuistapi.NewClient(tuistCacheURL, NoSecurity{})
+	tuistCacheClient, err := tuistapi.NewClient(tuistCacheURL)
 	require.NoError(t, err)
 
 	projectID := "account-name/project-name"

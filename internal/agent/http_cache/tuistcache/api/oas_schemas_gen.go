@@ -6,41 +6,78 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
-	"github.com/go-faster/jx"
 )
 
-// The URL to download an artifact.
-// Ref: #/components/schemas/ArtifactDownloadURL
-type ArtifactDownloadURL struct {
-	// The UNIX timestamp when the URL expires.
-	ExpiresAt int `json:"expires_at"`
-	// The URL to download the artifact.
-	URL string `json:"url"`
+// Ref: #/components/schemas/Account
+type Account struct {
+	// The handle of the account.
+	Handle string `json:"handle"`
+	// ID of the account.
+	ID float64 `json:"id"`
 }
 
-// GetExpiresAt returns the value of ExpiresAt.
-func (s *ArtifactDownloadURL) GetExpiresAt() int {
-	return s.ExpiresAt
+// GetHandle returns the value of Handle.
+func (s *Account) GetHandle() string {
+	return s.Handle
 }
 
-// GetURL returns the value of URL.
-func (s *ArtifactDownloadURL) GetURL() string {
-	return s.URL
+// GetID returns the value of ID.
+func (s *Account) GetID() float64 {
+	return s.ID
 }
 
-// SetExpiresAt sets the value of ExpiresAt.
-func (s *ArtifactDownloadURL) SetExpiresAt(val int) {
-	s.ExpiresAt = val
+// SetHandle sets the value of Handle.
+func (s *Account) SetHandle(val string) {
+	s.Handle = val
 }
 
-// SetURL sets the value of URL.
-func (s *ArtifactDownloadURL) SetURL(val string) {
-	s.URL = val
+// SetID sets the value of ID.
+func (s *Account) SetID(val float64) {
+	s.ID = val
 }
 
-func (*ArtifactDownloadURL) downloadPreviewRes() {}
+func (*Account) updateAccountRes() {}
 
-type ArtifactMultipartUploadPart jx.Raw
+// Represents an multipart upload's part identified by the upload id and the part number.
+// Ref: #/components/schemas/ArtifactMultipartUploadPart
+type ArtifactMultipartUploadPart struct {
+	// The content length of the part.
+	ContentLength OptInt `json:"content_length"`
+	// The part number of the multipart upload.
+	PartNumber int `json:"part_number"`
+	// The upload ID.
+	UploadID string `json:"upload_id"`
+}
+
+// GetContentLength returns the value of ContentLength.
+func (s *ArtifactMultipartUploadPart) GetContentLength() OptInt {
+	return s.ContentLength
+}
+
+// GetPartNumber returns the value of PartNumber.
+func (s *ArtifactMultipartUploadPart) GetPartNumber() int {
+	return s.PartNumber
+}
+
+// GetUploadID returns the value of UploadID.
+func (s *ArtifactMultipartUploadPart) GetUploadID() string {
+	return s.UploadID
+}
+
+// SetContentLength sets the value of ContentLength.
+func (s *ArtifactMultipartUploadPart) SetContentLength(val OptInt) {
+	s.ContentLength = val
+}
+
+// SetPartNumber sets the value of PartNumber.
+func (s *ArtifactMultipartUploadPart) SetPartNumber(val int) {
+	s.PartNumber = val
+}
+
+// SetUploadID sets the value of UploadID.
+func (s *ArtifactMultipartUploadPart) SetUploadID(val string) {
+	s.UploadID = val
+}
 
 // It represents a part that has been uploaded using multipart uploads. The part is identified by its
 // number and the etag.
@@ -260,6 +297,37 @@ func (s *ArtifactUploadIDStatus) UnmarshalText(data []byte) error {
 	}
 }
 
+// The URL to upload an artifact.
+// Ref: #/components/schemas/ArtifactUploadURL
+type ArtifactUploadURL struct {
+	// The UNIX timestamp when the URL expires.
+	ExpiresAt int `json:"expires_at"`
+	// The URL to upload the artifact.
+	URL string `json:"url"`
+}
+
+// GetExpiresAt returns the value of ExpiresAt.
+func (s *ArtifactUploadURL) GetExpiresAt() int {
+	return s.ExpiresAt
+}
+
+// GetURL returns the value of URL.
+func (s *ArtifactUploadURL) GetURL() string {
+	return s.URL
+}
+
+// SetExpiresAt sets the value of ExpiresAt.
+func (s *ArtifactUploadURL) SetExpiresAt(val int) {
+	s.ExpiresAt = val
+}
+
+// SetURL sets the value of URL.
+func (s *ArtifactUploadURL) SetURL(val string) {
+	s.URL = val
+}
+
+func (*ArtifactUploadURL) uploadPreviewIconRes() {}
+
 type AuthenticateReq struct {
 	// The email to authenticate with.
 	Email string `json:"email"`
@@ -319,20 +387,6 @@ func (s *AuthenticationTokens) SetRefreshToken(val string) {
 
 func (*AuthenticationTokens) authenticateRes() {}
 func (*AuthenticationTokens) refreshTokenRes() {}
-
-type Authorization struct {
-	Token string
-}
-
-// GetToken returns the value of Token.
-func (s *Authorization) GetToken() string {
-	return s.Token
-}
-
-// SetToken sets the value of Token.
-func (s *Authorization) SetToken(val string) {
-	s.Token = val
-}
 
 // Represents an action item stored in the cache.
 // Ref: #/components/schemas/CacheActionItem
@@ -603,6 +657,38 @@ func (s *CacheCategory) UnmarshalText(data []byte) error {
 	}
 }
 
+type CancelInvitationForbidden Error
+
+func (*CancelInvitationForbidden) cancelInvitationRes() {}
+
+// CancelInvitationNoContent is response for CancelInvitation operation.
+type CancelInvitationNoContent struct{}
+
+func (*CancelInvitationNoContent) cancelInvitationRes() {}
+
+type CancelInvitationNotFound Error
+
+func (*CancelInvitationNotFound) cancelInvitationRes() {}
+
+type CancelInvitationReq struct {
+	// The email of the invitee.
+	InviteeEmail string `json:"invitee_email"`
+}
+
+// GetInviteeEmail returns the value of InviteeEmail.
+func (s *CancelInvitationReq) GetInviteeEmail() string {
+	return s.InviteeEmail
+}
+
+// SetInviteeEmail sets the value of InviteeEmail.
+func (s *CancelInvitationReq) SetInviteeEmail(val string) {
+	s.InviteeEmail = val
+}
+
+type CancelInvitationUnauthorized Error
+
+func (*CancelInvitationUnauthorized) cancelInvitationRes() {}
+
 type CleanCacheForbidden Error
 
 func (*CleanCacheForbidden) cleanCacheRes() {}
@@ -663,7 +749,93 @@ func (s *CommandEvent) SetURL(val string) {
 
 func (*CommandEvent) createCommandEventRes() {}
 
-type CommandEventArtifact jx.Raw
+// It represents an artifact that's associated with a command event (e.g. result bundles).
+// Ref: #/components/schemas/CommandEventArtifact
+type CommandEventArtifact struct {
+	// The name of the file. It's used only for certain types such as result_bundle_object.
+	Name OptString `json:"name"`
+	// The command event artifact type. It can be:
+	// - result_bundle: A result bundle artifact that represents the whole `.xcresult` bundle
+	// - invocation_record: An invocation record artifact. This is a root bundle object of the result
+	// bundle
+	// - result_bundle_object: A result bundle object. There are many different bundle objects per result
+	// bundle.
+	Type CommandEventArtifactType `json:"type"`
+}
+
+// GetName returns the value of Name.
+func (s *CommandEventArtifact) GetName() OptString {
+	return s.Name
+}
+
+// GetType returns the value of Type.
+func (s *CommandEventArtifact) GetType() CommandEventArtifactType {
+	return s.Type
+}
+
+// SetName sets the value of Name.
+func (s *CommandEventArtifact) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetType sets the value of Type.
+func (s *CommandEventArtifact) SetType(val CommandEventArtifactType) {
+	s.Type = val
+}
+
+// The command event artifact type. It can be:
+// - result_bundle: A result bundle artifact that represents the whole `.xcresult` bundle
+// - invocation_record: An invocation record artifact. This is a root bundle object of the result
+// bundle
+// - result_bundle_object: A result bundle object. There are many different bundle objects per result
+// bundle.
+type CommandEventArtifactType string
+
+const (
+	CommandEventArtifactTypeResultBundle       CommandEventArtifactType = "result_bundle"
+	CommandEventArtifactTypeInvocationRecord   CommandEventArtifactType = "invocation_record"
+	CommandEventArtifactTypeResultBundleObject CommandEventArtifactType = "result_bundle_object"
+)
+
+// AllValues returns all CommandEventArtifactType values.
+func (CommandEventArtifactType) AllValues() []CommandEventArtifactType {
+	return []CommandEventArtifactType{
+		CommandEventArtifactTypeResultBundle,
+		CommandEventArtifactTypeInvocationRecord,
+		CommandEventArtifactTypeResultBundleObject,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CommandEventArtifactType) MarshalText() ([]byte, error) {
+	switch s {
+	case CommandEventArtifactTypeResultBundle:
+		return []byte(s), nil
+	case CommandEventArtifactTypeInvocationRecord:
+		return []byte(s), nil
+	case CommandEventArtifactTypeResultBundleObject:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CommandEventArtifactType) UnmarshalText(data []byte) error {
+	switch CommandEventArtifactType(data) {
+	case CommandEventArtifactTypeResultBundle:
+		*s = CommandEventArtifactTypeResultBundle
+		return nil
+	case CommandEventArtifactTypeInvocationRecord:
+		*s = CommandEventArtifactTypeInvocationRecord
+		return nil
+	case CommandEventArtifactTypeResultBundleObject:
+		*s = CommandEventArtifactTypeResultBundleObject
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
 
 type CompleteAnalyticsArtifactMultipartUploadForbidden Error
 
@@ -879,24 +1051,6 @@ type CompletePreviewsMultipartUploadNotFound Error
 
 func (*CompletePreviewsMultipartUploadNotFound) completePreviewsMultipartUploadRes() {}
 
-// The preview multipart upload has been completed.
-type CompletePreviewsMultipartUploadOK struct {
-	// The URL to download the preview.
-	URL string `json:"url"`
-}
-
-// GetURL returns the value of URL.
-func (s *CompletePreviewsMultipartUploadOK) GetURL() string {
-	return s.URL
-}
-
-// SetURL sets the value of URL.
-func (s *CompletePreviewsMultipartUploadOK) SetURL(val string) {
-	s.URL = val
-}
-
-func (*CompletePreviewsMultipartUploadOK) completePreviewsMultipartUploadRes() {}
-
 // The request body to complete the multipart upload of a preview.
 type CompletePreviewsMultipartUploadReq struct {
 	MultipartUploadParts ArtifactMultipartUploadParts `json:"multipart_upload_parts"`
@@ -928,19 +1082,86 @@ type CompletePreviewsMultipartUploadUnauthorized Error
 
 func (*CompletePreviewsMultipartUploadUnauthorized) completePreviewsMultipartUploadRes() {}
 
-type Cookie struct {
-	APIKey string
+type CreateAccountTokenForbidden Error
+
+func (*CreateAccountTokenForbidden) createAccountTokenRes() {}
+
+type CreateAccountTokenNotFound Error
+
+func (*CreateAccountTokenNotFound) createAccountTokenRes() {}
+
+// A new account token.
+type CreateAccountTokenOK struct {
+	// The generated account token.
+	Token string `json:"token"`
 }
 
-// GetAPIKey returns the value of APIKey.
-func (s *Cookie) GetAPIKey() string {
-	return s.APIKey
+// GetToken returns the value of Token.
+func (s *CreateAccountTokenOK) GetToken() string {
+	return s.Token
 }
 
-// SetAPIKey sets the value of APIKey.
-func (s *Cookie) SetAPIKey(val string) {
-	s.APIKey = val
+// SetToken sets the value of Token.
+func (s *CreateAccountTokenOK) SetToken(val string) {
+	s.Token = val
 }
+
+func (*CreateAccountTokenOK) createAccountTokenRes() {}
+
+// The request to create a new account token.
+type CreateAccountTokenReq struct {
+	// The scopes for the new account token.
+	Scopes []CreateAccountTokenReqScopesItem `json:"scopes"`
+}
+
+// GetScopes returns the value of Scopes.
+func (s *CreateAccountTokenReq) GetScopes() []CreateAccountTokenReqScopesItem {
+	return s.Scopes
+}
+
+// SetScopes sets the value of Scopes.
+func (s *CreateAccountTokenReq) SetScopes(val []CreateAccountTokenReqScopesItem) {
+	s.Scopes = val
+}
+
+// The scope of the token.
+type CreateAccountTokenReqScopesItem string
+
+const (
+	CreateAccountTokenReqScopesItemAccountRegistryRead CreateAccountTokenReqScopesItem = "account_registry_read"
+)
+
+// AllValues returns all CreateAccountTokenReqScopesItem values.
+func (CreateAccountTokenReqScopesItem) AllValues() []CreateAccountTokenReqScopesItem {
+	return []CreateAccountTokenReqScopesItem{
+		CreateAccountTokenReqScopesItemAccountRegistryRead,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CreateAccountTokenReqScopesItem) MarshalText() ([]byte, error) {
+	switch s {
+	case CreateAccountTokenReqScopesItemAccountRegistryRead:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CreateAccountTokenReqScopesItem) UnmarshalText(data []byte) error {
+	switch CreateAccountTokenReqScopesItem(data) {
+	case CreateAccountTokenReqScopesItemAccountRegistryRead:
+		*s = CreateAccountTokenReqScopesItemAccountRegistryRead
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type CreateAccountTokenUnauthorized Error
+
+func (*CreateAccountTokenUnauthorized) createAccountTokenRes() {}
 
 type CreateCommandEventForbidden Error
 
@@ -955,6 +1176,8 @@ type CreateCommandEventReq struct {
 	Duration float64 `json:"duration"`
 	// The error message of the command.
 	ErrorMessage OptString `json:"error_message"`
+	// The git branch.
+	GitBranch OptString `json:"git_branch"`
 	// The commit SHA.
 	GitCommitSha OptString `json:"git_commit_sha"`
 	// The git ref. When on CI, the value can be equal to remote reference such as `refs/pull/1234/merge`.
@@ -999,6 +1222,11 @@ func (s *CreateCommandEventReq) GetDuration() float64 {
 // GetErrorMessage returns the value of ErrorMessage.
 func (s *CreateCommandEventReq) GetErrorMessage() OptString {
 	return s.ErrorMessage
+}
+
+// GetGitBranch returns the value of GitBranch.
+func (s *CreateCommandEventReq) GetGitBranch() OptString {
+	return s.GitBranch
 }
 
 // GetGitCommitSha returns the value of GitCommitSha.
@@ -1079,6 +1307,11 @@ func (s *CreateCommandEventReq) SetDuration(val float64) {
 // SetErrorMessage sets the value of ErrorMessage.
 func (s *CreateCommandEventReq) SetErrorMessage(val OptString) {
 	s.ErrorMessage = val
+}
+
+// SetGitBranch sets the value of GitBranch.
+func (s *CreateCommandEventReq) SetGitBranch(val OptString) {
+	s.GitBranch = val
 }
 
 // SetGitCommitSha sets the value of GitCommitSha.
@@ -1477,6 +1710,7 @@ func (*Error) authenticateRes()       {}
 func (*Error) createOrganizationRes() {}
 func (*Error) getDeviceCodeRes()      {}
 func (*Error) listProjectsRes()       {}
+func (*Error) listRunsRes()           {}
 func (*Error) refreshTokenRes()       {}
 
 type GenerateAnalyticsArtifactMultipartUploadURLForbidden Error
@@ -1731,6 +1965,65 @@ type ListOrganizationsUnauthorized Error
 
 func (*ListOrganizationsUnauthorized) listOrganizationsRes() {}
 
+type ListPreviewsDistinctField string
+
+const (
+	ListPreviewsDistinctFieldBundleIdentifier ListPreviewsDistinctField = "bundle_identifier"
+)
+
+// AllValues returns all ListPreviewsDistinctField values.
+func (ListPreviewsDistinctField) AllValues() []ListPreviewsDistinctField {
+	return []ListPreviewsDistinctField{
+		ListPreviewsDistinctFieldBundleIdentifier,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ListPreviewsDistinctField) MarshalText() ([]byte, error) {
+	switch s {
+	case ListPreviewsDistinctFieldBundleIdentifier:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ListPreviewsDistinctField) UnmarshalText(data []byte) error {
+	switch ListPreviewsDistinctField(data) {
+	case ListPreviewsDistinctFieldBundleIdentifier:
+		*s = ListPreviewsDistinctFieldBundleIdentifier
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+type ListPreviewsForbidden Error
+
+func (*ListPreviewsForbidden) listPreviewsRes() {}
+
+type ListPreviewsOK struct {
+	// Previews list.
+	Previews []Preview `json:"previews"`
+}
+
+// GetPreviews returns the value of Previews.
+func (s *ListPreviewsOK) GetPreviews() []Preview {
+	return s.Previews
+}
+
+// SetPreviews sets the value of Previews.
+func (s *ListPreviewsOK) SetPreviews(val []Preview) {
+	s.Previews = val
+}
+
+func (*ListPreviewsOK) listPreviewsRes() {}
+
+type ListPreviewsUnauthorized Error
+
+func (*ListPreviewsUnauthorized) listPreviewsRes() {}
+
 type ListProjectTokensForbidden Error
 
 func (*ListProjectTokensForbidden) listProjectTokensRes() {}
@@ -1775,6 +2068,22 @@ func (s *ListProjectsOK) SetProjects(val []Project) {
 }
 
 func (*ListProjectsOK) listProjectsRes() {}
+
+type ListRunsOK struct {
+	Runs []Run `json:"runs"`
+}
+
+// GetRuns returns the value of Runs.
+func (s *ListRunsOK) GetRuns() []Run {
+	return s.Runs
+}
+
+// SetRuns sets the value of Runs.
+func (s *ListRunsOK) SetRuns(val []Run) {
+	s.Runs = val
+}
+
+func (*ListRunsOK) listRunsRes() {}
 
 // Ref: #/components/schemas/Module
 type Module struct {
@@ -1948,6 +2257,98 @@ func (o OptCacheCategory) Get() (v CacheCategory, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptCacheCategory) Or(d CacheCategory) CacheCategory {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptCancelInvitationReq returns new OptCancelInvitationReq with value set to v.
+func NewOptCancelInvitationReq(v CancelInvitationReq) OptCancelInvitationReq {
+	return OptCancelInvitationReq{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCancelInvitationReq is optional CancelInvitationReq.
+type OptCancelInvitationReq struct {
+	Value CancelInvitationReq
+	Set   bool
+}
+
+// IsSet returns true if OptCancelInvitationReq was set.
+func (o OptCancelInvitationReq) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCancelInvitationReq) Reset() {
+	var v CancelInvitationReq
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCancelInvitationReq) SetTo(v CancelInvitationReq) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCancelInvitationReq) Get() (v CancelInvitationReq, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCancelInvitationReq) Or(d CancelInvitationReq) CancelInvitationReq {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptCommandEventArtifact returns new OptCommandEventArtifact with value set to v.
+func NewOptCommandEventArtifact(v CommandEventArtifact) OptCommandEventArtifact {
+	return OptCommandEventArtifact{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCommandEventArtifact is optional CommandEventArtifact.
+type OptCommandEventArtifact struct {
+	Value CommandEventArtifact
+	Set   bool
+}
+
+// IsSet returns true if OptCommandEventArtifact was set.
+func (o OptCommandEventArtifact) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCommandEventArtifact) Reset() {
+	var v CommandEventArtifact
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCommandEventArtifact) SetTo(v CommandEventArtifact) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCommandEventArtifact) Get() (v CommandEventArtifact, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCommandEventArtifact) Or(d CommandEventArtifact) CommandEventArtifact {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -2178,6 +2579,52 @@ func (o OptCompletePreviewsMultipartUploadReq) Get() (v CompletePreviewsMultipar
 
 // Or returns value if set, or given parameter if does not.
 func (o OptCompletePreviewsMultipartUploadReq) Or(d CompletePreviewsMultipartUploadReq) CompletePreviewsMultipartUploadReq {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptCreateAccountTokenReq returns new OptCreateAccountTokenReq with value set to v.
+func NewOptCreateAccountTokenReq(v CreateAccountTokenReq) OptCreateAccountTokenReq {
+	return OptCreateAccountTokenReq{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCreateAccountTokenReq is optional CreateAccountTokenReq.
+type OptCreateAccountTokenReq struct {
+	Value CreateAccountTokenReq
+	Set   bool
+}
+
+// IsSet returns true if OptCreateAccountTokenReq was set.
+func (o OptCreateAccountTokenReq) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCreateAccountTokenReq) Reset() {
+	var v CreateAccountTokenReq
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCreateAccountTokenReq) SetTo(v CreateAccountTokenReq) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCreateAccountTokenReq) Get() (v CreateAccountTokenReq, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCreateAccountTokenReq) Or(d CreateAccountTokenReq) CreateAccountTokenReq {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -2598,6 +3045,52 @@ func (o OptInt) Or(d int) int {
 	return d
 }
 
+// NewOptListPreviewsDistinctField returns new OptListPreviewsDistinctField with value set to v.
+func NewOptListPreviewsDistinctField(v ListPreviewsDistinctField) OptListPreviewsDistinctField {
+	return OptListPreviewsDistinctField{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptListPreviewsDistinctField is optional ListPreviewsDistinctField.
+type OptListPreviewsDistinctField struct {
+	Value ListPreviewsDistinctField
+	Set   bool
+}
+
+// IsSet returns true if OptListPreviewsDistinctField was set.
+func (o OptListPreviewsDistinctField) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptListPreviewsDistinctField) Reset() {
+	var v ListPreviewsDistinctField
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptListPreviewsDistinctField) SetTo(v ListPreviewsDistinctField) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptListPreviewsDistinctField) Get() (v ListPreviewsDistinctField, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptListPreviewsDistinctField) Or(d ListPreviewsDistinctField) ListPreviewsDistinctField {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptNilString returns new OptNilString with value set to v.
 func NewOptNilString(v string) OptNilString {
 	return OptNilString{
@@ -2891,6 +3384,52 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
+// NewOptUpdateAccountReq returns new OptUpdateAccountReq with value set to v.
+func NewOptUpdateAccountReq(v UpdateAccountReq) OptUpdateAccountReq {
+	return OptUpdateAccountReq{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptUpdateAccountReq is optional UpdateAccountReq.
+type OptUpdateAccountReq struct {
+	Value UpdateAccountReq
+	Set   bool
+}
+
+// IsSet returns true if OptUpdateAccountReq was set.
+func (o OptUpdateAccountReq) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptUpdateAccountReq) Reset() {
+	var v UpdateAccountReq
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptUpdateAccountReq) SetTo(v UpdateAccountReq) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptUpdateAccountReq) Get() (v UpdateAccountReq, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptUpdateAccountReq) Or(d UpdateAccountReq) UpdateAccountReq {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptUpdateOrganization2Req returns new OptUpdateOrganization2Req with value set to v.
 func NewOptUpdateOrganization2Req(v UpdateOrganization2Req) OptUpdateOrganization2Req {
 	return OptUpdateOrganization2Req{
@@ -3161,6 +3700,52 @@ func (o OptUpdateProjectReq) Get() (v UpdateProjectReq, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptUpdateProjectReq) Or(d UpdateProjectReq) UpdateProjectReq {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptUpdateProjectReqVisibility returns new OptUpdateProjectReqVisibility with value set to v.
+func NewOptUpdateProjectReqVisibility(v UpdateProjectReqVisibility) OptUpdateProjectReqVisibility {
+	return OptUpdateProjectReqVisibility{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptUpdateProjectReqVisibility is optional UpdateProjectReqVisibility.
+type OptUpdateProjectReqVisibility struct {
+	Value UpdateProjectReqVisibility
+	Set   bool
+}
+
+// IsSet returns true if OptUpdateProjectReqVisibility was set.
+func (o OptUpdateProjectReqVisibility) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptUpdateProjectReqVisibility) Reset() {
+	var v UpdateProjectReqVisibility
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptUpdateProjectReqVisibility) SetTo(v UpdateProjectReqVisibility) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptUpdateProjectReqVisibility) Get() (v UpdateProjectReqVisibility, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptUpdateProjectReqVisibility) Or(d UpdateProjectReqVisibility) UpdateProjectReqVisibility {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -3465,12 +4050,14 @@ type OrganizationSSOProvider string
 
 const (
 	OrganizationSSOProviderGoogle OrganizationSSOProvider = "google"
+	OrganizationSSOProviderOkta   OrganizationSSOProvider = "okta"
 )
 
 // AllValues returns all OrganizationSSOProvider values.
 func (OrganizationSSOProvider) AllValues() []OrganizationSSOProvider {
 	return []OrganizationSSOProvider{
 		OrganizationSSOProviderGoogle,
+		OrganizationSSOProviderOkta,
 	}
 }
 
@@ -3478,6 +4065,8 @@ func (OrganizationSSOProvider) AllValues() []OrganizationSSOProvider {
 func (s OrganizationSSOProvider) MarshalText() ([]byte, error) {
 	switch s {
 	case OrganizationSSOProviderGoogle:
+		return []byte(s), nil
+	case OrganizationSSOProviderOkta:
 		return []byte(s), nil
 	default:
 		return nil, errors.Errorf("invalid value: %q", s)
@@ -3489,6 +4078,9 @@ func (s *OrganizationSSOProvider) UnmarshalText(data []byte) error {
 	switch OrganizationSSOProvider(data) {
 	case OrganizationSSOProviderGoogle:
 		*s = OrganizationSSOProviderGoogle
+		return nil
+	case OrganizationSSOProviderOkta:
+		*s = OrganizationSSOProviderOkta
 		return nil
 	default:
 		return errors.Errorf("invalid value: %q", data)
@@ -3514,6 +4106,200 @@ func (s *OrganizationUsage) SetCurrentMonthRemoteCacheHits(val float64) {
 
 func (*OrganizationUsage) showOrganizationUsageRes() {}
 
+// Ref: #/components/schemas/Preview
+type Preview struct {
+	// The bundle identifier of the preview.
+	BundleIdentifier OptString `json:"bundle_identifier"`
+	// The display name of the preview.
+	DisplayName OptString `json:"display_name"`
+	// The git branch associated with the preview.
+	GitBranch OptString `json:"git_branch"`
+	// The git commit SHA associated with the preview.
+	GitCommitSha OptString `json:"git_commit_sha"`
+	// The URL for the icon image of the preview.
+	IconURL string `json:"icon_url"`
+	// Unique identifier of the preview.
+	ID string `json:"id"`
+	// The URL for the QR code image to dowload the preview.
+	QrCodeURL string `json:"qr_code_url"`
+	// The URL to download the preview.
+	URL string `json:"url"`
+}
+
+// GetBundleIdentifier returns the value of BundleIdentifier.
+func (s *Preview) GetBundleIdentifier() OptString {
+	return s.BundleIdentifier
+}
+
+// GetDisplayName returns the value of DisplayName.
+func (s *Preview) GetDisplayName() OptString {
+	return s.DisplayName
+}
+
+// GetGitBranch returns the value of GitBranch.
+func (s *Preview) GetGitBranch() OptString {
+	return s.GitBranch
+}
+
+// GetGitCommitSha returns the value of GitCommitSha.
+func (s *Preview) GetGitCommitSha() OptString {
+	return s.GitCommitSha
+}
+
+// GetIconURL returns the value of IconURL.
+func (s *Preview) GetIconURL() string {
+	return s.IconURL
+}
+
+// GetID returns the value of ID.
+func (s *Preview) GetID() string {
+	return s.ID
+}
+
+// GetQrCodeURL returns the value of QrCodeURL.
+func (s *Preview) GetQrCodeURL() string {
+	return s.QrCodeURL
+}
+
+// GetURL returns the value of URL.
+func (s *Preview) GetURL() string {
+	return s.URL
+}
+
+// SetBundleIdentifier sets the value of BundleIdentifier.
+func (s *Preview) SetBundleIdentifier(val OptString) {
+	s.BundleIdentifier = val
+}
+
+// SetDisplayName sets the value of DisplayName.
+func (s *Preview) SetDisplayName(val OptString) {
+	s.DisplayName = val
+}
+
+// SetGitBranch sets the value of GitBranch.
+func (s *Preview) SetGitBranch(val OptString) {
+	s.GitBranch = val
+}
+
+// SetGitCommitSha sets the value of GitCommitSha.
+func (s *Preview) SetGitCommitSha(val OptString) {
+	s.GitCommitSha = val
+}
+
+// SetIconURL sets the value of IconURL.
+func (s *Preview) SetIconURL(val string) {
+	s.IconURL = val
+}
+
+// SetID sets the value of ID.
+func (s *Preview) SetID(val string) {
+	s.ID = val
+}
+
+// SetQrCodeURL sets the value of QrCodeURL.
+func (s *Preview) SetQrCodeURL(val string) {
+	s.QrCodeURL = val
+}
+
+// SetURL sets the value of URL.
+func (s *Preview) SetURL(val string) {
+	s.URL = val
+}
+
+func (*Preview) completePreviewsMultipartUploadRes() {}
+func (*Preview) downloadPreviewRes()                 {}
+
+// Ref: #/components/schemas/PreviewSupportedPlatform
+type PreviewSupportedPlatform string
+
+const (
+	PreviewSupportedPlatformIos               PreviewSupportedPlatform = "ios"
+	PreviewSupportedPlatformIosSimulator      PreviewSupportedPlatform = "ios_simulator"
+	PreviewSupportedPlatformTvos              PreviewSupportedPlatform = "tvos"
+	PreviewSupportedPlatformTvosSimulator     PreviewSupportedPlatform = "tvos_simulator"
+	PreviewSupportedPlatformWatchos           PreviewSupportedPlatform = "watchos"
+	PreviewSupportedPlatformWatchosSimulator  PreviewSupportedPlatform = "watchos_simulator"
+	PreviewSupportedPlatformVisionos          PreviewSupportedPlatform = "visionos"
+	PreviewSupportedPlatformVisionosSimulator PreviewSupportedPlatform = "visionos_simulator"
+	PreviewSupportedPlatformMacos             PreviewSupportedPlatform = "macos"
+)
+
+// AllValues returns all PreviewSupportedPlatform values.
+func (PreviewSupportedPlatform) AllValues() []PreviewSupportedPlatform {
+	return []PreviewSupportedPlatform{
+		PreviewSupportedPlatformIos,
+		PreviewSupportedPlatformIosSimulator,
+		PreviewSupportedPlatformTvos,
+		PreviewSupportedPlatformTvosSimulator,
+		PreviewSupportedPlatformWatchos,
+		PreviewSupportedPlatformWatchosSimulator,
+		PreviewSupportedPlatformVisionos,
+		PreviewSupportedPlatformVisionosSimulator,
+		PreviewSupportedPlatformMacos,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s PreviewSupportedPlatform) MarshalText() ([]byte, error) {
+	switch s {
+	case PreviewSupportedPlatformIos:
+		return []byte(s), nil
+	case PreviewSupportedPlatformIosSimulator:
+		return []byte(s), nil
+	case PreviewSupportedPlatformTvos:
+		return []byte(s), nil
+	case PreviewSupportedPlatformTvosSimulator:
+		return []byte(s), nil
+	case PreviewSupportedPlatformWatchos:
+		return []byte(s), nil
+	case PreviewSupportedPlatformWatchosSimulator:
+		return []byte(s), nil
+	case PreviewSupportedPlatformVisionos:
+		return []byte(s), nil
+	case PreviewSupportedPlatformVisionosSimulator:
+		return []byte(s), nil
+	case PreviewSupportedPlatformMacos:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *PreviewSupportedPlatform) UnmarshalText(data []byte) error {
+	switch PreviewSupportedPlatform(data) {
+	case PreviewSupportedPlatformIos:
+		*s = PreviewSupportedPlatformIos
+		return nil
+	case PreviewSupportedPlatformIosSimulator:
+		*s = PreviewSupportedPlatformIosSimulator
+		return nil
+	case PreviewSupportedPlatformTvos:
+		*s = PreviewSupportedPlatformTvos
+		return nil
+	case PreviewSupportedPlatformTvosSimulator:
+		*s = PreviewSupportedPlatformTvosSimulator
+		return nil
+	case PreviewSupportedPlatformWatchos:
+		*s = PreviewSupportedPlatformWatchos
+		return nil
+	case PreviewSupportedPlatformWatchosSimulator:
+		*s = PreviewSupportedPlatformWatchosSimulator
+		return nil
+	case PreviewSupportedPlatformVisionos:
+		*s = PreviewSupportedPlatformVisionos
+		return nil
+	case PreviewSupportedPlatformVisionosSimulator:
+		*s = PreviewSupportedPlatformVisionosSimulator
+		return nil
+	case PreviewSupportedPlatformMacos:
+		*s = PreviewSupportedPlatformMacos
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Ref: #/components/schemas/Project
 type Project struct {
 	// The default branch of the project.
@@ -3529,6 +4315,8 @@ type Project struct {
 	//
 	// Deprecated: schema marks this property as deprecated.
 	Token string `json:"token"`
+	// The visibility of the project.
+	Visibility ProjectVisibility `json:"visibility"`
 }
 
 // GetDefaultBranch returns the value of DefaultBranch.
@@ -3556,6 +4344,11 @@ func (s *Project) GetToken() string {
 	return s.Token
 }
 
+// GetVisibility returns the value of Visibility.
+func (s *Project) GetVisibility() ProjectVisibility {
+	return s.Visibility
+}
+
 // SetDefaultBranch sets the value of DefaultBranch.
 func (s *Project) SetDefaultBranch(val string) {
 	s.DefaultBranch = val
@@ -3579,6 +4372,11 @@ func (s *Project) SetRepositoryURL(val OptString) {
 // SetToken sets the value of Token.
 func (s *Project) SetToken(val string) {
 	s.Token = val
+}
+
+// SetVisibility sets the value of Visibility.
+func (s *Project) SetVisibility(val ProjectVisibility) {
+	s.Visibility = val
 }
 
 func (*Project) createProjectRes() {}
@@ -3612,6 +4410,48 @@ func (s *ProjectToken) SetID(val string) {
 // SetInsertedAt sets the value of InsertedAt.
 func (s *ProjectToken) SetInsertedAt(val time.Time) {
 	s.InsertedAt = val
+}
+
+// The visibility of the project.
+type ProjectVisibility string
+
+const (
+	ProjectVisibilityPrivate ProjectVisibility = "private"
+	ProjectVisibilityPublic  ProjectVisibility = "public"
+)
+
+// AllValues returns all ProjectVisibility values.
+func (ProjectVisibility) AllValues() []ProjectVisibility {
+	return []ProjectVisibility{
+		ProjectVisibilityPrivate,
+		ProjectVisibilityPublic,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ProjectVisibility) MarshalText() ([]byte, error) {
+	switch s {
+	case ProjectVisibilityPrivate:
+		return []byte(s), nil
+	case ProjectVisibilityPublic:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ProjectVisibility) UnmarshalText(data []byte) error {
+	switch ProjectVisibility(data) {
+	case ProjectVisibilityPrivate:
+		*s = ProjectVisibilityPrivate
+		return nil
+	case ProjectVisibilityPublic:
+		*s = ProjectVisibilityPublic
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 type RefreshTokenReq struct {
@@ -3649,6 +4489,252 @@ func (*RevokeProjectTokenNotFound) revokeProjectTokenRes() {}
 type RevokeProjectTokenUnauthorized Error
 
 func (*RevokeProjectTokenUnauthorized) revokeProjectTokenRes() {}
+
+// The schema for a Tuist run.
+// Ref: #/components/schemas/Run
+type Run struct {
+	// Cacheable targets of the run.
+	CacheableTargets []string `json:"cacheable_targets"`
+	// Arguments passed to the command.
+	CommandArguments []string `json:"command_arguments"`
+	// Duration of the run.
+	Duration float64 `json:"duration"`
+	// Git branch of the repository.
+	GitBranch string `json:"git_branch"`
+	// Git commit SHA of the repository.
+	GitCommitSha string `json:"git_commit_sha"`
+	// Git reference of the repository. When run from CI in a pull request, this will be the remote
+	// reference to the pull request, such as `refs/pull/23958/merge`.
+	GitRef string `json:"git_ref"`
+	// ID of the run.
+	ID float64 `json:"id"`
+	// Local cache target hits of the run.
+	LocalCacheTargetHits []string `json:"local_cache_target_hits"`
+	// Local test target hits of the run.
+	LocalTestTargetHits []string `json:"local_test_target_hits"`
+	// Version of macOS used.
+	MacosVersion string `json:"macos_version"`
+	// Command name of the run.
+	Name string `json:"name"`
+	// ID of the associated preview.
+	PreviewID OptString `json:"preview_id"`
+	// Remote cache target hits of the run.
+	RemoteCacheTargetHits []string `json:"remote_cache_target_hits"`
+	// Remote test target hits of the run.
+	RemoteTestTargetHits []string `json:"remote_test_target_hits"`
+	// Status of the command event.
+	Status string `json:"status"`
+	// Subcommand of the run.
+	Subcommand string `json:"subcommand"`
+	// Version of Swift used.
+	SwiftVersion string `json:"swift_version"`
+	// Test targets of the run.
+	TestTargets []string `json:"test_targets"`
+	// Version of Tuist used.
+	TuistVersion string `json:"tuist_version"`
+	// URL to the run.
+	URL string `json:"url"`
+}
+
+// GetCacheableTargets returns the value of CacheableTargets.
+func (s *Run) GetCacheableTargets() []string {
+	return s.CacheableTargets
+}
+
+// GetCommandArguments returns the value of CommandArguments.
+func (s *Run) GetCommandArguments() []string {
+	return s.CommandArguments
+}
+
+// GetDuration returns the value of Duration.
+func (s *Run) GetDuration() float64 {
+	return s.Duration
+}
+
+// GetGitBranch returns the value of GitBranch.
+func (s *Run) GetGitBranch() string {
+	return s.GitBranch
+}
+
+// GetGitCommitSha returns the value of GitCommitSha.
+func (s *Run) GetGitCommitSha() string {
+	return s.GitCommitSha
+}
+
+// GetGitRef returns the value of GitRef.
+func (s *Run) GetGitRef() string {
+	return s.GitRef
+}
+
+// GetID returns the value of ID.
+func (s *Run) GetID() float64 {
+	return s.ID
+}
+
+// GetLocalCacheTargetHits returns the value of LocalCacheTargetHits.
+func (s *Run) GetLocalCacheTargetHits() []string {
+	return s.LocalCacheTargetHits
+}
+
+// GetLocalTestTargetHits returns the value of LocalTestTargetHits.
+func (s *Run) GetLocalTestTargetHits() []string {
+	return s.LocalTestTargetHits
+}
+
+// GetMacosVersion returns the value of MacosVersion.
+func (s *Run) GetMacosVersion() string {
+	return s.MacosVersion
+}
+
+// GetName returns the value of Name.
+func (s *Run) GetName() string {
+	return s.Name
+}
+
+// GetPreviewID returns the value of PreviewID.
+func (s *Run) GetPreviewID() OptString {
+	return s.PreviewID
+}
+
+// GetRemoteCacheTargetHits returns the value of RemoteCacheTargetHits.
+func (s *Run) GetRemoteCacheTargetHits() []string {
+	return s.RemoteCacheTargetHits
+}
+
+// GetRemoteTestTargetHits returns the value of RemoteTestTargetHits.
+func (s *Run) GetRemoteTestTargetHits() []string {
+	return s.RemoteTestTargetHits
+}
+
+// GetStatus returns the value of Status.
+func (s *Run) GetStatus() string {
+	return s.Status
+}
+
+// GetSubcommand returns the value of Subcommand.
+func (s *Run) GetSubcommand() string {
+	return s.Subcommand
+}
+
+// GetSwiftVersion returns the value of SwiftVersion.
+func (s *Run) GetSwiftVersion() string {
+	return s.SwiftVersion
+}
+
+// GetTestTargets returns the value of TestTargets.
+func (s *Run) GetTestTargets() []string {
+	return s.TestTargets
+}
+
+// GetTuistVersion returns the value of TuistVersion.
+func (s *Run) GetTuistVersion() string {
+	return s.TuistVersion
+}
+
+// GetURL returns the value of URL.
+func (s *Run) GetURL() string {
+	return s.URL
+}
+
+// SetCacheableTargets sets the value of CacheableTargets.
+func (s *Run) SetCacheableTargets(val []string) {
+	s.CacheableTargets = val
+}
+
+// SetCommandArguments sets the value of CommandArguments.
+func (s *Run) SetCommandArguments(val []string) {
+	s.CommandArguments = val
+}
+
+// SetDuration sets the value of Duration.
+func (s *Run) SetDuration(val float64) {
+	s.Duration = val
+}
+
+// SetGitBranch sets the value of GitBranch.
+func (s *Run) SetGitBranch(val string) {
+	s.GitBranch = val
+}
+
+// SetGitCommitSha sets the value of GitCommitSha.
+func (s *Run) SetGitCommitSha(val string) {
+	s.GitCommitSha = val
+}
+
+// SetGitRef sets the value of GitRef.
+func (s *Run) SetGitRef(val string) {
+	s.GitRef = val
+}
+
+// SetID sets the value of ID.
+func (s *Run) SetID(val float64) {
+	s.ID = val
+}
+
+// SetLocalCacheTargetHits sets the value of LocalCacheTargetHits.
+func (s *Run) SetLocalCacheTargetHits(val []string) {
+	s.LocalCacheTargetHits = val
+}
+
+// SetLocalTestTargetHits sets the value of LocalTestTargetHits.
+func (s *Run) SetLocalTestTargetHits(val []string) {
+	s.LocalTestTargetHits = val
+}
+
+// SetMacosVersion sets the value of MacosVersion.
+func (s *Run) SetMacosVersion(val string) {
+	s.MacosVersion = val
+}
+
+// SetName sets the value of Name.
+func (s *Run) SetName(val string) {
+	s.Name = val
+}
+
+// SetPreviewID sets the value of PreviewID.
+func (s *Run) SetPreviewID(val OptString) {
+	s.PreviewID = val
+}
+
+// SetRemoteCacheTargetHits sets the value of RemoteCacheTargetHits.
+func (s *Run) SetRemoteCacheTargetHits(val []string) {
+	s.RemoteCacheTargetHits = val
+}
+
+// SetRemoteTestTargetHits sets the value of RemoteTestTargetHits.
+func (s *Run) SetRemoteTestTargetHits(val []string) {
+	s.RemoteTestTargetHits = val
+}
+
+// SetStatus sets the value of Status.
+func (s *Run) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetSubcommand sets the value of Subcommand.
+func (s *Run) SetSubcommand(val string) {
+	s.Subcommand = val
+}
+
+// SetSwiftVersion sets the value of SwiftVersion.
+func (s *Run) SetSwiftVersion(val string) {
+	s.SwiftVersion = val
+}
+
+// SetTestTargets sets the value of TestTargets.
+func (s *Run) SetTestTargets(val []string) {
+	s.TestTargets = val
+}
+
+// SetTuistVersion sets the value of TuistVersion.
+func (s *Run) SetTuistVersion(val string) {
+	s.TuistVersion = val
+}
+
+// SetURL sets the value of URL.
+func (s *Run) SetURL(val string) {
+	s.URL = val
+}
 
 type ShowOrganizationForbidden Error
 
@@ -3822,6 +4908,8 @@ type StartPreviewsMultipartUploadReq struct {
 	BundleIdentifier OptString `json:"bundle_identifier"`
 	// The display name of the preview.
 	DisplayName OptString `json:"display_name"`
+	// The supported platforms of the preview.
+	SupportedPlatforms []PreviewSupportedPlatform `json:"supported_platforms"`
 	// The type of the preview to upload.
 	Type OptStartPreviewsMultipartUploadReqType `json:"type"`
 	// The version of the preview.
@@ -3836,6 +4924,11 @@ func (s *StartPreviewsMultipartUploadReq) GetBundleIdentifier() OptString {
 // GetDisplayName returns the value of DisplayName.
 func (s *StartPreviewsMultipartUploadReq) GetDisplayName() OptString {
 	return s.DisplayName
+}
+
+// GetSupportedPlatforms returns the value of SupportedPlatforms.
+func (s *StartPreviewsMultipartUploadReq) GetSupportedPlatforms() []PreviewSupportedPlatform {
+	return s.SupportedPlatforms
 }
 
 // GetType returns the value of Type.
@@ -3856,6 +4949,11 @@ func (s *StartPreviewsMultipartUploadReq) SetBundleIdentifier(val OptString) {
 // SetDisplayName sets the value of DisplayName.
 func (s *StartPreviewsMultipartUploadReq) SetDisplayName(val OptString) {
 	s.DisplayName = val
+}
+
+// SetSupportedPlatforms sets the value of SupportedPlatforms.
+func (s *StartPreviewsMultipartUploadReq) SetSupportedPlatforms(val []PreviewSupportedPlatform) {
+	s.SupportedPlatforms = val
 }
 
 // SetType sets the value of Type.
@@ -3914,6 +5012,37 @@ type StartPreviewsMultipartUploadUnauthorized Error
 
 func (*StartPreviewsMultipartUploadUnauthorized) startPreviewsMultipartUploadRes() {}
 
+type UpdateAccountBadRequest Error
+
+func (*UpdateAccountBadRequest) updateAccountRes() {}
+
+type UpdateAccountForbidden Error
+
+func (*UpdateAccountForbidden) updateAccountRes() {}
+
+type UpdateAccountNotFound Error
+
+func (*UpdateAccountNotFound) updateAccountRes() {}
+
+type UpdateAccountReq struct {
+	// The new account handle.
+	Handle OptString `json:"handle"`
+}
+
+// GetHandle returns the value of Handle.
+func (s *UpdateAccountReq) GetHandle() OptString {
+	return s.Handle
+}
+
+// SetHandle sets the value of Handle.
+func (s *UpdateAccountReq) SetHandle(val OptString) {
+	s.Handle = val
+}
+
+type UpdateAccountUnauthorized Error
+
+func (*UpdateAccountUnauthorized) updateAccountRes() {}
+
 type UpdateOrganization2BadRequest Error
 
 func (*UpdateOrganization2BadRequest) updateOrganization2Res() {}
@@ -3958,6 +5087,7 @@ type UpdateOrganization2ReqSSOProvider string
 
 const (
 	UpdateOrganization2ReqSSOProviderGoogle UpdateOrganization2ReqSSOProvider = "google"
+	UpdateOrganization2ReqSSOProviderOkta   UpdateOrganization2ReqSSOProvider = "okta"
 	UpdateOrganization2ReqSSOProviderNone   UpdateOrganization2ReqSSOProvider = "none"
 )
 
@@ -3965,6 +5095,7 @@ const (
 func (UpdateOrganization2ReqSSOProvider) AllValues() []UpdateOrganization2ReqSSOProvider {
 	return []UpdateOrganization2ReqSSOProvider{
 		UpdateOrganization2ReqSSOProviderGoogle,
+		UpdateOrganization2ReqSSOProviderOkta,
 		UpdateOrganization2ReqSSOProviderNone,
 	}
 }
@@ -3973,6 +5104,8 @@ func (UpdateOrganization2ReqSSOProvider) AllValues() []UpdateOrganization2ReqSSO
 func (s UpdateOrganization2ReqSSOProvider) MarshalText() ([]byte, error) {
 	switch s {
 	case UpdateOrganization2ReqSSOProviderGoogle:
+		return []byte(s), nil
+	case UpdateOrganization2ReqSSOProviderOkta:
 		return []byte(s), nil
 	case UpdateOrganization2ReqSSOProviderNone:
 		return []byte(s), nil
@@ -3986,6 +5119,9 @@ func (s *UpdateOrganization2ReqSSOProvider) UnmarshalText(data []byte) error {
 	switch UpdateOrganization2ReqSSOProvider(data) {
 	case UpdateOrganization2ReqSSOProviderGoogle:
 		*s = UpdateOrganization2ReqSSOProviderGoogle
+		return nil
+	case UpdateOrganization2ReqSSOProviderOkta:
+		*s = UpdateOrganization2ReqSSOProviderOkta
 		return nil
 	case UpdateOrganization2ReqSSOProviderNone:
 		*s = UpdateOrganization2ReqSSOProviderNone
@@ -4116,6 +5252,7 @@ type UpdateOrganizationReqSSOProvider string
 
 const (
 	UpdateOrganizationReqSSOProviderGoogle UpdateOrganizationReqSSOProvider = "google"
+	UpdateOrganizationReqSSOProviderOkta   UpdateOrganizationReqSSOProvider = "okta"
 	UpdateOrganizationReqSSOProviderNone   UpdateOrganizationReqSSOProvider = "none"
 )
 
@@ -4123,6 +5260,7 @@ const (
 func (UpdateOrganizationReqSSOProvider) AllValues() []UpdateOrganizationReqSSOProvider {
 	return []UpdateOrganizationReqSSOProvider{
 		UpdateOrganizationReqSSOProviderGoogle,
+		UpdateOrganizationReqSSOProviderOkta,
 		UpdateOrganizationReqSSOProviderNone,
 	}
 }
@@ -4131,6 +5269,8 @@ func (UpdateOrganizationReqSSOProvider) AllValues() []UpdateOrganizationReqSSOPr
 func (s UpdateOrganizationReqSSOProvider) MarshalText() ([]byte, error) {
 	switch s {
 	case UpdateOrganizationReqSSOProviderGoogle:
+		return []byte(s), nil
+	case UpdateOrganizationReqSSOProviderOkta:
 		return []byte(s), nil
 	case UpdateOrganizationReqSSOProviderNone:
 		return []byte(s), nil
@@ -4144,6 +5284,9 @@ func (s *UpdateOrganizationReqSSOProvider) UnmarshalText(data []byte) error {
 	switch UpdateOrganizationReqSSOProvider(data) {
 	case UpdateOrganizationReqSSOProviderGoogle:
 		*s = UpdateOrganizationReqSSOProviderGoogle
+		return nil
+	case UpdateOrganizationReqSSOProviderOkta:
+		*s = UpdateOrganizationReqSSOProviderOkta
 		return nil
 	case UpdateOrganizationReqSSOProviderNone:
 		*s = UpdateOrganizationReqSSOProviderNone
@@ -4174,6 +5317,9 @@ type UpdateProjectReq struct {
 	DefaultBranch OptString `json:"default_branch"`
 	// The repository URL for the project.
 	RepositoryURL OptString `json:"repository_url"`
+	// The visibility of the project. Public projects are visible to everyone, private projects are only
+	// visible to the project's members.
+	Visibility OptUpdateProjectReqVisibility `json:"visibility"`
 }
 
 // GetDefaultBranch returns the value of DefaultBranch.
@@ -4186,6 +5332,11 @@ func (s *UpdateProjectReq) GetRepositoryURL() OptString {
 	return s.RepositoryURL
 }
 
+// GetVisibility returns the value of Visibility.
+func (s *UpdateProjectReq) GetVisibility() OptUpdateProjectReqVisibility {
+	return s.Visibility
+}
+
 // SetDefaultBranch sets the value of DefaultBranch.
 func (s *UpdateProjectReq) SetDefaultBranch(val OptString) {
 	s.DefaultBranch = val
@@ -4194,6 +5345,54 @@ func (s *UpdateProjectReq) SetDefaultBranch(val OptString) {
 // SetRepositoryURL sets the value of RepositoryURL.
 func (s *UpdateProjectReq) SetRepositoryURL(val OptString) {
 	s.RepositoryURL = val
+}
+
+// SetVisibility sets the value of Visibility.
+func (s *UpdateProjectReq) SetVisibility(val OptUpdateProjectReqVisibility) {
+	s.Visibility = val
+}
+
+// The visibility of the project. Public projects are visible to everyone, private projects are only
+// visible to the project's members.
+type UpdateProjectReqVisibility string
+
+const (
+	UpdateProjectReqVisibilityPublic  UpdateProjectReqVisibility = "public"
+	UpdateProjectReqVisibilityPrivate UpdateProjectReqVisibility = "private"
+)
+
+// AllValues returns all UpdateProjectReqVisibility values.
+func (UpdateProjectReqVisibility) AllValues() []UpdateProjectReqVisibility {
+	return []UpdateProjectReqVisibility{
+		UpdateProjectReqVisibilityPublic,
+		UpdateProjectReqVisibilityPrivate,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s UpdateProjectReqVisibility) MarshalText() ([]byte, error) {
+	switch s {
+	case UpdateProjectReqVisibilityPublic:
+		return []byte(s), nil
+	case UpdateProjectReqVisibilityPrivate:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *UpdateProjectReqVisibility) UnmarshalText(data []byte) error {
+	switch UpdateProjectReqVisibility(data) {
+	case UpdateProjectReqVisibilityPublic:
+		*s = UpdateProjectReqVisibilityPublic
+		return nil
+	case UpdateProjectReqVisibilityPrivate:
+		*s = UpdateProjectReqVisibilityPrivate
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 type UpdateProjectUnauthorized Error
@@ -4242,6 +5441,18 @@ func (s *UploadCacheActionItemReq) SetHash(val OptString) {
 type UploadCacheActionItemUnauthorized Error
 
 func (*UploadCacheActionItemUnauthorized) uploadCacheActionItemRes() {}
+
+type UploadPreviewIconForbidden Error
+
+func (*UploadPreviewIconForbidden) uploadPreviewIconRes() {}
+
+type UploadPreviewIconNotFound Error
+
+func (*UploadPreviewIconNotFound) uploadPreviewIconRes() {}
+
+type UploadPreviewIconUnauthorized Error
+
+func (*UploadPreviewIconUnauthorized) uploadPreviewIconRes() {}
 
 // A user.
 // Ref: #/components/schemas/User

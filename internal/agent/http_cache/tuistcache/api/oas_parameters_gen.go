@@ -3,6 +3,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -229,6 +230,72 @@ func decodeCacheArtifactExistsParams(args [0]string, argsEscaped bool, r *http.R
 		return params, &ogenerrors.DecodeParamError{
 			Name: "name",
 			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// CancelInvitationParams is parameters of cancelInvitation operation.
+type CancelInvitationParams struct {
+	// The name of the organization.
+	OrganizationName string
+}
+
+func unpackCancelInvitationParams(packed middleware.Parameters) (params CancelInvitationParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "organization_name",
+			In:   "path",
+		}
+		params.OrganizationName = packed[key].(string)
+	}
+	return params
+}
+
+func decodeCancelInvitationParams(args [1]string, argsEscaped bool, r *http.Request) (params CancelInvitationParams, _ error) {
+	// Decode path: organization_name.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "organization_name",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.OrganizationName = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "organization_name",
+			In:   "path",
 			Err:  err,
 		}
 	}
@@ -865,6 +932,72 @@ func decodeCompletePreviewsMultipartUploadParams(args [2]string, argsEscaped boo
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "project_handle",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// CreateAccountTokenParams is parameters of createAccountToken operation.
+type CreateAccountTokenParams struct {
+	// The account handle.
+	AccountHandle string
+}
+
+func unpackCreateAccountTokenParams(packed middleware.Parameters) (params CreateAccountTokenParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "account_handle",
+			In:   "path",
+		}
+		params.AccountHandle = packed[key].(string)
+	}
+	return params
+}
+
+func decodeCreateAccountTokenParams(args [1]string, argsEscaped bool, r *http.Request) (params CreateAccountTokenParams, _ error) {
+	// Decode path: account_handle.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "account_handle",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.AccountHandle = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "account_handle",
 			In:   "path",
 			Err:  err,
 		}
@@ -2430,6 +2563,533 @@ func decodeGetDeviceCodeParams(args [1]string, argsEscaped bool, r *http.Request
 	return params, nil
 }
 
+// ListPreviewsParams is parameters of listPreviews operation.
+type ListPreviewsParams struct {
+	// The handle of the account.
+	AccountHandle string
+	// The handle of the project.
+	ProjectHandle string
+	// The display name of previews.
+	DisplayName OptString
+	// The preview version specifier. Currently, accepts a commit SHA, branch name, or latest.
+	Specifier          OptString
+	SupportedPlatforms []PreviewSupportedPlatform
+	PageSize           OptInt
+	Page               OptInt
+	// Distinct fields – no two previews will be returned with this field having the same value.
+	DistinctField OptListPreviewsDistinctField
+}
+
+func unpackListPreviewsParams(packed middleware.Parameters) (params ListPreviewsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "account_handle",
+			In:   "path",
+		}
+		params.AccountHandle = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "project_handle",
+			In:   "path",
+		}
+		params.ProjectHandle = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "display_name",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.DisplayName = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "specifier",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Specifier = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "supported_platforms",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.SupportedPlatforms = v.([]PreviewSupportedPlatform)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "page_size",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.PageSize = v.(OptInt)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "page",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Page = v.(OptInt)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "distinct_field",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.DistinctField = v.(OptListPreviewsDistinctField)
+		}
+	}
+	return params
+}
+
+func decodeListPreviewsParams(args [2]string, argsEscaped bool, r *http.Request) (params ListPreviewsParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode path: account_handle.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "account_handle",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.AccountHandle = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "account_handle",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode path: project_handle.
+	if err := func() error {
+		param := args[1]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[1])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "project_handle",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.ProjectHandle = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "project_handle",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode query: display_name.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "display_name",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotDisplayNameVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotDisplayNameVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.DisplayName.SetTo(paramsDotDisplayNameVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "display_name",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: specifier.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "specifier",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotSpecifierVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotSpecifierVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Specifier.SetTo(paramsDotSpecifierVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "specifier",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: supported_platforms.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "supported_platforms",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				return d.DecodeArray(func(d uri.Decoder) error {
+					var paramsDotSupportedPlatformsVal PreviewSupportedPlatform
+					if err := func() error {
+						val, err := d.DecodeValue()
+						if err != nil {
+							return err
+						}
+
+						c, err := conv.ToString(val)
+						if err != nil {
+							return err
+						}
+
+						paramsDotSupportedPlatformsVal = PreviewSupportedPlatform(c)
+						return nil
+					}(); err != nil {
+						return err
+					}
+					params.SupportedPlatforms = append(params.SupportedPlatforms, paramsDotSupportedPlatformsVal)
+					return nil
+				})
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				var failures []validate.FieldError
+				for i, elem := range params.SupportedPlatforms {
+					if err := func() error {
+						if err := elem.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						failures = append(failures, validate.FieldError{
+							Name:  fmt.Sprintf("[%d]", i),
+							Error: err,
+						})
+					}
+				}
+				if len(failures) > 0 {
+					return &validate.Error{Fields: failures}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "supported_platforms",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Set default value for query: page_size.
+	{
+		val := int(10)
+		params.PageSize.SetTo(val)
+	}
+	// Decode query: page_size.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "page_size",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotPageSizeVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotPageSizeVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.PageSize.SetTo(paramsDotPageSizeVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.PageSize.Get(); ok {
+					if err := func() error {
+						if err := (validate.Int{
+							MinSet:        true,
+							Min:           1,
+							MaxSet:        true,
+							Max:           20,
+							MinExclusive:  false,
+							MaxExclusive:  false,
+							MultipleOfSet: false,
+							MultipleOf:    0,
+						}).Validate(int64(value)); err != nil {
+							return errors.Wrap(err, "int")
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "page_size",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Set default value for query: page.
+	{
+		val := int(1)
+		params.Page.SetTo(val)
+	}
+	// Decode query: page.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotPageVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotPageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Page.SetTo(paramsDotPageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Page.Get(); ok {
+					if err := func() error {
+						if err := (validate.Int{
+							MinSet:        true,
+							Min:           1,
+							MaxSet:        false,
+							Max:           0,
+							MinExclusive:  false,
+							MaxExclusive:  false,
+							MultipleOfSet: false,
+							MultipleOf:    0,
+						}).Validate(int64(value)); err != nil {
+							return errors.Wrap(err, "int")
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "page",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: distinct_field.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "distinct_field",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotDistinctFieldVal ListPreviewsDistinctField
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotDistinctFieldVal = ListPreviewsDistinctField(c)
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.DistinctField.SetTo(paramsDotDistinctFieldVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.DistinctField.Get(); ok {
+					if err := func() error {
+						if err := value.Validate(); err != nil {
+							return err
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "distinct_field",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // ListProjectTokensParams is parameters of listProjectTokens operation.
 type ListProjectTokensParams struct {
 	// The account handle.
@@ -2544,6 +3204,495 @@ func decodeListProjectTokensParams(args [2]string, argsEscaped bool, r *http.Req
 		return params, &ogenerrors.DecodeParamError{
 			Name: "project_handle",
 			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// ListRunsParams is parameters of listRuns operation.
+type ListRunsParams struct {
+	// The handle of the account.
+	AccountHandle string
+	// The handle of the project.
+	ProjectHandle string
+	// The name of the run.
+	Name OptString
+	// The git ref of the run.
+	GitRef OptString
+	// The git branch of the run.
+	GitBranch OptString
+	// The git commit SHA of the run.
+	GitCommitSha OptString
+	PageSize     OptInt
+	Page         OptInt
+}
+
+func unpackListRunsParams(packed middleware.Parameters) (params ListRunsParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "account_handle",
+			In:   "path",
+		}
+		params.AccountHandle = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "project_handle",
+			In:   "path",
+		}
+		params.ProjectHandle = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "name",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Name = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "git_ref",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.GitRef = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "git_branch",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.GitBranch = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "git_commit_sha",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.GitCommitSha = v.(OptString)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "page_size",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.PageSize = v.(OptInt)
+		}
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "page",
+			In:   "query",
+		}
+		if v, ok := packed[key]; ok {
+			params.Page = v.(OptInt)
+		}
+	}
+	return params
+}
+
+func decodeListRunsParams(args [2]string, argsEscaped bool, r *http.Request) (params ListRunsParams, _ error) {
+	q := uri.NewQueryDecoder(r.URL.Query())
+	// Decode path: account_handle.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "account_handle",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.AccountHandle = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "account_handle",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode path: project_handle.
+	if err := func() error {
+		param := args[1]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[1])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "project_handle",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.ProjectHandle = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "project_handle",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode query: name.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "name",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotNameVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotNameVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Name.SetTo(paramsDotNameVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "name",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: git_ref.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "git_ref",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotGitRefVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotGitRefVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.GitRef.SetTo(paramsDotGitRefVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "git_ref",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: git_branch.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "git_branch",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotGitBranchVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotGitBranchVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.GitBranch.SetTo(paramsDotGitBranchVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "git_branch",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Decode query: git_commit_sha.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "git_commit_sha",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotGitCommitShaVal string
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToString(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotGitCommitShaVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.GitCommitSha.SetTo(paramsDotGitCommitShaVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "git_commit_sha",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Set default value for query: page_size.
+	{
+		val := int(20)
+		params.PageSize.SetTo(val)
+	}
+	// Decode query: page_size.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "page_size",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotPageSizeVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotPageSizeVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.PageSize.SetTo(paramsDotPageSizeVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.PageSize.Get(); ok {
+					if err := func() error {
+						if err := (validate.Int{
+							MinSet:        true,
+							Min:           1,
+							MaxSet:        true,
+							Max:           100,
+							MinExclusive:  false,
+							MaxExclusive:  false,
+							MultipleOfSet: false,
+							MultipleOf:    0,
+						}).Validate(int64(value)); err != nil {
+							return errors.Wrap(err, "int")
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "page_size",
+			In:   "query",
+			Err:  err,
+		}
+	}
+	// Set default value for query: page.
+	{
+		val := int(1)
+		params.Page.SetTo(val)
+	}
+	// Decode query: page.
+	if err := func() error {
+		cfg := uri.QueryParameterDecodingConfig{
+			Name:    "page",
+			Style:   uri.QueryStyleForm,
+			Explode: true,
+		}
+
+		if err := q.HasParam(cfg); err == nil {
+			if err := q.DecodeParam(cfg, func(d uri.Decoder) error {
+				var paramsDotPageVal int
+				if err := func() error {
+					val, err := d.DecodeValue()
+					if err != nil {
+						return err
+					}
+
+					c, err := conv.ToInt(val)
+					if err != nil {
+						return err
+					}
+
+					paramsDotPageVal = c
+					return nil
+				}(); err != nil {
+					return err
+				}
+				params.Page.SetTo(paramsDotPageVal)
+				return nil
+			}); err != nil {
+				return err
+			}
+			if err := func() error {
+				if value, ok := params.Page.Get(); ok {
+					if err := func() error {
+						if err := (validate.Int{
+							MinSet:        true,
+							Min:           1,
+							MaxSet:        false,
+							Max:           0,
+							MinExclusive:  false,
+							MaxExclusive:  false,
+							MultipleOfSet: false,
+							MultipleOf:    0,
+						}).Validate(int64(value)); err != nil {
+							return errors.Wrap(err, "int")
+						}
+						return nil
+					}(); err != nil {
+						return err
+					}
+				}
+				return nil
+			}(); err != nil {
+				return err
+			}
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "page",
+			In:   "query",
 			Err:  err,
 		}
 	}
@@ -3382,6 +4531,72 @@ func decodeStartPreviewsMultipartUploadParams(args [2]string, argsEscaped bool, 
 	return params, nil
 }
 
+// UpdateAccountParams is parameters of updateAccount operation.
+type UpdateAccountParams struct {
+	// The handle of the account.
+	AccountHandle string
+}
+
+func unpackUpdateAccountParams(packed middleware.Parameters) (params UpdateAccountParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "account_handle",
+			In:   "path",
+		}
+		params.AccountHandle = packed[key].(string)
+	}
+	return params
+}
+
+func decodeUpdateAccountParams(args [1]string, argsEscaped bool, r *http.Request) (params UpdateAccountParams, _ error) {
+	// Decode path: account_handle.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "account_handle",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.AccountHandle = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "account_handle",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
 // UpdateOrganizationParams is parameters of updateOrganization operation.
 type UpdateOrganizationParams struct {
 	// The name of the organization to update.
@@ -3867,6 +5082,180 @@ func decodeUploadCacheActionItemParams(args [2]string, argsEscaped bool, r *http
 	}(); err != nil {
 		return params, &ogenerrors.DecodeParamError{
 			Name: "project_handle",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	return params, nil
+}
+
+// UploadPreviewIconParams is parameters of uploadPreviewIcon operation.
+type UploadPreviewIconParams struct {
+	// The handle of the account.
+	AccountHandle string
+	// The handle of the project.
+	ProjectHandle string
+	// The preview identifier.
+	PreviewID string
+}
+
+func unpackUploadPreviewIconParams(packed middleware.Parameters) (params UploadPreviewIconParams) {
+	{
+		key := middleware.ParameterKey{
+			Name: "account_handle",
+			In:   "path",
+		}
+		params.AccountHandle = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "project_handle",
+			In:   "path",
+		}
+		params.ProjectHandle = packed[key].(string)
+	}
+	{
+		key := middleware.ParameterKey{
+			Name: "preview_id",
+			In:   "path",
+		}
+		params.PreviewID = packed[key].(string)
+	}
+	return params
+}
+
+func decodeUploadPreviewIconParams(args [3]string, argsEscaped bool, r *http.Request) (params UploadPreviewIconParams, _ error) {
+	// Decode path: account_handle.
+	if err := func() error {
+		param := args[0]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[0])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "account_handle",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.AccountHandle = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "account_handle",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode path: project_handle.
+	if err := func() error {
+		param := args[1]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[1])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "project_handle",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.ProjectHandle = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "project_handle",
+			In:   "path",
+			Err:  err,
+		}
+	}
+	// Decode path: preview_id.
+	if err := func() error {
+		param := args[2]
+		if argsEscaped {
+			unescaped, err := url.PathUnescape(args[2])
+			if err != nil {
+				return errors.Wrap(err, "unescape path")
+			}
+			param = unescaped
+		}
+		if len(param) > 0 {
+			d := uri.NewPathDecoder(uri.PathDecoderConfig{
+				Param:   "preview_id",
+				Value:   param,
+				Style:   uri.PathStyleSimple,
+				Explode: false,
+			})
+
+			if err := func() error {
+				val, err := d.DecodeValue()
+				if err != nil {
+					return err
+				}
+
+				c, err := conv.ToString(val)
+				if err != nil {
+					return err
+				}
+
+				params.PreviewID = c
+				return nil
+			}(); err != nil {
+				return err
+			}
+		} else {
+			return validate.ErrFieldRequired
+		}
+		return nil
+	}(); err != nil {
+		return params, &ogenerrors.DecodeParamError{
+			Name: "preview_id",
 			In:   "path",
 			Err:  err,
 		}
