@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacachev2"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"golang.org/x/sync/semaphore"
@@ -62,6 +63,13 @@ func Start(opts ...Option) string {
 
 		mux.Handle(ghacache.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(ghacache.APIMountPoint,
 			ghacache.New(address))))
+
+		// GitHub Actions cache API v2
+		//
+		// Note that we don't strip the prefix here because
+		// Twirp handler inside *ghacachev2.Cache expects it.
+		ghaCacheV2 := ghacachev2.New(address)
+		mux.Handle(ghaCacheV2.PathPrefix(), ghaCacheV2)
 
 		// Apply options
 		for _, opt := range opts {

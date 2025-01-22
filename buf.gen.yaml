@@ -6,3 +6,6 @@ plugins:
   - plugin: buf.build/grpc/go
     out: pkg/
     opt: paths=source_relative
+  - name: twirp
+    out: pkg/
+    opt: paths=source_relative

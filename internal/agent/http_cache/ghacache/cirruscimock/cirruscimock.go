@@ -133,16 +133,32 @@ func (mock *cirrusCIMock) DownloadCache(request *api.DownloadCacheRequest, strea
 	return nil
 }
 
-func (mock *cirrusCIMock) GenerateCacheDownloadURLs(
-	_ context.Context,
-	request *api.CacheKey,
-) (*api.GenerateURLsResponse, error) {
-	uploadPartRequest, _ := mock.s3Client.GetObjectRequest(&s3.GetObjectInput{
+func (mock *cirrusCIMock) GenerateCacheUploadURL(ctx context.Context, request *api.CacheKey) (*api.GenerateURLResponse, error) {
+	putObjectRequest, _ := mock.s3Client.PutObjectRequest(&s3.PutObjectInput{
 		Bucket: mock.s3Bucket,
 		Key:    aws.String(request.CacheKey),
 	})
 
-	url, _, err := uploadPartRequest.PresignRequest(10 * time.Minute)
+	url, _, err := putObjectRequest.PresignRequest(10 * time.Minute)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.GenerateURLResponse{
+		Url: url,
+	}, nil
+}
+
+func (mock *cirrusCIMock) GenerateCacheDownloadURLs(
+	_ context.Context,
+	request *api.CacheKey,
+) (*api.GenerateURLsResponse, error) {
+	getObjectRequest, _ := mock.s3Client.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: mock.s3Bucket,
+		Key:    aws.String(request.CacheKey),
+	})
+
+	url, _, err := getObjectRequest.PresignRequest(10 * time.Minute)
 	if err != nil {
 		return nil, err
 	}
