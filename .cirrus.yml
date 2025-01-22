@@ -170,8 +170,10 @@ task:
   name: Check for lacking "buf generate" invocation
 
   container:
-    image: bufbuild/buf
+    image: golang:latest
 
+  install_buf_script: go install github.com/bufbuild/buf/cmd/buf@v1.50.0
+  install_protoc_gen_twirp_script: go install github.com/twitchtv/twirp/protoc-gen-twirp@latest
   generate_script: buf generate
   check_script: git diff --exit-code
 
