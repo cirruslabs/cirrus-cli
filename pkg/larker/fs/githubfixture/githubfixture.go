@@ -12,17 +12,17 @@ import (
 )
 
 const (
-	URL       = "https://github.com/cirruslabs/cirrus-cli"
+	URL       = "https://github.com/cirruslabs/softnet"
 	Owner     = "cirruslabs"
-	Repo      = "cirrus-cli"
-	Reference = "master"
+	Repo      = "softnet"
+	Reference = "main"
 )
 
 func Run(t *testing.T, fs fspkg.FileSystem) {
 	ctx := context.Background()
 
 	t.Run("TestStatFile", func(t *testing.T) {
-		stat, err := fs.Stat(ctx, "go.mod")
+		stat, err := fs.Stat(ctx, "Cargo.toml")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -40,12 +40,12 @@ func Run(t *testing.T, fs fspkg.FileSystem) {
 	})
 
 	t.Run("TestGetFile", func(t *testing.T) {
-		fileBytes, err := fs.Get(ctx, "go.mod")
+		fileBytes, err := fs.Get(ctx, "Cargo.toml")
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		assert.Contains(t, string(fileBytes), "module github.com/cirruslabs/cirrus-cli")
+		assert.Contains(t, string(fileBytes), "[package]")
 	})
 
 	t.Run("TestGetDirectory", func(t *testing.T) {
@@ -62,7 +62,7 @@ func Run(t *testing.T, fs fspkg.FileSystem) {
 	})
 
 	t.Run("TestReadDirFile", func(t *testing.T) {
-		_, err := fs.ReadDir(ctx, "go.mod")
+		_, err := fs.ReadDir(ctx, "Cargo.toml")
 
 		require.Error(t, err)
 		assert.True(t, errors.Is(err, syscall.ENOTDIR))
@@ -74,7 +74,7 @@ func Run(t *testing.T, fs fspkg.FileSystem) {
 			t.Fatal(err)
 		}
 
-		assert.Contains(t, entries, "go.mod", "go.sum")
+		assert.Contains(t, entries, "Cargo.toml", "Cargo.lock")
 	})
 
 	t.Run("TestReadDirNonExistentDirectory", func(t *testing.T) {
