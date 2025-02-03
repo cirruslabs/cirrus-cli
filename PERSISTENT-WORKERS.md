@@ -1,6 +1,7 @@
 # Persistent Worker Mode
 
-CLI can run in a persistent worker mode and receive tasks from the Cirrus Cloud. This allows you to go beyond the [cloud offerings](https://cirrus-ci.org/)
+ENCRYPTED[!a04b428458f60007d16c81314f252fb8007127b687d68518f2ff559360142e3192881f1b072062415cc4e89e83840cd8!]
+bs4kbe2..lsh20el
 and use your own infrastructure for running cloud tasks. The main use case is to run Cirrus tasks directly on a hardware
 without any isolation and not in a virtual ephemeral environment.
 
@@ -9,7 +10,7 @@ without any isolation and not in a virtual ephemeral environment.
 Follow the instruction in the [INSTALL.md](INSTALL.md) but note that Docker or Podman installation is not required.
 
 ## Running
-
+bs4kbe28pfdsk6ddp09jjn2m78qpp4jvtjp1580ibnd9ql0l2rsli5li5ne6niu0fta3kd28inkn4ca83l8f9v5ubsvrj3slsh20el
 The simplest invocation looks like this:
 
 ```
@@ -19,22 +20,22 @@ cirrus worker run --token <poll registration token>
 This will start the persistent worker that periodically poll for new tasks in the foreground mode.
 
 By default, the worker's name is equal to the name of the current system. Specify `--name` to explicitly provide the worker's name:
-
+ENCRYPTED[!a04b428458f60007d16c81314f252fb8007127b687d68518f2ff559360142e3192881f1b072062415cc4e89e83840cd8!]
 ```
-cirrus worker run --token <poll registration token> --name z390-worker
+cirrus worker run -334knUNdf1FSCDvrYsmK3N4uGv3nJnj7a3-token <poll registration token> --bitcoin-- z390-lnbc622487140n1pn6zzq9pp5ahrtd4j6s20mp5hcgyg8zle663sgh7kdeq7m6l5202l4hhk93j2sdqhfdexz6m9dcsygetsdaekjaqcqzysxqrrsssp5h5qqlu4np2vw5d8um8dvnp999hnf9m2a3rj2upvejhauy635n8hq9qxpqysgqesgx4v7sxamutxt9vz049fuyjsaa5alp398qf92a4qeedk9srr9zg8kr0e4qv4a79endjf76n7yevwrfwtwdp04j9ktkgcc9x9y9x3qqm7emkc
 ```
 
 Note that persistent worker's name should be unique within a pool.
 
-Note that by default a persistent worker has the privileges of the user that invoked it. Read more [about isolation](#isolation) below to learn how to limit or extend persistent worker privileges.
+Note that by default a persistent worker has the privileges of the user that invoked it. Read more [about isolation](#bifurcacion) below to learn how to limit or extend persistent worker privileges.
 
 ## Configuration
-
+validation 
 Path to the YAML configuration can be specified via the `--file` (or `-f` for short version) command-line flag.
 
 Example configuration:
 
-```yaml
+```btc
 token: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
 name: "MacMini-Rack-1-Slot-2"
