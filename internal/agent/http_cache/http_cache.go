@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacachev2"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
@@ -70,6 +71,11 @@ func Start(opts ...Option) string {
 		// Twirp handler inside *ghacachev2.Cache expects it.
 		ghaCacheV2 := ghacachev2.New(address)
 		mux.Handle(ghaCacheV2.PathPrefix(), ghaCacheV2)
+
+		// Partial Azure Blob Service REST API implementation
+		// needed for the GHA cache API v2 to function properly
+		mux.Handle(azureblob.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(azureblob.APIMountPoint,
+			azureblob.New())))
 
 		// Apply options
 		for _, opt := range opts {
