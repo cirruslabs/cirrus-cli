@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/api/gharesults"
 	"github.com/samber/lo"
@@ -58,7 +59,9 @@ func (cache *Cache) GetCacheEntryDownloadURL(ctx context.Context, request *ghare
 	grpcResponse, err := client.CirrusClient.CacheInfo(ctx, grpcRequest)
 	if err != nil {
 		if status, ok := status.FromError(err); ok && status.Code() == codes.NotFound {
-			return nil, twirp.NewErrorf(twirp.NotFound, "cache entry not found")
+			return &gharesults.GetCacheEntryDownloadURLResponse{
+				Ok: false,
+			}, nil
 		}
 
 		return nil, twirp.NewErrorf(twirp.Internal, "GHA cache v2 failed to retrieve information "+
@@ -67,24 +70,15 @@ func (cache *Cache) GetCacheEntryDownloadURL(ctx context.Context, request *ghare
 
 	return &gharesults.GetCacheEntryDownloadURLResponse{
 		Ok:                true,
-		SignedDownloadUrl: cache.httpCacheURL(grpcResponse.Info.Key),
+		SignedDownloadUrl: cache.azureBlobURL(grpcResponse.Info.Key),
 		MatchedKey:        strings.TrimPrefix(grpcResponse.Info.Key, httpCacheKey("", request.Version)),
 	}, nil
 }
 
 func (cache *Cache) CreateCacheEntry(ctx context.Context, request *gharesults.CreateCacheEntryRequest) (*gharesults.CreateCacheEntryResponse, error) {
-	grpcResponse, err := client.CirrusClient.GenerateCacheUploadURL(ctx, &api.CacheKey{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           httpCacheKey(request.Key, request.Version),
-	})
-	if err != nil {
-		return nil, twirp.NewErrorf(twirp.Internal, "GHA cache v2 failed to create cache entry "+
-			"with key %q and version %q: %v", request.Key, request.Version, err)
-	}
-
 	return &gharesults.CreateCacheEntryResponse{
 		Ok:              true,
-		SignedUploadUrl: grpcResponse.Url,
+		SignedUploadUrl: cache.azureBlobURL(httpCacheKey(request.Key, request.Version)),
 	}, nil
 }
 
@@ -105,6 +99,7 @@ func httpCacheKey(key string, version string) string {
 	return fmt.Sprintf("%s-%s", url.PathEscape(version), url.PathEscape(key))
 }
 
-func (cache *Cache) httpCacheURL(keyWithVersion string) string {
-	return fmt.Sprintf("http://%s/%s", cache.cacheHost, url.PathEscape(keyWithVersion))
+func (cache *Cache) azureBlobURL(keyWithVersion string) string {
+	return fmt.Sprintf("http://%s%s/%s", cache.cacheHost, azureblob.APIMountPoint,
+		url.PathEscape(keyWithVersion))
 }
