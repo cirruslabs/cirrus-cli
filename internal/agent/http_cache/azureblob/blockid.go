@@ -6,6 +6,9 @@ import (
 	"strconv"
 )
 
+// Constant from Azure SDK for JS[1]
+//
+// [1]: https://github.com/Azure/azure-sdk-for-js/blob/fc4cbf0e10e15cbbe7cf873294db7d6e2bd02851/sdk/storage/storage-blob/src/utils/utils.common.ts#L486-L487
 const maxBlockIndexLength = 6
 
 func blockIDToIndex(blockIDRaw string) (int, error) {
