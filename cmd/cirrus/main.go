@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -67,7 +68,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	interruptCh := make(chan os.Signal, 1)
-	signal.Notify(interruptCh, os.Interrupt)
+	signal.Notify(interruptCh, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		select {
