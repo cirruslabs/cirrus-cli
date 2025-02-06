@@ -176,10 +176,9 @@ func convert(
 		result.Value = &ScalarValue{Value: yamlNode.Value}
 	case yaml.AliasNode:
 		// test for recursion
-		var aParent *Node
-		for aParent = parent; aParent != nil; aParent = aParent.Parent {
+		for aParent := parent; aParent != nil; aParent = aParent.Parent {
 			// If we've found a parent with the same anchor, it means we have a recursion
-			if aParent.YAMLNode.Anchor == yamlNode.Value {
+			if aParent.YAMLNode != nil && aParent.YAMLNode.Anchor == yamlNode.Value {
 				return nil, parsererror.NewRich(yamlNode.Line, yamlNode.Column, "recursive alias '%s'", yamlNode.Value)
 			}
 		}
