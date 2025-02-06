@@ -1,0 +1,9 @@
+container:
+  image: debian:latest
+
+recursion: &RECURSION
+  env:
+    <<: *RECURSION
+
+task:
+  script: true
