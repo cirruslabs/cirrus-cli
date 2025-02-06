@@ -201,6 +201,7 @@ func proxyDownloadFromURL(w http.ResponseWriter, url string) bool {
 	bytesRead, err := io.Copy(w, resp.Body)
 	if err != nil {
 		log.Printf("Proxying cache download for %s failed with %v\n", url, err)
+		return false
 	} else {
 		log.Printf("Proxying cache %s succeded! Proxies %d bytes!\n", url, bytesRead)
 	}
