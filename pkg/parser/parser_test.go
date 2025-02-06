@@ -618,6 +618,8 @@ func TestRichErrors(t *testing.T) {
 			"expected a scalar value or a list with scalar values")},
 		{"testdata/rich-errors-matrix.yml", parsererror.NewRich(3, 5,
 			"matrix can be defined only under a task, docker_builder or pipe")},
+		{"testdata/rich-errors-recursion.yml", parsererror.NewRich(6, 9,
+			"recursive alias 'RECURSION'")},
 	}
 
 	for _, testCase := range testCases {
