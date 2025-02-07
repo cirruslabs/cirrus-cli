@@ -35,6 +35,15 @@ func (azureBlob *AzureBlob) putBlobAbstract(writer http.ResponseWriter, request 
 func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Request) {
 	key := request.PathValue("key")
 
+	// Parse the Content-Length header
+	contentLength, err := strconv.ParseUint(request.Header.Get("Content-Length"), 10, 64)
+	if err != nil {
+		fail(writer, request, http.StatusBadRequest, "failed to parse the Content-Length header value",
+			"key", key, "err", err, "value", contentLength)
+
+		return
+	}
+
 	// Generate cache upload URL
 	generateCacheUploadURLResponse, err := client.CirrusClient.GenerateCacheUploadURL(
 		request.Context(),
@@ -59,6 +68,9 @@ func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Re
 
 		return
 	}
+
+	// Content-Length is required to avoid HTTP 411
+	req.ContentLength = int64(contentLength)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -152,6 +164,9 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 
 		return
 	}
+
+	// Content-Length is pre-signed, so we need to provide it
+	req.ContentLength = int64(contentLength)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
