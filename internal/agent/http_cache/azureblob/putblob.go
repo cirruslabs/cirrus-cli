@@ -89,7 +89,7 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 	// Decode the block ID
 	blockID := request.URL.Query().Get("blockid")
 
-	blockIndex, err := blockIDToIndex(blockID)
+	partNumber, err := blockIDToPartNumber(blockID)
 	if err != nil {
 		fail(writer, request, http.StatusBadRequest, "failed to extract the block index "+
 			"from block ID", "key", key, "blockid", blockID, "err", err)
@@ -132,7 +132,7 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 		&api.MultipartCacheUploadPartRequest{
 			CacheKey:      cacheKey,
 			UploadId:      uploadID,
-			PartNumber:    uint32(blockIndex) + 1,
+			PartNumber:    uint32(partNumber),
 			ContentLength: contentLength,
 		},
 	)
@@ -169,7 +169,7 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	if err := uploadable.AppendPart(blockIndex, resp.Header.Get("ETag")); err != nil {
+	if err := uploadable.AppendPart(partNumber, resp.Header.Get("ETag")); err != nil {
 		fail(writer, request, http.StatusBadRequest, "failed to finalize part upload", "err", err)
 
 		return
@@ -222,7 +222,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 
 	for _, blockID := range blockList.Latest {
 		// Decode the part number
-		blockIndex, err := blockIDToIndex(blockID)
+		partNumber, err := blockIDToPartNumber(blockID)
 		if err != nil {
 			fail(writer, request, http.StatusBadRequest, "received a block list pointing to a non-parseable block",
 				"key", key, "blockid", blockID, "err", err)
@@ -230,16 +230,16 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 			return
 		}
 
-		part := uploadable.GetPart(blockIndex + 1)
+		part := uploadable.GetPart(partNumber)
 		if part == nil {
 			fail(writer, request, http.StatusBadRequest, "received a block list pointing to a non-existent block",
-				"key", key, "blockid", blockID, "index", blockIndex)
+				"key", key, "blockid", blockID, "index", partNumber)
 
 			return
 		}
 
 		protoParts = append(protoParts, &api.MultipartCacheUploadCommitRequest_Part{
-			PartNumber: uint32(blockIndex),
+			PartNumber: uint32(partNumber),
 			Etag:       part.ETag,
 		})
 	}
