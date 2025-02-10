@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestBlockIDToIndex(t *testing.T) {
-	blockIndex, err := blockIDToIndex("Yzg4ODM0YjYtZmI3MC00OWNmLWJlYmEtNDliODFjNDE0MWM3MDAwMDAwMDAwMDAx")
+func TestBlockIDToPartNumber(t *testing.T) {
+	partNumber, err := blockIDToPartNumber("Yzg4ODM0YjYtZmI3MC00OWNmLWJlYmEtNDliODFjNDE0MWM3MDAwMDAwMDAwMDAx")
 	require.NoError(t, err)
-	require.Equal(t, 1, blockIndex)
+	require.Equal(t, 2, partNumber)
 }
