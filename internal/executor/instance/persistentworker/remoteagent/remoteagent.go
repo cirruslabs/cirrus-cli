@@ -13,6 +13,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"io"
 	"net"
+	"os"
 	"strings"
 	"time"
 )
@@ -120,6 +121,11 @@ func WaitForAgent(
 	err = sess.Shell()
 	if err != nil {
 		return fmt.Errorf("%w: failed to start a shell: %v", ErrFailed, err)
+	}
+
+	// Passthrough SENTRY_DSN when it's set
+	if sentryDSN, ok := os.LookupEnv("SENTRY_DSN"); ok {
+		env["SENTRY_DSN"] = sentryDSN
 	}
 
 	for key, value := range env {
