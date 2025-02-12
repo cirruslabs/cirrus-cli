@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"os"
 	"testing"
 )
@@ -11,10 +12,21 @@ import (
 func NeedsContainerization(t *testing.T) {
 	t.Helper()
 
-	_, ci := os.LookupEnv("CI")
-	_, cirrusContainerBackend := os.LookupEnv("CIRRUS_CONTAINER_BACKEND")
-
-	if ci && !cirrusContainerBackend {
-		t.Skip("running in CI, but no container backend configured, skipping test...")
+	if _, ok := os.LookupEnv("CI"); !ok {
+		// Not running on CI
+		return
 	}
+
+	if cirrusContainerBackend, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); ok {
+		// Running on CI and container backend is configured, but not supported
+		if cirrusContainerBackend == containerbackend.BackendTypePodman {
+			t.Skip("Podman container backend is not supported, skipping test...")
+		}
+
+		// Running on CI and container backend is configured
+		return
+	}
+
+	// Running on CI and container backend is NOT configured
+	t.Skip("running in CI, but no container backend configured, skipping test...")
 }
