@@ -159,6 +159,11 @@ func Run(args []string) {
 		}
 	}()
 
+	// Prevent SENTRY_DSN propagation to scripts
+	if err := os.Unsetenv("SENTRY_DSN"); err != nil {
+		log.Printf("Failed to unset SENTRY_DSN: %v", err)
+	}
+
 	// Connect to the RPC server
 	md := metadata.New(map[string]string{
 		"org.cirruslabs.task-id":       *taskIdPtr,
