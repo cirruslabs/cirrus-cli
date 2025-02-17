@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/targz"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io"
 	"os"
 	"path/filepath"
@@ -156,4 +157,61 @@ func TestArchiveMultiple(t *testing.T) {
 		{tar.TypeDir, "/right/cold", "", []byte{}},
 	}
 	assert.Equal(t, expected, TarGzContentsHelper(t, dest))
+}
+
+func TestSymlinks(t *testing.T) {
+	// Create a base folder
+	baseFolder := testutil.TempDir(t)
+
+	// Create a basic directory structure
+	err := os.MkdirAll(filepath.Join(baseFolder, "dir/subdir"), 0755)
+	require.NoError(t, err)
+
+	// Create a symbolic link that points to a file in the directory above
+	// using an absolute reference scoped to a base folder
+	//
+	// Should result in a "../above-file" link target.
+	err = os.Symlink(filepath.Join(baseFolder, "dir/above-file"),
+		filepath.Join(baseFolder, "dir/subdir/absolute-basefolder-above"))
+	require.NoError(t, err)
+
+	// Create a symbolic link that points to a file in the current directory
+	// using an absolute reference scoped to a base folder
+	//
+	// Should result in a "current-file" link target.
+	err = os.Symlink(filepath.Join(baseFolder, "dir/subdir/current-file"),
+		filepath.Join(baseFolder, "dir/subdir/absolute-basefolder-current"))
+	require.NoError(t, err)
+
+	// Create a symbolic link that points to a system file
+	// using an absolute reference not scoped to a base folder
+	err = os.Symlink("/etc/passwd", filepath.Join(baseFolder, "dir/subdir/absolute-no-basefolder"))
+	require.NoError(t, err)
+
+	// Create a symbolic link that points to a file in the directory above
+	// using a relative reference not scoped to a base folder
+	err = os.Symlink("../above-file", filepath.Join(baseFolder, "dir/subdir/relative-above"))
+	require.NoError(t, err)
+
+	// Create a symbolic link that points to a file in the current directory
+	// using a relative reference not scoped to a base folder
+	err = os.Symlink("current-file", filepath.Join(baseFolder, "dir/subdir/relative-current"))
+	require.NoError(t, err)
+
+	// Pack the archive
+	archivePath := filepath.Join(testutil.TempDir(t), "archive.tar.gz")
+	require.NoError(t, targz.Archive(baseFolder, []string{baseFolder}, archivePath))
+
+	// Verify the archive
+	expected := []PartialTarHeader{
+		{tar.TypeDir, "", "", []byte{}},
+		{tar.TypeDir, "/dir", "", []byte{}},
+		{tar.TypeDir, "/dir/subdir", "", []byte{}},
+		{tar.TypeSymlink, "/dir/subdir/absolute-basefolder-above", "../above-file", []byte{}},
+		{tar.TypeSymlink, "/dir/subdir/absolute-basefolder-current", "current-file", []byte{}},
+		{tar.TypeSymlink, "/dir/subdir/absolute-no-basefolder", "/etc/passwd", []byte{}},
+		{tar.TypeSymlink, "/dir/subdir/relative-above", "../above-file", []byte{}},
+		{tar.TypeSymlink, "/dir/subdir/relative-current", "current-file", []byte{}},
+	}
+	assert.Equal(t, expected, TarGzContentsHelper(t, archivePath))
 }
