@@ -62,6 +62,10 @@ type Worker struct {
 	standbyInstanceStartedAt time.Time
 
 	tartPrePull *TartPrePull
+
+	// In ephemeral mode, only run a single task and then exit
+	ephemeral       bool
+	ephemeralTaskID string
 }
 
 func New(opts ...Option) (*Worker, error) {
@@ -78,6 +82,8 @@ func New(opts ...Option) (*Worker, error) {
 
 		logger:        logrus.New(),
 		echelonLogger: echelon.NewLogger(echelon.TraceLevel, renderers.NewSimpleRenderer(os.Stdout, nil)),
+
+		ephemeralTaskID: "",
 	}
 
 	// Apply options
@@ -363,7 +369,21 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 	}
 
 	for _, taskToStart := range response.TasksToStart {
-		worker.startTask(ctx, upstream, taskToStart)
+		// don't start a new task in ephemeral mode if one is running
+		if worker.ephemeral && worker.ephemeralTaskID != "" {
+			break
+		}
+
+		taskID, err := worker.startTask(ctx, upstream, taskToStart)
+		if err != nil {
+			worker.logger.Warnf("failed to start task: %v", err)
+			continue
+		}
+
+		if worker.ephemeral {
+			worker.ephemeralTaskID = taskID
+			break
+		}
 	}
 
 	if response.Shutdown {
@@ -375,6 +395,13 @@ func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstream
 
 	if len(response.UpdatedStandbyInstances) > 0 {
 		worker.UpdateStandby(ctx, response.UpdatedStandbyInstances[0])
+	}
+
+	if worker.ephemeral && worker.ephemeralTaskID != "" {
+		if _, ok := worker.tasks.Load(worker.ephemeralTaskID); !ok {
+			worker.logger.Infof("In ephemeral mode: task %s completed, terminating...", worker.ephemeralTaskID)
+			return ErrShutdown
+		}
 	}
 
 	return nil
