@@ -78,7 +78,7 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 	if err != nil {
 		proxyingDuration := time.Since(startProxyingAt)
 		fail(writer, request, http.StatusInternalServerError, "failed to proxy cache entry download",
-			"key", key, "err", err, "duration", proxyingDuration, "read", bytesRead)
+			"err", err, "duration", proxyingDuration, "read", bytesRead, "key", key)
 
 		return
 	}
