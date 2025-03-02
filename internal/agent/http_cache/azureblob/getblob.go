@@ -6,6 +6,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"io"
 	"net/http"
+	"time"
 )
 
 func (azureBlob *AzureBlob) getBlobAbstract(writer http.ResponseWriter, request *http.Request) {
@@ -72,10 +73,12 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
-	_, err = io.Copy(writer, resp.Body)
+	startProxyingAt := time.Now()
+	bytesRead, err := io.Copy(writer, resp.Body)
 	if err != nil {
+		proxyingDuration := time.Since(startProxyingAt)
 		fail(writer, request, http.StatusInternalServerError, "failed to proxy cache entry download",
-			"key", key, "err", err)
+			"err", err, "duration", proxyingDuration, "read", bytesRead, "key", key)
 
 		return
 	}
