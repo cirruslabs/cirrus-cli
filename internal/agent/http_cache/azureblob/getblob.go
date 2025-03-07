@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const PROXY_DOWNLOAD_BUFFER_SIZE = 1024 * 1024
+
 func (azureBlob *AzureBlob) getBlobAbstract(writer http.ResponseWriter, request *http.Request) {
 	switch request.URL.Query().Get("comp") {
 	default:
@@ -74,7 +76,9 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 	}
 
 	startProxyingAt := time.Now()
-	bytesRead, err := io.Copy(writer, resp.Body)
+	// we usually proxy large files so let's use a larger buffer
+	largeBuffer := make([]byte, PROXY_DOWNLOAD_BUFFER_SIZE)
+	bytesRead, err := io.CopyBuffer(writer, resp.Body, largeBuffer)
 	if err != nil {
 		proxyingDuration := time.Since(startProxyingAt)
 		fail(writer, request, http.StatusInternalServerError, "failed to proxy cache entry download",
