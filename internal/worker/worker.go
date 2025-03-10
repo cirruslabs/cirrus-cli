@@ -229,16 +229,9 @@ func (worker *Worker) Run(ctx context.Context) error {
 	defer cancel()
 
 	for {
-		// Create and start a standby instance if configured and not created yet
-		worker.tryCreateStandby(ctx)
-
-		for _, upstream := range worker.upstreams {
-			if err := worker.pollSingleUpstream(subCtx, upstream); err != nil {
-				if errors.Is(err, ErrShutdown) {
-					return nil
-				}
-
-				worker.logger.Errorf("failed to poll upstream %s: %v", upstream.Name(), err)
+		if err := worker.pollUpstreams(subCtx); err != nil {
+			if errors.Is(err, ErrShutdown) {
+				return nil
 			}
 		}
 
@@ -251,20 +244,20 @@ func (worker *Worker) Run(ctx context.Context) error {
 	}
 }
 
-func (worker *Worker) tryCreateStandby(ctx context.Context) {
+func (worker *Worker) tryCreateStandby(ctx context.Context) error {
 	// Do nothing if no standby instance is configured
 	if worker.standbyParameters == nil {
-		return
+		return nil
 	}
 
 	// Do nothing if the standby instance is already instantiated
 	if worker.standbyInstance != nil {
-		return
+		return nil
 	}
 
 	// Do nothing if there are tasks that are running to simplify the resource management
 	if !worker.canFitResources(worker.standbyParameters.Resources) {
-		return
+		return nil
 	}
 
 	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyParameters.Isolation)
@@ -274,7 +267,7 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 	if err != nil {
 		worker.logger.Errorf("failed to create a standby instance: %v", err)
 
-		return
+		return err
 	}
 
 	lazyPull := false
@@ -308,18 +301,38 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) {
 		worker.standbyParameters.Warmup, worker.echelonLogger); err != nil {
 		worker.logger.Errorf("failed to warm-up a standby instance: %v", err)
 
-		if err := standbyInstance.Close(ctx); err != nil {
-			worker.logger.Errorf("failed to terminate the standby instance after an: "+
-				"unsuccessful warm-up: %v", err)
+		if cleanupErr := standbyInstance.Close(ctx); cleanupErr != nil {
+			worker.logger.Errorf("failed to terminate the standby instance after an "+
+				"unsuccessful warm-up: %v", cleanupErr)
 		}
 
-		return
+		return err
 	}
 
 	worker.logger.Debugf("standby instance had successfully warmed-up")
 
 	worker.standbyInstance = standbyInstance
 	worker.standbyInstanceStartedAt = time.Now()
+
+	return nil
+}
+
+func (worker *Worker) pollUpstreams(ctx context.Context) error {
+	// Create and start a standby instance if configured and not created yet
+	standbyErr := worker.tryCreateStandby(ctx)
+	if standbyErr != nil {
+		worker.logger.Error("failed to create a standby instance... backing off...")
+		return standbyErr
+	}
+
+	for _, upstream := range worker.upstreams {
+		if pollErr := worker.pollSingleUpstream(ctx, upstream); pollErr != nil {
+			worker.logger.Errorf("failed to poll the upstream %s: %v", upstream.Name(), pollErr)
+			return pollErr
+		}
+	}
+
+	return nil
 }
 
 func (worker *Worker) pollSingleUpstream(ctx context.Context, upstream *upstreampkg.Upstream) error {
