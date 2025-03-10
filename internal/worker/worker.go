@@ -229,19 +229,9 @@ func (worker *Worker) Run(ctx context.Context) error {
 	defer cancel()
 
 	for {
-		for _, upstream := range worker.upstreams {
-			// Create and start a standby instance if configured and not created yet
-			err := worker.tryCreateStandby(ctx)
-			if err != nil {
-				worker.logger.Error("failed to create a standby instance... backing off...")
-				break
-			}
-			if err := worker.pollSingleUpstream(subCtx, upstream); err != nil {
-				if errors.Is(err, ErrShutdown) {
-					return nil
-				}
-
-				worker.logger.Errorf("failed to poll upstream %s: %v", upstream.Name(), err)
+		if err := worker.pollUpstreams(subCtx); err != nil {
+			if errors.Is(err, ErrShutdown) {
+				return nil
 			}
 		}
 
@@ -323,6 +313,24 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) error {
 
 	worker.standbyInstance = standbyInstance
 	worker.standbyInstanceStartedAt = time.Now()
+
+	return nil
+}
+
+func (worker *Worker) pollUpstreams(ctx context.Context) error {
+	for _, upstream := range worker.upstreams {
+		// Create and start a standby instance if configured and not created yet
+		standbyErr := worker.tryCreateStandby(ctx)
+		if standbyErr != nil {
+			worker.logger.Error("failed to create a standby instance... backing off...")
+			return standbyErr
+		}
+
+		if pollErr := worker.pollSingleUpstream(ctx, upstream); pollErr != nil {
+			worker.logger.Errorf("failed to poll the upstream %s: %v", upstream.Name(), pollErr)
+			return pollErr
+		}
+	}
 
 	return nil
 }
