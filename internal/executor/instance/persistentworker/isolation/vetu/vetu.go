@@ -98,6 +98,7 @@ func (vetu *Vetu) Warmup(
 	env map[string]string,
 	lazyPull bool,
 	_ *api.StandbyInstanceParameters_Warmup,
+	_ *runconfig.RunConfig,
 	logger *echelon.Logger,
 ) error {
 	return vetu.bootVM(ctx, ident, env, lazyPull, logger)
