@@ -78,12 +78,23 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 	}
 
 	startProxyingAt := time.Now()
-	progressLoggedAt := startProxyingAt
+	bytesRead, err := copyWithProgress(resp.Body, writer, key)
+	if err != nil {
+		proxyingDuration := time.Since(startProxyingAt)
+		fail(writer, request, http.StatusInternalServerError, "failed to proxy cache entry download",
+			"err", err, "duration", proxyingDuration, "read", bytesRead, "key", key)
+		return
+	}
+}
+
+func copyWithProgress(reader io.Reader, writer io.Writer, key string) (int64, error) {
+	startedAt := time.Now()
+	progressLoggedAt := startedAt
 	// we usually proxy large files so let's use a larger buffer
 	largeBuffer := make([]byte, PROXY_DOWNLOAD_BUFFER_SIZE)
 	bytesRead := int64(0)
 	for {
-		n, proxyErr := resp.Body.Read(largeBuffer)
+		n, proxyErr := reader.Read(largeBuffer)
 		if n > 0 {
 			if _, writeErr := writer.Write(largeBuffer[:n]); writeErr != nil {
 				proxyErr = writeErr
@@ -95,16 +106,11 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 			proxyErr = nil
 			break
 		}
-		if proxyErr != nil {
-			proxyingDuration := time.Since(startProxyingAt)
-			fail(writer, request, http.StatusInternalServerError, "failed to proxy cache entry download",
-				"err", proxyErr, "duration", proxyingDuration, "read", bytesRead, "key", key)
-			break
-		}
 		if time.Since(progressLoggedAt) > PROXY_DOWNLOAD_PROGRESS_LOG_INTERVAL {
-			currentSpeed := float64(bytesRead) / 1024 / 1024 / time.Since(startProxyingAt).Seconds()
-			log.Printf("Proxying cache entry download for %s: %d bytes read in %s (avg speed %.2f Mb/s)\n", key, bytesRead, time.Since(startProxyingAt), currentSpeed)
+			currentSpeed := float64(bytesRead) / 1024 / 1024 / time.Since(startedAt).Seconds()
+			log.Printf("Proxying cache entry download for %s: %d bytes read in %s (avg speed %.2f Mb/s)\n", key, bytesRead, time.Since(startedAt), currentSpeed)
 			progressLoggedAt = time.Now()
 		}
 	}
+	return bytesRead, nil
 }
