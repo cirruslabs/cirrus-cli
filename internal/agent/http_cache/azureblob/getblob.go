@@ -65,7 +65,7 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 		req.Header.Set("Range", rangeHeader)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := azureBlob.potentiallyCachingHTTPClient.Do(req)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to perform request to proxy"+
 			" cache entry download", "key", key, "err", err)
@@ -74,8 +74,8 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 	}
 
 	switch resp.StatusCode {
-	case http.StatusOK, http.StatusPartialContent:
-		// Proceed with proxying
+	case http.StatusOK:
+		// proceed with proxying
 	case http.StatusNotFound:
 		writer.WriteHeader(http.StatusNotFound)
 

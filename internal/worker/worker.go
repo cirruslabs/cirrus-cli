@@ -8,7 +8,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/tart"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/vetu"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
@@ -62,6 +64,7 @@ type Worker struct {
 	standbyInstanceStartedAt time.Time
 
 	tartPrePull *TartPrePull
+	chacha      *chacha.Chacha
 }
 
 func New(opts ...Option) (*Worker, error) {
@@ -244,6 +247,14 @@ func (worker *Worker) Run(ctx context.Context) error {
 	}
 }
 
+func (worker *Worker) Close() error {
+	if worker.chacha != nil {
+		return worker.chacha.Close()
+	}
+
+	return nil
+}
+
 func (worker *Worker) tryCreateStandby(ctx context.Context) error {
 	// Do nothing if no standby instance is configured
 	if worker.standbyParameters == nil {
@@ -297,8 +308,12 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) error {
 
 	worker.logger.Debugf("warming-up the standby instance")
 
+	runConfig := &runconfig.RunConfig{
+		Chacha: worker.chacha,
+	}
+
 	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil, lazyPull,
-		worker.standbyParameters.Warmup, worker.echelonLogger); err != nil {
+		worker.standbyParameters.Warmup, runConfig, worker.echelonLogger); err != nil {
 		worker.logger.Errorf("failed to warm-up a standby instance: %v", err)
 
 		if cleanupErr := standbyInstance.Close(ctx); cleanupErr != nil {

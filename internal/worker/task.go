@@ -185,6 +185,14 @@ func (worker *Worker) runTask(
 		AdditionalEnvironment: map[string]string{
 			"CIRRUS_SENTRY_TAGS": strings.Join(cirrusSentryTagsFormatted, ","),
 		},
+		Chacha: worker.chacha,
+	}
+
+	if worker.chacha != nil {
+		maps.Copy(config.AdditionalEnvironment, map[string]string{
+			"CIRRUSLABS_CHACHA_ADDR": worker.chacha.Addr(),
+			"CIRRUSLABS_CHACHA_CERT": worker.chacha.Cert(),
+		})
 	}
 
 	if err := config.SetCLIVersionWithoutDowngrade(cliVersion); err != nil {
