@@ -3,13 +3,17 @@ package azureblob
 import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/progressreader"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/dustin/go-humanize"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
 
 const PROXY_DOWNLOAD_BUFFER_SIZE = 1024 * 1024
+const PROXY_DOWNLOAD_PROGRESS_LOG_INTERVAL = 60 * time.Second
 
 func (azureBlob *AzureBlob) getBlobAbstract(writer http.ResponseWriter, request *http.Request) {
 	switch request.URL.Query().Get("comp") {
@@ -78,12 +82,17 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 	startProxyingAt := time.Now()
 	// we usually proxy large files so let's use a larger buffer
 	largeBuffer := make([]byte, PROXY_DOWNLOAD_BUFFER_SIZE)
-	bytesRead, err := io.CopyBuffer(writer, resp.Body, largeBuffer)
+	progressReader := progressreader.New(resp.Body, PROXY_DOWNLOAD_PROGRESS_LOG_INTERVAL, func(bytes int64, duration time.Duration) {
+		rate := float64(bytes) / duration.Seconds()
+
+		log.Printf("Proxying cache entry download for %s: %d bytes read in %s (%s/s)",
+			key, bytes, duration, humanize.Bytes(uint64(rate)))
+	})
+	bytesRead, err := io.CopyBuffer(writer, progressReader, largeBuffer)
 	if err != nil {
 		proxyingDuration := time.Since(startProxyingAt)
 		fail(writer, request, http.StatusInternalServerError, "failed to proxy cache entry download",
 			"err", err, "duration", proxyingDuration, "read", bytesRead, "key", key)
-
 		return
 	}
 }
