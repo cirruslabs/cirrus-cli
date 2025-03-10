@@ -23,8 +23,9 @@ import (
 var ErrConfiguration = errors.New("configuration error")
 
 type Config struct {
-	Name  string `yaml:"name"`
-	Token string `yaml:"token"`
+	Name      string `yaml:"name"`
+	Token     string `yaml:"token"`
+	Ephemeral bool   `yaml:"ephemeral"`
 
 	Labels    map[string]string  `yaml:"labels"`
 	Resources map[string]float64 `yaml:"resources"`
@@ -67,6 +68,7 @@ var (
 	labels      map[string]string
 	resources   map[string]string
 	rpcEndpoint string
+	ephemeral   bool
 )
 
 func attachFlags(cmd *cobra.Command) {
@@ -88,6 +90,8 @@ func attachFlags(cmd *cobra.Command) {
 		"additional resources to use (e.g. --resources devices=2)")
 	cmd.PersistentFlags().StringVar(&rpcEndpoint, "rpc-endpoint", upstream.DefaultRPCEndpoint,
 		"RPC endpoint address")
+	cmd.PersistentFlags().BoolVar(&ephemeral, "ephemeral", false,
+		"run a single task and then exit the process")
 }
 
 func parseConfig(path string) (*Config, error) {
@@ -95,6 +99,7 @@ func parseConfig(path string) (*Config, error) {
 	config := Config{
 		Name:      name,
 		Token:     token,
+		Ephemeral: ephemeral,
 		Labels:    labels,
 		Resources: map[string]float64{},
 		RPC: ConfigRPC{
@@ -229,6 +234,10 @@ func buildWorker(output io.Writer) (*worker.Worker, error) {
 
 	if config.TartPrePull != nil {
 		opts = append(opts, worker.WithTartPrePull(config.TartPrePull))
+	}
+
+	if ephemeral {
+		opts = append(opts, worker.WithEphemeral(ephemeral))
 	}
 
 	// Instantiate worker
