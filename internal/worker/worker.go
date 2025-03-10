@@ -318,14 +318,14 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) error {
 }
 
 func (worker *Worker) pollUpstreams(ctx context.Context) error {
-	for _, upstream := range worker.upstreams {
-		// Create and start a standby instance if configured and not created yet
-		standbyErr := worker.tryCreateStandby(ctx)
-		if standbyErr != nil {
-			worker.logger.Error("failed to create a standby instance... backing off...")
-			return standbyErr
-		}
+	// Create and start a standby instance if configured and not created yet
+	standbyErr := worker.tryCreateStandby(ctx)
+	if standbyErr != nil {
+		worker.logger.Error("failed to create a standby instance... backing off...")
+		return standbyErr
+	}
 
+	for _, upstream := range worker.upstreams {
 		if pollErr := worker.pollSingleUpstream(ctx, upstream); pollErr != nil {
 			worker.logger.Errorf("failed to poll the upstream %s: %v", upstream.Name(), pollErr)
 			return pollErr
