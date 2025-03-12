@@ -76,4 +76,9 @@ func TestGHACacheV2(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, properties.ContentLength)
 	require.EqualValues(t, len(cacheValue), *properties.ContentLength)
+
+	// Ensure that HTTP range requests are supported
+	buf := make([]byte, 4)
+	err = blockBlobClient.DownloadToBuffer(ctx, 10, 4, buf, azblob.DownloadOptions{})
+	require.NoError(t, err)
 }
