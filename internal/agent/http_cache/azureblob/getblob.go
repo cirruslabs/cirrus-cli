@@ -67,7 +67,7 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		// proceed with proxying
+		// Proceed with proxying
 	case http.StatusNotFound:
 		writer.WriteHeader(http.StatusNotFound)
 
@@ -77,6 +77,10 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 			" cache entry download, got unexpected HTTP %d", resp.StatusCode), "key", key)
 
 		return
+	}
+
+	if contentLength := resp.Header.Get("Content-Length"); contentLength != "" {
+		writer.Header().Set("Content-Length", contentLength)
 	}
 
 	startProxyingAt := time.Now()

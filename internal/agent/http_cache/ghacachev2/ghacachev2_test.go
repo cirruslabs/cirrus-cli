@@ -67,4 +67,13 @@ func TestGHACacheV2(t *testing.T) {
 	downloadRespBodyBytes, err := io.ReadAll(downloadResp.Body)
 	require.NoError(t, err)
 	require.Equal(t, cacheValue, downloadRespBodyBytes)
+
+	// Ensure that blob properties can be retrieved,
+	// this is actively used by GitHub Actions Toolkit
+	// to determine whether to enable parallel download
+	// or not.
+	properties, err := blockBlobClient.GetProperties(ctx, &azblob.BlobGetPropertiesOptions{})
+	require.NoError(t, err)
+	require.NotNil(t, properties.ContentLength)
+	require.EqualValues(t, len(cacheValue), *properties.ContentLength)
 }
