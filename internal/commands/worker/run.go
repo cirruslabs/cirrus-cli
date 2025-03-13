@@ -31,6 +31,9 @@ func NewRunCmd() *cobra.Command {
 			if err := worker.Run(cmd.Context()); err != nil {
 				return fmt.Errorf("%w: %v", ErrRun, err)
 			}
+			if err := worker.Close(); err != nil {
+				return fmt.Errorf("%w: %v", ErrRun, err)
+			}
 			return nil
 		},
 	}

@@ -31,16 +31,29 @@ const (
 
 var sem = semaphore.NewWeighted(int64(runtime.NumCPU() * activeRequestsPerLogicalCPU))
 
-var httpProxyClient = &http.Client{}
+var (
+	httpClient                   = &http.Client{}
+	potentiallyCachingHTTPClient = &http.Client{}
+)
 
-func Start(opts ...Option) string {
+func DefaultTransport() *http.Transport {
 	maxConcurrentConnections := runtime.NumCPU() * activeRequestsPerLogicalCPU
-	httpProxyClient = &http.Client{
-		Transport: &http.Transport{
-			MaxIdleConns:        maxConcurrentConnections,
-			MaxIdleConnsPerHost: maxConcurrentConnections, // default is 2 which is too small
-		},
-		Timeout: 10 * time.Minute,
+
+	return &http.Transport{
+		MaxIdleConns:        maxConcurrentConnections,
+		MaxIdleConnsPerHost: maxConcurrentConnections, // default is 2 which is too small
+	}
+}
+
+func Start(potentiallyCachingTransport http.RoundTripper, opts ...Option) string {
+	httpClient = &http.Client{
+		Transport: DefaultTransport(),
+		Timeout:   10 * time.Minute,
+	}
+
+	potentiallyCachingHTTPClient = &http.Client{
+		Transport: potentiallyCachingTransport,
+		Timeout:   10 * time.Minute,
 	}
 
 	mux := http.NewServeMux()
@@ -75,7 +88,7 @@ func Start(opts ...Option) string {
 		// Partial Azure Blob Service REST API implementation
 		// needed for the GHA cache API v2 to function properly
 		mux.Handle(azureblob.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(azureblob.APIMountPoint,
-			azureblob.New())))
+			azureblob.New(potentiallyCachingHTTPClient))))
 
 		// Apply options
 		for _, opt := range opts {
@@ -186,7 +199,7 @@ func proxyDownloadFromURLs(w http.ResponseWriter, urls []string) {
 }
 
 func proxyDownloadFromURL(w http.ResponseWriter, url string) bool {
-	resp, err := httpProxyClient.Get(url)
+	resp, err := potentiallyCachingHTTPClient.Get(url)
 	if err != nil {
 		log.Printf("Proxying cache %s failed: %v\n", url, err)
 		return false
@@ -241,7 +254,7 @@ func uploadCacheEntry(w http.ResponseWriter, r *http.Request, cacheKey string) {
 	for k, v := range generateResp.GetExtraHeaders() {
 		req.Header.Set(k, v)
 	}
-	resp, err := httpProxyClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to proxy upload of %s cache! %s", cacheKey, err)
 		log.Println(errorMsg)

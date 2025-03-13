@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
@@ -42,6 +43,8 @@ type Config struct {
 	ResourceModifiers []*resourcemodifier.Modifier `yaml:"resource-modifiers"`
 
 	TartPrePull *worker.TartPrePull `yaml:"tart-pre-pull"`
+
+	Chacha *ConfigChacha `yaml:"chacha"`
 }
 
 type ConfigLog struct {
@@ -58,6 +61,11 @@ type ConfigRPC struct {
 type ConfigUpstream struct {
 	Token    string `yaml:"token"`
 	Endpoint string `yaml:"endpoint"`
+}
+
+type ConfigChacha struct {
+	Addr string `yaml:"addr"`
+	Cert string `yaml:"cert"`
 }
 
 var (
@@ -229,6 +237,15 @@ func buildWorker(output io.Writer) (*worker.Worker, error) {
 
 	if config.TartPrePull != nil {
 		opts = append(opts, worker.WithTartPrePull(config.TartPrePull))
+	}
+
+	if config.Chacha != nil {
+		chacha, err := chacha.New(config.Chacha.Addr, config.Chacha.Cert)
+		if err != nil {
+			return nil, err
+		}
+
+		opts = append(opts, worker.WithChacha(chacha))
 	}
 
 	// Instantiate worker

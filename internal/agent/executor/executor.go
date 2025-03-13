@@ -2,6 +2,8 @@ package executor
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"github.com/avast/retry-go/v4"
@@ -12,11 +14,14 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/terminalwrapper"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/updatebatcher"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/vaultunboxer"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/fallbackroundtripper"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/tuistcache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -230,7 +235,22 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			}
 		}
 
-		httpCacheHost := http_cache.Start(httpCacheOpts...)
+		// Default transport
+		var transport http.RoundTripper
+
+		transport = http_cache.DefaultTransport()
+
+		// Try Chacha transport
+		chachaTransport, err := executor.tryChachaTransport(transport)
+		if err != nil {
+			log.Printf("%v", err)
+		}
+		if chachaTransport != nil {
+			// Use Chacha transport with a fallback to the default transport
+			transport = fallbackroundtripper.New(chachaTransport, transport)
+		}
+
+		httpCacheHost := http_cache.Start(transport, httpCacheOpts...)
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
 
@@ -435,6 +455,43 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	); err != nil {
 		log.Printf("Failed to report that the agent has finished: %v\n", err)
 	}
+}
+
+func (executor *Executor) tryChachaTransport(baseTransport http.RoundTripper) (http.RoundTripper, error) {
+	if _, ok := executor.env.Lookup("CIRRUS_CHACHA_ENABLED"); ok {
+		return nil, nil
+	}
+
+	chachaAddr, ok := executor.env.Lookup("CIRRUS_CHACHA_ADDR")
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize Chacha transport: " +
+			"Chacha is enabled, but no CIRRUS_CHACHA_ADDR is set")
+	}
+
+	chachaURL, err := url.Parse(chachaAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize Chacha transport: "+
+			"failed to parse Chacha address %q: %w", chachaAddr, err)
+	}
+
+	chachaTransport := &http.Transport{
+		Proxy: http.ProxyURL(chachaURL),
+	}
+
+	if chachaCert, ok := executor.env.Lookup("CIRRUS_CHACHA_CERT"); ok {
+		certPool := x509.NewCertPool()
+
+		if certPool.AppendCertsFromPEM([]byte(chachaCert)) {
+			chachaTransport.TLSClientConfig = &tls.Config{
+				RootCAs: certPool,
+			}
+		} else {
+			return nil, fmt.Errorf("failed to initialize Chacha transport: " +
+				"failed to add Chacha PEM certificate to root CA pool")
+		}
+	}
+
+	return chachaTransport, nil
 }
 
 // BoundedCommands bounds a slice of commands with unique names to a half-open range [fromName, toName).

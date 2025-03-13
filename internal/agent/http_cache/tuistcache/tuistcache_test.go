@@ -26,7 +26,8 @@ func TestTuistCache(t *testing.T) {
 	tuistCache, err := tuistcache.New()
 	require.NoError(t, err)
 
-	tuistCacheURL := tuistcache.URL(http_cache.Start(http_cache.WithTuistCache(tuistCache)))
+	tuistCacheURL := tuistcache.URL(http_cache.Start(http_cache.DefaultTransport(),
+		http_cache.WithTuistCache(tuistCache)))
 
 	tuistCacheClient, err := tuistapi.NewClient(tuistCacheURL)
 	require.NoError(t, err)

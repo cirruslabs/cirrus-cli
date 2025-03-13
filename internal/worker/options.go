@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
@@ -55,5 +56,11 @@ func WithResourceModifiersManager(resourceModifiersManager *resourcemodifier.Man
 func WithTartPrePull(tartPrePull *TartPrePull) Option {
 	return func(e *Worker) {
 		e.tartPrePull = tartPrePull
+	}
+}
+
+func WithChacha(chacha *chacha.Chacha) Option {
+	return func(e *Worker) {
+		e.chacha = chacha
 	}
 }

@@ -26,14 +26,16 @@ type statusAndError struct {
 }
 
 type AzureBlob struct {
-	mux         *http.ServeMux
-	uploadables *xsync.MapOf[string, *uploadablepkg.Uploadable]
+	mux                          *http.ServeMux
+	uploadables                  *xsync.MapOf[string, *uploadablepkg.Uploadable]
+	potentiallyCachingHTTPClient *http.Client
 }
 
-func New() *AzureBlob {
+func New(potentiallyCachingHTTPClient *http.Client) *AzureBlob {
 	azureBlobContainer := &AzureBlob{
-		mux:         http.NewServeMux(),
-		uploadables: xsync.NewMapOf[string, *uploadablepkg.Uploadable](),
+		mux:                          http.NewServeMux(),
+		uploadables:                  xsync.NewMapOf[string, *uploadablepkg.Uploadable](),
+		potentiallyCachingHTTPClient: potentiallyCachingHTTPClient,
 	}
 
 	azureBlobContainer.mux.HandleFunc("GET /{key...}", azureBlobContainer.getBlobAbstract)
