@@ -57,6 +57,14 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
+	// Support HTTP range requests
+	if rangeHeader := request.Header.Get("Range"); rangeHeader != "" {
+		req.Header.Set("Range", rangeHeader)
+	}
+	if rangeHeader := request.Header.Get("X-Ms-Range"); rangeHeader != "" {
+		req.Header.Set("Range", rangeHeader)
+	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to perform request to proxy"+
@@ -66,8 +74,8 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 	}
 
 	switch resp.StatusCode {
-	case http.StatusOK:
-		// proceed with proxying
+	case http.StatusOK, http.StatusPartialContent:
+		// Proceed with proxying
 	case http.StatusNotFound:
 		writer.WriteHeader(http.StatusNotFound)
 
@@ -78,6 +86,12 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 
 		return
 	}
+
+	if contentLength := resp.Header.Get("Content-Length"); contentLength != "" {
+		writer.Header().Set("Content-Length", contentLength)
+	}
+
+	writer.WriteHeader(resp.StatusCode)
 
 	startProxyingAt := time.Now()
 	// we usually proxy large files so let's use a larger buffer

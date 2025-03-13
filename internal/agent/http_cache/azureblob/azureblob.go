@@ -37,6 +37,7 @@ func New() *AzureBlob {
 	}
 
 	azureBlobContainer.mux.HandleFunc("GET /{key...}", azureBlobContainer.getBlobAbstract)
+	azureBlobContainer.mux.HandleFunc("HEAD /{key...}", azureBlobContainer.headBlobAbstract)
 	azureBlobContainer.mux.HandleFunc("PUT /{key...}", azureBlobContainer.putBlobAbstract)
 
 	return azureBlobContainer
