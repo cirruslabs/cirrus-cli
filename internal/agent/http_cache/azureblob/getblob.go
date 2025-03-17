@@ -74,8 +74,8 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 	}
 
 	switch resp.StatusCode {
-	case http.StatusOK:
-		// proceed with proxying
+	case http.StatusOK, http.StatusPartialContent:
+		// Proceed with proxying
 	case http.StatusNotFound:
 		writer.WriteHeader(http.StatusNotFound)
 
