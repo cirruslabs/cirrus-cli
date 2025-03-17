@@ -170,6 +170,7 @@ func (vm *VM) Configure(
 func (vm *VM) Start(
 	ctx context.Context,
 	softnet bool,
+	softnetAllow []string,
 	directoryMounts []directoryMount,
 ) {
 	vm.wg.Add(1)
@@ -181,6 +182,10 @@ func (vm *VM) Start(
 
 		if softnet {
 			args = append(args, "--net-softnet")
+
+			if len(softnetAllow) > 0 {
+				args = append(args, "--net-softnet-allow", strings.Join(softnetAllow, ","))
+			}
 		}
 
 		for _, directoryMount := range directoryMounts {

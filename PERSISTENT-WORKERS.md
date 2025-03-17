@@ -154,6 +154,8 @@ security:
       allowed-images:
         - "ghcr.io/cirruslabs/*"
       force-softnet: true
+      softnet-allow:
+        - 10.0.0.0/16
 ```
 
 #### Restricting Tart volumes

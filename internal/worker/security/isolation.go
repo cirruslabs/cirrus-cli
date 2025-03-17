@@ -23,6 +23,7 @@ type IsolationPolicyTart struct {
 	AllowedImages  AllowedImages       `yaml:"allowed-images"`
 	AllowedVolumes []AllowedVolumeTart `yaml:"allowed-volumes"`
 	ForceSoftnet   bool                `yaml:"force-softnet"`
+	SoftnetAllow   []string            `yaml:"softnet-allow"`
 }
 
 type AllowedVolumeTart struct {

@@ -41,17 +41,18 @@ const (
 )
 
 type Tart struct {
-	logger      logger.Lightweight
-	vmName      string
-	sshUser     string
-	sshPassword string
-	sshPort     uint16
-	cpu         uint32
-	memory      uint32
-	diskSize    uint32
-	softnet     bool
-	display     string
-	volumes     []*api.Isolation_Tart_Volume
+	logger       logger.Lightweight
+	vmName       string
+	sshUser      string
+	sshPassword  string
+	sshPort      uint16
+	cpu          uint32
+	memory       uint32
+	diskSize     uint32
+	softnet      bool
+	softnetAllow []string
+	display      string
+	volumes      []*api.Isolation_Tart_Volume
 
 	vm              *VM
 	initializeHooks []remoteagent.WaitForAgentHook
@@ -296,7 +297,7 @@ func (tart *Tart) bootVM(
 		})
 	}
 
-	vm.Start(ctx, tart.softnet, directoryMounts)
+	vm.Start(ctx, tart.softnet, tart.softnetAllow, directoryMounts)
 
 	// Wait for the VM to start and get it's DHCP address
 	bootLogger := logger.Scoped("boot virtual machine")
