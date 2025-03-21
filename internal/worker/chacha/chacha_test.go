@@ -11,7 +11,7 @@ func TestChacha(t *testing.T) {
 	addr := "1.2.3.4:12345"
 	cert := "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
 
-	chacha, err := chacha.New(addr, cert)
+	chacha, err := chacha.New(addr, cert, true)
 	require.NoError(t, err)
 
 	require.Equal(t, addr, chacha.Addr())

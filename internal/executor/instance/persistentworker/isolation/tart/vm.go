@@ -74,7 +74,7 @@ func NewVMClonedFrom(
 }
 
 func (vm *VM) pull(ctx context.Context, from string, chacha *chacha.Chacha, logger *echelon.Logger) {
-	if chacha != nil {
+	if chacha != nil && chacha.EnableTart() {
 		logger.Infof("Pulling virtual machine %s via Chacha...", from)
 
 		args := []string{

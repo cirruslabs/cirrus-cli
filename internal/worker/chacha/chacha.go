@@ -6,13 +6,14 @@ import (
 )
 
 type Chacha struct {
-	addr string
-	cert string
+	addr       string
+	cert       string
+	enableTart bool
 
 	certFile *os.File
 }
 
-func New(addr string, cert string) (*Chacha, error) {
+func New(addr string, cert string, enableTart bool) (*Chacha, error) {
 	caCertFile, err := os.CreateTemp("", "cirrus-cli-chacha-ca-cert-*")
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize Chacha: "+
@@ -28,9 +29,10 @@ func New(addr string, cert string) (*Chacha, error) {
 	}
 
 	return &Chacha{
-		addr:     addr,
-		cert:     cert,
-		certFile: caCertFile,
+		addr:       addr,
+		cert:       cert,
+		enableTart: enableTart,
+		certFile:   caCertFile,
 	}, nil
 }
 
@@ -40,6 +42,10 @@ func (chacha *Chacha) Addr() string {
 
 func (chacha *Chacha) Cert() string {
 	return chacha.cert
+}
+
+func (chacha *Chacha) EnableTart() bool {
+	return chacha.enableTart
 }
 
 func (chacha *Chacha) CertPath() string {

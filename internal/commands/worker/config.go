@@ -64,8 +64,9 @@ type ConfigUpstream struct {
 }
 
 type ConfigChacha struct {
-	Addr string `yaml:"addr"`
-	Cert string `yaml:"cert"`
+	Addr       string `yaml:"addr"`
+	Cert       string `yaml:"cert"`
+	EnableTart bool   `yaml:"enable-tart"`
 }
 
 var (
@@ -240,7 +241,7 @@ func buildWorker(output io.Writer) (*worker.Worker, error) {
 	}
 
 	if config.Chacha != nil {
-		chacha, err := chacha.New(config.Chacha.Addr, config.Chacha.Cert)
+		chacha, err := chacha.New(config.Chacha.Addr, config.Chacha.Cert, config.Chacha.EnableTart)
 		if err != nil {
 			return nil, err
 		}
