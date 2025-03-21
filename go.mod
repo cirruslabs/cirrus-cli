@@ -7,7 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/PaesslerAG/gval v1.2.2
 	github.com/antihax/optional v1.0.0
-	github.com/avast/retry-go/v4 v4.5.1
+	github.com/avast/retry-go/v4 v4.6.1
 	github.com/breml/rootcerts v0.2.16
 	github.com/cirruslabs/cirrus-ci-agent v1.134.1 // indirect
 	github.com/cirruslabs/echelon v1.9.0
