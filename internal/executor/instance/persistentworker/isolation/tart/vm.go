@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
 	"go.opentelemetry.io/otel/trace"
@@ -38,6 +39,7 @@ func NewVMClonedFrom(
 	to string,
 	lazyPull bool,
 	env map[string]string,
+	chacha *chacha.Chacha,
 	logger *echelon.Logger,
 ) (*VM, error) {
 	runningVMCtx, runningVMCtxCancel := context.WithCancel(
@@ -54,14 +56,7 @@ func NewVMClonedFrom(
 
 	pullLogger := logger.Scoped("pull virtual machine")
 	if !lazyPull {
-		pullLogger.Infof("Pulling virtual machine %s...", from)
-
-		if _, _, err := CmdWithLogger(ctx, vm.env, pullLogger, "pull", from); err != nil {
-			pullLogger.Errorf("Ignoring pull failure: %v", err)
-			pullLogger.FinishWithType(echelon.FinishTypeFailed)
-		} else {
-			pullLogger.FinishWithType(echelon.FinishTypeSucceeded)
-		}
+		vm.pull(ctx, from, chacha, pullLogger)
 	} else {
 		pullLogger.FinishWithType(echelon.FinishTypeSkipped)
 	}
@@ -76,6 +71,36 @@ func NewVMClonedFrom(
 
 	cloneLogger.Finish(true)
 	return vm, nil
+}
+
+func (vm *VM) pull(ctx context.Context, from string, chacha *chacha.Chacha, logger *echelon.Logger) {
+	if chacha != nil && chacha.EnableTart() {
+		logger.Infof("Pulling virtual machine %s via Chacha...", from)
+
+		args := []string{
+			"--proxy", chacha.Addr(),
+			"--ca-cert", chacha.CertPath(),
+			"--max-retries", "1",
+			from,
+		}
+
+		if _, _, err := CmdWithLogger(ctx, vm.env, logger, "pull", args...); err != nil {
+			logger.Errorf("Failed to pull virtual machine %s via Chacha: %v", from, err)
+		} else {
+			logger.FinishWithType(echelon.FinishTypeSucceeded)
+
+			return
+		}
+	}
+
+	logger.Infof("Pulling virtual machine %s...", from)
+
+	if _, _, err := CmdWithLogger(ctx, vm.env, logger, "pull", from); err != nil {
+		logger.Errorf("Ignoring pull failure: %v", err)
+		logger.FinishWithType(echelon.FinishTypeFailed)
+	} else {
+		logger.FinishWithType(echelon.FinishTypeSucceeded)
+	}
 }
 
 func (vm *VM) Ident() string {
@@ -145,6 +170,7 @@ func (vm *VM) Configure(
 func (vm *VM) Start(
 	ctx context.Context,
 	softnet bool,
+	softnetAllow []string,
 	directoryMounts []directoryMount,
 ) {
 	vm.wg.Add(1)
@@ -156,6 +182,10 @@ func (vm *VM) Start(
 
 		if softnet {
 			args = append(args, "--net-softnet")
+
+			if len(softnetAllow) > 0 {
+				args = append(args, "--net-softnet-allow", strings.Join(softnetAllow, ","))
+			}
 		}
 
 		for _, directoryMount := range directoryMounts {

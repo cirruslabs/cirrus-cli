@@ -109,7 +109,7 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 	opts := []tart.Option{tart.WithVolumes(iso.Tart.Volumes), tart.WithLogger(logger)}
 
 	if iso.Tart.Softnet || tartPolicy.ForceSoftnet {
-		opts = append(opts, tart.WithSoftnet())
+		opts = append(opts, tart.WithSoftnet(tartPolicy.SoftnetAllow))
 	}
 
 	if iso.Tart.Display != "" {

@@ -29,6 +29,7 @@ type WarmableInstance interface {
 		env map[string]string,
 		lazyPull bool,
 		warmup *api.StandbyInstanceParameters_Warmup,
+		config *runconfig.RunConfig,
 		logger *echelon.Logger,
 	) error
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
@@ -40,17 +41,18 @@ const (
 )
 
 type Tart struct {
-	logger      logger.Lightweight
-	vmName      string
-	sshUser     string
-	sshPassword string
-	sshPort     uint16
-	cpu         uint32
-	memory      uint32
-	diskSize    uint32
-	softnet     bool
-	display     string
-	volumes     []*api.Isolation_Tart_Volume
+	logger       logger.Lightweight
+	vmName       string
+	sshUser      string
+	sshPassword  string
+	sshPort      uint16
+	cpu          uint32
+	memory       uint32
+	diskSize     uint32
+	softnet      bool
+	softnetAllow []string
+	display      string
+	volumes      []*api.Isolation_Tart_Volume
 
 	vm              *VM
 	initializeHooks []remoteagent.WaitForAgentHook
@@ -106,9 +108,10 @@ func (tart *Tart) Warmup(
 	additionalEnvironment map[string]string,
 	lazyPull bool,
 	warmup *api.StandbyInstanceParameters_Warmup,
+	config *runconfig.RunConfig,
 	logger *echelon.Logger,
 ) error {
-	err := tart.bootVM(ctx, ident, additionalEnvironment, "", lazyPull, logger)
+	err := tart.bootVM(ctx, ident, additionalEnvironment, "", lazyPull, config.Chacha, logger)
 	if err != nil {
 		return err
 	}
@@ -217,6 +220,7 @@ func (tart *Tart) bootVM(
 	additionalEnvironment map[string]string,
 	automountDir string,
 	lazyPull bool,
+	chacha *chacha.Chacha,
 	logger *echelon.Logger,
 ) error {
 	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
@@ -238,6 +242,7 @@ func (tart *Tart) bootVM(
 		tart.vmName, tmpVMName,
 		lazyPull,
 		additionalEnvironment,
+		chacha,
 		logger,
 	)
 	if err != nil {
@@ -292,7 +297,7 @@ func (tart *Tart) bootVM(
 		})
 	}
 
-	vm.Start(ctx, tart.softnet, directoryMounts)
+	vm.Start(ctx, tart.softnet, tart.softnetAllow, directoryMounts)
 
 	// Wait for the VM to start and get it's DHCP address
 	bootLogger := logger.Scoped("boot virtual machine")
@@ -344,7 +349,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 			automountProjectDir = config.ProjectDir
 		}
 		err = tart.bootVM(ctx, config.TaskID, config.AdditionalEnvironment,
-			automountProjectDir, config.TartOptions.LazyPull, config.Logger())
+			automountProjectDir, config.TartOptions.LazyPull, config.Chacha, config.Logger())
 		if err != nil {
 			return err
 		}
