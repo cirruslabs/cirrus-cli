@@ -78,7 +78,7 @@ require (
 	github.com/go-chi/render v1.0.3
 	github.com/go-faster/errors v0.7.1
 	github.com/go-faster/jx v1.1.0
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/go-github/v59 v59.0.0
 	github.com/hashicorp/vault/api v1.12.2
 	github.com/klauspost/pgzip v1.2.6
