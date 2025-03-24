@@ -87,8 +87,12 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
-	if contentLength := resp.Header.Get("Content-Length"); contentLength != "" {
-		writer.Header().Set("Content-Length", contentLength)
+	// Chacha doesn't support Range requests yet, and not disclosing Content-Length
+	// to the Azure Blob Client makes it not use the Range requests
+	if !azureBlob.chachaEnabled {
+		if contentLength := resp.Header.Get("Content-Length"); contentLength != "" {
+			writer.Header().Set("Content-Length", contentLength)
+		}
 	}
 
 	writer.WriteHeader(resp.StatusCode)
