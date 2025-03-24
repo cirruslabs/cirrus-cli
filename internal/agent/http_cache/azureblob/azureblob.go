@@ -29,13 +29,15 @@ type AzureBlob struct {
 	mux                          *http.ServeMux
 	uploadables                  *xsync.MapOf[string, *uploadablepkg.Uploadable]
 	potentiallyCachingHTTPClient *http.Client
+	chachaEnabled                bool
 }
 
-func New(potentiallyCachingHTTPClient *http.Client) *AzureBlob {
+func New(potentiallyCachingHTTPClient *http.Client, chachaEnabled bool) *AzureBlob {
 	azureBlobContainer := &AzureBlob{
 		mux:                          http.NewServeMux(),
 		uploadables:                  xsync.NewMapOf[string, *uploadablepkg.Uploadable](),
 		potentiallyCachingHTTPClient: potentiallyCachingHTTPClient,
+		chachaEnabled:                chachaEnabled,
 	}
 
 	azureBlobContainer.mux.HandleFunc("GET /{key...}", azureBlobContainer.getBlobAbstract)

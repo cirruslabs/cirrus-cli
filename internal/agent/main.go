@@ -262,7 +262,7 @@ func reportSignal(ctx context.Context, sig os.Signal, taskId string, clientToken
 }
 
 func dialWithTimeout(ctx context.Context, apiEndpoint string, md metadata.MD) (*grpc.ClientConn, error) {
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	_, cancel := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancel()
 
 	target, transportSecurity := grpchelper.TransportSettingsAsDialOption(apiEndpoint)

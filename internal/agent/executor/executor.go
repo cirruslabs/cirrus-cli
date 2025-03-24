@@ -237,6 +237,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 
 		// Default transport
 		var transport http.RoundTripper
+		var chachaEnabled bool
 
 		transport = http_cache.DefaultTransport()
 
@@ -248,9 +249,10 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		if chachaTransport != nil {
 			// Use Chacha transport with a fallback to the default transport
 			transport = fallbackroundtripper.New(chachaTransport, transport)
+			chachaEnabled = true
 		}
 
-		httpCacheHost := http_cache.Start(transport, httpCacheOpts...)
+		httpCacheHost := http_cache.Start(transport, chachaEnabled, httpCacheOpts...)
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
 

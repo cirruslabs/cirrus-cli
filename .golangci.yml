@@ -1,3 +1,5 @@
+version: 2
+
 run:
   timeout: 5m
 
@@ -16,45 +18,11 @@ linters-settings:
     excludes:
       - G115
 
+formatters:
+  enable-all: true
+
 linters:
-  enable:
-  - asciicheck
-  - bodyclose
-  - dupl
-  - errcheck
-  - exhaustive
-  - gocognit
-  - gocritic
-  - gocyclo
-  - godot
-  - godox
-  - gofmt
-  - goheader
-  - gomodguard
-  - goprintffuncname
-  - gosec
-  - gosimple
-  - govet
-  - ineffassign
-  - lll
-  - makezero
-  - misspell
-  - nakedret
-  - nestif
-  - noctx
-  - nolintlint
-  - predeclared
-  - rowserrcheck
-  - sqlclosecheck
-  - staticcheck
-  - stylecheck
-  - testpackage
-  - tparallel
-  - typecheck
-  - unconvert
-  - unparam
-  - unused
-  - whitespace
+  enable-all: true
 
   disable:
     # We don't have high-performance requirements at this moment, so sacrificing
@@ -71,8 +39,6 @@ linters:
 
     # Style linters that are total nuts.
     - wsl
-    - gofumpt
-    - goimports
     - funlen
 
     # Enough parallelism for now.
@@ -96,9 +62,6 @@ linters:
     # [1]: https://github.com/mgechev/revive/issues/244#issuecomment-560512162
     - revive
 
-    # Unfortunately too much false-positives, e.g. for a 0700 umask or number 10 when using strconv.FormatInt()
-    - gomnd
-
     # Needs package whitelists
     - depguard
 
@@ -109,10 +72,13 @@ linters:
     # Work around https://github.com/golangci/golangci-lint/pull/4698
     - gochecknoinits
 
+    # We don't care about some of the errors
+    - errcheck
+
+    # Remove after we stop using deprecated Protocol Buffer fields in api/cirrus_ci_service.proto
+    - staticcheck
+
 issues:
   # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.
   max-issues-per-linter: 0
   max-same-issues: 0
-
-  exclude-dirs:
-    - internal/agent
