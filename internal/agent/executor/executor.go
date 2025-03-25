@@ -242,7 +242,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		transport = http_cache.DefaultTransport()
 
 		// Try Chacha transport
-		chachaTransport, err := executor.tryChachaTransport(transport)
+		chachaTransport, err := executor.tryChachaTransport()
 		if err != nil {
 			log.Printf("%v", err)
 		}
@@ -459,8 +459,10 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	}
 }
 
-func (executor *Executor) tryChachaTransport(baseTransport http.RoundTripper) (http.RoundTripper, error) {
-	if _, ok := executor.env.Lookup("CIRRUS_CHACHA_ENABLED"); ok {
+func (executor *Executor) tryChachaTransport() (http.RoundTripper, error) {
+	if _, ok := executor.env.Lookup("CIRRUS_CHACHA_ENABLED"); !ok {
+		log.Printf("not initializing Chacha transport because CIRRUS_CHACHA_ENABLED is not set")
+
 		return nil, nil
 	}
 
