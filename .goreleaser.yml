@@ -31,7 +31,7 @@ builds:
 
 archives:
   - id: binary
-    format: binary
+    formats: binary
     name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
   - id: regular
     name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
