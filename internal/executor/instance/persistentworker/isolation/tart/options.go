@@ -16,6 +16,7 @@ func WithLogger(logger logger.Lightweight) Option {
 func WithSoftnet(allow []string) Option {
 	return func(tart *Tart) {
 		tart.softnet = true
+		tart.softnetAllow = allow
 	}
 }
 
