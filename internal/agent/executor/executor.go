@@ -242,7 +242,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		transport = http_cache.DefaultTransport()
 
 		// Try Chacha transport
-		chachaTransport, err := executor.tryChachaTransport(transport)
+		chachaTransport, err := executor.tryChachaTransport()
 		if err != nil {
 			log.Printf("%v", err)
 		}
@@ -459,12 +459,14 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	}
 }
 
-func (executor *Executor) tryChachaTransport(baseTransport http.RoundTripper) (http.RoundTripper, error) {
-	if _, ok := executor.env.Lookup("CIRRUS_CHACHA_ENABLED"); ok {
+func (executor *Executor) tryChachaTransport() (http.RoundTripper, error) {
+	if _, ok := executor.env.Lookup("CIRRUS_CHACHA_ENABLED"); !ok {
+		log.Printf("not initializing Chacha transport because CIRRUS_CHACHA_ENABLED is not set")
+
 		return nil, nil
 	}
 
-	chachaAddr, ok := executor.env.Lookup("CIRRUS_CHACHA_ADDR")
+	chachaAddr, ok := os.LookupEnv("CIRRUS_CHACHA_ADDR")
 	if !ok {
 		return nil, fmt.Errorf("failed to initialize Chacha transport: " +
 			"Chacha is enabled, but no CIRRUS_CHACHA_ADDR is set")
@@ -480,7 +482,7 @@ func (executor *Executor) tryChachaTransport(baseTransport http.RoundTripper) (h
 		Proxy: http.ProxyURL(chachaURL),
 	}
 
-	if chachaCert, ok := executor.env.Lookup("CIRRUS_CHACHA_CERT"); ok {
+	if chachaCert, ok := os.LookupEnv("CIRRUS_CHACHA_CERT"); ok {
 		certPool := x509.NewCertPool()
 
 		if certPool.AppendCertsFromPEM([]byte(chachaCert)) {
