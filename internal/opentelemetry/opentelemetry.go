@@ -92,6 +92,7 @@ func Init(ctx context.Context) (func(), error) {
 		return nil, err
 	}
 	logProvider := log.NewLoggerProvider(
+		log.WithResource(resource),
 		log.WithProcessor(
 			log.NewBatchProcessor(logExporter),
 		),
