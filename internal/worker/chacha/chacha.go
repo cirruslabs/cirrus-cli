@@ -54,8 +54,8 @@ func (chacha *Chacha) CertPath() string {
 
 func (chacha *Chacha) AgentEnvironmentVariables() map[string]string {
 	return map[string]string{
-		"CHACHA_ADDR": chacha.addr,
-		"CHACHA_CERT": chacha.cert,
+		"CIRRUS_CHACHA_ADDR": chacha.addr,
+		"CIRRUS_CHACHA_CERT": chacha.cert,
 	}
 }
 

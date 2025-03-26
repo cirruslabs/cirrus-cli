@@ -189,10 +189,7 @@ func (worker *Worker) runTask(
 	}
 
 	if worker.chacha != nil {
-		maps.Copy(config.AdditionalEnvironment, map[string]string{
-			"CIRRUSLABS_CHACHA_ADDR": worker.chacha.Addr(),
-			"CIRRUSLABS_CHACHA_CERT": worker.chacha.Cert(),
-		})
+		maps.Copy(config.AdditionalEnvironment, worker.chacha.AgentEnvironmentVariables())
 	}
 
 	if err := config.SetCLIVersionWithoutDowngrade(cliVersion); err != nil {
