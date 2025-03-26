@@ -31,5 +31,5 @@ func (transport *FallbackTransport) RoundTrip(request *http.Request) (*http.Resp
 		log.Printf("Falling back to secondary transport as primary transport failed: HTTP %d", resp.StatusCode)
 	}
 
-	return transport.primaryTransport.RoundTrip(request)
+	return transport.secondaryTransport.RoundTrip(request)
 }
