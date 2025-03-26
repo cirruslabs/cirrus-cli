@@ -495,6 +495,8 @@ func (executor *Executor) tryChachaTransport() (http.RoundTripper, error) {
 		}
 	}
 
+	log.Printf("Chacha transport initialized")
+
 	return chachaTransport, nil
 }
 
