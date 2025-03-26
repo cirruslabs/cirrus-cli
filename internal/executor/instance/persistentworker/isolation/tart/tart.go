@@ -21,6 +21,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/ssh"
 	"io"
+	"maps"
 	"os"
 	"path"
 	"strings"
@@ -381,10 +382,17 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		tart.logger.Debugf("successfully auto-detected the VM's operating system as %q", agentOS)
 	}
 
+	agentEnv := map[string]string{
+		"CIRRUS_VM_ID": tart.vm.Ident(),
+	}
+
+	if config.Chacha != nil {
+		maps.Copy(agentEnv, config.AdditionalEnvironment)
+	}
+
 	err = remoteagent.WaitForAgent(ctx, tart.logger, fmt.Sprintf("%s:%d", ip, tart.sshPort),
-		tart.sshUser, tart.sshPassword, agentOS, "arm64",
-		config, true, initializeHooks, terminateHooks, "",
-		map[string]string{"CIRRUS_VM_ID": tart.vm.Ident()})
+		tart.sshUser, tart.sshPassword, agentOS, "arm64", config, true,
+		initializeHooks, terminateHooks, "", agentEnv)
 	if err != nil {
 		addTartListBreadcrumb(ctx)
 		addDHCPDLeasesBreadcrumb(ctx)
