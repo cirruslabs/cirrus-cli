@@ -129,7 +129,7 @@ func WaitForAgent(
 	}
 
 	for key, value := range env {
-		_, err = stdinBuf.Write([]byte(fmt.Sprintf("export %s=%s\n", key, value)))
+		_, err = stdinBuf.Write([]byte(fmt.Sprintf("export %s=\"%s\"\n", key, value)))
 		if err != nil {
 			return fmt.Errorf("%w: failed set env variable %s: %v", ErrFailed, key, err)
 		}
