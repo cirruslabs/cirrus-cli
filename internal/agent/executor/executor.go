@@ -235,29 +235,29 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			}
 		}
 
-		// Default transport
-		var transport http.RoundTripper
-		var chachaEnabled bool
+		// Default HTTP cache
+		transport := http_cache.DefaultTransport()
 
-		transport = http_cache.DefaultTransport()
-
-		// Try Chacha transport
-		chachaTransport, err := executor.tryChachaTransport()
-		if err != nil {
-			log.Printf("%v", err)
-		}
-		if chachaTransport != nil {
-			// Use Chacha transport with a fallback to the default transport
-			transport = fallbackroundtripper.New(chachaTransport, transport)
-			chachaEnabled = true
-		}
-
-		httpCacheHost := http_cache.Start(transport, chachaEnabled, httpCacheOpts...)
+		httpCacheHost := http_cache.Start(http_cache.DefaultTransport(), false, httpCacheOpts...)
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
 
 		if tuistCaching {
 			executor.env.Set("CIRRUS_TUIST_CACHE_URL", tuistcache.URL(httpCacheHost))
+		}
+
+		// Thunder HTTP cache
+		chachaTransport, err := executor.tryChachaTransport()
+		if err != nil {
+			log.Printf("%v", err)
+		}
+		if chachaTransport != nil {
+			// Always Chacha transport with a fallback to the default transport, just in case
+			transport := fallbackroundtripper.New(chachaTransport, transport)
+
+			httpCacheHostThunder := http_cache.Start(transport, true, httpCacheOpts...)
+
+			executor.env.Set("CIRRUS_HTTP_CACHE_HOST_THUNDER", httpCacheHostThunder)
 		}
 	}
 
