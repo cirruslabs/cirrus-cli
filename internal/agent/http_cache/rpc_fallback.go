@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-func downloadCacheViaRPC(w http.ResponseWriter, r *http.Request, cacheKey string) {
+func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.Request, cacheKey string) {
 	cacheStream, err := client.CirrusClient.DownloadCache(r.Context(), &api.DownloadCacheRequest{
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
@@ -47,7 +47,7 @@ func downloadCacheViaRPC(w http.ResponseWriter, r *http.Request, cacheKey string
 
 		if chunk.RedirectUrl != "" {
 			log.Printf("%s cache download (RPC fallback) requested a redirect\n", cacheKey)
-			proxyDownloadFromURLs(w, []string{chunk.RedirectUrl})
+			httpCache.proxyDownloadFromURLs(w, []string{chunk.RedirectUrl})
 
 			return
 		}
