@@ -29,12 +29,12 @@ const (
 	CirrusHeaderCreatedBy = "Cirrus-Created-By"
 )
 
-var sem = semaphore.NewWeighted(int64(runtime.NumCPU() * activeRequestsPerLogicalCPU))
+type HTTPCache struct {
+	httpClient                   *http.Client
+	potentiallyCachingHTTPClient *http.Client
+}
 
-var (
-	httpClient                   = &http.Client{}
-	potentiallyCachingHTTPClient = &http.Client{}
-)
+var sem = semaphore.NewWeighted(int64(runtime.NumCPU() * activeRequestsPerLogicalCPU))
 
 func DefaultTransport() *http.Transport {
 	maxConcurrentConnections := runtime.NumCPU() * activeRequestsPerLogicalCPU
@@ -46,20 +46,21 @@ func DefaultTransport() *http.Transport {
 }
 
 func Start(potentiallyCachingTransport http.RoundTripper, chachaEnabled bool, opts ...Option) string {
-	httpClient = &http.Client{
-		Transport: DefaultTransport(),
-		Timeout:   10 * time.Minute,
-	}
-
-	potentiallyCachingHTTPClient = &http.Client{
-		Transport: potentiallyCachingTransport,
-		Timeout:   10 * time.Minute,
+	httpCache := &HTTPCache{
+		httpClient: &http.Client{
+			Transport: DefaultTransport(),
+			Timeout:   10 * time.Minute,
+		},
+		potentiallyCachingHTTPClient: &http.Client{
+			Transport: potentiallyCachingTransport,
+			Timeout:   10 * time.Minute,
+		},
 	}
 
 	mux := http.NewServeMux()
 
 	// HTTP cache protocol
-	mux.HandleFunc("/{objectname...}", handler)
+	mux.HandleFunc("/{objectname...}", httpCache.handler)
 
 	address := "127.0.0.1:12321"
 	listener, err := net.Listen("tcp", address)
@@ -88,7 +89,7 @@ func Start(potentiallyCachingTransport http.RoundTripper, chachaEnabled bool, op
 		// Partial Azure Blob Service REST API implementation
 		// needed for the GHA cache API v2 to function properly
 		mux.Handle(azureblob.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(azureblob.APIMountPoint,
-			azureblob.New(potentiallyCachingHTTPClient, chachaEnabled))))
+			azureblob.New(httpCache.potentiallyCachingHTTPClient, chachaEnabled))))
 
 		// Apply options
 		for _, opt := range opts {
@@ -102,7 +103,7 @@ func Start(potentiallyCachingTransport http.RoundTripper, chachaEnabled bool, op
 	return address
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func (httpCache *HTTPCache) handler(w http.ResponseWriter, r *http.Request) {
 	// Limit request concurrency
 	if err := sem.Acquire(r.Context(), 1); err != nil {
 		log.Printf("Failed to acquite the semaphore: %s\n", err)
@@ -130,13 +131,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Method == http.MethodGet {
-		downloadCache(w, r, key)
+		httpCache.downloadCache(w, r, key)
 	} else if r.Method == http.MethodHead {
 		checkCacheExists(w, key)
 	} else if r.Method == http.MethodPost {
-		uploadCacheEntry(w, r, key)
+		httpCache.uploadCacheEntry(w, r, key)
 	} else if r.Method == http.MethodPut {
-		uploadCacheEntry(w, r, key)
+		httpCache.uploadCacheEntry(w, r, key)
 	} else if r.Method == http.MethodDelete {
 		deleteCacheEntry(w, key)
 	} else {
@@ -165,7 +166,7 @@ func checkCacheExists(w http.ResponseWriter, cacheKey string) {
 	}
 }
 
-func downloadCache(w http.ResponseWriter, r *http.Request, cacheKey string) {
+func (httpCache *HTTPCache) downloadCache(w http.ResponseWriter, r *http.Request, cacheKey string) {
 	key := api.CacheKey{
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
@@ -177,7 +178,7 @@ func downloadCache(w http.ResponseWriter, r *http.Request, cacheKey string) {
 		// RPC fallback
 		if status.Code(err) == codes.Unimplemented {
 			log.Println("Falling back to downloading cache over RPC...")
-			downloadCacheViaRPC(w, r, cacheKey)
+			httpCache.downloadCacheViaRPC(w, r, cacheKey)
 
 			return
 		}
@@ -185,21 +186,21 @@ func downloadCache(w http.ResponseWriter, r *http.Request, cacheKey string) {
 		w.WriteHeader(http.StatusNotFound)
 	} else {
 		log.Printf("Redirecting cache download of %s\n", cacheKey)
-		proxyDownloadFromURLs(w, response.Urls)
+		httpCache.proxyDownloadFromURLs(w, response.Urls)
 	}
 }
 
-func proxyDownloadFromURLs(w http.ResponseWriter, urls []string) {
+func (httpCache *HTTPCache) proxyDownloadFromURLs(w http.ResponseWriter, urls []string) {
 	for _, url := range urls {
-		if proxyDownloadFromURL(w, url) {
+		if httpCache.proxyDownloadFromURL(w, url) {
 			return
 		}
 	}
 	w.WriteHeader(http.StatusNotFound)
 }
 
-func proxyDownloadFromURL(w http.ResponseWriter, url string) bool {
-	resp, err := potentiallyCachingHTTPClient.Get(url)
+func (httpCache *HTTPCache) proxyDownloadFromURL(w http.ResponseWriter, url string) bool {
+	resp, err := httpCache.potentiallyCachingHTTPClient.Get(url)
 	if err != nil {
 		log.Printf("Proxying cache %s failed: %v\n", url, err)
 		return false
@@ -221,7 +222,7 @@ func proxyDownloadFromURL(w http.ResponseWriter, url string) bool {
 	return true
 }
 
-func uploadCacheEntry(w http.ResponseWriter, r *http.Request, cacheKey string) {
+func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Request, cacheKey string) {
 	key := api.CacheKey{
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
@@ -254,7 +255,7 @@ func uploadCacheEntry(w http.ResponseWriter, r *http.Request, cacheKey string) {
 	for k, v := range generateResp.GetExtraHeaders() {
 		req.Header.Set(k, v)
 	}
-	resp, err := httpClient.Do(req)
+	resp, err := httpCache.httpClient.Do(req)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to proxy upload of %s cache! %s", cacheKey, err)
 		log.Println(errorMsg)
