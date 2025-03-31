@@ -15,7 +15,7 @@ require (
 	github.com/cirruslabs/podmanapi v0.3.1
 	github.com/containers/image/v5 v5.34.2
 	github.com/containers/storage v1.57.2 // indirect
-	github.com/cyphar/filepath-securejoin v0.3.6
+	github.com/cyphar/filepath-securejoin v0.4.1
 	github.com/docker/cli v27.5.1+incompatible
 	github.com/docker/docker v27.5.1+incompatible
 	github.com/docker/go-units v0.5.0
