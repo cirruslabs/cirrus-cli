@@ -38,7 +38,7 @@ func (tasksRPC *TasksRPC) InitialCommands(
 	return &api.CommandsResponse{
 		Environment: map[string]string{
 			"CIRRUS_REPO_CLONE_URL": "http://github.com/cirruslabs/cirrus-cli.git",
-			"CIRRUS_BRANCH":         "master",
+			"CIRRUS_BRANCH":         "main",
 		},
 		Commands: []*api.Command{
 			{
