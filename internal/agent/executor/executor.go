@@ -480,6 +480,19 @@ func (executor *Executor) tryChachaTransport() (http.RoundTripper, error) {
 
 	chachaTransport := &http.Transport{
 		Proxy: http.ProxyURL(chachaURL),
+
+		// Disable compression when using Chacha, as the latter
+		// does not support Vary header yet, which means that
+		// any presence of this header causes the responses
+		// to be non-cacheable.
+		//
+		// Currently on Chacha we get an "Accept-Encoding: gzip"
+		// request and a "Vary: Accept-Encoding" response.
+		//
+		// When compression is disabled, we should not get
+		// "Vary" in responses because no "Accept-Encoding"
+		// will be set.
+		DisableCompression: true,
 	}
 
 	if chachaCert, ok := os.LookupEnv("CIRRUS_CHACHA_CERT"); ok {
