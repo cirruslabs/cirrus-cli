@@ -144,7 +144,7 @@ def main(ctx):
 	}
 
 	// Try specifying a branch
-	env["CIRRUS_CHANGE_IN_REPO"] = "master"
+	env["CIRRUS_CHANGE_IN_REPO"] = "main"
 	_, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{
 		StarlarkConfig: starlarkConfig,
 		Environment:    env,
