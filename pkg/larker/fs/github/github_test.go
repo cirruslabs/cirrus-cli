@@ -29,7 +29,7 @@ func TestGitHubFixture(t *testing.T) {
 func TestStatUsesFileInfosCache(t *testing.T) {
 	possiblySkip(t)
 
-	fileSystem, err := github.New("cirruslabs", "cirrus-cli", "master", "")
+	fileSystem, err := github.New("cirruslabs", "cirrus-cli", "main", "")
 	if err != nil {
 		t.Fatal(err)
 	}
