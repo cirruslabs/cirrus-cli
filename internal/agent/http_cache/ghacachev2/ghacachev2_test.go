@@ -44,11 +44,17 @@ func TestGHACacheV2(t *testing.T) {
 	require.True(t, createCacheEntryRes.Ok)
 
 	// Feed the returned pre-signed upload URL to Azure Blob client
-	blockBlobClient, err := azblob.NewBlockBlobClientWithNoCredential(createCacheEntryRes.SignedUploadUrl,
-		nil)
+	//
+	// Unfortunately azblob.ParseURL() just drops the rest of the path,
+	// and has no ServiceURL() convenience method, so we have to manually
+	// add the "://" and "/_azureblob" below.
+	url, err := azblob.ParseURL(createCacheEntryRes.SignedUploadUrl)
 	require.NoError(t, err)
 
-	_, err = blockBlobClient.UploadBuffer(ctx, cacheValue, azblob.UploadOption{})
+	blockBlobClient, err := azblob.NewClientWithNoCredential(url.Scheme+"://"+url.Host+"/_azureblob", nil)
+	require.NoError(t, err)
+
+	_, err = blockBlobClient.UploadBuffer(ctx, url.ContainerName, url.BlobName, cacheValue, &azblob.UploadBufferOptions{})
 	require.NoError(t, err)
 
 	// Ensure that an entry for our cache key is present
@@ -72,13 +78,20 @@ func TestGHACacheV2(t *testing.T) {
 	// this is actively used by GitHub Actions Toolkit
 	// to determine whether to enable parallel download
 	// or not.
-	properties, err := blockBlobClient.GetProperties(ctx, &azblob.BlobGetPropertiesOptions{})
+	resp, err := blockBlobClient.DownloadStream(ctx, url.ContainerName, url.BlobName, &azblob.DownloadStreamOptions{})
 	require.NoError(t, err)
-	require.NotNil(t, properties.ContentLength)
-	require.EqualValues(t, len(cacheValue), *properties.ContentLength)
+	require.NotNil(t, resp.ContentLength)
+	require.EqualValues(t, len(cacheValue), *resp.ContentLength)
 
 	// Ensure that HTTP range requests are supported
-	buf := make([]byte, 4)
-	err = blockBlobClient.DownloadToBuffer(ctx, 10, 4, buf, azblob.DownloadOptions{})
+	buf := make([]byte, 5)
+	n, err := blockBlobClient.DownloadBuffer(ctx, url.ContainerName, url.BlobName, buf, &azblob.DownloadBufferOptions{
+		Range: azblob.HTTPRange{
+			Offset: 7,
+			Count:  5,
+		},
+	})
 	require.NoError(t, err)
+	require.EqualValues(t, 5, n)
+	require.Equal(t, []byte("World"), buf)
 }
