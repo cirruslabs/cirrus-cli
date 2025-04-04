@@ -151,7 +151,7 @@ func decodeCacheArtifactExistsParams(args [0]string, argsEscaped bool, r *http.R
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -187,7 +187,7 @@ func decodeCacheArtifactExistsParams(args [0]string, argsEscaped bool, r *http.R
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -223,7 +223,7 @@ func decodeCacheArtifactExistsParams(args [0]string, argsEscaped bool, r *http.R
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -698,7 +698,7 @@ func decodeCompleteCacheArtifactMultipartUploadParams(args [0]string, argsEscape
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -734,7 +734,7 @@ func decodeCompleteCacheArtifactMultipartUploadParams(args [0]string, argsEscape
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -770,7 +770,7 @@ func decodeCompleteCacheArtifactMultipartUploadParams(args [0]string, argsEscape
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -806,7 +806,7 @@ func decodeCompleteCacheArtifactMultipartUploadParams(args [0]string, argsEscape
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -1050,7 +1050,7 @@ func decodeCreateCommandEventParams(args [0]string, argsEscaped bool, r *http.Re
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -1516,7 +1516,7 @@ func decodeDownloadCacheArtifactParams(args [0]string, argsEscaped bool, r *http
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -1552,7 +1552,7 @@ func decodeDownloadCacheArtifactParams(args [0]string, argsEscaped bool, r *http
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -1588,7 +1588,7 @@ func decodeDownloadCacheArtifactParams(args [0]string, argsEscaped bool, r *http
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -2046,7 +2046,7 @@ func decodeGenerateCacheArtifactMultipartUploadURLParams(args [0]string, argsEsc
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -2082,7 +2082,7 @@ func decodeGenerateCacheArtifactMultipartUploadURLParams(args [0]string, argsEsc
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -2118,7 +2118,7 @@ func decodeGenerateCacheArtifactMultipartUploadURLParams(args [0]string, argsEsc
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -2154,7 +2154,7 @@ func decodeGenerateCacheArtifactMultipartUploadURLParams(args [0]string, argsEsc
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -2190,7 +2190,7 @@ func decodeGenerateCacheArtifactMultipartUploadURLParams(args [0]string, argsEsc
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -4326,7 +4326,7 @@ func decodeStartCacheArtifactMultipartUploadParams(args [0]string, argsEscaped b
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -4362,7 +4362,7 @@ func decodeStartCacheArtifactMultipartUploadParams(args [0]string, argsEscaped b
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {
@@ -4398,7 +4398,7 @@ func decodeStartCacheArtifactMultipartUploadParams(args [0]string, argsEscaped b
 				return err
 			}
 		} else {
-			return validate.ErrFieldRequired
+			return err
 		}
 		return nil
 	}(); err != nil {

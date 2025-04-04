@@ -3124,10 +3124,10 @@ func (o *OptNilString) SetTo(v string) {
 	o.Value = v
 }
 
-// IsSet returns true if value is Null.
+// IsNull returns true if value is Null.
 func (o OptNilString) IsNull() bool { return o.Null }
 
-// SetNull sets value to null.
+// SetToNull sets value to null.
 func (o *OptNilString) SetToNull() {
 	o.Set = true
 	o.Null = true

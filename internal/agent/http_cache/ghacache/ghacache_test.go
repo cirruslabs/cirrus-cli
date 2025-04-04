@@ -32,7 +32,7 @@ func TestGHA(t *testing.T) {
 	tokenString, err := token.SignedString([]byte("whatever"))
 	require.NoError(t, err)
 
-	ac, err := actionscache.New(tokenString, httpCacheURL, actionscache.Opt{})
+	ac, err := actionscache.New(tokenString, httpCacheURL, false, actionscache.Opt{})
 	require.NoError(t, err)
 
 	cacheKey := uuid.NewString()
