@@ -7,7 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/cirrus-cli/pkg/privdrop"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -67,6 +69,9 @@ var vetuLazyPull bool
 // Flags useful for debugging.
 var debugNoCleanup bool
 
+// username for privilege dropping on macOS
+var username string
+
 func readYaml(
 	ctx context.Context,
 	baseEnvironment map[string]string,
@@ -117,6 +122,13 @@ func readYaml(
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	// Initialize privilege dropping on macOS, if requested
+	if username != "" {
+		if err := privdrop.Initialize(username); err != nil {
+			return err
+		}
+	}
+
 	baseEnvironment := makeBaseEnvironment()
 
 	userSpecifiedEnvironment, err := makeUserSpecifiedEnvironment()
@@ -295,6 +307,11 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().StringArrayVar(&env, "environment", []string{},
 		"deprecated, please use --env instead")
 	_ = cmd.PersistentFlags().MarkHidden("environment")
+
+	if runtime.GOOS == "darwin" {
+		cmd.Flags().StringVar(&username, "user", "", "user name to drop privileges to"+
+			" when running external programs (only Tart, Parallels and unset isolation are currently supported)")
+	}
 
 	return cmd
 }
