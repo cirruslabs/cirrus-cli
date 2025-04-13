@@ -479,7 +479,15 @@ func (executor *Executor) tryChachaTransport() (http.RoundTripper, error) {
 	}
 
 	chachaTransport := &http.Transport{
-		Proxy: http.ProxyURL(chachaURL),
+		Proxy: func(request *http.Request) (*url.URL, error) {
+			// Chacha might issue a redirect and ask the client to connect
+			// directly to the storage server (without using a proxy)
+			if request.Response != nil && request.Response.Header.Get("X-Chacha-Direct-Connect") == "1" {
+				return nil, nil
+			}
+
+			return chachaURL, nil
+		},
 
 		// Disable compression when using Chacha, as the latter
 		// does not support Vary header yet, which means that
