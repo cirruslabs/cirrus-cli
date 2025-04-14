@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-var allowedStatusCodes = mapset.NewSet[int](
+var successStatusCodes = mapset.NewSet[int](
 	http.StatusOK,
 	http.StatusTemporaryRedirect,
 )
@@ -26,7 +26,7 @@ func New(primaryTransport http.RoundTripper, secondaryTransport http.RoundTrippe
 func (transport *FallbackTransport) RoundTrip(request *http.Request) (*http.Response, error) {
 	// Try primary transport first
 	resp, err := transport.primaryTransport.RoundTrip(request)
-	if err == nil && allowedStatusCodes.ContainsOne(resp.StatusCode) {
+	if err == nil && successStatusCodes.ContainsOne(resp.StatusCode) {
 		return resp, nil
 	}
 
