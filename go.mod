@@ -72,6 +72,7 @@ require (
 	github.com/bmatcuk/doublestar v1.3.4
 	github.com/cirruslabs/cirrus-ci-annotations v0.10.0
 	github.com/cirruslabs/terminal v0.16.0
+	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/docker/go-connections v0.5.0
 	github.com/go-chi/render v1.0.3
 	github.com/go-faster/errors v0.7.1

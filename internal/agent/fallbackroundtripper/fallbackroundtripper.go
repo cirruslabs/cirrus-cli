@@ -1,8 +1,14 @@
 package fallbackroundtripper
 
 import (
+	"github.com/deckarep/golang-set/v2"
 	"log"
 	"net/http"
+)
+
+var allowedStatusCodes = mapset.NewSet[int](
+	http.StatusOK,
+	http.StatusTemporaryRedirect,
 )
 
 type FallbackTransport struct {
@@ -20,7 +26,7 @@ func New(primaryTransport http.RoundTripper, secondaryTransport http.RoundTrippe
 func (transport *FallbackTransport) RoundTrip(request *http.Request) (*http.Response, error) {
 	// Try primary transport first
 	resp, err := transport.primaryTransport.RoundTrip(request)
-	if err == nil && resp.StatusCode == http.StatusOK {
+	if err == nil && allowedStatusCodes.ContainsOne(resp.StatusCode) {
 		return resp, nil
 	}
 
