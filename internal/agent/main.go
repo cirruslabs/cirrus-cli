@@ -14,7 +14,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/grpchelper"
 	"github.com/getsentry/sentry-go"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
@@ -66,7 +65,7 @@ func Run(args []string) {
 	// Propagate W3C Trace Context from the environment variables[1]
 	//
 	// [1]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md
-	ctx := otel.GetTextMapPropagator().Extract(context.Background(), propagation.MapCarrier{
+	ctx := propagation.TraceContext{}.Extract(context.Background(), propagation.MapCarrier{
 		"traceparent": os.Getenv("TRACEPARENT"),
 		"tracestate":  os.Getenv("TRACESTATE"),
 	})
