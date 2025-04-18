@@ -6285,10 +6285,11 @@ type PollResponse_AgentAwareTask struct {
 	CliVersion     string             `protobuf:"bytes,7,opt,name=cli_version,json=cliVersion,proto3" json:"cli_version,omitempty"`
 	ResourcesToUse map[string]float64 `protobuf:"bytes,6,rep,name=resources_to_use,json=resourcesToUse,proto3" json:"resources_to_use,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"fixed64,2,opt,name=value"`
 	TaskId         string             `protobuf:"bytes,8,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	Traceparent    string             `protobuf:"bytes,9,opt,name=traceparent,proto3" json:"traceparent,omitempty"`
-	Tracestate     string             `protobuf:"bytes,10,opt,name=tracestate,proto3" json:"tracestate,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Task's W3C Trace Context
+	Traceparent   string `protobuf:"bytes,9,opt,name=traceparent,proto3" json:"traceparent,omitempty"`
+	Tracestate    string `protobuf:"bytes,10,opt,name=tracestate,proto3" json:"tracestate,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PollResponse_AgentAwareTask) Reset() {
