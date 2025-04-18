@@ -12,6 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/proto"
@@ -36,6 +37,12 @@ func (worker *Worker) startTask(
 	upstream *upstreampkg.Upstream,
 	agentAwareTask *api.PollResponse_AgentAwareTask,
 ) {
+	// Propagate task's W3C Trace Context to a worker
+	ctx = propagation.TraceContext{}.Extract(ctx, propagation.MapCarrier{
+		"traceparent": agentAwareTask.Traceparent,
+		"tracestate":  agentAwareTask.Tracestate,
+	})
+
 	taskID := agentAwareTask.TaskId
 	if taskID == "" {
 		taskID = fmt.Sprintf("%d", agentAwareTask.OldTaskId)
@@ -72,7 +79,8 @@ func (worker *Worker) startTask(
 
 	worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(inst.Attributes()...))
 	go worker.runTask(taskCtx, upstream, inst, agentAwareTask.CliVersion,
-		taskID, agentAwareTask.ClientSecret, agentAwareTask.ServerSecret)
+		taskID, agentAwareTask.ClientSecret, agentAwareTask.ServerSecret,
+		agentAwareTask.Traceparent, agentAwareTask.Tracestate)
 
 	worker.logger.Infof("started task %s", taskID)
 }
@@ -125,6 +133,8 @@ func (worker *Worker) runTask(
 	taskID string,
 	clientSecret string,
 	serverSecret string,
+	traceparent string,
+	tracestate string,
 ) {
 	// Provide tags for Sentry: task ID and upstream worker name
 	cirrusSentryTags := map[string]string{
@@ -184,6 +194,11 @@ func (worker *Worker) runTask(
 		TaskID:       taskID,
 		AdditionalEnvironment: map[string]string{
 			"CIRRUS_SENTRY_TAGS": strings.Join(cirrusSentryTagsFormatted, ","),
+			// Propagate task's W3C Trace Context to an agent using the environment variables[1]
+			//
+			// [1]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md
+			"TRACEPARENT": traceparent,
+			"TRACESTATE":  tracestate,
 		},
 		Chacha: worker.chacha,
 	}

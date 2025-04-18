@@ -186,6 +186,10 @@ message PollResponse {
     string cli_version = 7;
     map<string, double> resources_to_use = 6;
     string task_id = 8;
+
+    // Task's W3C Trace Context
+    string traceparent = 9;
+    string tracestate = 10;
   }
 
   repeated AgentAwareTask tasks_to_start = 1;
