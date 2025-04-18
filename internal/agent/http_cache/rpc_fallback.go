@@ -47,7 +47,7 @@ func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.R
 
 		if chunk.RedirectUrl != "" {
 			log.Printf("%s cache download (RPC fallback) requested a redirect\n", cacheKey)
-			httpCache.proxyDownloadFromURLs(w, []string{chunk.RedirectUrl})
+			httpCache.proxyDownloadFromURLs(w, r, []string{chunk.RedirectUrl})
 
 			return
 		}

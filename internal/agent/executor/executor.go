@@ -19,6 +19,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/tuistcache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/propagation"
 	"log"
 	"net/http"
 	"net/url"
@@ -238,7 +240,8 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		// Default HTTP cache
 		transport := http_cache.DefaultTransport()
 
-		httpCacheHost := http_cache.Start(http_cache.DefaultTransport(), false, httpCacheOpts...)
+		httpCacheHost := http_cache.Start(ctx, http_cache.DefaultTransport(), false,
+			httpCacheOpts...)
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
 
@@ -252,10 +255,17 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			log.Printf("%v", err)
 		}
 		if chachaTransport != nil {
+			// Propagate agent's context using W3C Trace Context
+			// when sending requests using the Chacha transport
+			chachaTransport = otelhttp.NewTransport(chachaTransport,
+				otelhttp.WithPropagators(propagation.TraceContext{}),
+			)
+
 			// Always Chacha transport with a fallback to the default transport, just in case
 			transport := fallbackroundtripper.New(chachaTransport, transport)
 
-			httpCacheHostThunder := http_cache.Start(transport, true, httpCacheOpts...)
+			httpCacheHostThunder := http_cache.Start(ctx, transport, true,
+				httpCacheOpts...)
 
 			executor.env.Set("CIRRUS_HTTP_CACHE_HOST_THUNDER", httpCacheHostThunder)
 		}

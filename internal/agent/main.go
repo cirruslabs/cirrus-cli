@@ -14,6 +14,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/grpchelper"
 	"github.com/getsentry/sentry-go"
 	"github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -60,6 +62,14 @@ func Run(args []string) {
 			}
 		})
 	}
+
+	// Propagate W3C Trace Context from the environment variables[1]
+	//
+	// [1]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md
+	ctx := otel.GetTextMapPropagator().Extract(context.Background(), propagation.MapCarrier{
+		"traceparent": os.Getenv("TRACEPARENT"),
+		"tracestate":  os.Getenv("TRACESTATE"),
+	})
 
 	// Initialize logger
 	logFilePath := filepath.Join(os.TempDir(), fmt.Sprintf("cirrus-agent-%s.log", *taskIdPtr))
@@ -134,7 +144,7 @@ func Run(args []string) {
 
 	log.Printf("Running agent version %s", version.FullVersion)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	signalChannel := make(chan os.Signal, 1)
