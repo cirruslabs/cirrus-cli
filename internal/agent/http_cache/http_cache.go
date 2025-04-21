@@ -45,7 +45,7 @@ func DefaultTransport() *http.Transport {
 	}
 }
 
-func Start(potentiallyCachingTransport http.RoundTripper, chachaEnabled bool, opts ...Option) string {
+func Start(ctx context.Context, potentiallyCachingTransport http.RoundTripper, chachaEnabled bool, opts ...Option) string {
 	httpCache := &HTTPCache{
 		httpClient: &http.Client{
 			Transport: DefaultTransport(),
@@ -96,7 +96,18 @@ func Start(potentiallyCachingTransport http.RoundTripper, chachaEnabled bool, op
 			opt(mux)
 		}
 
-		go http.Serve(listener, mux)
+		httpServer := &http.Server{
+			// Use agent's context as a base for the HTTP cache handlers
+			//
+			// This way the HTTP cache handlers utilizing Chacha transport will
+			// be able to further propagate that context using W3C Trace Context
+			BaseContext: func(_ net.Listener) context.Context {
+				return ctx
+			},
+			Handler: mux,
+		}
+
+		go httpServer.Serve(listener)
 	} else {
 		log.Printf("Failed to start http cache server %s: %s\n", address, err)
 	}
@@ -186,21 +197,26 @@ func (httpCache *HTTPCache) downloadCache(w http.ResponseWriter, r *http.Request
 		w.WriteHeader(http.StatusNotFound)
 	} else {
 		log.Printf("Redirecting cache download of %s\n", cacheKey)
-		httpCache.proxyDownloadFromURLs(w, response.Urls)
+		httpCache.proxyDownloadFromURLs(w, r, response.Urls)
 	}
 }
 
-func (httpCache *HTTPCache) proxyDownloadFromURLs(w http.ResponseWriter, urls []string) {
+func (httpCache *HTTPCache) proxyDownloadFromURLs(w http.ResponseWriter, r *http.Request, urls []string) {
 	for _, url := range urls {
-		if httpCache.proxyDownloadFromURL(w, url) {
+		if httpCache.proxyDownloadFromURL(w, r, url) {
 			return
 		}
 	}
 	w.WriteHeader(http.StatusNotFound)
 }
 
-func (httpCache *HTTPCache) proxyDownloadFromURL(w http.ResponseWriter, url string) bool {
-	resp, err := httpCache.potentiallyCachingHTTPClient.Get(url)
+func (httpCache *HTTPCache) proxyDownloadFromURL(w http.ResponseWriter, r *http.Request, url string) bool {
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, url, nil)
+	if err != nil {
+		log.Printf("Failed to create a new GET HTTP request to URL %s: %v", url, err)
+		return false
+	}
+	resp, err := httpCache.potentiallyCachingHTTPClient.Do(req)
 	if err != nil {
 		log.Printf("Proxying cache %s failed: %v\n", url, err)
 		return false

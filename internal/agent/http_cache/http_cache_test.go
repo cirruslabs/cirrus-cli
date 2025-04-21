@@ -1,6 +1,7 @@
 package http_cache_test
 
 import (
+	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/cirruscimock"
@@ -18,8 +19,8 @@ func TestHTTPCache(t *testing.T) {
 
 	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
-	httpCacheObjectURL := "http://" + http_cache.Start(http_cache.DefaultTransport(), false) +
-		"/cache/" + uuid.NewString() + "/test.txt"
+	httpCacheObjectURL := "http://" + http_cache.Start(context.Background(), http_cache.DefaultTransport(),
+		false) + "/cache/" + uuid.NewString() + "/test.txt"
 
 	// Ensure that the cache entry does not exist
 	resp, err := http.Get(httpCacheObjectURL)

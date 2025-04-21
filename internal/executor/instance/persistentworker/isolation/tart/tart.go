@@ -386,9 +386,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 		"CIRRUS_VM_ID": tart.vm.Ident(),
 	}
 
-	if config.Chacha != nil {
-		maps.Copy(agentEnv, config.AdditionalEnvironment)
-	}
+	maps.Copy(agentEnv, config.AdditionalEnvironment)
 
 	err = remoteagent.WaitForAgent(ctx, tart.logger, fmt.Sprintf("%s:%d", ip, tart.sshPort),
 		tart.sshUser, tart.sshPassword, agentOS, "arm64", config, true,

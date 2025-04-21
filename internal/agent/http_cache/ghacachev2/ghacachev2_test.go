@@ -22,7 +22,7 @@ func TestGHACacheV2(t *testing.T) {
 
 	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
-	httpCacheURL := "http://" + http_cache.Start(http_cache.DefaultTransport(), false)
+	httpCacheURL := "http://" + http_cache.Start(ctx, http_cache.DefaultTransport(), false)
 
 	client := gharesults.NewCacheServiceJSONClient(httpCacheURL, &http.Client{})
 
