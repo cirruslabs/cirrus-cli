@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/internal"
+	"github.com/cirruslabs/cirrus-cli/internal/commands/localnetworkhelper"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/validate"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
@@ -24,6 +25,7 @@ func NewRootCmd() *cobra.Command {
 		newServeCmd(),
 		internal.NewRootCmd(),
 		worker.NewRootCmd(),
+		localnetworkhelper.NewCommand(),
 	}
 
 	return helpers.ConsumeSubCommands(cmd, commands)

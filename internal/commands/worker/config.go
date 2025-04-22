@@ -140,17 +140,15 @@ func parseConfig(path string) (*Config, error) {
 	return &config, nil
 }
 
-func buildWorker(output io.Writer) (*worker.Worker, error) {
+func buildWorker(output io.Writer, opts ...worker.Option) (*worker.Worker, error) {
 	config, err := parseConfig(configPath)
 	if err != nil {
 		return nil, err
 	}
 
 	// Configure worker
-	opts := []worker.Option{
-		worker.WithLabels(config.Labels),
-		worker.WithResources(config.Resources),
-	}
+	opts = append(opts, worker.WithLabels(config.Labels),
+		worker.WithResources(config.Resources))
 
 	// Configure logging
 	logger := logrus.New()

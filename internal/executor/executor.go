@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
@@ -48,6 +49,7 @@ type Executor struct {
 	tartOptions              options.TartOptions
 	vetuOptions              options.VetuOptions
 	artifactsDir             string
+	localNetworkHelper       *localnetworkhelper.LocalNetworkHelper
 }
 
 func New(projectDir string, tasks []*api.Task, opts ...Option) (*Executor, error) {
@@ -190,6 +192,7 @@ func (e *Executor) runSingleTask(ctx context.Context, task *build.Task) (err err
 		ContainerOptions:     e.containerOptions,
 		TartOptions:          e.tartOptions,
 		VetuOptions:          e.vetuOptions,
+		LocalNetworkHelper:   e.localNetworkHelper,
 	}
 
 	instanceRunOpts.SetLogger(taskLogger)

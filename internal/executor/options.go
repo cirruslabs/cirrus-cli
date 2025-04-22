@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/taskfilter"
 	"github.com/cirruslabs/echelon"
@@ -72,5 +73,11 @@ func WithVetuOptions(vetuOptions options.VetuOptions) Option {
 func WithArtifactsDir(artifactsDir string) Option {
 	return func(e *Executor) {
 		e.artifactsDir = artifactsDir
+	}
+}
+
+func WithLocalNetworkHelper(localNetworkHelper *localnetworkhelper.LocalNetworkHelper) Option {
+	return func(e *Executor) {
+		e.localNetworkHelper = localNetworkHelper
 	}
 }

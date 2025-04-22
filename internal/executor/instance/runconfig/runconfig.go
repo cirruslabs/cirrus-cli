@@ -1,6 +1,7 @@
 package runconfig
 
 import (
+	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
@@ -28,6 +29,7 @@ type RunConfig struct {
 	containerBackend           containerbackend.ContainerBackend
 	AdditionalEnvironment      map[string]string
 	Chacha                     *chacha.Chacha
+	LocalNetworkHelper         *localnetworkhelper.LocalNetworkHelper
 }
 
 func (rc *RunConfig) GetContainerBackend() (containerbackend.ContainerBackend, error) {

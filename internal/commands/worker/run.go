@@ -3,7 +3,10 @@ package worker
 import (
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/pkg/privdrop"
+	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
+	"github.com/cirruslabs/chacha/pkg/privdrop"
+	"github.com/cirruslabs/cirrus-cli/internal/worker"
+	oldprivdrop "github.com/cirruslabs/cirrus-cli/pkg/privdrop"
 	"github.com/spf13/cobra"
 	"runtime"
 )
@@ -11,20 +14,37 @@ import (
 var ErrRun = errors.New("run failed")
 
 var username string
+var userCoarseGrained bool
 
 func NewRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run",
 		Short: "Run persistent worker",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Initialize privilege dropping on macOS, if requested
+			var opts []worker.Option
+
+			// Run the macOS "Local Network" permission helper
+			// when privilege dropping is requested
 			if username != "" {
-				if err := privdrop.Initialize(username); err != nil {
-					return err
+				if userCoarseGrained {
+					if err := oldprivdrop.Initialize(username); err != nil {
+						return err
+					}
+				} else {
+					localNetworkHelper, err := localnetworkhelper.New(cmd.Context())
+					if err != nil {
+						return err
+					}
+
+					opts = append(opts, worker.WithLocalNetworkHelper(localNetworkHelper))
+
+					if err := privdrop.Drop(username); err != nil {
+						return err
+					}
 				}
 			}
 
-			worker, err := buildWorker(cmd.ErrOrStderr())
+			worker, err := buildWorker(cmd.ErrOrStderr(), opts...)
 			if err != nil {
 				return err
 			}
@@ -50,8 +70,12 @@ func NewRunCmd() *cobra.Command {
 	//nolint:lll // can't make the link shorter
 	// [1]: https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy#macOS-considerations
 	if runtime.GOOS == "darwin" {
-		cmd.Flags().StringVar(&username, "user", "", "user name to drop privileges to"+
-			" when running external programs (only Tart, Parallels and unset isolation are currently supported)")
+		cmd.Flags().StringVar(&username, "user", "", "username to drop privileges to "+
+			"(\"Local Network\" permission workaround: requires starting \"cirrus worker run\" as \"root\", the privileges "+
+			"will be then dropped to the specified user after starting the \"cirrus localnetworkhelper\" helper process)")
+
+		cmd.Flags().BoolVar(&userCoarseGrained, "user-coarse-grained", false, "use older, coarse-grained "+
+			"privilege dropping mechanism that only applies to external programs (and only Tart, Parallels and unset isolation)")
 	}
 
 	attachFlags(cmd)
