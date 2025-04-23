@@ -7,7 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
+	"github.com/cirruslabs/chacha/pkg/privdrop"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -64,6 +67,9 @@ var tartLazyPull bool
 // Vetu-related flags.
 var vetuLazyPull bool
 
+// macOS-related flags.
+var username string
+
 // Flags useful for debugging.
 var debugNoCleanup bool
 
@@ -117,6 +123,23 @@ func readYaml(
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	var executorOpts []executor.Option
+
+	// Run the macOS "Local Network" permission helper
+	// when privilege dropping is requested
+	if username != "" {
+		localNetworkHelper, err := localnetworkhelper.New(cmd.Context())
+		if err != nil {
+			return err
+		}
+
+		executorOpts = append(executorOpts, executor.WithLocalNetworkHelper(localNetworkHelper))
+
+		if err := privdrop.Drop(username); err != nil {
+			return err
+		}
+	}
+
 	baseEnvironment := makeBaseEnvironment()
 
 	userSpecifiedEnvironment, err := makeUserSpecifiedEnvironment()
@@ -131,8 +154,6 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	var executorOpts []executor.Option
 
 	// Enable logging
 	logger, cancel := logs.GetLogger(output, verbose, cmd.OutOrStdout(), os.Stdout)
@@ -285,6 +306,13 @@ func newRunCmd() *cobra.Command {
 	// Vetu-related flags
 	cmd.PersistentFlags().BoolVar(&vetuLazyPull, "vetu-lazy-pull", false,
 		"attempt to pull Vetu VM images only if they are missing locally (helpful in case of registry rate limits)")
+
+	// macOS-related flags
+	if runtime.GOOS == "darwin" {
+		cmd.Flags().StringVar(&username, "user", "", "username to drop privileges to "+
+			"(\"Local Network\" permission workaround: requires starting \"cirrus run\" as \"root\", the privileges "+
+			"will be then dropped to the specified user after starting the \"cirrus localnetworkhelper\" helper process)")
+	}
 
 	// Flags useful for debugging
 	cmd.PersistentFlags().BoolVar(&debugNoCleanup, "debug-no-cleanup", false,

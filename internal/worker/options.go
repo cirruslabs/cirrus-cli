@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
@@ -62,5 +63,11 @@ func WithTartPrePull(tartPrePull *TartPrePull) Option {
 func WithChacha(chacha *chacha.Chacha) Option {
 	return func(e *Worker) {
 		e.chacha = chacha
+	}
+}
+
+func WithLocalNetworkHelper(localNetworkHelper *localnetworkhelper.LocalNetworkHelper) Option {
+	return func(e *Worker) {
+		e.localNetworkHelper = localNetworkHelper
 	}
 }

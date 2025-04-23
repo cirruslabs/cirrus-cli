@@ -200,7 +200,8 @@ func (worker *Worker) runTask(
 			"TRACEPARENT": traceparent,
 			"TRACESTATE":  tracestate,
 		},
-		Chacha: worker.chacha,
+		Chacha:             worker.chacha,
+		LocalNetworkHelper: worker.localNetworkHelper,
 	}
 
 	if worker.chacha != nil {

@@ -150,7 +150,7 @@ func (vetu *Vetu) bootVM(
 	bootLogger.Errorf("VM was assigned with %s IP", ip)
 
 	sshClient, err := remoteagent.WaitForSSH(ipCtx, fmt.Sprintf("%s:%d", ip, vetu.sshPort), vetu.sshUser,
-		vetu.sshPassword, logger)
+		vetu.sshPassword, nil, logger)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 	err = remoteagent.WaitForAgent(ctx, vetu.logger, fmt.Sprintf("%s:%d", ip, vetu.sshPort),
 		vetu.sshUser, vetu.sshPassword, "linux", runtime.GOARCH,
 		config, true, vetu.initializeHooks(config), nil, "",
-		map[string]string{"CIRRUS_VM_ID": vetu.vm.Ident()})
+		map[string]string{"CIRRUS_VM_ID": vetu.vm.Ident()}, nil)
 	if err != nil {
 		return err
 	}

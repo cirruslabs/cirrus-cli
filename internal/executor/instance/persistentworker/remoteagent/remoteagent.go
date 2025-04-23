@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/avast/retry-go/v4"
+	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
@@ -55,11 +56,12 @@ func WaitForAgent(
 	terminateHooks WaitForAgentHooks,
 	preCreatedWorkingDir string,
 	env map[string]string,
+	localNetworkHelper *localnetworkhelper.LocalNetworkHelper,
 ) error {
 	ctx, span := tracer.Start(ctx, "upload-and-wait-for-agent")
 	defer span.End()
 
-	cli, err := connectViaSSH(ctx, logger, addr, sshUser, sshPassword)
+	cli, err := connectViaSSH(ctx, logger, addr, sshUser, sshPassword, localNetworkHelper)
 	if err != nil {
 		return err
 	}
@@ -244,12 +246,13 @@ func connectViaSSH(
 	addr string,
 	sshUser string,
 	sshPassword string,
+	localNetworkHelper *localnetworkhelper.LocalNetworkHelper,
 ) (*ssh.Client, error) {
 	// Connect to the VM and upload the agent
 
 	logger.Debugf("connecting via SSH to %s...", addr)
 
-	sshClient, err := WaitForSSH(ctx, addr, sshUser, sshPassword, logger)
+	sshClient, err := WaitForSSH(ctx, addr, sshUser, sshPassword, localNetworkHelper, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -264,6 +267,7 @@ func WaitForSSH(
 	addr string,
 	sshUser string,
 	sshPassword string,
+	localNetworkHelper *localnetworkhelper.LocalNetworkHelper,
 	logger logger.Lightweight,
 ) (*ssh.Client, error) {
 	ctx, span := tracer.Start(ctx, "wait-for-ssh")
@@ -273,11 +277,19 @@ func WaitForSSH(
 	var reqs <-chan *ssh.Request
 
 	if err := retry.Do(func() error {
-		dialer := net.Dialer{
-			Timeout: time.Second,
-		}
+		var netConn net.Conn
+		var err error
 
-		netConn, err := dialer.DialContext(ctx, "tcp", addr)
+		boundedCtx, cancel := context.WithTimeout(ctx, time.Second)
+		defer cancel()
+
+		if localNetworkHelper != nil {
+			netConn, err = localNetworkHelper.PrivilegedDialContext(boundedCtx, "tcp", addr)
+		} else {
+			dialer := net.Dialer{}
+
+			netConn, err = dialer.DialContext(ctx, "tcp", addr)
+		}
 		if err != nil {
 			logger.Debugf("failed to dial %s: %v", addr, err)
 

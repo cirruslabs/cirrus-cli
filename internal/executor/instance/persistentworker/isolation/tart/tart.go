@@ -122,7 +122,7 @@ func (tart *Tart) Warmup(
 	}
 
 	sshClient, err := remoteagent.WaitForSSH(ctx, fmt.Sprintf("%s:%d", ip, tart.sshPort), tart.sshUser,
-		tart.sshPassword, tart.logger)
+		tart.sshPassword, config.LocalNetworkHelper, tart.logger)
 	if err != nil {
 		return err
 	}
@@ -390,7 +390,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 
 	err = remoteagent.WaitForAgent(ctx, tart.logger, fmt.Sprintf("%s:%d", ip, tart.sshPort),
 		tart.sshUser, tart.sshPassword, agentOS, "arm64", config, true,
-		initializeHooks, terminateHooks, "", agentEnv)
+		initializeHooks, terminateHooks, "", agentEnv, config.LocalNetworkHelper)
 	if err != nil {
 		addTartListBreadcrumb(ctx)
 		addDHCPDLeasesBreadcrumb(ctx)

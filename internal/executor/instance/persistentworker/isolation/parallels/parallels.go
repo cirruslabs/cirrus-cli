@@ -78,7 +78,7 @@ func (parallels *Parallels) Run(ctx context.Context, config *runconfig.RunConfig
 	return remoteagent.WaitForAgent(ctx, parallels.logger, fmt.Sprintf("%s:22", ip),
 		parallels.sshUser, parallels.sshPassword, parallels.agentOS, "amd64",
 		config, vm.ClonedFromSuspended(), nil, nil, "",
-		map[string]string{"CIRRUS_VM_ID": vm.Ident()})
+		map[string]string{"CIRRUS_VM_ID": vm.Ident()}, nil)
 }
 
 func (parallels *Parallels) WorkingDirectory(projectDir string, dirtyMode bool) string {
