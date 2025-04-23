@@ -311,7 +311,8 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) error {
 	worker.logger.Debugf("warming-up the standby instance")
 
 	runConfig := &runconfig.RunConfig{
-		Chacha: worker.chacha,
+		Chacha:             worker.chacha,
+		LocalNetworkHelper: worker.localNetworkHelper,
 	}
 
 	if err := standbyInstance.(abstract.WarmableInstance).Warmup(ctx, "standby", nil, lazyPull,
