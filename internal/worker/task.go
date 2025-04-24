@@ -79,8 +79,7 @@ func (worker *Worker) startTask(
 
 	worker.imagesCounter.Add(ctx, 1, metric.WithAttributes(inst.Attributes()...))
 	go worker.runTask(taskCtx, upstream, inst, agentAwareTask.CliVersion,
-		taskID, agentAwareTask.ClientSecret, agentAwareTask.ServerSecret,
-		agentAwareTask.Traceparent, agentAwareTask.Tracestate)
+		taskID, agentAwareTask.ClientSecret, agentAwareTask.ServerSecret)
 
 	worker.logger.Infof("started task %s", taskID)
 }
@@ -133,8 +132,6 @@ func (worker *Worker) runTask(
 	taskID string,
 	clientSecret string,
 	serverSecret string,
-	traceparent string,
-	tracestate string,
 ) {
 	// Provide tags for Sentry: task ID and upstream worker name
 	cirrusSentryTags := map[string]string{
@@ -186,6 +183,9 @@ func (worker *Worker) runTask(
 		cirrusSentryTagsFormatted = append(cirrusSentryTagsFormatted, fmt.Sprintf("%s=%s", k, v))
 	}
 
+	mapCarrier := propagation.MapCarrier{}
+	propagation.TraceContext{}.Inject(ctx, mapCarrier)
+
 	config := runconfig.RunConfig{
 		ProjectDir:   "",
 		Endpoint:     upstream.AgentEndpoint(),
@@ -197,8 +197,8 @@ func (worker *Worker) runTask(
 			// Propagate task's W3C Trace Context to an agent using the environment variables[1]
 			//
 			// [1]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md
-			"TRACEPARENT": traceparent,
-			"TRACESTATE":  tracestate,
+			"TRACEPARENT": mapCarrier.Get("traceparent"),
+			"TRACESTATE":  mapCarrier.Get("tracestate"),
 		},
 		Chacha:             worker.chacha,
 		LocalNetworkHelper: worker.localNetworkHelper,
