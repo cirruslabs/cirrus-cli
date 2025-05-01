@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"time"
 )
 
 const bufSize = 10 * 1024 * 1024
@@ -56,6 +58,38 @@ func (c *Cache) Get(key string) (*os.File, error) {
 	}
 
 	return file, nil
+}
+
+func SafeModTime(entry os.DirEntry) time.Time {
+	info, err := entry.Info()
+	if err != nil {
+		return time.Unix(0, 0)
+	}
+	return info.ModTime()
+}
+
+func (c *Cache) FindByPrefix(prefix string) (*os.File, error) {
+	entries, err := os.ReadDir(c.namespaceDir)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+	}
+
+	// Sort entries by modification time, descending
+	sort.Slice(entries, func(i, j int) bool {
+		return SafeModTime(entries[i]).Compare(SafeModTime(entries[j])) < 0
+	})
+
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasPrefix(entry.Name(), prefix) {
+			file, err := os.OpenFile(filepath.Join(c.namespaceDir, entry.Name()), os.O_RDONLY, 0)
+			if err != nil {
+				return nil, fmt.Errorf("%w: %v", ErrInternal, err)
+			}
+			return file, nil
+		}
+	}
+
+	return nil, ErrBlobNotFound
 }
 
 func (c *Cache) Put(key string) (*PutOperation, error) {

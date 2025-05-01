@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"io"
+	"os"
 )
 
 const sendBufSize = 1024 * 1024
@@ -125,7 +126,17 @@ func (r *RPC) CacheInfo(ctx context.Context, req *api.CacheInfoRequest) (*api.Ca
 
 	r.logger.Debugf("sending info about cache key %s", req.CacheKey)
 
-	file, err := r.build.Cache.Get(req.CacheKey)
+	var file *os.File
+
+	if req.CacheKey != "" {
+		file, err = r.build.Cache.Get(req.CacheKey)
+	}
+	for _, prefix := range req.CacheKeyPrefixes {
+		file, err = r.build.Cache.FindByPrefix(prefix)
+		if file != nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "cache blob with the specified key not found")
 	}

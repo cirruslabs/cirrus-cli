@@ -697,6 +697,7 @@ message CacheInstruction {
 
   repeated string populate_scripts = 3;
   bool reupload_on_changes = 4;
+  bool optimistically_restore_on_miss = 7;
 }
 
 message UploadCacheInstruction {

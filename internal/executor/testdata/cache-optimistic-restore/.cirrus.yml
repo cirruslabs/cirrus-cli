@@ -1,0 +1,22 @@
+container:
+  image: debian:latest
+
+fill_cache_task:
+  test_cache:
+    folder: cache
+    populate_script:
+      - mkdir cache
+      - cd cache
+      - dd if=/dev/urandom of=from-populate-script bs=1M count=1
+    fingerprint_script: echo "key-v1"
+  script: touch cache/from-main-script
+
+check_cache_task:
+  depends_on: fill_cache
+  test_cache:
+    folder: cache
+    fingerprint_script: echo "key-v2"
+    optimistically_restore_on_miss: true
+  script:
+    - test -e cache/from-populate-script
+    - test -e cache/from-main-script

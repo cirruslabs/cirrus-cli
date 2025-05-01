@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bmatcuk/doublestar"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/hasher"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
@@ -114,6 +115,15 @@ func (executor *Executor) DownloadCache(
 
 	cachePopulated, cacheAvailable := executor.tryToDownloadAndPopulateCache(ctx, logUploader, commandName, cacheHost, cacheKey, baseFolder)
 
+	if !cacheAvailable && instruction.OptimisticallyRestoreOnMiss {
+		logUploader.Write([]byte("\nWasn't able to find the exact cache! Requesting the last available one..."))
+		cacheInfo := executor.findLatestAvailableCache(ctx, logUploader, commandName)
+		if cacheInfo != nil {
+			logUploader.Write([]byte(fmt.Sprintf("\nFound cache entry %s created by task %s!", cacheInfo.Key, cacheInfo.CreatedByTaskId)))
+			cachePopulated, cacheAvailable = executor.tryToDownloadAndPopulateCache(ctx, logUploader, commandName, cacheHost, cacheInfo.Key, baseFolder)
+		}
+	}
+
 	// Expand cache folders in case they contain potential globs,
 	// so we can calculate the hashes for directories that already exist
 	foldersToCache, message := executor.expandAndDeduplicateGlobs(partiallyExpandedFolders)
@@ -192,6 +202,27 @@ func (executor *Executor) generateCacheKey(
 	}
 
 	return fmt.Sprintf("%s-%x", commandName, cacheKeyHash.Sum(nil)), true
+}
+
+func (executor *Executor) findLatestAvailableCache(ctx context.Context, uploader *LogUploader, commandName string) *api.CacheInfo {
+	cacheInfoRequest := api.CacheInfoRequest{
+		TaskIdentification: client.CirrusTaskIdentification,
+		CacheKey:           commandName + "-", // Use a prefix that will match any cache key for this command
+	}
+
+	response, err := client.CirrusClient.CacheInfo(ctx, &cacheInfoRequest)
+
+	if err != nil {
+		uploader.Write([]byte(fmt.Sprintf("\nFailed to find latest available cache for %s: %v\n", commandName, err)))
+		return nil
+	}
+	if response != nil && response.Info != nil {
+		return response.Info
+	}
+
+	uploader.Write([]byte(fmt.Sprintf("\nThere is no other cache entry available for %s: %v\n", commandName)))
+
+	return nil
 }
 
 func (executor *Executor) expandAndDeduplicateGlobs(folders []string) ([]string, string) {
