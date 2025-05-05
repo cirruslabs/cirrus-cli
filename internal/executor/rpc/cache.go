@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"io"
@@ -128,13 +129,19 @@ func (r *RPC) CacheInfo(ctx context.Context, req *api.CacheInfoRequest) (*api.Ca
 
 	var file *os.File
 
+	var prefixMatch bool
+
 	if req.CacheKey != "" {
 		file, err = r.build.Cache.Get(req.CacheKey)
 	}
-	for _, prefix := range req.CacheKeyPrefixes {
-		file, err = r.build.Cache.FindByPrefix(prefix)
-		if file != nil {
-			break
+	if file == nil {
+		for _, prefix := range req.CacheKeyPrefixes {
+			file, err = r.build.Cache.FindByPrefix(prefix)
+			if file != nil {
+				prefixMatch = true
+
+				break
+			}
 		}
 	}
 	if err != nil {
@@ -149,7 +156,7 @@ func (r *RPC) CacheInfo(ctx context.Context, req *api.CacheInfoRequest) (*api.Ca
 
 	response := api.CacheInfoResponse{
 		Info: &api.CacheInfo{
-			Key:               req.CacheKey,
+			Key:               lo.Ternary(prefixMatch, fileInfo.Name(), req.CacheKey),
 			SizeInBytes:       fileInfo.Size(),
 			CreationTimestamp: fileInfo.ModTime().Unix(),
 		},
