@@ -8,7 +8,7 @@ require (
 	github.com/PaesslerAG/gval v1.2.4
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go/v4 v4.6.1
-	github.com/breml/rootcerts v0.2.20
+	github.com/breml/rootcerts v0.2.21
 	github.com/cirruslabs/cirrus-ci-agent v1.134.1 // indirect
 	github.com/cirruslabs/echelon v1.9.0
 	github.com/cirruslabs/go-java-glob v0.1.0
@@ -37,7 +37,7 @@ require (
 	github.com/lestrrat-go/pdebug v0.0.0-20210111095411-35b07dbf089b // indirect
 	github.com/lestrrat-go/structinfo v0.0.0-20210312050401-7f8bd69d6acb // indirect
 	github.com/mitchellh/go-ps v1.0.0
-	github.com/moby/buildkit v0.21.0
+	github.com/moby/buildkit v0.21.1
 	github.com/moby/term v0.5.2 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0
