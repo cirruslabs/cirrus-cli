@@ -106,6 +106,10 @@
             "name": {
               "type": "string"
             },
+            "optimistically_restore_on_miss": {
+              "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
+              "type": "string"
+            },
             "populate_script": {
               "anyOf": [
                 {
@@ -279,6 +283,10 @@
                   "description": "A list of folders to cache."
                 },
                 "name": {
+                  "type": "string"
+                },
+                "optimistically_restore_on_miss": {
+                  "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
                   "type": "string"
                 },
                 "populate_script": {
@@ -498,6 +506,10 @@
                 "name": {
                   "type": "string"
                 },
+                "optimistically_restore_on_miss": {
+                  "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
+                  "type": "string"
+                },
                 "populate_script": {
                   "anyOf": [
                     {
@@ -678,6 +690,10 @@
                 "name": {
                   "type": "string"
                 },
+                "optimistically_restore_on_miss": {
+                  "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
+                  "type": "string"
+                },
                 "populate_script": {
                   "anyOf": [
                     {
@@ -856,6 +872,10 @@
                   "description": "A list of folders to cache."
                 },
                 "name": {
+                  "type": "string"
+                },
+                "optimistically_restore_on_miss": {
+                  "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
                   "type": "string"
                 },
                 "populate_script": {
@@ -1135,6 +1155,10 @@
                     "name": {
                       "type": "string"
                     },
+                    "optimistically_restore_on_miss": {
+                      "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
+                      "type": "string"
+                    },
                     "populate_script": {
                       "anyOf": [
                         {
@@ -1301,6 +1325,10 @@
                           "description": "A list of folders to cache."
                         },
                         "name": {
+                          "type": "string"
+                        },
+                        "optimistically_restore_on_miss": {
+                          "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
                           "type": "string"
                         },
                         "populate_script": {
@@ -1487,6 +1515,10 @@
                         "name": {
                           "type": "string"
                         },
+                        "optimistically_restore_on_miss": {
+                          "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
+                          "type": "string"
+                        },
                         "populate_script": {
                           "anyOf": [
                             {
@@ -1667,6 +1699,10 @@
                         "name": {
                           "type": "string"
                         },
+                        "optimistically_restore_on_miss": {
+                          "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
+                          "type": "string"
+                        },
                         "populate_script": {
                           "anyOf": [
                             {
@@ -1845,6 +1881,10 @@
                           "description": "A list of folders to cache."
                         },
                         "name": {
+                          "type": "string"
+                        },
+                        "optimistically_restore_on_miss": {
+                          "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
                           "type": "string"
                         },
                         "populate_script": {
@@ -2052,6 +2092,10 @@
             "name": {
               "type": "string"
             },
+            "optimistically_restore_on_miss": {
+              "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
+              "type": "string"
+            },
             "populate_script": {
               "anyOf": [
                 {
@@ -2225,6 +2269,10 @@
                   "description": "A list of folders to cache."
                 },
                 "name": {
+                  "type": "string"
+                },
+                "optimistically_restore_on_miss": {
+                  "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
                   "type": "string"
                 },
                 "populate_script": {
@@ -2612,6 +2660,10 @@
                 "name": {
                   "type": "string"
                 },
+                "optimistically_restore_on_miss": {
+                  "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
+                  "type": "string"
+                },
                 "populate_script": {
                   "anyOf": [
                     {
@@ -2792,6 +2844,10 @@
                 "name": {
                   "type": "string"
                 },
+                "optimistically_restore_on_miss": {
+                  "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
+                  "type": "string"
+                },
                 "populate_script": {
                   "anyOf": [
                     {
@@ -2970,6 +3026,10 @@
                   "description": "A list of folders to cache."
                 },
                 "name": {
+                  "type": "string"
+                },
+                "optimistically_restore_on_miss": {
+                  "description": "Boolean expression. A flag to enable optimistic cache restoration on miss by finding the latest available key.",
                   "type": "string"
                 },
                 "populate_script": {
