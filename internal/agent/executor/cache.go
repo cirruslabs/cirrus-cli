@@ -220,7 +220,7 @@ func (executor *Executor) findLatestAvailableCache(ctx context.Context, uploader
 		return response.Info
 	}
 
-	uploader.Write([]byte(fmt.Sprintf("\nThere is no other cache entry available for %s: %v\n", commandName)))
+	uploader.Write([]byte(fmt.Sprintf("\nThere is no other cache entry available for %s\n", commandName)))
 
 	return nil
 }
