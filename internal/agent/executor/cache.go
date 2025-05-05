@@ -207,7 +207,7 @@ func (executor *Executor) generateCacheKey(
 func (executor *Executor) findLatestAvailableCache(ctx context.Context, uploader *LogUploader, commandName string) *api.CacheInfo {
 	cacheInfoRequest := api.CacheInfoRequest{
 		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           commandName + "-", // Use a prefix that will match any cache key for this command
+		CacheKeyPrefixes:   []string{commandName + "-"}, // Use a prefix that will match any cache key for this command
 	}
 
 	response, err := client.CirrusClient.CacheInfo(ctx, &cacheInfoRequest)
