@@ -43,6 +43,7 @@ var validCases = []string{
 	"pipe-cache",
 	"upload-caches",
 	"cache-fingerprint-key",
+	"cache-optimistic-restore",
 	"docker-arguments-expansion",
 	"yaml-scripts-merging",
 	"singleGKEContainer3",

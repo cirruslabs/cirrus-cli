@@ -123,6 +123,18 @@ func NewCacheCommand(mergedEnv map[string]string, parserKit *parserkit.ParserKit
 		return nil
 	})
 
+	optimisticRestoreSchema := schema.Condition("A flag to enable optimistic cache restoration on miss by finding the latest available key.")
+	cache.OptionalField(nameable.NewSimpleNameable("optimistically_restore_on_miss"), optimisticRestoreSchema, func(node *node.Node) error {
+		evaluation, err := node.GetBoolValue(mergedEnv, parserKit.Boolevator)
+		if err != nil {
+			return err
+		}
+
+		cache.instruction.OptimisticallyRestoreOnMiss = evaluation
+
+		return nil
+	})
+
 	return cache
 }
 

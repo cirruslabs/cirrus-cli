@@ -4,9 +4,11 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"io"
+	"os"
 )
 
 const sendBufSize = 1024 * 1024
@@ -125,7 +127,23 @@ func (r *RPC) CacheInfo(ctx context.Context, req *api.CacheInfoRequest) (*api.Ca
 
 	r.logger.Debugf("sending info about cache key %s", req.CacheKey)
 
-	file, err := r.build.Cache.Get(req.CacheKey)
+	var file *os.File
+
+	var prefixMatch bool
+
+	if req.CacheKey != "" {
+		file, err = r.build.Cache.Get(req.CacheKey)
+	}
+	if file == nil {
+		for _, prefix := range req.CacheKeyPrefixes {
+			file, err = r.build.Cache.FindByPrefix(prefix)
+			if file != nil {
+				prefixMatch = true
+
+				break
+			}
+		}
+	}
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "cache blob with the specified key not found")
 	}
@@ -138,7 +156,7 @@ func (r *RPC) CacheInfo(ctx context.Context, req *api.CacheInfoRequest) (*api.Ca
 
 	response := api.CacheInfoResponse{
 		Info: &api.CacheInfo{
-			Key:               req.CacheKey,
+			Key:               lo.Ternary(prefixMatch, fileInfo.Name(), req.CacheKey),
 			SizeInBytes:       fileInfo.Size(),
 			CreationTimestamp: fileInfo.ModTime().Unix(),
 		},

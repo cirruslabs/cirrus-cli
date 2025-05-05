@@ -1,0 +1,7 @@
+container:
+  image: debian:latest
+
+task:
+  cache:
+    folder: node_modules
+    optimistically_restore_on_miss: true
