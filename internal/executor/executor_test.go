@@ -229,7 +229,6 @@ func TestCacheOptimisticRestore(t *testing.T) {
 	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
 		t.Skip("no container backend configured")
 	}
-	t.Skip("TODO: remove after next release")
 
 	dir := testutil.TempDirPopulatedWith(t, "testdata/cache-optimistic-restore")
 	err := testutil.Execute(t, dir)
