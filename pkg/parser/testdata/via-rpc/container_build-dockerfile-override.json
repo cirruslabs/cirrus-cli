@@ -4,27 +4,34 @@
       {
         "cloneInstruction": {},
         "name": "clone"
+      },
+      {
+        "name": "main",
+        "scriptInstruction": {
+          "scripts": [
+            "./test1.sh"
+          ]
+        }
       }
     ],
     "environment": {
-      "CIRRUS_OS": "linux",
-      "IMAGE_TAG": "latest",
-      "IMAGE_TEMPLATE": "debian:${IMAGE_TAG}"
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.ContainerInstance",
       "cpu": 2,
       "dockerArguments": {
-        "IMAGE": "debian:latest"
+        "bar": "baz",
+        "foo": "bar"
       },
-      "dockerfile": "Dockerfile",
-      "image": "gcr.io/cirrus-ci-community/7ef62700d0a4377704ae8645658a033f:latest",
+      "dockerfile": "ci/Dockerfile",
+      "image": "gcr.io/cirrus-ci-community/471ea1673a33079acdc4c2c47c30f13b:latest",
       "memory": 4096
     },
     "metadata": {
       "properties": {
         "allow_failures": "false",
-        "dockerfile_hash": "7ef62700d0a4377704ae8645658a033f",
+        "dockerfile_hash": "471ea1673a33079acdc4c2c47c30f13b",
         "experimental": "false",
         "indexWithinBuild": "0",
         "timeout_in": "3600",
@@ -46,7 +53,7 @@
         "name": "build",
         "scriptInstruction": {
           "scripts": [
-            "docker build --tag gcr.io/cirrus-ci-community/7ef62700d0a4377704ae8645658a033f:latest --file Dockerfile --build-arg IMAGE=\"debian:latest\" ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
+            "docker build --tag gcr.io/cirrus-ci-community/471ea1673a33079acdc4c2c47c30f13b:latest --file ci/Dockerfile --build-arg bar=\"baz\" --build-arg foo=\"bar\" ${CIRRUS_DOCKER_CONTEXT:-$CIRRUS_WORKING_DIR}"
           ]
         }
       },
@@ -54,24 +61,23 @@
         "name": "push",
         "scriptInstruction": {
           "scripts": [
-            "gcloud docker -- push gcr.io/cirrus-ci-community/7ef62700d0a4377704ae8645658a033f:latest"
+            "gcloud docker -- push gcr.io/cirrus-ci-community/471ea1673a33079acdc4c2c47c30f13b:latest"
           ]
         }
       }
     ],
     "environment": {
-      "CIRRUS_OS": "linux",
-      "IMAGE_TAG": "latest",
-      "IMAGE_TEMPLATE": "debian:${IMAGE_TAG}"
+      "CIRRUS_OS": "linux"
     },
     "instance": {
       "@type": "type.googleapis.com/org.cirruslabs.ci.services.cirruscigrpc.PrebuiltImageInstance",
       "arguments": {
-        "IMAGE": "debian:latest"
+        "bar": "baz",
+        "foo": "bar"
       },
-      "dockerfile": "Dockerfile",
+      "dockerfile": "ci/Dockerfile",
       "reference": "latest",
-      "repository": "cirrus-ci-community/7ef62700d0a4377704ae8645658a033f"
+      "repository": "cirrus-ci-community/471ea1673a33079acdc4c2c47c30f13b"
     },
     "localGroupId": "1",
     "metadata": {
@@ -84,6 +90,6 @@
         "trigger_type": "AUTOMATIC"
       }
     },
-    "name": "Prebuild Dockerfile IMAGE=debian:latest"
+    "name": "Prebuild ci/Dockerfile bar=baz foo=bar"
   }
 ]

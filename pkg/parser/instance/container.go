@@ -1,6 +1,8 @@
 package instance
 
 import (
+	"strconv"
+
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
@@ -9,7 +11,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
-	"strconv"
 )
 
 const (
@@ -36,6 +37,9 @@ func NewCommunityContainer(
 
 	imageSchema := schema.String("Docker Image to use.")
 	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
+		// reset dockerfile as CI environment
+		container.proto.Dockerfile = ""
+
 		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
 			return err
@@ -141,6 +145,12 @@ func (container *Container) Parse(node *node.Node, parserKit *parserkit.ParserKi
 	}
 	if container.proto.Memory == 0 {
 		container.proto.Memory = defaultMemory
+	}
+
+	// Finally, remove the Docker arguments if "dockerfile:"
+	// was not specified or was overridden by "image:"
+	if container.proto.Dockerfile == "" {
+		container.proto.DockerArguments = nil
 	}
 
 	return container.proto, nil
