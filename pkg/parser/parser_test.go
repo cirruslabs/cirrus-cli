@@ -71,7 +71,19 @@ func TestValidConfigs(t *testing.T) {
 	for _, validCase := range validCases {
 		file := validCase
 		t.Run(file, func(t *testing.T) {
-			p := parser.New()
+			// Craft virtual in-memory filesystem with test-specific files
+			fileContents := make(map[string][]byte)
+
+			for key, value := range viaRPCLoadMap(t, absolutize(file+".fc")) {
+				fileContents[key] = []byte(value)
+			}
+
+			fs, err := memory.New(fileContents)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			p := parser.New(parser.WithFileSystem(fs))
 			result, err := p.ParseFromFile(context.Background(), absolutize(file+".yml"))
 
 			require.Nil(t, err)
