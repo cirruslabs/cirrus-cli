@@ -27,6 +27,20 @@ func NewWindowsCommunityContainer(mergedEnv map[string]string, parserKit *parser
 		},
 	}
 
+	imageSchema := schema.String("Docker Image to use.")
+	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
+		// reset dockerfile as CI environment
+		container.proto.Dockerfile = ""
+		container.proto.DockerArguments = nil
+
+		image, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+		container.proto.Image = image
+		return nil
+	})
+
 	dockerfileSchema := schema.String("Relative path to Dockerfile to build container from.")
 	container.OptionalField(nameable.NewSimpleNameable("dockerfile"), dockerfileSchema, func(node *node.Node) error {
 		dockerfile, err := node.GetExpandedStringValue(mergedEnv)
@@ -45,20 +59,6 @@ func NewWindowsCommunityContainer(mergedEnv map[string]string, parserKit *parser
 			return err
 		}
 		container.proto.DockerArguments = dockerArguments
-		return nil
-	})
-
-	imageSchema := schema.String("Docker Image to use.")
-	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
-		// reset dockerfile as CI environment
-		container.proto.Dockerfile = ""
-		container.proto.DockerArguments = nil
-
-		image, err := node.GetExpandedStringValue(mergedEnv)
-		if err != nil {
-			return err
-		}
-		container.proto.Image = image
 		return nil
 	})
 
