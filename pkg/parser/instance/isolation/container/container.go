@@ -38,7 +38,6 @@ func NewContainer(mergedEnv map[string]string) *Container {
 	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
 		// reset dockerfile as CI environment
 		container.proto.Container.Dockerfile = ""
-		container.proto.Container.DockerArguments = nil
 
 		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
@@ -160,6 +159,12 @@ func (container *Container) Parse(node *node.Node, parserKit *parserkit.ParserKi
 	}
 	if container.proto.Container.Memory == 0 {
 		container.proto.Container.Memory = defaultMemory
+	}
+
+	// Finally, remove the Docker arguments if "dockerfile:"
+	// was not specified or was overridden by "image:"
+	if container.proto.Container.Dockerfile == "" {
+		container.proto.Container.DockerArguments = nil
 	}
 
 	return nil
