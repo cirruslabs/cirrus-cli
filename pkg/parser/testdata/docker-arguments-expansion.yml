@@ -4,5 +4,6 @@ env:
 
 task:
     container:
+        dockerfile: Dockerfile
         docker_arguments:
             IMAGE: '${IMAGE_TEMPLATE}'
