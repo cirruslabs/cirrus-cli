@@ -39,7 +39,6 @@ func NewCommunityContainer(
 	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
 		// reset dockerfile as CI environment
 		container.proto.Dockerfile = ""
-		container.proto.DockerArguments = nil
 
 		image, err := node.GetExpandedStringValue(mergedEnv)
 		if err != nil {
@@ -146,6 +145,12 @@ func (container *Container) Parse(node *node.Node, parserKit *parserkit.ParserKi
 	}
 	if container.proto.Memory == 0 {
 		container.proto.Memory = defaultMemory
+	}
+
+	// Finally, remove the Docker arguments if "dockerfile:"
+	// was not specified or was overridden by "image:"
+	if container.proto.Dockerfile == "" {
+		container.proto.DockerArguments = nil
 	}
 
 	return container.proto, nil
