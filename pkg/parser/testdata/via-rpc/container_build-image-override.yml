@@ -1,0 +1,11 @@
+container: &BUILD_CONTAINER_TEMPLATE
+  dockerfile: ci/Dockerfile
+  docker_arguments:
+    foo: bar
+    bar: baz
+
+task:
+  container:
+    image: debian:latest
+    <<: *BUILD_CONTAINER_TEMPLATE
+  script: ./test1.sh

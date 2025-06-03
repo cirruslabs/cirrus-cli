@@ -1,6 +1,8 @@
 package instance
 
 import (
+	"strconv"
+
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/nameable"
@@ -9,7 +11,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
-	"strconv"
 )
 
 type WindowsContainer struct {
@@ -25,16 +26,6 @@ func NewWindowsCommunityContainer(mergedEnv map[string]string, parserKit *parser
 			OsVersion: "2019",
 		},
 	}
-
-	imageSchema := schema.String("Docker Image to use.")
-	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
-		image, err := node.GetExpandedStringValue(mergedEnv)
-		if err != nil {
-			return err
-		}
-		container.proto.Image = image
-		return nil
-	})
 
 	dockerfileSchema := schema.String("Relative path to Dockerfile to build container from.")
 	container.OptionalField(nameable.NewSimpleNameable("dockerfile"), dockerfileSchema, func(node *node.Node) error {
@@ -54,6 +45,20 @@ func NewWindowsCommunityContainer(mergedEnv map[string]string, parserKit *parser
 			return err
 		}
 		container.proto.DockerArguments = dockerArguments
+		return nil
+	})
+
+	imageSchema := schema.String("Docker Image to use.")
+	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
+		// reset dockerfile as CI environment
+		container.proto.Dockerfile = ""
+		container.proto.DockerArguments = nil
+
+		image, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+		container.proto.Image = image
 		return nil
 	})
 

@@ -1,6 +1,9 @@
 package container
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/constants"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/instance/resources"
@@ -11,8 +14,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parserkit"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/schema"
 	jsschema "github.com/lestrrat-go/jsschema"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -32,18 +33,6 @@ func NewContainer(mergedEnv map[string]string) *Container {
 			Container: &api.Isolation_Container{},
 		},
 	}
-
-	imageSchema := schema.String("Container image to use.")
-	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
-		image, err := node.GetExpandedStringValue(mergedEnv)
-		if err != nil {
-			return err
-		}
-
-		container.proto.Container.Image = image
-
-		return nil
-	})
 
 	cpuSchema := schema.Number("CPU units for the container to use.")
 	container.OptionalField(nameable.NewSimpleNameable("cpu"), cpuSchema, func(node *node.Node) error {
@@ -121,6 +110,22 @@ func NewContainer(mergedEnv map[string]string) *Container {
 			return err
 		}
 		container.proto.Container.DockerArguments = dockerArguments
+		return nil
+	})
+
+	imageSchema := schema.String("Container image to use.")
+	container.OptionalField(nameable.NewSimpleNameable("image"), imageSchema, func(node *node.Node) error {
+		// reset dockerfile as CI environment
+		container.proto.Container.Dockerfile = ""
+		container.proto.Container.DockerArguments = nil
+
+		image, err := node.GetExpandedStringValue(mergedEnv)
+		if err != nil {
+			return err
+		}
+
+		container.proto.Container.Image = image
+
 		return nil
 	})
 
