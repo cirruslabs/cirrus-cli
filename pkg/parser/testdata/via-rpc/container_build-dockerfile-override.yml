@@ -1,0 +1,8 @@
+task:
+  container:
+    docker_arguments:
+      foo: bar
+      bar: baz
+    image: debian:latest
+    dockerfile: ci/Dockerfile
+  script: ./test1.sh
