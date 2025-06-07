@@ -23,6 +23,8 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"math"
 	"os"
@@ -418,6 +420,9 @@ func (worker *Worker) Pause(ctx context.Context, wait bool) error {
 
 	for _, upstream := range worker.upstreams {
 		if err := upstream.SetDisabled(subCtx, true); err != nil {
+			if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+				continue
+			}
 			return err
 		}
 	}
@@ -448,16 +453,21 @@ func (worker *Worker) Pause(ctx context.Context, wait bool) error {
 	return nil
 }
 
-func (worker *Worker) Resume(ctx context.Context) (err error) {
+func (worker *Worker) Resume(ctx context.Context) error {
 	// A sub-context to cancel this function's side effects when it finishes
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	for _, slot := range worker.upstreams {
-		err = slot.SetDisabled(subCtx, false)
+		if err := slot.SetDisabled(subCtx, false); err != nil {
+			if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+				continue
+			}
+			return err
+		}
 	}
 
-	return
+	return nil
 }
 
 func (worker *Worker) pollIntervalSeconds() uint32 {
