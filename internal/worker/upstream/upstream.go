@@ -10,8 +10,10 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/grpchelper"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -218,6 +220,11 @@ func (upstream *Upstream) SetDisabled(ctx context.Context, disabled bool) error 
 
 	response, err := upstream.rpcClient.UpdateStatus(ctx, request, grpc.PerRPCCredentials(upstream))
 	if err != nil {
+		// Ignore the error in case the worker is not registered yet
+		if status.Code(err) == codes.NotFound {
+			return nil
+		}
+
 		return fmt.Errorf("%w: failed to set disabled state on upstream %s: %v",
 			ErrFailed, upstream.Name(), err)
 	}
