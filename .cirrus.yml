@@ -95,7 +95,7 @@ task:
   name: Release (Dry Run)
   only_if: $CIRRUS_TAG == ''
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-runner:sonoma
+    image: ghcr.io/cirruslabs/macos-runner:sequoia
   env:
     MACOS_SIGN_P12: ENCRYPTED[!183482723ca1a95f9c4439f7a79c9d3b115472bb18c739ed1586e12d3914ccf94ade8169eeda7332fc204f8be9c27d9f!]
     MACOS_SIGN_PASSWORD: ENCRYPTED[!417423346c567f12007f42d084bff1cfee30ee14f7e8258550157679a269c70d541c9f19224224ab0293b10f2c6d4c5e!]
@@ -115,7 +115,7 @@ task:
   only_if: $CIRRUS_TAG != ''
   depends_on: Tests
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-runner:sonoma
+    image: ghcr.io/cirruslabs/macos-runner:sequoia
   env:
     MACOS_SIGN_P12: ENCRYPTED[!183482723ca1a95f9c4439f7a79c9d3b115472bb18c739ed1586e12d3914ccf94ade8169eeda7332fc204f8be9c27d9f!]
     MACOS_SIGN_PASSWORD: ENCRYPTED[!417423346c567f12007f42d084bff1cfee30ee14f7e8258550157679a269c70d541c9f19224224ab0293b10f2c6d4c5e!]
