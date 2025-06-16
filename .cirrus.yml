@@ -95,7 +95,7 @@ task:
   name: Release (Dry Run)
   only_if: $CIRRUS_TAG == ''
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-runner:sonoma
+    image: ghcr.io/cirruslabs/macos-runner:sequoia
   env:
     MACOS_SIGN_P12: ENCRYPTED[!183482723ca1a95f9c4439f7a79c9d3b115472bb18c739ed1586e12d3914ccf94ade8169eeda7332fc204f8be9c27d9f!]
     MACOS_SIGN_PASSWORD: ENCRYPTED[!417423346c567f12007f42d084bff1cfee30ee14f7e8258550157679a269c70d541c9f19224224ab0293b10f2c6d4c5e!]
@@ -105,7 +105,8 @@ task:
     GORELEASER_KEY: ENCRYPTED[!9b80b6ef684ceaf40edd4c7af93014ee156c8aba7e6e5795f41c482729887b5c31f36b651491d790f1f668670888d9fd!]
 
   install_script:
-    - brew update && brew install go goreleaser/tap/goreleaser-pro getsentry/tools/sentry-cli
+    - brew update && brew install go getsentry/tools/sentry-cli
+    - brew install --cask goreleaser/tap/goreleaser-pro
   goreleaser_script: goreleaser release --skip=publish --snapshot --clean --verbose
   binaries_artifacts:
     path: "dist/cirrus_*/cirrus*"
@@ -115,7 +116,7 @@ task:
   only_if: $CIRRUS_TAG != ''
   depends_on: Tests
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-runner:sonoma
+    image: ghcr.io/cirruslabs/macos-runner:sequoia
   env:
     MACOS_SIGN_P12: ENCRYPTED[!183482723ca1a95f9c4439f7a79c9d3b115472bb18c739ed1586e12d3914ccf94ade8169eeda7332fc204f8be9c27d9f!]
     MACOS_SIGN_PASSWORD: ENCRYPTED[!417423346c567f12007f42d084bff1cfee30ee14f7e8258550157679a269c70d541c9f19224224ab0293b10f2c6d4c5e!]
@@ -129,7 +130,8 @@ task:
     SENTRY_PROJECT: persistent-workers
     SENTRY_AUTH_TOKEN: ENCRYPTED[!c16a5cf7da5f856b4bc2f21fe8cb7aa2a6c981f851c094ed4d3025fd02ea59a58a86cee8b193a69a1fc20fa217e56ac3!]
   install_script:
-    - brew update && brew install go goreleaser/tap/goreleaser-pro getsentry/tools/sentry-cli
+    - brew update && brew install go getsentry/tools/sentry-cli
+    - brew install --cask goreleaser/tap/goreleaser-pro
   release_script: goreleaser
   create_sentry_release_script:
     - export SENTRY_RELEASE="cirrus-cli@$CIRRUS_TAG"
