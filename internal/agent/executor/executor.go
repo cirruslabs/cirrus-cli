@@ -16,7 +16,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/vaultunboxer"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/fallbackroundtripper"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/tuistcache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -223,31 +222,12 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// the OS environment nor through the task's environment,
 	// run our built-in cache server
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
-		var httpCacheOpts []http_cache.Option
-		var tuistCaching bool
-
-		// Tuist caching API support
-		if _, ok := executor.env.Lookup("CIRRUS_TUIST_CACHE_ENABLED"); ok {
-			tuistCache, err := tuistcache.New()
-			if err != nil {
-				log.Printf("Failed to initialize Tuist cache: %v", err)
-			} else {
-				httpCacheOpts = append(httpCacheOpts, http_cache.WithTuistCache(tuistCache))
-				tuistCaching = true
-			}
-		}
-
 		// Default HTTP cache
 		transport := http_cache.DefaultTransport()
 
-		httpCacheHost := http_cache.Start(ctx, http_cache.DefaultTransport(), false,
-			httpCacheOpts...)
+		httpCacheHost := http_cache.Start(ctx, http_cache.DefaultTransport(), false)
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
-
-		if tuistCaching {
-			executor.env.Set("CIRRUS_TUIST_CACHE_URL", tuistcache.URL(httpCacheHost))
-		}
 
 		// Thunder HTTP cache
 		chachaTransport, err := executor.tryChachaTransport()
@@ -264,8 +244,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			// Always Chacha transport with a fallback to the default transport, just in case
 			transport := fallbackroundtripper.New(chachaTransport, transport)
 
-			httpCacheHostThunder := http_cache.Start(ctx, transport, true,
-				httpCacheOpts...)
+			httpCacheHostThunder := http_cache.Start(ctx, transport, true)
 
 			executor.env.Set("CIRRUS_HTTP_CACHE_HOST_THUNDER", httpCacheHostThunder)
 		}
