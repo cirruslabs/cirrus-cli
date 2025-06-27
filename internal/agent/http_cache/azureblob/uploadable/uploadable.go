@@ -17,8 +17,9 @@ type Uploadable struct {
 }
 
 type Part struct {
-	eTag string
-	file *os.File
+	eTag     string
+	file     *os.File
+	fileSize int64
 }
 
 func (part *Part) ETag() string {
@@ -29,6 +30,10 @@ func (part *Part) File() *os.File {
 	_, _ = part.file.Seek(0, io.SeekStart)
 
 	return part.file
+}
+
+func (part *Part) FileSize() int64 {
+	return part.fileSize
 }
 
 func New(local bool) *Uploadable {
@@ -100,7 +105,8 @@ func (uploadable *Uploadable) AppendPartLocal(number uint32, r io.Reader) error 
 		return err
 	}
 
-	if _, err := io.Copy(file, r); err != nil {
+	n, err := io.Copy(file, r)
+	if err != nil {
 		return err
 	}
 
@@ -115,7 +121,8 @@ func (uploadable *Uploadable) AppendPartLocal(number uint32, r io.Reader) error 
 	}
 
 	uploadable.parts[number] = &Part{
-		file: file,
+		file:     file,
+		fileSize: n,
 	}
 
 	return nil

@@ -259,6 +259,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 	}
 
 	var localPartReaders []io.Reader
+	var localPartReadersTotalBytes int64
 	var protoParts []*api.MultipartCacheUploadCommitRequest_Part
 
 	for _, blockID := range blockList.Latest {
@@ -281,6 +282,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 
 		if uploadable.Local() {
 			localPartReaders = append(localPartReaders, part.File())
+			localPartReadersTotalBytes += part.FileSize()
 		} else {
 			protoParts = append(protoParts, &api.MultipartCacheUploadCommitRequest_Part{
 				PartNumber: partNumber,
@@ -301,13 +303,17 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 			return
 		}
 
-		uploadReq, err := http.NewRequest(http.MethodPut, generateCacheUploadURLResponse.Url, io.MultiReader(localPartReaders...))
+		uploadReq, err := http.NewRequest(http.MethodPut, generateCacheUploadURLResponse.Url,
+			io.MultiReader(localPartReaders...))
 		if err != nil {
 			fail(writer, request, http.StatusInternalServerError, "failed to create request to cache upload URL "+
 				"for local part upload", "key", key, "uploadid", uploadID, "err", err)
 
 			return
 		}
+
+		// Content-Length is required to avoid HTTP 411
+		uploadReq.ContentLength = localPartReadersTotalBytes
 
 		uploadResp, err := http.DefaultClient.Do(uploadReq)
 		if err != nil {
@@ -318,7 +324,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 		}
 
 		if uploadResp.StatusCode != http.StatusOK {
-			fail(writer, request, http.StatusInternalServerError, "failed to create request to cache upload URL "+
+			fail(writer, request, http.StatusInternalServerError, "failed to perform request to cache upload URL "+
 				"for local part upload, got unexpected HTTP status", "key", key, "uploadid", uploadID,
 				"http_status_code", uploadResp.StatusCode, "http_status", uploadResp.Status)
 
