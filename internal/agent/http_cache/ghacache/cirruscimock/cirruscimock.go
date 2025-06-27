@@ -176,6 +176,29 @@ func (mock *cirrusCIMock) CacheInfo(ctx context.Context, request *api.CacheInfoR
 	if err != nil {
 		var requestFailure awserr.RequestFailure
 		if errors.As(err, &requestFailure) && requestFailure.StatusCode() == http.StatusNotFound {
+			// Try to match cache entry by key prefixes as a fallback
+			for _, cacheKeyPrefix := range request.CacheKeyPrefixes {
+				result, err := mock.s3Client.ListObjectsWithContext(ctx, &s3.ListObjectsInput{
+					Bucket:  mock.s3Bucket,
+					Prefix:  aws.String(cacheKeyPrefix),
+					MaxKeys: aws.Int64(1),
+				})
+				if err != nil {
+					return nil, err
+				}
+
+				if len(result.Contents) == 0 {
+					continue
+				}
+
+				return &api.CacheInfoResponse{
+					Info: &api.CacheInfo{
+						Key:         *result.Contents[0].Key,
+						SizeInBytes: *result.Contents[0].Size,
+					},
+				}, nil
+			}
+
 			return nil, status.Errorf(codes.NotFound, "cache entry for key %s is not found",
 				request.CacheKey)
 		}
