@@ -96,7 +96,7 @@ func (cache *Cache) FinalizeCacheEntryUpload(ctx context.Context, request *ghare
 }
 
 func httpCacheKey(key string, version string) string {
-	return fmt.Sprintf("%s-%s", url.PathEscape(version), url.PathEscape(key))
+	return fmt.Sprintf("%s-%s", version, key)
 }
 
 func (cache *Cache) azureBlobURL(keyWithVersion string) string {
