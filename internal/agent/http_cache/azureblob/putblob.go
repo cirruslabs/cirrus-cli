@@ -6,7 +6,10 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	uploadablepkg "github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/uploadable"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/dustin/go-humanize"
 	"github.com/go-chi/render"
+	"io"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -120,8 +123,30 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 
 	// Retrieve an already existing uploadable or compute a new one
 	uploadable, _ := azureBlob.uploadables.LoadOrCompute(key, func() *uploadablepkg.Uploadable {
-		return uploadablepkg.New()
+		// Upload locally if we're observing chunks that are smaller
+		// than S3's minimum part size for multipart uploads
+		local := contentLength < 5*humanize.MiByte
+
+		if local {
+			log.Printf("Using local uploadable because the first observed "+
+				"block size for key %q is only %s", key, humanize.IBytes(contentLength))
+		}
+
+		return uploadablepkg.New(local)
 	})
+
+	if uploadable.Local() {
+		if err := uploadable.AppendPartLocal(partNumber, request.Body); err != nil {
+			fail(writer, request, http.StatusInternalServerError, "failed to upload part locally",
+				"key", key, "blockid", blockID, "err", err)
+
+			return
+		}
+
+		writer.WriteHeader(http.StatusCreated)
+
+		return
+	}
 
 	// Retrieve an already existing uploadable ID or compute a new one
 	uploadID, err := uploadable.IDOrCompute(func() (string, error) {
@@ -233,6 +258,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 		return
 	}
 
+	var localPartReaders []io.Reader
 	var protoParts []*api.MultipartCacheUploadCommitRequest_Part
 
 	for _, blockID := range blockList.Latest {
@@ -253,10 +279,55 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 			return
 		}
 
-		protoParts = append(protoParts, &api.MultipartCacheUploadCommitRequest_Part{
-			PartNumber: uint32(partNumber),
-			Etag:       part.ETag,
+		if uploadable.Local() {
+			localPartReaders = append(localPartReaders, part.File())
+		} else {
+			protoParts = append(protoParts, &api.MultipartCacheUploadCommitRequest_Part{
+				PartNumber: partNumber,
+				Etag:       part.ETag(),
+			})
+		}
+	}
+
+	if uploadable.Local() {
+		generateCacheUploadURLResponse, err := client.CirrusClient.GenerateCacheUploadURL(request.Context(), &api.CacheKey{
+			TaskIdentification: client.CirrusTaskIdentification,
+			CacheKey:           key,
 		})
+		if err != nil {
+			fail(writer, request, http.StatusInternalServerError, "failed to generate cache upload URL "+
+				"for local part upload", "key", key, "uploadid", uploadID, "err", err)
+
+			return
+		}
+
+		uploadReq, err := http.NewRequest(http.MethodPut, generateCacheUploadURLResponse.Url, io.MultiReader(localPartReaders...))
+		if err != nil {
+			fail(writer, request, http.StatusInternalServerError, "failed to create request to cache upload URL "+
+				"for local part upload", "key", key, "uploadid", uploadID, "err", err)
+
+			return
+		}
+
+		uploadResp, err := http.DefaultClient.Do(uploadReq)
+		if err != nil {
+			fail(writer, request, http.StatusInternalServerError, "failed to perform request to cache upload URL "+
+				"for local part upload", "key", key, "uploadid", uploadID, "err", err)
+
+			return
+		}
+
+		if uploadResp.StatusCode != http.StatusOK {
+			fail(writer, request, http.StatusInternalServerError, "failed to create request to cache upload URL "+
+				"for local part upload, got unexpected HTTP status", "key", key, "uploadid", uploadID,
+				"http_status_code", uploadResp.StatusCode, "http_status", uploadResp.Status)
+
+			return
+		}
+
+		writer.WriteHeader(http.StatusCreated)
+
+		return
 	}
 
 	_, err := client.CirrusClient.MultipartCacheUploadCommit(request.Context(), &api.MultipartCacheUploadCommitRequest{
