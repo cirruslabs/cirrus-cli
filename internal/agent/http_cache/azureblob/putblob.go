@@ -9,6 +9,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/go-chi/render"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -125,6 +126,11 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 		// Upload locally if we're observing chunks that are smaller
 		// than S3's minimum part size for multipart uploads
 		local := contentLength < 5*humanize.MiByte
+
+		if local {
+			log.Printf("using local uploadable because the first observed "+
+				"block size for key %q is only %s", key, humanize.IBytes(contentLength))
+		}
 
 		return uploadablepkg.New(local)
 	})
