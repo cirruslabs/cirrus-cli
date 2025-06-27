@@ -7,6 +7,7 @@ import (
 	uploadablepkg "github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/uploadable"
 	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/render"
+	"github.com/google/uuid"
 	"github.com/puzpuzpuz/xsync/v3"
 	"github.com/samber/lo"
 	"log"
@@ -48,6 +49,13 @@ func New(potentiallyCachingHTTPClient *http.Client, chachaEnabled bool) *AzureBl
 }
 
 func (azureBlob *AzureBlob) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	// Provide "x-ms-request-id" header for libraries like
+	// go-actions-cache that expect it in the response[1][2]
+	//
+	// [1]: https://github.com/tonistiigi/go-actions-cache/blob/378c5ed1ddd9f4bd9371b02deeca46c9b6fae2fa/cache_v2.go#L74
+	// [2]: https://github.com/moby/buildkit/blob/a23bc16feff9789f207a7b59220ce79c86444a39/vendor/github.com/tonistiigi/go-actions-cache/cache_v2.go#L73
+	writer.Header().Set("x-ms-request-id", uuid.NewString())
+
 	azureBlob.mux.ServeHTTP(writer, request)
 }
 
