@@ -128,7 +128,7 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 		local := contentLength < 5*humanize.MiByte
 
 		if local {
-			log.Printf("using local uploadable because the first observed "+
+			log.Printf("Using local uploadable because the first observed "+
 				"block size for key %q is only %s", key, humanize.IBytes(contentLength))
 		}
 
