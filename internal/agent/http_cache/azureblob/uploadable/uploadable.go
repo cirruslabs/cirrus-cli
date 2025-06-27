@@ -2,24 +2,46 @@ package uploadable
 
 import (
 	"fmt"
+	"github.com/google/uuid"
+	"io"
+	"os"
 	"sync"
 )
 
 type Uploadable struct {
 	id    string
+	local bool
 	parts map[uint32]*Part
 
 	mtx sync.Mutex
 }
 
 type Part struct {
-	ETag string
+	eTag string
+	file *os.File
 }
 
-func New() *Uploadable {
-	return &Uploadable{
+func (part *Part) ETag() string {
+	return part.eTag
+}
+
+func (part *Part) File() *os.File {
+	_, _ = part.file.Seek(0, io.SeekStart)
+
+	return part.file
+}
+
+func New(local bool) *Uploadable {
+	uploadable := &Uploadable{
+		local: local,
 		parts: make(map[uint32]*Part),
 	}
+
+	if local {
+		uploadable.id = uuid.NewString()
+	}
+
+	return uploadable
 }
 
 func (uploadable *Uploadable) ID() (string, bool) {
@@ -50,6 +72,10 @@ func (uploadable *Uploadable) IDOrCompute(compute func() (string, error)) (strin
 	return uploadID, nil
 }
 
+func (uploadable *Uploadable) Local() bool {
+	return uploadable.local
+}
+
 func (uploadable *Uploadable) AppendPart(number uint32, eTag string) error {
 	uploadable.mtx.Lock()
 	defer uploadable.mtx.Unlock()
@@ -59,7 +85,37 @@ func (uploadable *Uploadable) AppendPart(number uint32, eTag string) error {
 	}
 
 	uploadable.parts[number] = &Part{
-		ETag: eTag,
+		eTag: eTag,
+	}
+
+	return nil
+}
+
+func (uploadable *Uploadable) AppendPartLocal(number uint32, r io.Reader) error {
+	pattern := fmt.Sprintf("uploadable-%s-part-%d-*",
+		uploadable.id, number)
+
+	file, err := os.CreateTemp("", pattern)
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(file, r); err != nil {
+		return err
+	}
+
+	uploadable.mtx.Lock()
+	defer uploadable.mtx.Unlock()
+
+	if _, ok := uploadable.parts[number]; ok {
+		_ = file.Close()
+		_ = os.Remove(file.Name())
+
+		return fmt.Errorf("part %d already exists", number)
+	}
+
+	uploadable.parts[number] = &Part{
+		file: file,
 	}
 
 	return nil
