@@ -7,7 +7,7 @@ import (
 
 type Uploadable struct {
 	id    string
-	parts map[int]*Part
+	parts map[uint32]*Part
 
 	mtx sync.Mutex
 }
@@ -18,7 +18,7 @@ type Part struct {
 
 func New() *Uploadable {
 	return &Uploadable{
-		parts: make(map[int]*Part),
+		parts: make(map[uint32]*Part),
 	}
 }
 
@@ -50,7 +50,7 @@ func (uploadable *Uploadable) IDOrCompute(compute func() (string, error)) (strin
 	return uploadID, nil
 }
 
-func (uploadable *Uploadable) AppendPart(number int, eTag string) error {
+func (uploadable *Uploadable) AppendPart(number uint32, eTag string) error {
 	uploadable.mtx.Lock()
 	defer uploadable.mtx.Unlock()
 
@@ -65,7 +65,7 @@ func (uploadable *Uploadable) AppendPart(number int, eTag string) error {
 	return nil
 }
 
-func (uploadable *Uploadable) GetPart(number int) *Part {
+func (uploadable *Uploadable) GetPart(number uint32) *Part {
 	uploadable.mtx.Lock()
 	defer uploadable.mtx.Unlock()
 
