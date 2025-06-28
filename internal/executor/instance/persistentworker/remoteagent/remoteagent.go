@@ -288,7 +288,7 @@ func WaitForSSH(
 		} else {
 			dialer := net.Dialer{}
 
-			netConn, err = dialer.DialContext(ctx, "tcp", addr)
+			netConn, err = dialer.DialContext(boundedCtx, "tcp", addr)
 		}
 		if err != nil {
 			logger.Debugf("failed to dial %s: %v", addr, err)
