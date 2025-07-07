@@ -8,6 +8,7 @@ import (
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
 	"go.opentelemetry.io/otel/trace"
+	"maps"
 	"strconv"
 	"strings"
 	"sync"
@@ -63,8 +64,16 @@ func NewVMClonedFrom(
 
 	cloneLogger := logger.Scoped("clone virtual machine")
 	cloneLogger.Infof("Cloning virtual machine %s...", from)
+	cloneEnv := vm.env
+	if cloneEnv == nil {
+		cloneEnv = map[string]string{}
+	} else {
+		cloneEnv = maps.Clone(cloneEnv)
+	}
 
-	if _, _, err := CmdWithLogger(ctx, vm.env, cloneLogger, "clone", from, vm.ident); err != nil {
+	cloneEnv["TART_NO_AUTO_PRUNE"] = ""
+
+	if _, _, err := CmdWithLogger(ctx, cloneEnv, cloneLogger, "clone", from, vm.ident); err != nil {
 		cloneLogger.Finish(false)
 		return nil, err
 	}
