@@ -33,25 +33,14 @@ func Init(ctx context.Context) (func(), error) {
 		}
 	}
 
-	defaultResource := resource.Default()
-
-	customResource, err := resource.New(ctx,
-		resource.WithSchemaURL(semconv.SchemaURL),
-		resource.WithOSType(),
-		resource.WithHost(),
-		resource.WithAttributes(
-			semconv.HostArchKey.String(runtime.GOARCH),
-		),
-		resource.WithAttributes(
+	resource, err := resource.Merge(
+		resource.Default(),
+		resource.NewSchemaless(
 			semconv.ServiceName("cirrus-cli"),
 			semconv.ServiceVersion(version.Version),
+			semconv.HostArchKey.String(runtime.GOARCH),
 		),
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	resource, err := resource.Merge(defaultResource, customResource)
 	if err != nil {
 		return nil, err
 	}
