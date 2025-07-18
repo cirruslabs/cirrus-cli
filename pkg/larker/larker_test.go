@@ -6,11 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/cirruslabs/cirrus-cli/internal/testutil"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -18,6 +13,12 @@ import (
 	"testing"
 	"text/template"
 	"time"
+
+	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/local"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func possiblySkip(t *testing.T) {
@@ -78,6 +79,12 @@ func TestMainReturnsTupleList(t *testing.T) {
 // which is essentially a piece of YAML configuration.
 func TestMainReturnsString(t *testing.T) {
 	validateExpected(t, "testdata/main-returns-string")
+}
+
+// TestMainReturnsStringWithYamlEscaping ensures that we support overrides represented as a string
+// with proper YAML escaping, which is essentially a piece of YAML configuration.
+func TestMainReturnsStringWithYamlEscaping(t *testing.T) {
+	validateExpected(t, "testdata/main-returns-string-with-yaml-escaping")
 }
 
 func TestNoCtxHook(t *testing.T) {
