@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cirruslabs/echelon"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapio"
 	"io"
@@ -54,6 +55,12 @@ func CmdWithLogger(
 	name string,
 	args ...string,
 ) (string, string, error) {
+	// Extract parent span ID before creating a new span
+	var parentSpanID string
+	if parentSpan := trace.SpanFromContext(ctx); parentSpan.SpanContext().IsValid() {
+		parentSpanID = parentSpan.SpanContext().SpanID().String()
+	}
+
 	ctx, span := tracer.Start(ctx, fmt.Sprintf("exec-command/%s-%s", vetuCommandName, name))
 	defer span.End()
 
@@ -63,6 +70,11 @@ func CmdWithLogger(
 
 	// Default environment
 	cmd.Env = cmd.Environ()
+
+	// Pass parent OTEL span ID to vetu binary
+	if parentSpanID != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("OTEL_PARENT_SPAN_ID=%s", parentSpanID))
+	}
 
 	// Additional environment
 	for key, value := range additionalEnvironment {
