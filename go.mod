@@ -8,13 +8,13 @@ require (
 	github.com/PaesslerAG/gval v1.2.4
 	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go/v4 v4.6.1
-	github.com/breml/rootcerts v0.3.0
+	github.com/breml/rootcerts v0.3.1
 	github.com/cirruslabs/cirrus-ci-agent v1.134.1 // indirect
 	github.com/cirruslabs/echelon v1.9.0
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/cirruslabs/podmanapi v0.3.1
-	github.com/containers/image/v5 v5.35.0
-	github.com/containers/storage v1.58.0 // indirect
+	github.com/containers/image/v5 v5.36.0
+	github.com/containers/storage v1.59.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1
 	github.com/docker/cli v28.3.2+incompatible
 	github.com/docker/docker v28.3.2+incompatible
@@ -76,7 +76,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/docker/go-connections v0.5.0
 	github.com/go-chi/render v1.0.3
-	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/google/go-github/v59 v59.0.0
 	github.com/hashicorp/vault/api v1.20.0
 	github.com/klauspost/pgzip v1.2.6
@@ -85,7 +85,7 @@ require (
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 	github.com/samber/lo v1.51.0
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/testcontainers/testcontainers-go v0.37.0
+	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/tonistiigi/go-actions-cache v0.0.0-20250626083717-378c5ed1ddd9
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	go.opentelemetry.io/contrib/bridges/otelzap v0.12.0
@@ -108,7 +108,7 @@ require (
 )
 
 require (
-	dario.cat/mergo v1.0.1 // indirect
+	dario.cat/mergo v1.0.2 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.18.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.1 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
@@ -133,7 +133,7 @@ require (
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
-	github.com/ebitengine/purego v0.8.2 // indirect
+	github.com/ebitengine/purego v0.8.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -150,7 +150,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.8 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
@@ -193,7 +193,7 @@ require (
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/secure-systems-lab/go-securesystemslib v0.9.0 // indirect
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
-	github.com/shirou/gopsutil/v4 v4.25.1 // indirect
+	github.com/shirou/gopsutil/v4 v4.25.5 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
