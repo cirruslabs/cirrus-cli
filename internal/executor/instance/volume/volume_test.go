@@ -60,6 +60,10 @@ func TestCleanupOnFailure(t *testing.T) {
 	// Create a container backend client
 	backend := testutil.ContainerBackendFromEnv(t)
 
+	if _, ok := backend.(*containerbackend.Podman); ok {
+		t.Skip("Podman backend can mount non-existent directories without an error")
+	}
+
 	identifier := uuid.New().String()
 	agentVolumeName := fmt.Sprintf("cirrus-agent-volume-%s", identifier)
 	workingVolumeName := fmt.Sprintf("cirrus-working-volume-%s", identifier)

@@ -29,14 +29,18 @@ type Docker struct {
 	cli client.APIClient
 }
 
-func NewDocker() (ContainerBackend, error) {
+func NewDocker(hosts ...string) (*Docker, error) {
 	// Create Docker client
 	config, err := config.Load("")
 	if err != nil {
 		return nil, err
 	}
 
-	cli, err := command.NewAPIClientFromFlags(flags.NewClientOptions(), config)
+	clientOptions := flags.NewClientOptions()
+
+	clientOptions.Hosts = hosts
+
+	cli, err := command.NewAPIClientFromFlags(clientOptions, config)
 	if err != nil {
 		return nil, err
 	}

@@ -6,13 +6,11 @@ toolchain go1.24.2
 
 require (
 	github.com/PaesslerAG/gval v1.2.4
-	github.com/antihax/optional v1.0.0
 	github.com/avast/retry-go/v4 v4.6.1
 	github.com/breml/rootcerts v0.3.1
 	github.com/cirruslabs/cirrus-ci-agent v1.134.1 // indirect
 	github.com/cirruslabs/echelon v1.9.0
 	github.com/cirruslabs/go-java-glob v0.1.0
-	github.com/cirruslabs/podmanapi v0.3.1
 	github.com/containers/image/v5 v5.36.0
 	github.com/containers/storage v1.59.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1
@@ -55,7 +53,6 @@ require (
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20240314022150-ee8ed142361c
 	golang.org/x/crypto v0.40.0
-	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sys v0.34.0
 	golang.org/x/text v0.27.0
 	google.golang.org/grpc v1.73.0
@@ -67,7 +64,6 @@ require (
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.1
 	github.com/IGLOU-EU/go-wildcard v1.0.3
-	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/bmatcuk/doublestar v1.3.4
 	github.com/cirruslabs/chacha v0.16.3
