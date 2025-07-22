@@ -21,8 +21,6 @@ docker_builder:
     - echo 'unqualified-search-registries=["docker.io"]' > /etc/containers/registries.conf.d/docker.conf
   work_around_gcloud_credential_helper_script:
     - rm /root/.docker/config.json
-  run_podman_background_script:
-    - podman system service -t 0 unix:///tmp/podman.sock
   test_script:
     - wget --no-verbose -O - https://go.dev/dl/go1.22.1.linux-amd64.tar.gz | tar -C /usr/local -xz
     - export PATH=$PATH:/usr/local/go/bin
