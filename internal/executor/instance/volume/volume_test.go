@@ -8,11 +8,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"os"
-	"runtime"
 	"testing"
 )
 
@@ -62,21 +60,13 @@ func TestCleanupOnFailure(t *testing.T) {
 	// Create a container backend client
 	backend := testutil.ContainerBackendFromEnv(t)
 
+	if _, ok := backend.(*containerbackend.Podman); ok {
+		t.Skip("Podman backend can mount non-existent directories without an error")
+	}
+
 	identifier := uuid.New().String()
 	agentVolumeName := fmt.Sprintf("cirrus-agent-volume-%s", identifier)
 	workingVolumeName := fmt.Sprintf("cirrus-working-volume-%s", identifier)
-
-	// Set an architecture that will fail the container
-	var architecture api.Architecture
-
-	switch runtime.GOARCH {
-	case "amd64":
-		architecture = api.Architecture_ARM64
-	case "arm64":
-		architecture = api.Architecture_AMD64
-	default:
-		t.Skipf("unsupported architecture: %s", runtime.GOARCH)
-	}
 
 	_, _, err := volume.CreateWorkingVolume(
 		context.Background(),
@@ -88,7 +78,7 @@ func TestCleanupOnFailure(t *testing.T) {
 		false,
 		platform.DefaultAgentVersion,
 		platform.Auto(),
-		&architecture,
+		nil,
 	)
 	require.Error(t, err)
 
