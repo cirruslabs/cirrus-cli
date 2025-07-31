@@ -42,18 +42,19 @@ const (
 )
 
 type Tart struct {
-	logger       logger.Lightweight
-	vmName       string
-	sshUser      string
-	sshPassword  string
-	sshPort      uint16
-	cpu          uint32
-	memory       uint32
-	diskSize     uint32
-	softnet      bool
-	softnetAllow []string
-	display      string
-	volumes      []*api.Isolation_Tart_Volume
+	logger          logger.Lightweight
+	vmName          string
+	sshUser         string
+	sshPassword     string
+	sshPort         uint16
+	cpu             uint32
+	memory          uint32
+	diskSize        uint32
+	softnet         bool
+	softnetAllow    []string
+	display         string
+	volumes         []*api.Isolation_Tart_Volume
+	syncTimeOverSSH bool
 
 	vm              *VM
 	initializeHooks []remoteagent.WaitForAgentHook
@@ -389,7 +390,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	maps.Copy(agentEnv, config.AdditionalEnvironment)
 
 	err = remoteagent.WaitForAgent(ctx, tart.logger, fmt.Sprintf("%s:%d", ip, tart.sshPort),
-		tart.sshUser, tart.sshPassword, agentOS, "arm64", config, true,
+		tart.sshUser, tart.sshPassword, agentOS, "arm64", config, tart.syncTimeOverSSH,
 		initializeHooks, terminateHooks, "", agentEnv, config.LocalNetworkHelper)
 	if err != nil {
 		addTartListBreadcrumb(ctx)

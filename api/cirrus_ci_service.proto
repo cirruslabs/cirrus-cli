@@ -847,6 +847,8 @@ message Isolation {
     repeated Volume volumes = 9;
 
     uint32 disk_size = 10; // requested disk size in gigabytes
+
+    bool sync_time_over_ssh = 12;
   }
 
   message Vetu {
@@ -871,6 +873,8 @@ message Isolation {
     }
 
     uint32 disk_size = 8; // requested disk size in gigabytes
+
+    bool sync_time_over_ssh = 10;
   }
 
   oneof type {

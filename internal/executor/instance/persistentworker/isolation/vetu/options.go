@@ -29,3 +29,9 @@ func WithDiskSize(diskSize uint32) Option {
 		vetu.diskSize = diskSize
 	}
 }
+
+func WithSyncTimeOverSSH() Option {
+	return func(vetu *Vetu) {
+		vetu.syncTimeOverSSH = true
+	}
+}

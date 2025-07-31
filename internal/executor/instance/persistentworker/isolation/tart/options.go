@@ -37,3 +37,9 @@ func WithDiskSize(diskSize uint32) Option {
 		tart.diskSize = diskSize
 	}
 }
+
+func WithSyncTimeOverSSH() Option {
+	return func(tart *Tart) {
+		tart.syncTimeOverSSH = true
+	}
+}

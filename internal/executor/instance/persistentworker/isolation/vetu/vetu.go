@@ -43,6 +43,7 @@ type Vetu struct {
 	bridgedInterface string
 	hostNetworking   bool
 	resourceModifier *resourcemodifier.Modifier
+	syncTimeOverSSH  bool
 
 	vm *VM
 }
@@ -180,7 +181,7 @@ func (vetu *Vetu) Run(ctx context.Context, config *runconfig.RunConfig) error {
 
 	err = remoteagent.WaitForAgent(ctx, vetu.logger, fmt.Sprintf("%s:%d", ip, vetu.sshPort),
 		vetu.sshUser, vetu.sshPassword, "linux", runtime.GOARCH,
-		config, true, vetu.initializeHooks(config), nil, "",
+		config, vetu.syncTimeOverSSH, vetu.initializeHooks(config), nil, "",
 		map[string]string{"CIRRUS_VM_ID": vetu.vm.Ident()}, nil)
 	if err != nil {
 		return err
