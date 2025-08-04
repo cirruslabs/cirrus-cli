@@ -120,6 +120,10 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 		opts = append(opts, tart.WithDiskSize(iso.Tart.DiskSize))
 	}
 
+	if iso.Tart.SyncTimeOverSsh {
+		opts = append(opts, tart.WithSyncTimeOverSSH())
+	}
+
 	return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, uint16(iso.Tart.Port),
 		iso.Tart.Cpu, iso.Tart.Memory, opts...)
 }
@@ -154,6 +158,10 @@ func newVetu(
 
 	if iso.Vetu.DiskSize != 0 {
 		opts = append(opts, vetu.WithDiskSize(iso.Vetu.DiskSize))
+	}
+
+	if iso.Vetu.SyncTimeOverSsh {
+		opts = append(opts, vetu.WithSyncTimeOverSSH())
 	}
 
 	return vetu.New(iso.Vetu.Image, iso.Vetu.User, iso.Vetu.Password, uint16(iso.Vetu.Port),
