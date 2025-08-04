@@ -34,7 +34,7 @@ func (azureBlob *AzureBlob) headBlob(writer http.ResponseWriter, request *http.R
 
 	if len(generateCacheDownloadURLResponse.Urls) == 0 {
 		fail(writer, request, http.StatusInternalServerError, fmt.Sprintf("failed to generate"+
-			" cache download URLs: expected at least 1 URL, got %d", len(generateCacheDownloadURLResponse.Urls)))
+			" cache download URLs: expected at least 1 URL, got 0"))
 
 		return
 	}
