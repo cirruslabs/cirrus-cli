@@ -14,11 +14,11 @@ require (
 	github.com/containers/image/v5 v5.36.0
 	github.com/containers/storage v1.59.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1
-	github.com/docker/cli v28.3.2+incompatible
+	github.com/docker/cli v28.3.3+incompatible
 	github.com/docker/docker v28.3.3+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/getsentry/sentry-go v0.34.1
+	github.com/getsentry/sentry-go v0.35.0
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/go-test/deep v1.1.1
@@ -64,7 +64,7 @@ require (
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.2
 	github.com/IGLOU-EU/go-wildcard v1.0.3
-	github.com/aws/aws-sdk-go v1.55.7
+	github.com/aws/aws-sdk-go v1.55.8
 	github.com/bmatcuk/doublestar v1.3.4
 	github.com/cirruslabs/chacha v0.16.3
 	github.com/cirruslabs/cirrus-ci-annotations v0.10.0
@@ -72,7 +72,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/docker/go-connections v0.5.0
 	github.com/go-chi/render v1.0.3
-	github.com/golang-jwt/jwt/v5 v5.2.3
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-github/v59 v59.0.0
 	github.com/hashicorp/vault/api v1.20.0
 	github.com/klauspost/pgzip v1.2.6
