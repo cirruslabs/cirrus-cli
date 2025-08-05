@@ -34,27 +34,46 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 		},
 	)
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "failed to generate cache download URL",
+		fail(writer, request, http.StatusInternalServerError, "failed to generate cache download URLs",
 			"key", key, "err", err)
 
 		return
 	}
 
-	if len(generateCacheDownloadURLResponse.Urls) != 1 {
+	if len(generateCacheDownloadURLResponse.Urls) == 0 {
 		fail(writer, request, http.StatusInternalServerError, fmt.Sprintf("failed to generate"+
-			" cache download URL: expected 1 URL, got %d", len(generateCacheDownloadURLResponse.Urls)))
+			" cache download URLs: expected at least 1 URL, got 0"))
 
 		return
 	}
 
 	// Proxy cache entry download
-	req, err := http.NewRequestWithContext(request.Context(), http.MethodGet,
-		generateCacheDownloadURLResponse.Urls[0], nil)
+	for i, url := range generateCacheDownloadURLResponse.Urls {
+		isLastIteration := i == len(generateCacheDownloadURLResponse.Urls)-1
+
+		if azureBlob.proxyCacheEntryDownload(writer, request, key, url, isLastIteration) {
+			break
+		}
+	}
+}
+
+func (azureBlob *AzureBlob) proxyCacheEntryDownload(
+	writer http.ResponseWriter,
+	request *http.Request,
+	key string,
+	url string,
+	isLastIteration bool,
+) bool {
+	req, err := http.NewRequestWithContext(request.Context(), http.MethodGet, url, nil)
 	if err != nil {
+		if !isLastIteration {
+			return false
+		}
+
 		fail(writer, request, http.StatusInternalServerError, "failed to create request to proxy"+
 			" cache entry download", "key", key, "err", err)
 
-		return
+		return true
 	}
 
 	// Support HTTP range requests
@@ -67,24 +86,37 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 
 	resp, err := azureBlob.potentiallyCachingHTTPClient.Do(req)
 	if err != nil {
+		if !isLastIteration {
+			return false
+		}
+
 		fail(writer, request, http.StatusInternalServerError, "failed to perform request to proxy"+
 			" cache entry download", "key", key, "err", err)
 
-		return
+		return true
 	}
+	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusOK, http.StatusPartialContent:
 		// Proceed with proxying
 	case http.StatusNotFound:
+		if !isLastIteration {
+			return false
+		}
+
 		writer.WriteHeader(http.StatusNotFound)
 
-		return
+		return true
 	default:
+		if !isLastIteration {
+			return false
+		}
+
 		fail(writer, request, http.StatusInternalServerError, fmt.Sprintf("failed to perform request to proxy"+
 			" cache entry download, got unexpected HTTP %d", resp.StatusCode), "key", key)
 
-		return
+		return true
 	}
 
 	// Chacha doesn't support Range requests yet, and not disclosing Content-Length
@@ -108,9 +140,11 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 	})
 	bytesRead, err := io.CopyBuffer(writer, progressReader, largeBuffer)
 	if err != nil {
-		proxyingDuration := time.Since(startProxyingAt)
 		fail(writer, request, http.StatusInternalServerError, "failed to proxy cache entry download",
-			"err", err, "duration", proxyingDuration, "read", bytesRead, "key", key)
-		return
+			"err", err, "duration", time.Since(startProxyingAt), "read", bytesRead, "key", key)
+
+		return true
 	}
+
+	return true
 }
