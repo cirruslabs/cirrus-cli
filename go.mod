@@ -11,8 +11,8 @@ require (
 	github.com/cirruslabs/cirrus-ci-agent v1.134.1 // indirect
 	github.com/cirruslabs/echelon v1.9.0
 	github.com/cirruslabs/go-java-glob v0.1.0
-	github.com/containers/image/v5 v5.36.0
-	github.com/containers/storage v1.59.0 // indirect
+	github.com/containers/image/v5 v5.36.1
+	github.com/containers/storage v1.59.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1
 	github.com/docker/cli v28.3.3+incompatible
 	github.com/docker/docker v28.3.3+incompatible
@@ -52,11 +52,11 @@ require (
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20240314022150-ee8ed142361c
-	golang.org/x/crypto v0.40.0
-	golang.org/x/sys v0.34.0
-	golang.org/x/text v0.27.0
+	golang.org/x/crypto v0.41.0
+	golang.org/x/sys v0.35.0
+	golang.org/x/text v0.28.0
 	google.golang.org/grpc v1.74.2
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.7
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -70,7 +70,7 @@ require (
 	github.com/cirruslabs/cirrus-ci-annotations v0.10.0
 	github.com/cirruslabs/terminal v0.16.0
 	github.com/deckarep/golang-set/v2 v2.8.0
-	github.com/docker/go-connections v0.5.0
+	github.com/docker/go-connections v0.6.0
 	github.com/go-chi/render v1.0.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-github/v59 v59.0.0
