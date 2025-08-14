@@ -3,6 +3,9 @@ package persistentworker
 import (
 	"errors"
 	"fmt"
+	"runtime"
+	"strings"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/container"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/isolation/none"
@@ -13,8 +16,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"runtime"
-	"strings"
 )
 
 var ErrInvalidIsolation = errors.New("invalid isolation parameters")
@@ -110,6 +111,10 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 
 	if iso.Tart.Softnet || tartPolicy.ForceSoftnet {
 		opts = append(opts, tart.WithSoftnet(tartPolicy.SoftnetAllow))
+	}
+
+	if iso.Tart.Nested {
+		opts = append(opts, tart.WithNested())
 	}
 
 	if iso.Tart.Display != "" {

@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
-	"github.com/cirruslabs/echelon"
-	"github.com/getsentry/sentry-go"
-	"go.opentelemetry.io/otel/trace"
 	"maps"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
+	"github.com/cirruslabs/echelon"
+	"github.com/getsentry/sentry-go"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type VM struct {
@@ -180,6 +181,7 @@ func (vm *VM) Start(
 	ctx context.Context,
 	softnet bool,
 	softnetAllow []string,
+	nested bool,
 	directoryMounts []directoryMount,
 ) {
 	vm.wg.Add(1)
@@ -195,6 +197,10 @@ func (vm *VM) Start(
 			if len(softnetAllow) > 0 {
 				args = append(args, "--net-softnet-allow", strings.Join(softnetAllow, ","))
 			}
+		}
+
+		if nested {
+			args = append(args, "--nested")
 		}
 
 		for _, directoryMount := range directoryMounts {
