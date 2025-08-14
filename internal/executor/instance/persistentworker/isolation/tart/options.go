@@ -20,6 +20,12 @@ func WithSoftnet(allow []string) Option {
 	}
 }
 
+func WithNested() Option {
+	return func(tart *Tart) {
+		tart.nested = true
+	}
+}
+
 func WithDisplay(display string) Option {
 	return func(tart *Tart) {
 		tart.display = display

@@ -828,6 +828,9 @@ message Isolation {
     // [1]: https://github.com/cirruslabs/softnet
     bool softnet = 6;
 
+    // Whether to enable nested virtualization for a VM
+    bool nested = 13;
+
     // Whether to mount a temporary working directory
     // from host to speed-up I/O, see [1] for more details.
     //

@@ -5,6 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"maps"
+	"os"
+	"path"
+	"strings"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/projectdirsyncer"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
@@ -20,12 +27,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/ssh"
-	"io"
-	"maps"
-	"os"
-	"path"
-	"strings"
-	"time"
 )
 
 var (
@@ -52,6 +53,7 @@ type Tart struct {
 	diskSize        uint32
 	softnet         bool
 	softnetAllow    []string
+	nested          bool
 	display         string
 	volumes         []*api.Isolation_Tart_Volume
 	syncTimeOverSSH bool
@@ -299,7 +301,7 @@ func (tart *Tart) bootVM(
 		})
 	}
 
-	vm.Start(ctx, tart.softnet, tart.softnetAllow, directoryMounts)
+	vm.Start(ctx, tart.softnet, tart.softnetAllow, tart.nested, directoryMounts)
 
 	// Wait for the VM to start and get it's DHCP address
 	bootLogger := logger.Scoped("boot virtual machine")
