@@ -6,6 +6,18 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"syscall"
+	"time"
+
 	"github.com/avast/retry-go/v4"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/cirrusenv"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
@@ -20,17 +32,6 @@ import (
 	"github.com/samber/lo"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/propagation"
-	"log"
-	"net/http"
-	"net/url"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
-	"strconv"
-	"strings"
-	"syscall"
-	"time"
 )
 
 type CommandAndLogs struct {
@@ -260,8 +261,8 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 
 	// Like timeout-bounded context, but extended by 5 minutes
 	// to allow for "on_timeout:" user-defined instructions to succeed
-	extendedTimeoutCtx, extendedTimeoutCtxCancel := context.WithTimeout(ctx, timeout+(5*time.Minute))
-	defer extendedTimeoutCtxCancel()
+	var extendedTimeoutCtx context.Context
+	var extendedTimeoutCtxCancel context.CancelFunc
 
 	executor.env.AddSensitiveValues(response.SecretsToMask...)
 
@@ -330,6 +331,11 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		var stepCtx context.Context
 
 		if command.ExecutionBehaviour == api.Command_ON_TIMEOUT || command.ExecutionBehaviour == api.Command_ALWAYS {
+			if extendedTimeoutCtx == nil {
+				extendedTimeoutCtx, extendedTimeoutCtxCancel = context.WithTimeout(context.Background(), 5*time.Minute)
+				defer extendedTimeoutCtxCancel()
+			}
+
 			stepCtx = extendedTimeoutCtx
 		} else {
 			stepCtx = timeoutCtx
