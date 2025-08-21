@@ -188,7 +188,7 @@ func (vm *VM) Start(
 	go func() {
 		defer vm.wg.Done()
 
-		args := []string{"--no-graphics", "--no-clipboard", "--no-audio", "--root-disk-opts", "caching=cached,sync=none"}
+		args := []string{"--no-graphics", "--no-clipboard", "--no-audio", "--root-disk-opts", "sync=none"}
 
 		if softnet {
 			args = append(args, "--net-softnet")
