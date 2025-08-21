@@ -5,12 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/echelon"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapio"
 	"io"
 	"os/exec"
 	"strings"
+
+	"github.com/cirruslabs/echelon"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapio"
 )
 
 const vetuCommandName = "vetu"
@@ -19,6 +20,12 @@ var (
 	ErrVetuNotFound = errors.New("vetu command not found")
 	ErrVetuFailed   = errors.New("vetu command returned non-zero exit code")
 )
+
+type CmdOpts struct {
+	AdditionalEnvironment map[string]string
+	Logger                *echelon.Logger
+	StandardOutputToLogs  bool
+}
 
 type loggerAsWriter struct {
 	level    echelon.LogLevel
@@ -54,6 +61,18 @@ func CmdWithLogger(
 	name string,
 	args ...string,
 ) (string, string, error) {
+	return CmdWithOpts(ctx, CmdOpts{
+		AdditionalEnvironment: additionalEnvironment,
+		Logger:                logger,
+	}, name, args...)
+}
+
+func CmdWithOpts(
+	ctx context.Context,
+	opts CmdOpts,
+	name string,
+	args ...string,
+) (string, string, error) {
 	ctx, span := tracer.Start(ctx, fmt.Sprintf("exec-command/%s-%s", vetuCommandName, name))
 	defer span.End()
 
@@ -65,7 +84,7 @@ func CmdWithLogger(
 	cmd.Env = cmd.Environ()
 
 	// Additional environment
-	for key, value := range additionalEnvironment {
+	for key, value := range opts.AdditionalEnvironment {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
 	}
 
@@ -79,11 +98,23 @@ func CmdWithLogger(
 		zap.String("command", strings.Join(append([]string{cmd.Path}, cmd.Args...), " ")),
 	}
 
-	zapInfoWriter := &zapio.Writer{
-		Log:   zap.L().With(zapFields...),
-		Level: zap.InfoLevel,
+	stdoutWriters := []io.Writer{
+		&stdout,
+		&loggerAsWriter{
+			level:    echelon.InfoLevel,
+			delegate: opts.Logger,
+		},
 	}
-	defer zapInfoWriter.Close()
+
+	if opts.StandardOutputToLogs {
+		zapInfoWriter := &zapio.Writer{
+			Log:   zap.L().With(zapFields...),
+			Level: zap.InfoLevel,
+		}
+		defer zapInfoWriter.Close()
+
+		stdoutWriters = append(stdoutWriters, zapInfoWriter)
+	}
 
 	zapErrorWriter := &zapio.Writer{
 		Log:   zap.L().With(zapFields...),
@@ -91,13 +122,10 @@ func CmdWithLogger(
 	}
 	defer zapErrorWriter.Close()
 
-	cmd.Stdout = io.MultiWriter(&stdout, &loggerAsWriter{
-		level:    echelon.InfoLevel,
-		delegate: logger,
-	}, zapInfoWriter)
+	cmd.Stdout = io.MultiWriter(stdoutWriters...)
 	cmd.Stderr = io.MultiWriter(&stderr, &loggerAsWriter{
 		level:    echelon.WarnLevel,
-		delegate: logger,
+		delegate: opts.Logger,
 	}, zapErrorWriter)
 
 	err := cmd.Run()

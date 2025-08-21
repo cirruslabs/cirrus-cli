@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
+	"strings"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/projectdirsyncer"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
@@ -17,9 +21,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/crypto/ssh"
-	"runtime"
-	"strings"
-	"time"
 )
 
 var (
@@ -32,18 +33,19 @@ var (
 const vmNamePrefix = "cirrus-cli-"
 
 type Vetu struct {
-	logger           logger.Lightweight
-	vmName           string
-	sshUser          string
-	sshPassword      string
-	sshPort          uint16
-	cpu              uint32
-	memory           uint32
-	diskSize         uint32
-	bridgedInterface string
-	hostNetworking   bool
-	resourceModifier *resourcemodifier.Modifier
-	syncTimeOverSSH  bool
+	logger               logger.Lightweight
+	vmName               string
+	sshUser              string
+	sshPassword          string
+	sshPort              uint16
+	cpu                  uint32
+	memory               uint32
+	diskSize             uint32
+	bridgedInterface     string
+	hostNetworking       bool
+	resourceModifier     *resourcemodifier.Modifier
+	syncTimeOverSSH      bool
+	standardOutputToLogs bool
 
 	vm *VM
 }
@@ -122,7 +124,8 @@ func (vetu *Vetu) bootVM(
 
 	tmpVMName := vmNamePrefix + identToBeInjected + uuid.NewString()
 
-	vm, err := NewVMClonedFrom(ctx, vetu.vmName, tmpVMName, lazyPull, env, vetu.resourceModifier, logger)
+	vm, err := NewVMClonedFrom(ctx, vetu.vmName, tmpVMName, lazyPull, env, vetu.standardOutputToLogs,
+		vetu.resourceModifier, logger)
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, vetu.vmName, err)
 	}
