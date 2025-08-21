@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"maps"
 	"strconv"
 	"strings"
 	"sync"
@@ -189,7 +188,7 @@ func (vm *VM) Start(
 	go func() {
 		defer vm.wg.Done()
 
-		args := []string{"--no-graphics", "--no-clipboard", "--no-audio", "--root-disk-opts", "caching=automatic,sync=none"}
+		args := []string{"--no-graphics", "--no-clipboard", "--no-audio", "--root-disk-opts", "caching=cached,sync=none"}
 
 		if softnet {
 			args = append(args, "--net-softnet")
