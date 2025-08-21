@@ -35,3 +35,9 @@ func WithSyncTimeOverSSH() Option {
 		vetu.syncTimeOverSSH = true
 	}
 }
+
+func WithStandardOutputToLogs() Option {
+	return func(vetu *Vetu) {
+		vetu.standardOutputToLogs = true
+	}
+}

@@ -169,6 +169,10 @@ func newVetu(
 		opts = append(opts, vetu.WithSyncTimeOverSSH())
 	}
 
+	if iso.Vetu.StandardOutputToLogs {
+		opts = append(opts, vetu.WithStandardOutputToLogs())
+	}
+
 	return vetu.New(iso.Vetu.Image, iso.Vetu.User, iso.Vetu.Password, uint16(iso.Vetu.Port),
 		iso.Vetu.Cpu, iso.Vetu.Memory, resourceModifier, opts...)
 }

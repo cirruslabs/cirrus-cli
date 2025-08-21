@@ -2,23 +2,25 @@ package vetu
 
 import (
 	"context"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
 	"go.opentelemetry.io/otel/trace"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 type VM struct {
-	ident              string
-	env                map[string]string
-	resourceModifier   *resourcemodifier.Modifier
-	runningVMCtx       context.Context
-	runningVMCtxCancel context.CancelFunc
-	wg                 sync.WaitGroup
-	errChan            chan error
+	ident                string
+	env                  map[string]string
+	standardOutputToLogs bool
+	resourceModifier     *resourcemodifier.Modifier
+	runningVMCtx         context.Context
+	runningVMCtxCancel   context.CancelFunc
+	wg                   sync.WaitGroup
+	errChan              chan error
 }
 
 func NewVMClonedFrom(
@@ -27,6 +29,7 @@ func NewVMClonedFrom(
 	to string,
 	lazyPull bool,
 	env map[string]string,
+	standardOutputToLogs bool,
 	resourceModifier *resourcemodifier.Modifier,
 	logger *echelon.Logger,
 ) (*VM, error) {
@@ -35,12 +38,13 @@ func NewVMClonedFrom(
 	)
 
 	vm := &VM{
-		ident:              to,
-		env:                env,
-		resourceModifier:   resourceModifier,
-		runningVMCtx:       runningVMCtx,
-		runningVMCtxCancel: runningVMCtxCancel,
-		errChan:            make(chan error, 1),
+		ident:                to,
+		env:                  env,
+		standardOutputToLogs: standardOutputToLogs,
+		resourceModifier:     resourceModifier,
+		runningVMCtx:         runningVMCtx,
+		runningVMCtxCancel:   runningVMCtxCancel,
+		errChan:              make(chan error, 1),
 	}
 
 	pullLogger := logger.Scoped("pull virtual machine")
@@ -143,7 +147,10 @@ func (vm *VM) Start(
 
 		args = append(args, vm.ident)
 
-		stdout, stderr, err := Cmd(vm.runningVMCtx, vm.env, "run", args...)
+		stdout, stderr, err := CmdWithOpts(vm.runningVMCtx, CmdOpts{
+			AdditionalEnvironment: vm.env,
+			StandardOutputToLogs:  vm.standardOutputToLogs,
+		}, "run", args...)
 		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
 			localHub.AddBreadcrumb(&sentry.Breadcrumb{
 				Message: "\"vetu run\" finished",

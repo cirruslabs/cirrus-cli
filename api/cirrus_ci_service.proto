@@ -878,6 +878,8 @@ message Isolation {
     uint32 disk_size = 8; // requested disk size in gigabytes
 
     bool sync_time_over_ssh = 10;
+
+    bool standard_output_to_logs = 11;
   }
 
   oneof type {
