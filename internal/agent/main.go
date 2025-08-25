@@ -4,6 +4,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
+	"log"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"runtime/debug"
+	"strconv"
+	"strings"
+	"syscall"
+	"time"
+
 	"github.com/avast/retry-go/v4"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor"
@@ -22,16 +33,6 @@ import (
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
-	"io"
-	"log"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"runtime/debug"
-	"strconv"
-	"strings"
-	"syscall"
-	"time"
 )
 
 func Run(args []string) {
@@ -295,12 +296,15 @@ func dialWithTimeout(ctx context.Context, apiEndpoint string, md metadata.MD) (*
 				grpc_retry.WithCodes(retryCodes...),
 				grpc_retry.WithPerRetryTimeout(60*time.Second),
 			),
-			metadataInterceptor(md),
+			unaryMetadataInterceptor(md),
+		),
+		grpc.WithChainStreamInterceptor(
+			streamMetadataInterceptor(md),
 		),
 	)
 }
 
-func metadataInterceptor(md metadata.MD) grpc.UnaryClientInterceptor {
+func unaryMetadataInterceptor(md metadata.MD) grpc.UnaryClientInterceptor {
 	return func(
 		ctx context.Context,
 		method string,
@@ -312,6 +316,21 @@ func metadataInterceptor(md metadata.MD) grpc.UnaryClientInterceptor {
 		ctx = metadata.NewOutgoingContext(ctx, md)
 
 		return invoker(ctx, method, req, reply, cc, opts...)
+	}
+}
+
+func streamMetadataInterceptor(md metadata.MD) grpc.StreamClientInterceptor {
+	return func(
+		ctx context.Context,
+		desc *grpc.StreamDesc,
+		cc *grpc.ClientConn,
+		method string,
+		streamer grpc.Streamer,
+		opts ...grpc.CallOption,
+	) (grpc.ClientStream, error) {
+		ctx = metadata.NewOutgoingContext(ctx, md)
+
+		return streamer(ctx, desc, cc, method, opts...)
 	}
 }
 
