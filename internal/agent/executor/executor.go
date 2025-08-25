@@ -21,6 +21,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/cirrusenv"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/contextops"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/metrics"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/terminalwrapper"
@@ -336,7 +337,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 				defer extendedTimeoutCtxCancel()
 			}
 
-			stepCtx = extendedTimeoutCtx
+			stepCtx = contextops.And(timeoutCtx, extendedTimeoutCtx)
 		} else {
 			stepCtx = timeoutCtx
 		}
