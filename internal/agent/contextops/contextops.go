@@ -2,7 +2,7 @@ package contextops
 
 import "context"
 
-func And(inputCtxs ...context.Context) context.Context {
+func All(inputCtxs ...context.Context) context.Context {
 	outputCtx, outputCtxCancel := context.WithCancel(context.Background())
 
 	go func() {

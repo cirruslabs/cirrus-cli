@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAndLeftToRight(t *testing.T) {
+func TestAllLeftToRight(t *testing.T) {
 	firstCtx, firstCtxCancel := context.WithCancel(context.Background())
 	firstCtxCancel()
 
@@ -17,13 +17,13 @@ func TestAndLeftToRight(t *testing.T) {
 	defer secondCtxCancel()
 
 	waitStart := time.Now()
-	<-contextops.And(firstCtx, secondCtx).Done()
+	<-contextops.All(firstCtx, secondCtx).Done()
 	waitStop := time.Now()
 
 	require.GreaterOrEqual(t, waitStop.Sub(waitStart), 15*time.Second)
 }
 
-func TestAndRightToLeft(t *testing.T) {
+func TestAllRightToLeft(t *testing.T) {
 	firstCtx, firstCtxCancel := context.WithCancel(context.Background())
 	firstCtxCancel()
 
@@ -31,7 +31,7 @@ func TestAndRightToLeft(t *testing.T) {
 	defer secondCtxCancel()
 
 	waitStart := time.Now()
-	<-contextops.And(secondCtx, firstCtx).Done()
+	<-contextops.All(secondCtx, firstCtx).Done()
 	waitStop := time.Now()
 
 	require.GreaterOrEqual(t, waitStop.Sub(waitStart), 15*time.Second)

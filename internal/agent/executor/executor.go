@@ -337,7 +337,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 				defer extendedTimeoutCtxCancel()
 			}
 
-			stepCtx = contextops.And(timeoutCtx, extendedTimeoutCtx)
+			stepCtx = contextops.All(timeoutCtx, extendedTimeoutCtx)
 		} else {
 			stepCtx = timeoutCtx
 		}
