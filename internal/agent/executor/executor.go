@@ -261,8 +261,8 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 
 	// Like timeout-bounded context, but extended by 5 minutes
 	// to allow for "on_timeout:" user-defined instructions to succeed
-	var extendedTimeoutCtx context.Context
-	var extendedTimeoutCtxCancel context.CancelFunc
+	extendedTimeoutCtx, extendedTimeoutCtxCancel := context.WithTimeout(context.Background(), timeout+(5*time.Minute))
+	defer extendedTimeoutCtxCancel()
 
 	executor.env.AddSensitiveValues(response.SecretsToMask...)
 
@@ -331,11 +331,6 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		var stepCtx context.Context
 
 		if command.ExecutionBehaviour == api.Command_ON_TIMEOUT || command.ExecutionBehaviour == api.Command_ALWAYS {
-			if extendedTimeoutCtx == nil {
-				extendedTimeoutCtx, extendedTimeoutCtxCancel = context.WithTimeout(context.Background(), 5*time.Minute)
-				defer extendedTimeoutCtxCancel()
-			}
-
 			stepCtx = extendedTimeoutCtx
 		} else {
 			stepCtx = timeoutCtx
