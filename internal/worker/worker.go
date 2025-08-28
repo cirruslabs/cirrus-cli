@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
+	"os"
+	"runtime"
+	"time"
+
 	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/abstract"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker"
@@ -24,10 +29,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"google.golang.org/protobuf/proto"
-	"math"
-	"os"
-	"runtime"
-	"time"
 )
 
 var (
@@ -50,12 +51,10 @@ type Worker struct {
 	tasks           *xsync.MapOf[string, *Task]
 	taskCompletions chan string
 
-	imagesCounter               metric.Int64Counter
-	tasksCounter                metric.Int64Counter
-	taskExecutionTimeHistogram  metric.Float64Histogram
-	standbyHitCounter           metric.Int64Counter
-	standbyMissCounter          metric.Int64Counter
-	standbyInstanceAgeHistogram metric.Float64Histogram
+	imagesCounter      metric.Int64Counter
+	tasksCounter       metric.Int64Counter
+	standbyHitCounter  metric.Int64Counter
+	standbyMissCounter metric.Int64Counter
 
 	logger        logrus.FieldLogger
 	echelonLogger *echelon.Logger
@@ -159,15 +158,6 @@ func (worker *Worker) Run(ctx context.Context) error {
 		return err
 	}
 
-	worker.taskExecutionTimeHistogram, err = meter.Float64Histogram(
-		"org.cirruslabs.persistent_worker.tasks.execution_time",
-		metric.WithDescription("Task execution time."),
-		metric.WithUnit("s"),
-	)
-	if err != nil {
-		return err
-	}
-
 	// Resource-related metrics
 	_, err = meter.Float64ObservableGauge("org.cirruslabs.persistent_worker.resources.unused_count",
 		metric.WithDescription("Amount of resources available for use on the Persistent Worker."),
@@ -203,15 +193,6 @@ func (worker *Worker) Run(ctx context.Context) error {
 		return err
 	}
 	worker.standbyMissCounter, err = meter.Int64Counter("org.cirruslabs.persistent_worker.standby.miss")
-	if err != nil {
-		return err
-	}
-
-	worker.standbyInstanceAgeHistogram, err = meter.Float64Histogram(
-		"org.cirruslabs.persistent_worker.standby.age",
-		metric.WithDescription("Standby instance age at the moment of relinquishing the ownership."),
-		metric.WithUnit("s"),
-	)
 	if err != nil {
 		return err
 	}
