@@ -210,13 +210,8 @@ func (worker *Worker) runTask(
 		worker.logger.Warnf("failed to set CLI's version for task %s: %v", taskID, err)
 	}
 
-	var taskExecutionAttributes []attribute.KeyValue
-
 	err := inst.Run(ctx, &config)
 	if err != nil && !errors.Is(err, context.Canceled) && !errors.Is(ctx.Err(), context.Canceled) {
-		// Update task execution attributes
-		taskExecutionAttributes = append(taskExecutionAttributes, attribute.String("status", "failed"))
-
 		worker.logger.Errorf("failed to run task %s: %v", taskID, err)
 
 		boundedCtx, cancel := context.WithTimeout(backgroundCtxWithSpan, perCallTimeout)
@@ -262,9 +257,6 @@ func (worker *Worker) runTask(
 				localHub.CaptureMessage(fmt.Sprintf("failed to notify the server about the failed task: %v", err))
 			})
 		}
-	} else {
-		// Update task execution attributes
-		taskExecutionAttributes = append(taskExecutionAttributes, attribute.String("status", "succeeded"))
 	}
 
 	boundedCtx, cancel := context.WithTimeout(backgroundCtxWithSpan, perCallTimeout)
