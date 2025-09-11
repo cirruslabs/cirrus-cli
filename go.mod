@@ -1,6 +1,6 @@
 module github.com/cirruslabs/cirrus-cli
 
-go 1.24
+go 1.24.0
 
 toolchain go1.24.2
 
@@ -11,11 +11,11 @@ require (
 	github.com/cirruslabs/cirrus-ci-agent v1.134.1 // indirect
 	github.com/cirruslabs/echelon v1.9.0
 	github.com/cirruslabs/go-java-glob v0.1.0
-	github.com/containers/image/v5 v5.36.1
+	github.com/containers/image/v5 v5.36.2
 	github.com/containers/storage v1.59.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1
-	github.com/docker/cli v28.3.3+incompatible
-	github.com/docker/docker v28.3.3+incompatible
+	github.com/docker/cli v28.4.0+incompatible
+	github.com/docker/docker v28.4.0+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/getsentry/sentry-go v0.35.1
@@ -35,7 +35,7 @@ require (
 	github.com/lestrrat-go/pdebug v0.0.0-20210111095411-35b07dbf089b // indirect
 	github.com/lestrrat-go/structinfo v0.0.0-20210312050401-7f8bd69d6acb // indirect
 	github.com/mitchellh/go-ps v1.0.0
-	github.com/moby/buildkit v0.23.2
+	github.com/moby/buildkit v0.24.0
 	github.com/moby/term v0.5.2 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0
@@ -45,7 +45,7 @@ require (
 	github.com/qri-io/starlib v0.5.0
 	github.com/sergi/go-diff v1.4.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.9.1
+	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/yudai/gojsondiff v1.0.0
@@ -53,7 +53,7 @@ require (
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20240314022150-ee8ed142361c
 	golang.org/x/crypto v0.41.0
-	golang.org/x/sys v0.35.0
+	golang.org/x/sys v0.36.0
 	golang.org/x/text v0.28.0
 	google.golang.org/grpc v1.75.0
 	google.golang.org/protobuf v1.36.8
@@ -99,8 +99,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.38.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
-	golang.org/x/sync v0.16.0
-	golang.org/x/time v0.12.0
+	golang.org/x/sync v0.17.0
+	golang.org/x/time v0.13.0
 )
 
 require (
@@ -116,7 +116,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
-	github.com/containerd/containerd/v2 v2.1.3 // indirect
+	github.com/containerd/containerd/v2 v2.1.4 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
@@ -193,7 +193,7 @@ require (
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
-	github.com/spf13/pflag v1.0.6 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.14 // indirect
 	github.com/tklauser/numcpus v0.8.0 // indirect
@@ -205,8 +205,8 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.56.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.31.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.60.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.35.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.38.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.35.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.7.1 // indirect
