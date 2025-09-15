@@ -73,6 +73,12 @@ func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
+	// Headers are pre-signed too, so ensure that they're present,
+	// otherwise we'll get HTTP 403
+	for key, value := range generateCacheUploadURLResponse.GetExtraHeaders() {
+		req.Header.Set(key, value)
+	}
+
 	// Content-Length is required to avoid HTTP 411
 	req.ContentLength = int64(contentLength)
 
@@ -316,6 +322,12 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 				"for local part upload", "key", key, "uploadid", uploadID, "err", err)
 
 			return
+		}
+
+		// Headers are pre-signed too, so ensure that they're present,
+		// otherwise we'll get HTTP 403
+		for key, value := range generateCacheUploadURLResponse.GetExtraHeaders() {
+			uploadReq.Header.Set(key, value)
 		}
 
 		// Content-Length is required to avoid HTTP 411
