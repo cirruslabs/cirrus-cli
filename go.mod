@@ -18,7 +18,7 @@ require (
 	github.com/docker/docker v28.4.0+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/getsentry/sentry-go v0.35.1
+	github.com/getsentry/sentry-go v0.35.2
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/go-test/deep v1.1.1
@@ -52,11 +52,11 @@ require (
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20240314022150-ee8ed142361c
-	golang.org/x/crypto v0.41.0
+	golang.org/x/crypto v0.42.0
 	golang.org/x/sys v0.36.0
-	golang.org/x/text v0.28.0
-	google.golang.org/grpc v1.75.0
-	google.golang.org/protobuf v1.36.8
+	golang.org/x/text v0.29.0
+	google.golang.org/grpc v1.75.1
+	google.golang.org/protobuf v1.36.9
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -74,7 +74,7 @@ require (
 	github.com/go-chi/render v1.0.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-github/v59 v59.0.0
-	github.com/hashicorp/vault/api v1.20.0
+	github.com/hashicorp/vault/api v1.21.0
 	github.com/klauspost/pgzip v1.2.6
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.17.0
@@ -131,7 +131,6 @@ require (
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/ebitengine/purego v0.8.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fvbommel/sortorder v1.1.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
@@ -148,9 +147,9 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
-	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.8 // indirect
+	github.com/hashicorp/go-secure-stdlib/parseutil v0.2.0 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
-	github.com/hashicorp/go-sockaddr v1.0.6 // indirect
+	github.com/hashicorp/go-sockaddr v1.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.1-vault-7 // indirect
 	github.com/in-toto/in-toto-golang v0.9.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
