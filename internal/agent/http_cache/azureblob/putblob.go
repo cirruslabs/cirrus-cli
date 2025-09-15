@@ -3,15 +3,16 @@ package azureblob
 import (
 	"encoding/xml"
 	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"strconv"
+
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	uploadablepkg "github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/uploadable"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/dustin/go-humanize"
 	"github.com/go-chi/render"
-	"io"
-	"log"
-	"net/http"
-	"strconv"
 )
 
 // As documented in Put Block List's documentation[1]
@@ -82,10 +83,15 @@ func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Re
 
 		return
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		bodyBytes, bodyReadErr := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
+
 		fail(writer, request, http.StatusInternalServerError, fmt.Sprintf("failed to perform request to proxy "+
-			"cache entry upload, got unexpected HTTP %d", resp.StatusCode), "key", key)
+			"cache entry upload, got unexpected HTTP %d", resp.StatusCode), "key", key,
+			"url", generateCacheUploadURLResponse.Url, "extra_headers", generateCacheUploadURLResponse.ExtraHeaders,
+			"body", string(bodyBytes), "body_read_err", bodyReadErr)
 
 		return
 	}
