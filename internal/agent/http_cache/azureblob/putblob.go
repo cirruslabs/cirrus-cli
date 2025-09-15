@@ -86,12 +86,12 @@ func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Re
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
+		bodyBytes, bodyReadErr := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
 
 		fail(writer, request, http.StatusInternalServerError, fmt.Sprintf("failed to perform request to proxy "+
 			"cache entry upload, got unexpected HTTP %d", resp.StatusCode), "key", key,
 			"url", generateCacheUploadURLResponse.Url, "extra_headers", generateCacheUploadURLResponse.ExtraHeaders,
-			"body", string(bodyBytes))
+			"body", string(bodyBytes), "body_read_err", bodyReadErr)
 
 		return
 	}
