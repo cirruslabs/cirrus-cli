@@ -65,6 +65,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.2
 	github.com/IGLOU-EU/go-wildcard v1.0.3
 	github.com/aws/aws-sdk-go v1.55.8
+	github.com/bartventer/httpcache v0.10.2
 	github.com/bmatcuk/doublestar v1.3.4
 	github.com/cirruslabs/chacha v0.16.3
 	github.com/cirruslabs/cirrus-ci-annotations v0.10.0

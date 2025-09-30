@@ -5,26 +5,20 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
-	"github.com/google/go-github/v59/github"
-	lru "github.com/hashicorp/golang-lru"
 	"net/http"
 	"os"
 	"path"
 	"syscall"
 	"time"
+
+	"github.com/bartventer/httpcache"
+	_ "github.com/bartventer/httpcache/store/memcache"
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/google/go-github/v59/github"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var ErrAPI = errors.New("failed to communicate with the GitHub API")
-
-var defaultGitHubClient = github.NewClient(&http.Client{
-	Transport: &http.Transport{
-		MaxIdleConns:        1024,
-		MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
-		IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
-	},
-	Timeout: 11 * time.Second, // GitHub has a 10-second timeout for API requests
-})
 
 type GitHub struct {
 	token     string
@@ -129,11 +123,18 @@ func (gh *GitHub) Join(elem ...string) string {
 }
 
 func (gh *GitHub) client() *github.Client {
+	httpClient := httpcache.NewClient("memcache://")
+
+	// GitHub has a 10-second timeout for API requests
+	httpClient.Timeout = 11 * time.Second
+
+	githubClient := github.NewClient(httpClient)
+
 	if gh.token != "" {
-		return defaultGitHubClient.WithAuthToken(gh.token)
+		return githubClient.WithAuthToken(gh.token)
 	}
 
-	return defaultGitHubClient
+	return githubClient
 }
 
 func (gh *GitHub) getContentsWrapper(
