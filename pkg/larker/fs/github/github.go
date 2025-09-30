@@ -9,10 +9,7 @@ import (
 	"os"
 	"path"
 	"syscall"
-	"time"
 
-	"github.com/bartventer/httpcache"
-	_ "github.com/bartventer/httpcache/store/memcache"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/google/go-github/v59/github"
 	lru "github.com/hashicorp/golang-lru"
@@ -38,7 +35,7 @@ type Contents struct {
 	Directory []*github.RepositoryContent
 }
 
-func New(owner, repo, reference, token string) (*GitHub, error) {
+func New(owner, repo, reference, token string, httpClient *http.Client) (*GitHub, error) {
 	contentsCache, err := lru.New(16)
 	if err != nil {
 		return nil, err
@@ -47,17 +44,6 @@ func New(owner, repo, reference, token string) (*GitHub, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	httpClient := httpcache.NewClient("memcache://", httpcache.WithUpstream(
-		&http.Transport{
-			MaxIdleConns:        1024,
-			MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
-			IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
-		},
-	))
-
-	// GitHub has a 10-second timeout for API requests
-	httpClient.Timeout = 11 * time.Second
 
 	return &GitHub{
 		token:     token,

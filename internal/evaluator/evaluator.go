@@ -5,6 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/bartventer/httpcache"
+	_ "github.com/bartventer/httpcache/store/memcache"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
@@ -23,8 +30,6 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/structpb"
-	"net"
-	"strings"
 )
 
 const pathYAML = ".cirrus.yml"
@@ -97,7 +102,9 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		yamlConfigs = append(yamlConfigs, request.YamlConfig)
 	}
 
-	fs, err := convertFS(request.Fs)
+	httpClient := cachingHTTPClient()
+
+	fs, err := convertFS(request.Fs, httpClient)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to initialize file system: %v", err)
 	}
@@ -109,6 +116,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 			larker.WithFileSystem(fs),
 			larker.WithEnvironment(request.Environment),
 			larker.WithAffectedFiles(request.AffectedFiles),
+			larker.WithHTTPClient(httpClient),
 		)
 
 		lrkResult, err := lrk.MainOptional(ctx, request.StarlarkConfig)
@@ -207,7 +215,9 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 	ctx context.Context,
 	request *api.EvaluateFunctionRequest,
 ) (*api.EvaluateFunctionResponse, error) {
-	fs, err := convertFS(request.Fs)
+	httpClient := cachingHTTPClient()
+
+	fs, err := convertFS(request.Fs, httpClient)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to initialize file system: %v", err)
 	}
@@ -215,6 +225,7 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 	lrk := larker.New(
 		larker.WithFileSystem(fs),
 		larker.WithEnvironment(request.Environment),
+		larker.WithHTTPClient(httpClient),
 	)
 
 	// Run Starlark hook
@@ -281,7 +292,7 @@ func TransformAdditionalInstances(
 	return additionalInstances, nil
 }
 
-func convertFS(apiFS *api.FileSystem) (fs fs.FileSystem, err error) {
+func convertFS(apiFS *api.FileSystem, httpClient *http.Client) (fs fs.FileSystem, err error) {
 	fs = failing.New(ErrNoFS)
 
 	if apiFS == nil {
@@ -292,8 +303,24 @@ func convertFS(apiFS *api.FileSystem) (fs fs.FileSystem, err error) {
 	case *api.FileSystem_Memory_:
 		fs, err = memory.New(impl.Memory.FilesContents)
 	case *api.FileSystem_Github_:
-		fs, err = github.New(impl.Github.Owner, impl.Github.Repo, impl.Github.Reference, impl.Github.Token)
+		fs, err = github.New(impl.Github.Owner, impl.Github.Repo, impl.Github.Reference, impl.Github.Token,
+			httpClient)
 	}
 
 	return fs, err
+}
+
+func cachingHTTPClient() *http.Client {
+	httpClient := httpcache.NewClient("memcache://", httpcache.WithUpstream(
+		&http.Transport{
+			MaxIdleConns:        1024,
+			MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
+			IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
+		},
+	))
+
+	// GitHub has a 10-second timeout for API requests
+	httpClient.Timeout = 11 * time.Second
+
+	return httpClient
 }

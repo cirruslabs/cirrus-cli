@@ -5,6 +5,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/cachinglayer"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
@@ -12,7 +15,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/yamlhelper"
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v3"
-	"time"
 )
 
 var (
@@ -29,6 +31,7 @@ type Larker struct {
 	env           map[string]string
 	affectedFiles []string
 	isTest        bool
+	httpClient    *http.Client
 }
 
 type HookResult struct {
@@ -82,7 +85,8 @@ func (larker *Larker) Main(ctx context.Context, source string) (*MainResult, err
 	}
 
 	thread := &starlark.Thread{
-		Load:  loader.NewLoader(ctx, larker.fs, larker.env, larker.affectedFiles, larker.isTest).LoadFunc(larker.fs),
+		Load: loader.NewLoader(ctx, larker.fs, larker.env, larker.affectedFiles, larker.isTest, larker.httpClient).
+			LoadFunc(larker.fs),
 		Print: capture,
 	}
 
@@ -193,7 +197,8 @@ func (larker *Larker) Hook(
 	}
 
 	thread := &starlark.Thread{
-		Load:  loader.NewLoader(ctx, larker.fs, larker.env, []string{}, larker.isTest).LoadFunc(larker.fs),
+		Load: loader.NewLoader(ctx, larker.fs, larker.env, []string{}, larker.isTest, larker.httpClient).
+			LoadFunc(larker.fs),
 		Print: capture,
 	}
 
