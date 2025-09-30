@@ -20,6 +20,21 @@ import (
 
 var ErrAPI = errors.New("failed to communicate with the GitHub API")
 
+var httpClient *http.Client
+
+func init() {
+	httpClient = httpcache.NewClient("memcache://", httpcache.WithUpstream(
+		&http.Transport{
+			MaxIdleConns:        1024,
+			MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
+			IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
+		},
+	))
+
+	// GitHub has a 10-second timeout for API requests
+	httpClient.Timeout = 11 * time.Second
+}
+
 type GitHub struct {
 	token     string
 	owner     string
@@ -123,17 +138,6 @@ func (gh *GitHub) Join(elem ...string) string {
 }
 
 func (gh *GitHub) client() *github.Client {
-	httpClient := httpcache.NewClient("memcache://", httpcache.WithUpstream(
-		&http.Transport{
-			MaxIdleConns:        1024,
-			MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
-			IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
-		},
-	))
-
-	// GitHub has a 10-second timeout for API requests
-	httpClient.Timeout = 11 * time.Second
-
 	githubClient := github.NewClient(httpClient)
 
 	if gh.token != "" {
