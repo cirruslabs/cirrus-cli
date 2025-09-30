@@ -20,19 +20,6 @@ import (
 
 var ErrAPI = errors.New("failed to communicate with the GitHub API")
 
-var httpClient = httpcache.NewClient("memcache://", httpcache.WithUpstream(
-	&http.Transport{
-		MaxIdleConns:        1024,
-		MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
-		IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
-	},
-))
-
-func init() {
-	// GitHub has a 10-second timeout for API requests
-	httpClient.Timeout = 11 * time.Second
-}
-
 type GitHub struct {
 	token     string
 	owner     string
@@ -41,6 +28,7 @@ type GitHub struct {
 
 	contentsCache  *lru.Cache
 	fileInfosCache *lru.Cache
+	githubClient   *github.Client
 
 	apiCallCount uint64
 }
@@ -60,6 +48,17 @@ func New(owner, repo, reference, token string) (*GitHub, error) {
 		return nil, err
 	}
 
+	httpClient := httpcache.NewClient("memcache://", httpcache.WithUpstream(
+		&http.Transport{
+			MaxIdleConns:        1024,
+			MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
+			IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
+		},
+	))
+
+	// GitHub has a 10-second timeout for API requests
+	httpClient.Timeout = 11 * time.Second
+
 	return &GitHub{
 		token:     token,
 		owner:     owner,
@@ -68,6 +67,7 @@ func New(owner, repo, reference, token string) (*GitHub, error) {
 
 		contentsCache:  contentsCache,
 		fileInfosCache: fileInfosCache,
+		githubClient:   github.NewClient(httpClient),
 	}, nil
 }
 
@@ -136,13 +136,11 @@ func (gh *GitHub) Join(elem ...string) string {
 }
 
 func (gh *GitHub) client() *github.Client {
-	githubClient := github.NewClient(httpClient)
-
 	if gh.token != "" {
-		return githubClient.WithAuthToken(gh.token)
+		return gh.githubClient.WithAuthToken(gh.token)
 	}
 
-	return githubClient
+	return gh.githubClient
 }
 
 func (gh *GitHub) getContentsWrapper(
