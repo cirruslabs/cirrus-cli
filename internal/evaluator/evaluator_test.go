@@ -492,7 +492,7 @@ def main(ctx):
 					Repo:      "cirrus-cli",
 					Reference: "main",
 					HttpCache: &api.FileSystem_Github_HTTPCache{
-						Tenant: "cirruslabs/cirrus-cli",
+						Tenant: "tenant1",
 						Size:   64 * 1024,
 					},
 				},
@@ -501,5 +501,26 @@ def main(ctx):
 	}, evaluator.WithRoundTripperForTests(mockTransport))
 	require.NoError(t, err)
 	require.Equal(t, 1, mockTransport.GetTotalCallCount())
+	require.Equal(t, "Hello, World!\nHello, World!\n", string(response.OutputLogs))
+
+	// Ensure that the other tenant does not reuse our cache
+	response, err = evaluateConfigHelper(t, &api.EvaluateConfigRequest{
+		StarlarkConfig: starlarkConfig,
+		Fs: &api.FileSystem{
+			Impl: &api.FileSystem_Github_{
+				Github: &api.FileSystem_Github{
+					Owner:     "cirruslabs",
+					Repo:      "cirrus-cli",
+					Reference: "main",
+					HttpCache: &api.FileSystem_Github_HTTPCache{
+						Tenant: "tenant2",
+						Size:   64 * 1024,
+					},
+				},
+			},
+		},
+	}, evaluator.WithRoundTripperForTests(mockTransport))
+	require.NoError(t, err)
+	require.Equal(t, 2, mockTransport.GetTotalCallCount())
 	require.Equal(t, "Hello, World!\nHello, World!\n", string(response.OutputLogs))
 }
