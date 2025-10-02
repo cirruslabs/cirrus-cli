@@ -111,8 +111,8 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 
 	var httpClient *http.Client
 
-	if githubFS, ok := request.Fs.Impl.(*api.FileSystem_Github_); ok {
-		if httpCache := githubFS.Github.GetHttpCache(); httpCache != nil {
+	if githubFS := request.GetFs().GetGithub(); githubFS != nil {
+		if httpCache := githubFS.GetHttpCache(); httpCache != nil {
 			httpClient = r.cachingHTTPClient(httpCache.GetTenant(), httpCache.GetSize())
 		}
 	}
@@ -230,8 +230,8 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 ) (*api.EvaluateFunctionResponse, error) {
 	var httpClient *http.Client
 
-	if githubFS, ok := request.Fs.Impl.(*api.FileSystem_Github_); ok {
-		if httpCache := githubFS.Github.GetHttpCache(); httpCache != nil {
+	if githubFS := request.GetFs().GetGithub(); githubFS != nil {
+		if httpCache := githubFS.GetHttpCache(); httpCache != nil {
 			httpClient = r.cachingHTTPClient(httpCache.GetTenant(), httpCache.GetSize())
 		}
 	}
