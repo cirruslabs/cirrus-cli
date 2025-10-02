@@ -58,10 +58,16 @@ message FileSystem {
   }
 
   message Github {
+    message HTTPCache {
+      string tenant = 1;
+      int32 size = 2;
+    }
+
     string owner = 1;
     string repo = 2;
     string reference = 3;
     string token = 4;
+    HTTPCache http_cache = 5;
   }
 
   oneof impl {

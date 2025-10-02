@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/bartventer/httpcache"
-	_ "github.com/bartventer/httpcache/store/memcache"
+	_ "github.com/cirruslabs/cirrus-cli/internal/evaluator/lrucache"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker"
@@ -21,6 +21,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/memory"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser"
 	"github.com/cirruslabs/cirrus-cli/pkg/parser/parsererror"
+	"github.com/jellydator/ttlcache/v3"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/metric/noop"
 	"google.golang.org/grpc"
@@ -38,6 +39,8 @@ const pathStarlark = ".cirrus.star"
 var ErrNoFS = errors.New("no filesystem available")
 
 type ConfigurationEvaluatorServiceServer struct {
+	perTenantCachingHTTPClients *ttlcache.Cache[string, *http.Client]
+
 	// must be embedded to have forward compatible implementations
 	api.UnimplementedCirrusConfigurationEvaluatorServiceServer
 }
@@ -67,7 +70,11 @@ func Serve(ctx context.Context, lis net.Listener) error {
 		)),
 	)
 
-	api.RegisterCirrusConfigurationEvaluatorServiceServer(server, &ConfigurationEvaluatorServiceServer{})
+	api.RegisterCirrusConfigurationEvaluatorServiceServer(server, &ConfigurationEvaluatorServiceServer{
+		perTenantCachingHTTPClients: ttlcache.New[string, *http.Client](
+			ttlcache.WithTTL[string, *http.Client](24 * time.Hour),
+		),
+	})
 
 	errChan := make(chan error)
 
@@ -102,7 +109,13 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateConfig(
 		yamlConfigs = append(yamlConfigs, request.YamlConfig)
 	}
 
-	httpClient := cachingHTTPClient()
+	var httpClient *http.Client
+
+	if githubFS, ok := request.Fs.Impl.(*api.FileSystem_Github_); ok {
+		if httpCache := githubFS.Github.GetHttpCache(); httpCache != nil {
+			httpClient = r.cachingHTTPClient(httpCache.GetTenant(), httpCache.GetSize())
+		}
+	}
 
 	fs, err := convertFS(request.Fs, httpClient)
 	if err != nil {
@@ -215,7 +228,13 @@ func (r *ConfigurationEvaluatorServiceServer) EvaluateFunction(
 	ctx context.Context,
 	request *api.EvaluateFunctionRequest,
 ) (*api.EvaluateFunctionResponse, error) {
-	httpClient := cachingHTTPClient()
+	var httpClient *http.Client
+
+	if githubFS, ok := request.Fs.Impl.(*api.FileSystem_Github_); ok {
+		if httpCache := githubFS.Github.GetHttpCache(); httpCache != nil {
+			httpClient = r.cachingHTTPClient(httpCache.GetTenant(), httpCache.GetSize())
+		}
+	}
 
 	fs, err := convertFS(request.Fs, httpClient)
 	if err != nil {
@@ -310,17 +329,27 @@ func convertFS(apiFS *api.FileSystem, httpClient *http.Client) (fs fs.FileSystem
 	return fs, err
 }
 
-func cachingHTTPClient() *http.Client {
-	httpClient := httpcache.NewClient("memcache://", httpcache.WithUpstream(
-		&http.Transport{
-			MaxIdleConns:        1024,
-			MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
-			IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
-		},
-	))
+func (r *ConfigurationEvaluatorServiceServer) cachingHTTPClient(tenant string, size int32) *http.Client {
+	if tenant == "" || size == 0 {
+		return nil
+	}
 
-	// GitHub has a 10-second timeout for API requests
-	httpClient.Timeout = 11 * time.Second
+	httpClient, _ := r.perTenantCachingHTTPClients.GetOrSetFunc(tenant, func() *http.Client {
+		dsn := fmt.Sprintf("lrucache://?size=%d", size)
 
-	return httpClient
+		httpClient := httpcache.NewClient(dsn, httpcache.WithUpstream(
+			&http.Transport{
+				MaxIdleConns:        1024,
+				MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
+				IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
+			},
+		))
+
+		// GitHub has a 10-second timeout for API requests
+		httpClient.Timeout = 11 * time.Second
+
+		return httpClient
+	})
+
+	return httpClient.Value()
 }
