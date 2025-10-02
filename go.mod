@@ -77,6 +77,7 @@ require (
 	github.com/google/go-github/v59 v59.0.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/hashicorp/vault/api v1.21.0
+	github.com/jarcoal/httpmock v1.4.1
 	github.com/jellydator/ttlcache/v3 v3.4.0
 	github.com/klauspost/pgzip v1.2.6
 	github.com/pkg/errors v0.9.1

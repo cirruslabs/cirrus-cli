@@ -40,6 +40,7 @@ var ErrNoFS = errors.New("no filesystem available")
 
 type ConfigurationEvaluatorServiceServer struct {
 	perTenantCachingHTTPClients *ttlcache.Cache[string, *http.Client]
+	roundTripperForTests        http.RoundTripper
 
 	// must be embedded to have forward compatible implementations
 	api.UnimplementedCirrusConfigurationEvaluatorServiceServer
@@ -62,7 +63,7 @@ func addVersion(
 	return handler(ctx, req)
 }
 
-func Serve(ctx context.Context, lis net.Listener) error {
+func Serve(ctx context.Context, lis net.Listener, opts ...Option) error {
 	server := grpc.NewServer(
 		grpc.UnaryInterceptor(addVersion),
 		grpc.StatsHandler(otelgrpc.NewServerHandler(
@@ -70,11 +71,18 @@ func Serve(ctx context.Context, lis net.Listener) error {
 		)),
 	)
 
-	api.RegisterCirrusConfigurationEvaluatorServiceServer(server, &ConfigurationEvaluatorServiceServer{
+	r := &ConfigurationEvaluatorServiceServer{
 		perTenantCachingHTTPClients: ttlcache.New[string, *http.Client](
 			ttlcache.WithTTL[string, *http.Client](24 * time.Hour),
 		),
-	})
+	}
+
+	// Apply opts
+	for _, opt := range opts {
+		opt(r)
+	}
+
+	api.RegisterCirrusConfigurationEvaluatorServiceServer(server, r)
 
 	errChan := make(chan error)
 
@@ -337,13 +345,7 @@ func (r *ConfigurationEvaluatorServiceServer) cachingHTTPClient(tenant string, s
 	httpClient, _ := r.perTenantCachingHTTPClients.GetOrSetFunc(tenant, func() *http.Client {
 		dsn := fmt.Sprintf("lrucache://?size=%d", size)
 
-		httpClient := httpcache.NewClient(dsn, httpcache.WithUpstream(
-			&http.Transport{
-				MaxIdleConns:        1024,
-				MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
-				IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
-			},
-		))
+		httpClient := httpcache.NewClient(dsn, httpcache.WithUpstream(r.roundTripper()))
 
 		// GitHub has a 10-second timeout for API requests
 		httpClient.Timeout = 11 * time.Second
@@ -352,4 +354,16 @@ func (r *ConfigurationEvaluatorServiceServer) cachingHTTPClient(tenant string, s
 	})
 
 	return httpClient.Value()
+}
+
+func (r *ConfigurationEvaluatorServiceServer) roundTripper() http.RoundTripper {
+	if r.roundTripperForTests != nil {
+		return r.roundTripperForTests
+	}
+
+	return &http.Transport{
+		MaxIdleConns:        1024,
+		MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
+		IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
+	}
 }

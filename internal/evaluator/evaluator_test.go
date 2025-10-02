@@ -4,12 +4,22 @@
 package evaluator_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"io"
+	"net"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/evaluator"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/google/go-github/v59/github"
+	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/xeipuuv/gojsonschema"
@@ -21,12 +31,9 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
-	"net"
-	"testing"
-	"time"
 )
 
-func getClient(t *testing.T) api.CirrusConfigurationEvaluatorServiceClient {
+func getClient(t *testing.T, opts ...evaluator.Option) api.CirrusConfigurationEvaluatorServiceClient {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	lis, err := net.Listen("tcp", "localhost:0")
@@ -37,7 +44,7 @@ func getClient(t *testing.T) api.CirrusConfigurationEvaluatorServiceClient {
 	errChan := make(chan error)
 
 	go func() {
-		errChan <- evaluator.Serve(ctx, lis)
+		errChan <- evaluator.Serve(ctx, lis, opts...)
 	}()
 
 	t.Cleanup(func() {
@@ -56,8 +63,8 @@ func getClient(t *testing.T) api.CirrusConfigurationEvaluatorServiceClient {
 	return api.NewCirrusConfigurationEvaluatorServiceClient(conn)
 }
 
-func evaluateConfigHelper(t *testing.T, request *api.EvaluateConfigRequest) (*api.EvaluateConfigResponse, error) {
-	return getClient(t).EvaluateConfig(context.Background(), request)
+func evaluateConfigHelper(t *testing.T, request *api.EvaluateConfigRequest, opts ...evaluator.Option) (*api.EvaluateConfigResponse, error) {
+	return getClient(t, opts...).EvaluateConfig(context.Background(), request)
 }
 
 func schemaHelper(t *testing.T, request *api.JSONSchemaRequest) (*api.JSONSchemaResponse, error) {
@@ -447,4 +454,52 @@ func TestBacktraceHook(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(response.OutputLogs), "hook\nsentinel\n")
 	require.Contains(t, string(response.OutputLogs), "Traceback (most recent call last):\n  .cirrus.star:6:10")
+}
+
+func TestGitHubHTTPCache(t *testing.T) {
+	mockTransport := httpmock.NewMockTransport()
+
+	mockTransport.RegisterResponder("GET", "https://api.github.com/repos/cirruslabs/cirrus-cli/contents/README.md?ref=main", func(req *http.Request) (*http.Response, error) {
+		githubRepositoryContent := github.RepositoryContent{
+			Content: github.String(base64.StdEncoding.EncodeToString([]byte("Hello, World!"))),
+		}
+
+		githubRepositoryContentJSON, err := json.Marshal(&githubRepositoryContent)
+		require.NoError(t, err)
+
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Header:     http.Header{},
+			Body:       io.NopCloser(bytes.NewReader(githubRepositoryContentJSON)),
+		}, nil
+	})
+
+	starlarkConfig := `load("cirrus", "fs")
+def main(ctx):
+    print(fs.read("README.md"))
+
+    print(fs.read("README.md"))
+
+    return []
+`
+
+	response, err := evaluateConfigHelper(t, &api.EvaluateConfigRequest{
+		StarlarkConfig: starlarkConfig,
+		Fs: &api.FileSystem{
+			Impl: &api.FileSystem_Github_{
+				Github: &api.FileSystem_Github{
+					Owner:     "cirruslabs",
+					Repo:      "cirrus-cli",
+					Reference: "main",
+					HttpCache: &api.FileSystem_Github_HTTPCache{
+						Tenant: "cirruslabs/cirrus-cli",
+						Size:   64 * 1024,
+					},
+				},
+			},
+		},
+	}, evaluator.WithRoundTripperForTests(mockTransport))
+	require.NoError(t, err)
+	require.Equal(t, 1, mockTransport.GetTotalCallCount())
+	require.Equal(t, "Hello, World!\nHello, World!\n", string(response.OutputLogs))
 }
