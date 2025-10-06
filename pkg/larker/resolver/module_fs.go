@@ -3,12 +3,14 @@ package resolver
 import (
 	"context"
 	"errors"
+	"net/http"
+	"path"
+	"regexp"
+
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/git"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/scopedlayer"
-	"path"
-	"regexp"
 )
 
 type relativeLocation struct {
@@ -100,8 +102,9 @@ func FindModuleFS(
 	currentFS fs.FileSystem,
 	env map[string]string,
 	module string,
+	httpClient *http.Client,
 ) (fs.FileSystem, string, error) {
-	return findLocatorFS(ctx, currentFS, env, parseLocation(module))
+	return findLocatorFS(ctx, currentFS, env, parseLocation(module), httpClient)
 }
 
 func findLocatorFS(
@@ -109,12 +112,13 @@ func findLocatorFS(
 	currentFS fs.FileSystem,
 	env map[string]string,
 	location interface{},
+	httpClient *http.Client,
 ) (fs.FileSystem, string, error) {
 	switch typedLocation := location.(type) {
 	case gitHubLocation:
 		token := env["CIRRUS_REPO_CLONE_TOKEN"]
 
-		ghFS, err := github.New(typedLocation.Owner, typedLocation.Name, typedLocation.Revision, token)
+		ghFS, err := github.New(typedLocation.Owner, typedLocation.Name, typedLocation.Revision, token, httpClient)
 		if err != nil {
 			return nil, "", err
 		}

@@ -5,26 +5,17 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
-	"github.com/google/go-github/v59/github"
-	lru "github.com/hashicorp/golang-lru"
 	"net/http"
 	"os"
 	"path"
 	"syscall"
-	"time"
+
+	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
+	"github.com/google/go-github/v59/github"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var ErrAPI = errors.New("failed to communicate with the GitHub API")
-
-var defaultGitHubClient = github.NewClient(&http.Client{
-	Transport: &http.Transport{
-		MaxIdleConns:        1024,
-		MaxIdleConnsPerHost: 1024,        // default is 2 which is too small and we mostly access the same host
-		IdleConnTimeout:     time.Minute, // let's put something big but not infinite like the default
-	},
-	Timeout: 11 * time.Second, // GitHub has a 10-second timeout for API requests
-})
 
 type GitHub struct {
 	token     string
@@ -34,6 +25,7 @@ type GitHub struct {
 
 	contentsCache  *lru.Cache
 	fileInfosCache *lru.Cache
+	githubClient   *github.Client
 
 	apiCallCount uint64
 }
@@ -43,7 +35,7 @@ type Contents struct {
 	Directory []*github.RepositoryContent
 }
 
-func New(owner, repo, reference, token string) (*GitHub, error) {
+func New(owner, repo, reference, token string, httpClient *http.Client) (*GitHub, error) {
 	contentsCache, err := lru.New(16)
 	if err != nil {
 		return nil, err
@@ -61,6 +53,7 @@ func New(owner, repo, reference, token string) (*GitHub, error) {
 
 		contentsCache:  contentsCache,
 		fileInfosCache: fileInfosCache,
+		githubClient:   github.NewClient(httpClient),
 	}, nil
 }
 
@@ -130,10 +123,10 @@ func (gh *GitHub) Join(elem ...string) string {
 
 func (gh *GitHub) client() *github.Client {
 	if gh.token != "" {
-		return defaultGitHubClient.WithAuthToken(gh.token)
+		return gh.githubClient.WithAuthToken(gh.token)
 	}
 
-	return defaultGitHubClient
+	return gh.githubClient
 }
 
 func (gh *GitHub) getContentsWrapper(

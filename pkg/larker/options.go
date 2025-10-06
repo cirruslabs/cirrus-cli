@@ -1,6 +1,8 @@
 package larker
 
 import (
+	"net/http"
+
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 )
 
@@ -27,5 +29,11 @@ func WithAffectedFiles(affectedFiles []string) Option {
 func WithTestMode() Option {
 	return func(e *Larker) {
 		e.isTest = true
+	}
+}
+
+func WithHTTPClient(httpClient *http.Client) Option {
+	return func(e *Larker) {
+		e.httpClient = httpClient
 	}
 }

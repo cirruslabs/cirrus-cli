@@ -3,9 +3,10 @@ package resolver
 
 import (
 	"context"
+	"testing"
+
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/dummy"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestParse(t *testing.T) {
@@ -109,7 +110,7 @@ func TestRetrieve(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
-			filesystem, path, err := findLocatorFS(context.Background(), dummy.New(), make(map[string]string), testCase.Locator)
+			filesystem, path, err := findLocatorFS(context.Background(), dummy.New(), make(map[string]string), testCase.Locator, nil)
 			if err != nil {
 				t.Fatal(err)
 			}

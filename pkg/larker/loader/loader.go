@@ -4,21 +4,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/builtin"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/resolver"
 	"github.com/qri-io/starlib/encoding/base64"
 	"github.com/qri-io/starlib/encoding/yaml"
 	"github.com/qri-io/starlib/hash"
-	"github.com/qri-io/starlib/http"
+	starhttp "github.com/qri-io/starlib/http"
 	"github.com/qri-io/starlib/re"
 	"github.com/qri-io/starlib/zipfile"
 	starlarkjson "go.starlark.net/lib/json"
 	"go.starlark.net/starlark"
 	"go.starlark.net/starlarkstruct"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 var (
@@ -37,6 +39,7 @@ type Loader struct {
 	env           map[string]string
 	affectedFiles []string
 	isTest        bool
+	httpClient    *http.Client
 }
 
 func NewLoader(
@@ -45,6 +48,7 @@ func NewLoader(
 	env map[string]string,
 	affectedFiles []string,
 	isTest bool,
+	httpClient *http.Client,
 ) *Loader {
 	return &Loader{
 		ctx:           ctx,
@@ -53,11 +57,12 @@ func NewLoader(
 		env:           env,
 		affectedFiles: affectedFiles,
 		isTest:        isTest,
+		httpClient:    httpClient,
 	}
 }
 
 func (loader *Loader) ResolveFS(currentFS fs.FileSystem, locator string) (fs.FileSystem, string, error) {
-	return resolver.FindModuleFS(loader.ctx, currentFS, loader.env, locator)
+	return resolver.FindModuleFS(loader.ctx, currentFS, loader.env, locator, loader.httpClient)
 }
 
 func (loader *Loader) LoadFunc(
@@ -144,7 +149,7 @@ func (loader *Loader) loadCirrusModule() (starlark.StringDict, error) {
 		}),
 	}
 
-	httpModule, err := http.LoadModule()
+	httpModule, err := starhttp.LoadModule()
 	if err != nil {
 		return nil, err
 	}

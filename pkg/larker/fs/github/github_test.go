@@ -2,11 +2,12 @@ package github_test
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/github"
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/fs/githubfixture"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func possiblySkip(t *testing.T) {
@@ -18,7 +19,7 @@ func possiblySkip(t *testing.T) {
 func TestGitHubFixture(t *testing.T) {
 	possiblySkip(t)
 
-	ghFS, err := github.New(githubfixture.Owner, githubfixture.Repo, githubfixture.Reference, "")
+	ghFS, err := github.New(githubfixture.Owner, githubfixture.Repo, githubfixture.Reference, "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +30,7 @@ func TestGitHubFixture(t *testing.T) {
 func TestStatUsesFileInfosCache(t *testing.T) {
 	possiblySkip(t)
 
-	fileSystem, err := github.New("cirruslabs", "cirrus-cli", "main", "")
+	fileSystem, err := github.New("cirruslabs", "cirrus-cli", "main", "", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
