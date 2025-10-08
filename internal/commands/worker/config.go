@@ -4,21 +4,23 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor/endpoint"
 	"github.com/cirruslabs/cirrus-cli/internal/worker"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/tuning"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/dustin/go-humanize"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"gopkg.in/yaml.v3"
-	"io"
-	"os"
-	"strconv"
-	"strings"
 )
 
 var ErrConfiguration = errors.New("configuration error")
@@ -37,6 +39,8 @@ type Config struct {
 	Upstreams []ConfigUpstream `yaml:"upstreams"`
 
 	Security *security.Security `yaml:"security"`
+
+	Tuning *tuning.Tuning `yaml:"tuning"`
 
 	Standby *worker.StandbyConfig `yaml:"standby"`
 
@@ -232,6 +236,10 @@ func buildWorker(output io.Writer, opts ...worker.Option) (*worker.Worker, error
 		opts = append(opts, worker.WithResourceModifiersManager(
 			resourcemodifier.NewManager(config.ResourceModifiers...),
 		))
+	}
+
+	if config.Tuning != nil {
+		opts = append(opts, worker.WithTuning(config.Tuning))
 	}
 
 	if config.TartPrePull != nil {

@@ -15,6 +15,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/tuning"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 )
 
@@ -24,6 +25,7 @@ func New(
 	isolation *api.Isolation,
 	security *security.Security,
 	resourceModifier *resourcemodifier.Modifier,
+	tuning *tuning.Tuning,
 	logger logger.Lightweight,
 ) (abstract.Instance, error) {
 	if isolation == nil {
@@ -74,7 +76,7 @@ func New(
 	case *api.Isolation_Tart_:
 		return newTart(iso, security, logger)
 	case *api.Isolation_Vetu_:
-		return newVetu(iso, security, resourceModifier, logger)
+		return newVetu(iso, security, resourceModifier, tuning, logger)
 	default:
 		return nil, fmt.Errorf("%w: unsupported isolation type %T", ErrInvalidIsolation, iso)
 	}
@@ -137,6 +139,7 @@ func newVetu(
 	iso *api.Isolation_Vetu_,
 	security *security.Security,
 	resourceModifier *resourcemodifier.Modifier,
+	tuning *tuning.Tuning,
 	logger logger.Lightweight,
 ) (*vetu.Vetu, error) {
 	vetuPolicy := security.VetuPolicy()
@@ -174,5 +177,5 @@ func newVetu(
 	}
 
 	return vetu.New(iso.Vetu.Image, iso.Vetu.User, iso.Vetu.Password, uint16(iso.Vetu.Port),
-		iso.Vetu.Cpu, iso.Vetu.Memory, resourceModifier, opts...)
+		iso.Vetu.Cpu, iso.Vetu.Memory, resourceModifier, tuning, opts...)
 }

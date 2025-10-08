@@ -119,7 +119,7 @@ func (worker *Worker) getInstance(
 
 	// Otherwise proceed with creating a new instance
 	return persistentworker.New(isolation, worker.security,
-		worker.resourceModifierManager.Acquire(resourcesToUse), worker.logger)
+		worker.resourceModifierManager.Acquire(resourcesToUse), worker.tuning, worker.logger)
 }
 
 func (worker *Worker) runTask(

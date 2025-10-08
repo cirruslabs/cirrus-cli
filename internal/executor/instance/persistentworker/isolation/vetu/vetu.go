@@ -14,6 +14,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/tuning"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
@@ -44,6 +45,7 @@ type Vetu struct {
 	bridgedInterface     string
 	hostNetworking       bool
 	resourceModifier     *resourcemodifier.Modifier
+	tuning               *tuning.Tuning
 	syncTimeOverSSH      bool
 	standardOutputToLogs bool
 
@@ -58,6 +60,7 @@ func New(
 	cpu uint32,
 	memory uint32,
 	resourceModifier *resourcemodifier.Modifier,
+	tuning *tuning.Tuning,
 	opts ...Option,
 ) (*Vetu, error) {
 	vetu := &Vetu{
@@ -68,6 +71,7 @@ func New(
 		cpu:              cpu,
 		memory:           memory,
 		resourceModifier: resourceModifier,
+		tuning:           tuning,
 	}
 
 	// Apply options
@@ -125,7 +129,7 @@ func (vetu *Vetu) bootVM(
 	tmpVMName := vmNamePrefix + identToBeInjected + uuid.NewString()
 
 	vm, err := NewVMClonedFrom(ctx, vetu.vmName, tmpVMName, lazyPull, env, vetu.standardOutputToLogs,
-		vetu.resourceModifier, logger)
+		vetu.resourceModifier, vetu.tuning, logger)
 	if err != nil {
 		return fmt.Errorf("%w: failed to create VM cloned from %q: %v", ErrFailed, vetu.vmName, err)
 	}

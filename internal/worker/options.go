@@ -5,6 +5,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/tuning"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/sirupsen/logrus"
@@ -51,6 +52,12 @@ func WithStandby(standby *api.StandbyInstanceParameters) Option {
 func WithResourceModifiersManager(resourceModifiersManager *resourcemodifier.Manager) Option {
 	return func(e *Worker) {
 		e.resourceModifierManager = resourceModifiersManager
+	}
+}
+
+func WithTuning(tuning *tuning.Tuning) Option {
+	return func(e *Worker) {
+		e.tuning = tuning
 	}
 }
 
