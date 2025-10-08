@@ -19,6 +19,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/tuning"
 	upstreampkg "github.com/cirruslabs/cirrus-cli/internal/worker/upstream"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/echelon"
@@ -44,6 +45,7 @@ type Worker struct {
 
 	security                *security.Security
 	resourceModifierManager *resourcemodifier.Manager
+	tuning                  *tuning.Tuning
 
 	userSpecifiedLabels    map[string]string
 	userSpecifiedResources map[string]float64
@@ -257,7 +259,7 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) error {
 	worker.logger.Debugf("creating a new standby instance with isolation %s", worker.standbyParameters.Isolation)
 
 	standbyInstance, err := persistentworker.New(worker.standbyParameters.Isolation, worker.security,
-		worker.resourceModifierManager.Acquire(worker.standbyParameters.Resources), worker.logger)
+		worker.resourceModifierManager.Acquire(worker.standbyParameters.Resources), worker.tuning, worker.logger)
 	if err != nil {
 		worker.logger.Errorf("failed to create a standby instance: %v", err)
 

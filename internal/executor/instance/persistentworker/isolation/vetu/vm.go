@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
+	"github.com/cirruslabs/cirrus-cli/internal/worker/tuning"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
 	"go.opentelemetry.io/otel/trace"
@@ -17,6 +18,7 @@ type VM struct {
 	env                  map[string]string
 	standardOutputToLogs bool
 	resourceModifier     *resourcemodifier.Modifier
+	tuning               *tuning.Tuning
 	runningVMCtx         context.Context
 	runningVMCtxCancel   context.CancelFunc
 	wg                   sync.WaitGroup
@@ -31,6 +33,7 @@ func NewVMClonedFrom(
 	env map[string]string,
 	standardOutputToLogs bool,
 	resourceModifier *resourcemodifier.Modifier,
+	tuning *tuning.Tuning,
 	logger *echelon.Logger,
 ) (*VM, error) {
 	runningVMCtx, runningVMCtxCancel := context.WithCancel(
@@ -42,6 +45,7 @@ func NewVMClonedFrom(
 		env:                  env,
 		standardOutputToLogs: standardOutputToLogs,
 		resourceModifier:     resourceModifier,
+		tuning:               tuning,
 		runningVMCtx:         runningVMCtx,
 		runningVMCtxCancel:   runningVMCtxCancel,
 		errChan:              make(chan error, 1),
@@ -138,6 +142,10 @@ func (vm *VM) Start(
 			args = append(args, "--net-bridged", bridgedInterface)
 		} else if hostNetworking {
 			args = append(args, "--net-host")
+		}
+
+		if mtu := vm.tuning.GetVetu().MTU; mtu != 0 {
+			args = append(args, "--net-host-mtu", strconv.Itoa(mtu))
 		}
 
 		// Apply "run" resource modifier
