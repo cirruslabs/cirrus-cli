@@ -6,6 +6,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"runtime"
+	"time"
+
+	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/metrics/source"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/metrics/source/cgroup/cpu"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/metrics/source/cgroup/memory"
@@ -16,9 +21,6 @@ import (
 	gopsutilcpu "github.com/shirou/gopsutil/v3/cpu"
 	gopsutilmem "github.com/shirou/gopsutil/v3/mem"
 	"github.com/sirupsen/logrus"
-	"log"
-	"runtime"
-	"time"
 )
 
 var (
@@ -28,11 +30,13 @@ var (
 )
 
 type Result struct {
-	errors              map[string]error
-	ResourceUtilization *api.ResourceUtilization
+	errors                        map[string]error
+	lastReportedCPUChartOffset    int
+	lastReportedMemoryChartOffset int
+	ResourceUtilization           *api.ResourceUtilization
 }
 
-func (result Result) Errors() []error {
+func (result *Result) Errors() []error {
 	var deduplicatedErrors []error
 
 	for _, err := range result.errors {
@@ -40,6 +44,35 @@ func (result Result) Errors() []error {
 	}
 
 	return deduplicatedErrors
+}
+
+func (result *Result) reportIntermediateResults(ctx context.Context) error {
+	boundedCtx, boundedCtxCancel := context.WithTimeout(ctx, time.Second)
+	defer boundedCtxCancel()
+
+	cpuChartToReport := result.ResourceUtilization.CpuChart[result.lastReportedCPUChartOffset:]
+	memoryChartToReport := result.ResourceUtilization.MemoryChart[result.lastReportedMemoryChartOffset:]
+
+	if client.CirrusClient == nil {
+		return fmt.Errorf("skipping intermediate results reporting because gRPC client was not initialized")
+	}
+
+	if _, err := client.CirrusClient.ReportAgentResourceUtilization(boundedCtx, &api.ReportAgentResourceUtilizationRequest{
+		TaskIdentification: client.CirrusTaskIdentification,
+		ResourceUtilization: &api.ResourceUtilization{
+			CpuChart:    cpuChartToReport,
+			MemoryChart: memoryChartToReport,
+			CpuTotal:    result.ResourceUtilization.CpuTotal,
+			MemoryTotal: result.ResourceUtilization.MemoryTotal,
+		},
+	}); err != nil {
+		return err
+	} else {
+		result.lastReportedCPUChartOffset += len(cpuChartToReport)
+		result.lastReportedMemoryChartOffset += len(memoryChartToReport)
+	}
+
+	return nil
 }
 
 func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
@@ -148,6 +181,11 @@ func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
 					SecondsFromStart: uint32(timeSinceStart.Seconds()),
 					Value:            amountMemoryUsed,
 				})
+			}
+
+			if err := result.reportIntermediateResults(ctx); err != nil {
+				err := fmt.Errorf("failed to report intermediate resource utilization: %w", err)
+				result.errors[err.Error()] = err
 			}
 
 			// Make sure we wait the whole pollInterval

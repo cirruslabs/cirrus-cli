@@ -4,6 +4,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
+	"net"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -15,16 +21,12 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"io"
-	"net"
-	"net/http"
-	"testing"
-	"time"
 )
 
 type cirrusCIMock struct {
-	s3Client *s3.S3
-	s3Bucket *string
+	s3Client                         *s3.S3
+	s3Bucket                         *string
+	intermediateResourceUtilizations []*api.ResourceUtilization
 
 	api.UnimplementedCirrusCIServiceServer
 }
@@ -44,6 +46,12 @@ func newCirrusCIMock(t *testing.T, s3Client *s3.S3) *cirrusCIMock {
 }
 
 func ClientConn(t *testing.T) *grpc.ClientConn {
+	clientConn, _ := ClientConnWithMock(t)
+
+	return clientConn
+}
+
+func ClientConnWithMock(t *testing.T) (*grpc.ClientConn, *cirrusCIMock) {
 	t.Helper()
 
 	s3Client := S3Client(t)
@@ -51,9 +59,11 @@ func ClientConn(t *testing.T) *grpc.ClientConn {
 	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 
+	cirrusCIMock := newCirrusCIMock(t, s3Client)
+
 	go func() {
 		server := grpc.NewServer()
-		api.RegisterCirrusCIServiceServer(server, newCirrusCIMock(t, s3Client))
+		api.RegisterCirrusCIServiceServer(server, cirrusCIMock)
 		require.NoError(t, server.Serve(lis))
 	}()
 
@@ -61,7 +71,7 @@ func ClientConn(t *testing.T) *grpc.ClientConn {
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
 	require.NoError(t, err)
 
-	return clientConn
+	return clientConn, cirrusCIMock
 }
 
 func (mock *cirrusCIMock) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
