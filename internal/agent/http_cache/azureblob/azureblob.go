@@ -4,16 +4,17 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"log"
+	"log/slog"
+	"net/http"
+	"strings"
+
 	uploadablepkg "github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/uploadable"
 	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 	"github.com/puzpuzpuz/xsync/v3"
 	"github.com/samber/lo"
-	"log"
-	"log/slog"
-	"net/http"
-	"strings"
 )
 
 const APIMountPoint = "/_azureblob/cirrus-runners-cache"
@@ -31,14 +32,20 @@ type AzureBlob struct {
 	uploadables                  *xsync.MapOf[string, *uploadablepkg.Uploadable]
 	potentiallyCachingHTTPClient *http.Client
 	chachaEnabled                bool
+	withUnexpectedEOFReader      bool
 }
 
-func New(potentiallyCachingHTTPClient *http.Client, chachaEnabled bool) *AzureBlob {
+func New(potentiallyCachingHTTPClient *http.Client, chachaEnabled bool, opts ...Option) *AzureBlob {
 	azureBlobContainer := &AzureBlob{
 		mux:                          http.NewServeMux(),
 		uploadables:                  xsync.NewMapOf[string, *uploadablepkg.Uploadable](),
 		potentiallyCachingHTTPClient: potentiallyCachingHTTPClient,
 		chachaEnabled:                chachaEnabled,
+	}
+
+	// Apply opts
+	for _, opt := range opts {
+		opt(azureBlobContainer)
 	}
 
 	azureBlobContainer.mux.HandleFunc("GET /{key...}", azureBlobContainer.getBlobAbstract)
@@ -93,18 +100,37 @@ func fail(writer http.ResponseWriter, request *http.Request, status int, msg str
 		hub.CaptureException(errors.New(msg))
 	})
 
-	// Format failure message for non-structured consumers
-	var stringBuilder strings.Builder
-	logger := slog.New(slog.NewTextHandler(&stringBuilder, nil))
-	logger.Error(msg, args...)
-	message := stringBuilder.String()
+	message := craftAndLogMessage(slog.LevelError, msg, args...)
 
-	// Report failure to the logger
-	log.Println(message)
+	if writer == nil {
+		return
+	}
 
 	// Report failure to the caller
 	writer.WriteHeader(status)
 	render.XML(writer, request, &statusAndError{
 		Message: message,
 	})
+}
+
+func craftAndLogMessage(level slog.Level, msg string, args ...any) string {
+	// Format failure message for non-structured consumers
+	var stringBuilder strings.Builder
+	logger := slog.New(slog.NewTextHandler(&stringBuilder, nil))
+	switch level {
+	case slog.LevelDebug:
+		logger.Debug(msg, args...)
+	case slog.LevelInfo:
+		logger.Info(msg, args...)
+	case slog.LevelWarn:
+		logger.Warn(msg, args...)
+	case slog.LevelError:
+		logger.Error(msg, args...)
+	}
+	message := stringBuilder.String()
+
+	// Report failure to the logger
+	log.Print(message)
+
+	return message
 }

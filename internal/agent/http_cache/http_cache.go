@@ -5,6 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"log"
+	"net"
+	"net/http"
+	"runtime"
+	"strconv"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache"
@@ -14,13 +22,6 @@ import (
 	"golang.org/x/sync/semaphore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"io"
-	"log"
-	"net"
-	"net/http"
-	"runtime"
-	"strconv"
-	"time"
 )
 
 const (
@@ -32,6 +33,7 @@ const (
 type HTTPCache struct {
 	httpClient                   *http.Client
 	potentiallyCachingHTTPClient *http.Client
+	azureBlobOpts                []azureblob.Option
 }
 
 var sem = semaphore.NewWeighted(int64(runtime.NumCPU() * activeRequestsPerLogicalCPU))
@@ -45,7 +47,12 @@ func DefaultTransport() *http.Transport {
 	}
 }
 
-func Start(ctx context.Context, potentiallyCachingTransport http.RoundTripper, chachaEnabled bool) string {
+func Start(
+	ctx context.Context,
+	potentiallyCachingTransport http.RoundTripper,
+	chachaEnabled bool,
+	opts ...Option,
+) string {
 	httpCache := &HTTPCache{
 		httpClient: &http.Client{
 			Transport: DefaultTransport(),
@@ -55,6 +62,11 @@ func Start(ctx context.Context, potentiallyCachingTransport http.RoundTripper, c
 			Transport: potentiallyCachingTransport,
 			Timeout:   10 * time.Minute,
 		},
+	}
+
+	// Apply opts
+	for _, opt := range opts {
+		opt(httpCache)
 	}
 
 	mux := http.NewServeMux()
@@ -89,7 +101,7 @@ func Start(ctx context.Context, potentiallyCachingTransport http.RoundTripper, c
 		// Partial Azure Blob Service REST API implementation
 		// needed for the GHA cache API v2 to function properly
 		mux.Handle(azureblob.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(azureblob.APIMountPoint,
-			azureblob.New(httpCache.potentiallyCachingHTTPClient, chachaEnabled))))
+			azureblob.New(httpCache.potentiallyCachingHTTPClient, chachaEnabled, httpCache.azureBlobOpts...))))
 
 		httpServer := &http.Server{
 			// Use agent's context as a base for the HTTP cache handlers

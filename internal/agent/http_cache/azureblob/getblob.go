@@ -1,15 +1,22 @@
 package azureblob
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/progressreader"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"github.com/dustin/go-humanize"
 	"io"
 	"log"
 	"net/http"
 	"time"
+
+	"log/slog"
+
+	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/simplerange"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/unexpectedeofreader"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/progressreader"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/dustin/go-humanize"
 )
 
 const PROXY_DOWNLOAD_BUFFER_SIZE = 1024 * 1024
@@ -77,11 +84,17 @@ func (azureBlob *AzureBlob) proxyCacheEntryDownload(
 	}
 
 	// Support HTTP range requests
+	var rangeHeaderToUse string
+
 	if rangeHeader := request.Header.Get("Range"); rangeHeader != "" {
-		req.Header.Set("Range", rangeHeader)
+		rangeHeaderToUse = rangeHeader
 	}
 	if rangeHeader := request.Header.Get("X-Ms-Range"); rangeHeader != "" {
-		req.Header.Set("Range", rangeHeader)
+		rangeHeaderToUse = rangeHeader
+	}
+
+	if rangeHeaderToUse != "" {
+		req.Header.Set("Range", rangeHeaderToUse)
 	}
 
 	resp, err := azureBlob.potentiallyCachingHTTPClient.Do(req)
@@ -132,7 +145,14 @@ func (azureBlob *AzureBlob) proxyCacheEntryDownload(
 	startProxyingAt := time.Now()
 	// we usually proxy large files so let's use a larger buffer
 	largeBuffer := make([]byte, PROXY_DOWNLOAD_BUFFER_SIZE)
-	progressReader := progressreader.New(resp.Body, PROXY_DOWNLOAD_PROGRESS_LOG_INTERVAL, func(bytes int64, duration time.Duration) {
+
+	reader := resp.Body
+
+	if azureBlob.withUnexpectedEOFReader {
+		reader = io.NopCloser(unexpectedeofreader.New(resp.Body))
+	}
+
+	progressReader := progressreader.New(reader, PROXY_DOWNLOAD_PROGRESS_LOG_INTERVAL, func(bytes int64, duration time.Duration) {
 		rate := float64(bytes) / duration.Seconds()
 
 		log.Printf("Proxying cache entry download for %s: %d bytes read in %s (%s/s)",
@@ -140,11 +160,89 @@ func (azureBlob *AzureBlob) proxyCacheEntryDownload(
 	})
 	bytesRead, err := io.CopyBuffer(writer, progressReader, largeBuffer)
 	if err != nil {
-		fail(writer, request, http.StatusInternalServerError, "failed to proxy cache entry download",
+		fail(nil, request, http.StatusInternalServerError, "failed to proxy cache entry download",
 			"err", err, "duration", time.Since(startProxyingAt), "read", bytesRead, "key", key)
+
+		// Try to recover by adjusting Range header and re-issuing the request
+		if errors.Is(err, io.ErrUnexpectedEOF) {
+			bytesRecovered, err := azureBlob.proxyRecover(request.Context(), rangeHeaderToUse, resp, url, bytesRead, writer)
+			if err != nil {
+				craftAndLogMessage(slog.LevelError, "failed to recover proxy cache entry download",
+					"err", err)
+			} else {
+				craftAndLogMessage(slog.LevelInfo, "successfully recovered proxy cache entry download",
+					"read", bytesRecovered, "key", key)
+			}
+		}
 
 		return true
 	}
 
 	return true
+}
+
+func (azureBlob *AzureBlob) proxyRecover(
+	ctx context.Context,
+	rangeHeader string,
+	upstreamResponse *http.Response,
+	url string,
+	bytesRead int64,
+	writer http.ResponseWriter,
+) (int64, error) {
+	var start int64
+	var end *int64
+	var err error
+
+	if rangeHeader != "" {
+		// Take into account the Range header specified in a downstream request
+		start, end, err = simplerange.Parse(rangeHeader)
+		if err != nil {
+			return 0, fmt.Errorf("failed to parse Range header %q: %w", rangeHeader, err)
+		}
+	}
+
+	// Retrieve an identifier from the upstream response
+	// to detect possible object modification
+	var ifRangeValue string
+
+	if eTag := upstreamResponse.Header.Get("ETag"); eTag != "" {
+		ifRangeValue = eTag
+	} else if lastModified := upstreamResponse.Header.Get("Last-Modified"); lastModified != "" {
+		ifRangeValue = lastModified
+	} else {
+		return 0, fmt.Errorf("no ETag or Last-Modifier header found to use for If-Range")
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create an additional request: %w", err)
+	}
+
+	if end != nil {
+		if start+bytesRead > *end {
+			return 0, fmt.Errorf("range start + bytes read (%d) is larger than range end (%d)",
+				start+bytesRead, *end)
+		}
+
+		req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", start+bytesRead, *end))
+	} else {
+		req.Header.Set("Range", fmt.Sprintf("bytes=%d-", start+bytesRead))
+	}
+
+	req.Header.Set("If-Range", ifRangeValue)
+
+	resp, err := azureBlob.potentiallyCachingHTTPClient.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusPartialContent:
+		// Proceed with proxying
+	default:
+		return 0, fmt.Errorf("got unexpected HTTP %d", resp.StatusCode)
+	}
+
+	return io.Copy(writer, resp.Body)
 }
