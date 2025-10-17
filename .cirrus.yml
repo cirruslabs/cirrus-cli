@@ -64,7 +64,7 @@ task:
     role_session_name: cirrus
     region: us-east-2
   ec2_instance:
-    image: ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*
+    image: ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-server-*
     architecture: arm64
     region: us-east-2
     type: a1.metal
@@ -72,6 +72,7 @@ task:
       - device_name: /dev/sda1
         ebs:
           volume_size: 100
+          volume_type: gp3
   install_vetu_script:
     - sudo apt-get update && sudo apt-get -y install apt-transport-https ca-certificates
     - echo "deb [trusted=yes] https://apt.fury.io/cirruslabs/ /" | sudo tee /etc/apt/sources.list.d/cirruslabs.list
@@ -83,7 +84,7 @@ task:
     - export PATH=$PATH:/usr/local/go/bin
     - go test -v -p 1 ./...
   env:
-    CIRRUS_INTERNAL_VETU_VM: ghcr.io/cirruslabs/ubuntu-runner-arm64:latest
+    CIRRUS_INTERNAL_VETU_VM: ghcr.io/cirruslabs/ubuntu:latest
     CIRRUS_INTERNAL_VETU_SSH_PASSWORD: admin
     CIRRUS_INTERNAL_VETU_SSH_USER: admin
     HOME: /root
