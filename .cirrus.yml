@@ -84,7 +84,7 @@ task:
     - export PATH=$PATH:/usr/local/go/bin
     - go test -v -p 1 ./...
   env:
-    CIRRUS_INTERNAL_VETU_VM: ghcr.io/cirruslabs/ubuntu-runner-arm64:latest
+    CIRRUS_INTERNAL_VETU_VM: ghcr.io/cirruslabs/ubuntu:latest
     CIRRUS_INTERNAL_VETU_SSH_PASSWORD: admin
     CIRRUS_INTERNAL_VETU_SSH_USER: admin
     HOME: /root
