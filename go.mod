@@ -88,6 +88,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.39.0
 	github.com/tonistiigi/go-actions-cache v0.0.0-20250626083717-378c5ed1ddd9
 	github.com/twitchtv/twirp v8.1.3+incompatible
+	github.com/veqryn/slog-context v0.8.0
 	go.opentelemetry.io/contrib/bridges/otelzap v0.13.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.63.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.63.0

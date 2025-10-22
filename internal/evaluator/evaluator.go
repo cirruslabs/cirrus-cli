@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"strings"
@@ -345,7 +346,8 @@ func (r *ConfigurationEvaluatorServiceServer) cachingHTTPClient(tenant string, s
 	httpClient, _ := r.perTenantCachingHTTPClients.GetOrSetFunc(tenant, func() *http.Client {
 		dsn := fmt.Sprintf("lrucache://?size=%d", size)
 
-		httpClient := httpcache.NewClient(dsn, httpcache.WithUpstream(r.roundTripper()))
+		httpClient := httpcache.NewClient(dsn, httpcache.WithUpstream(r.roundTripper()),
+			httpcache.WithLogger(slog.Default()))
 
 		// GitHub has a 10-second timeout for API requests
 		httpClient.Timeout = 11 * time.Second

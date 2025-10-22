@@ -6,10 +6,14 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/evaluator"
-	"github.com/spf13/cobra"
+	"log/slog"
 	"net"
 	"os"
+
+	"github.com/cirruslabs/cirrus-cli/internal/evaluator"
+	"github.com/cirruslabs/cirrus-cli/internal/logginglevel"
+	"github.com/spf13/cobra"
+	slogctx "github.com/veqryn/slog-context"
 )
 
 var ErrServe = errors.New("serve failed")
@@ -17,6 +21,16 @@ var ErrServe = errors.New("serve failed")
 var address string
 
 func serve(cmd *cobra.Command, args []string) error {
+	// Initialize logger: produce machine-friendly output
+	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: logginglevel.Level,
+	})
+	// Initialize logger: support context.Context
+	slogctxHandler := slogctx.NewHandler(jsonHandler, &slogctx.HandlerOptions{})
+	// Initialize logger: final steps
+	logger := slog.New(slogctxHandler)
+	slog.SetDefault(logger)
+
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
