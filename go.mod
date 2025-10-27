@@ -18,7 +18,7 @@ require (
 	github.com/docker/docker v28.5.1+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/getsentry/sentry-go v0.36.0
+	github.com/getsentry/sentry-go v0.36.1
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.16.3
 	github.com/go-test/deep v1.1.1
@@ -41,7 +41,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.1
 	github.com/otiai10/copy v1.14.1
-	github.com/pkg/sftp v1.13.9
+	github.com/pkg/sftp v1.13.10
 	github.com/qri-io/starlib v0.5.0
 	github.com/sergi/go-diff v1.4.0
 	github.com/sirupsen/logrus v1.9.3
@@ -81,7 +81,7 @@ require (
 	github.com/jellydator/ttlcache/v3 v3.4.0
 	github.com/klauspost/pgzip v1.2.6
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/procfs v0.17.0
+	github.com/prometheus/procfs v0.19.1
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 	github.com/samber/lo v1.52.0
 	github.com/shirou/gopsutil/v3 v3.24.5
