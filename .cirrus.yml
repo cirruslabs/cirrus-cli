@@ -3,9 +3,10 @@ use_compute_credits: true
 docker_builder:
   name: Test (Linux with Docker)
   alias: Tests
+  prepare_script:
+    - sudo apt-get -y update
+    - sudo apt-get -y install golang-go
   test_script:
-    - wget --no-verbose -O - https://go.dev/dl/go1.22.1.linux-amd64.tar.gz | tar -C /usr/local -xz
-    - export PATH=$PATH:/usr/local/go/bin
     - go test ./...
   env:
     HOME: /root
@@ -14,16 +15,14 @@ docker_builder:
 docker_builder:
   name: Test (Linux with Podman)
   alias: Tests
-  install_podman_script:
+  prepare_script:
     - sudo apt-get -y update
-    - sudo apt-get -y install podman
+    - sudo apt-get -y install podman golang-go
   configure_podman_script:
     - echo 'unqualified-search-registries=["docker.io"]' > /etc/containers/registries.conf.d/docker.conf
   work_around_gcloud_credential_helper_script:
     - rm /root/.docker/config.json
   test_script:
-    - wget --no-verbose -O - https://go.dev/dl/go1.22.1.linux-amd64.tar.gz | tar -C /usr/local -xz
-    - export PATH=$PATH:/usr/local/go/bin
     - go test ./...
   env:
     HOME: /root
@@ -73,15 +72,13 @@ task:
         ebs:
           volume_size: 100
           volume_type: gp3
-  install_vetu_script:
-    - sudo apt-get update && sudo apt-get -y install apt-transport-https ca-certificates
+  prepare_script:
+    - sudo apt-get update && sudo apt-get -y install apt-transport-https ca-certificates golang-go
     - echo "deb [trusted=yes] https://apt.fury.io/cirruslabs/ /" | sudo tee /etc/apt/sources.list.d/cirruslabs.list
     - sudo apt-get update && sudo apt-get -y install vetu
   pre_pull_vm_script:
     - vetu pull $CIRRUS_INTERNAL_VETU_VM
   test_script:
-    - wget --no-verbose -O - https://go.dev/dl/go1.22.2.linux-arm64.tar.gz | tar -C /usr/local -xz
-    - export PATH=$PATH:/usr/local/go/bin
     - go test -v -p 1 ./...
   env:
     CIRRUS_INTERNAL_VETU_VM: ghcr.io/cirruslabs/ubuntu:latest
