@@ -1,24 +1,22 @@
 module github.com/cirruslabs/cirrus-cli
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.25.3
 
 require (
 	github.com/PaesslerAG/gval v1.2.4
 	github.com/avast/retry-go/v4 v4.7.0
-	github.com/breml/rootcerts v0.3.2
+	github.com/breml/rootcerts v0.3.3
 	github.com/cirruslabs/cirrus-ci-agent v1.134.1 // indirect
 	github.com/cirruslabs/echelon v1.9.0
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/containers/image/v5 v5.36.2
 	github.com/containers/storage v1.59.1 // indirect
-	github.com/cyphar/filepath-securejoin v0.5.0
+	github.com/cyphar/filepath-securejoin v0.5.1
 	github.com/docker/cli v28.5.1+incompatible
 	github.com/docker/docker v28.5.1+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/getsentry/sentry-go v0.36.1
+	github.com/getsentry/sentry-go v0.36.2
 	github.com/go-git/go-billy/v5 v5.6.2
 	github.com/go-git/go-git/v5 v5.16.3
 	github.com/go-test/deep v1.1.1
@@ -65,7 +63,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.3
 	github.com/IGLOU-EU/go-wildcard v1.0.3
 	github.com/aws/aws-sdk-go v1.55.8
-	github.com/bartventer/httpcache v0.10.2
+	github.com/bartventer/httpcache v0.12.0
 	github.com/bmatcuk/doublestar v1.3.4
 	github.com/cirruslabs/chacha v0.16.3
 	github.com/cirruslabs/cirrus-ci-annotations v0.10.0
@@ -81,7 +79,7 @@ require (
 	github.com/jellydator/ttlcache/v3 v3.4.0
 	github.com/klauspost/pgzip v1.2.6
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/procfs v0.19.1
+	github.com/prometheus/procfs v0.19.2
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 	github.com/samber/lo v1.52.0
 	github.com/shirou/gopsutil/v3 v3.24.5
