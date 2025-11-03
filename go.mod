@@ -1,6 +1,6 @@
 module github.com/cirruslabs/cirrus-cli
 
-go 1.25
+go 1.25.3
 
 require (
 	github.com/PaesslerAG/gval v1.2.4
