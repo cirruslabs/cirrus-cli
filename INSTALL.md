@@ -102,7 +102,7 @@ curl -L -o cirrus https://github.com/cirruslabs/cirrus-cli/releases/latest/downl
 
 ## Golang
 
-If you have [Go](https://golang.org/) 1.17 or newer installed, you can run:
+If you have latest [Golang](https://golang.org/) installed locally, you can run:
 
 ```
 go install github.com/cirruslabs/cirrus-cli/...@latest
