@@ -47,12 +47,7 @@ func DefaultTransport() *http.Transport {
 	}
 }
 
-func Start(
-	ctx context.Context,
-	potentiallyCachingTransport http.RoundTripper,
-	chachaEnabled bool,
-	opts ...Option,
-) string {
+func Start(ctx context.Context, potentiallyCachingTransport http.RoundTripper, opts ...Option) string {
 	httpCache := &HTTPCache{
 		httpClient: &http.Client{
 			Transport: DefaultTransport(),
@@ -101,7 +96,7 @@ func Start(
 		// Partial Azure Blob Service REST API implementation
 		// needed for the GHA cache API v2 to function properly
 		mux.Handle(azureblob.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(azureblob.APIMountPoint,
-			azureblob.New(httpCache.potentiallyCachingHTTPClient, chachaEnabled, httpCache.azureBlobOpts...))))
+			azureblob.New(httpCache.potentiallyCachingHTTPClient, httpCache.azureBlobOpts...))))
 
 		httpServer := &http.Server{
 			// Use agent's context as a base for the HTTP cache handlers

@@ -2,9 +2,10 @@ package azureblob
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"net/http"
 )
 
 func (azureBlob *AzureBlob) headBlobAbstract(writer http.ResponseWriter, request *http.Request) {
@@ -78,14 +79,6 @@ func (azureBlob *AzureBlob) retrieveCacheEntryInfo(
 			" cache entry information", "key", key, "err", err)
 
 		return true
-	}
-
-	// Chacha doesn't support Range requests yet, and not disclosing Content-Length
-	// to the Azure Blob Client makes it not use the Range requests
-	if !azureBlob.chachaEnabled {
-		if contentLength := resp.Header.Get("Content-Length"); contentLength != "" {
-			writer.Header().Set("Content-Length", contentLength)
-		}
 	}
 
 	writer.WriteHeader(resp.StatusCode)
