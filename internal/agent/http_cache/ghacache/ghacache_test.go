@@ -3,6 +3,9 @@ package ghacache_test
 import (
 	"bytes"
 	"context"
+	"testing"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/cirruscimock"
@@ -11,8 +14,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	actionscache "github.com/tonistiigi/go-actions-cache"
-	"testing"
-	"time"
 )
 
 func TestGHA(t *testing.T) {
@@ -22,7 +23,7 @@ func TestGHA(t *testing.T) {
 
 	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
-	httpCacheURL := "http://" + http_cache.Start(ctx, http_cache.DefaultTransport(), false) + "/"
+	httpCacheURL := "http://" + http_cache.Start(ctx) + "/"
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"ac":  `[]`,

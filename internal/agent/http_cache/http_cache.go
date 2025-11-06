@@ -31,9 +31,8 @@ const (
 )
 
 type HTTPCache struct {
-	httpClient                   *http.Client
-	potentiallyCachingHTTPClient *http.Client
-	azureBlobOpts                []azureblob.Option
+	httpClient    *http.Client
+	azureBlobOpts []azureblob.Option
 }
 
 var sem = semaphore.NewWeighted(int64(runtime.NumCPU() * activeRequestsPerLogicalCPU))
@@ -47,14 +46,10 @@ func DefaultTransport() *http.Transport {
 	}
 }
 
-func Start(ctx context.Context, potentiallyCachingTransport http.RoundTripper, opts ...Option) string {
+func Start(ctx context.Context, opts ...Option) string {
 	httpCache := &HTTPCache{
 		httpClient: &http.Client{
 			Transport: DefaultTransport(),
-			Timeout:   10 * time.Minute,
-		},
-		potentiallyCachingHTTPClient: &http.Client{
-			Transport: potentiallyCachingTransport,
 			Timeout:   10 * time.Minute,
 		},
 	}
@@ -96,7 +91,7 @@ func Start(ctx context.Context, potentiallyCachingTransport http.RoundTripper, o
 		// Partial Azure Blob Service REST API implementation
 		// needed for the GHA cache API v2 to function properly
 		mux.Handle(azureblob.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(azureblob.APIMountPoint,
-			azureblob.New(httpCache.potentiallyCachingHTTPClient, httpCache.azureBlobOpts...))))
+			azureblob.New(httpCache.httpClient, httpCache.azureBlobOpts...))))
 
 		httpServer := &http.Server{
 			// Use agent's context as a base for the HTTP cache handlers
@@ -218,7 +213,7 @@ func (httpCache *HTTPCache) proxyDownloadFromURL(w http.ResponseWriter, r *http.
 		log.Printf("Failed to create a new GET HTTP request to URL %s: %v", url, err)
 		return false
 	}
-	resp, err := httpCache.potentiallyCachingHTTPClient.Do(req)
+	resp, err := httpCache.httpClient.Do(req)
 	if err != nil {
 		log.Printf("Proxying cache %s failed: %v\n", url, err)
 		return false

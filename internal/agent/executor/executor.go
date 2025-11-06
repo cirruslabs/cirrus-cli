@@ -27,7 +27,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/terminalwrapper"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/updatebatcher"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/vaultunboxer"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/fallbackroundtripper"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
@@ -224,10 +223,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// the OS environment nor through the task's environment,
 	// run our built-in cache server
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
-		// Default HTTP cache
-		transport := http_cache.DefaultTransport()
-
-		httpCacheHost := http_cache.Start(ctx, http_cache.DefaultTransport(), false)
+		httpCacheHost := http_cache.Start(ctx)
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
 
@@ -243,10 +239,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 				otelhttp.WithPropagators(propagation.TraceContext{}),
 			)
 
-			// Always Chacha transport with a fallback to the default transport, just in case
-			transport := fallbackroundtripper.New(chachaTransport, transport)
-
-			httpCacheHostThunder := http_cache.Start(ctx, transport, true)
+			httpCacheHostThunder := http_cache.Start(ctx)
 
 			executor.env.Set("CIRRUS_HTTP_CACHE_HOST_THUNDER", httpCacheHostThunder)
 		}

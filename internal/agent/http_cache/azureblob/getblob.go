@@ -97,7 +97,7 @@ func (azureBlob *AzureBlob) proxyCacheEntryDownload(
 		req.Header.Set("Range", rangeHeaderToUse)
 	}
 
-	resp, err := azureBlob.potentiallyCachingHTTPClient.Do(req)
+	resp, err := azureBlob.httpClient.Do(req)
 	if err != nil {
 		if !isLastIteration {
 			return false
@@ -223,7 +223,7 @@ func (azureBlob *AzureBlob) proxyRecover(
 
 	req.Header.Set("If-Range", ifRangeValue)
 
-	resp, err := azureBlob.potentiallyCachingHTTPClient.Do(req)
+	resp, err := azureBlob.httpClient.Do(req)
 	if err != nil {
 		return 0, err
 	}
