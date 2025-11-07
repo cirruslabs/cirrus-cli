@@ -260,8 +260,6 @@ service CirrusCIService {
   }
   rpc SaveLogs (stream LogEntry) returns (UploadLogsResponse) {
   }
-  rpc UploadCache (stream CacheEntry) returns (UploadCacheResponse) {
-  }
 
   // Artifacts upload over gRPC
   rpc UploadArtifacts (stream ArtifactEntry) returns (UploadArtifactsResponse);
@@ -270,8 +268,6 @@ service CirrusCIService {
   rpc GenerateArtifactUploadURLs (GenerateArtifactUploadURLsRequest) returns (GenerateArtifactUploadURLsResponse);
   rpc CommitUploadedArtifacts (CommitUploadedArtifactsRequest) returns (CommitUploadedArtifactsResponse);
 
-  rpc DownloadCache (DownloadCacheRequest) returns (stream DataChunk) {
-  }
   rpc CacheInfo (CacheInfoRequest) returns (CacheInfoResponse) {
   }
   rpc DeleteCache (DeleteCacheRequest) returns (DeleteCacheResponse) {

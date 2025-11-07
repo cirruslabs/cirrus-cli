@@ -2,122 +2,13 @@ package rpc
 
 import (
 	"context"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
+	"os"
+
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"io"
-	"os"
 )
-
-const sendBufSize = 1024 * 1024
-
-func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
-	var putOp *cache.PutOperation
-	var bytesSaved int64
-
-	for {
-		cacheEntry, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			r.logger.Warnf("error stream errored out while uploading cache: %v", err)
-			return err
-		}
-
-		switch x := cacheEntry.Value.(type) {
-		case *api.CacheEntry_Key:
-			if putOp != nil {
-				r.logger.Warnf("received multiple cache entries in a single method call")
-				return status.Error(codes.FailedPrecondition, "received multiple cache entries in a single method call")
-			}
-			_, err := r.build.GetTaskFromIdentification(x.Key.TaskIdentification, r.clientSecret)
-			if err != nil {
-				return err
-			}
-			putOp, err = r.build.Cache.Put(x.Key.CacheKey)
-			if err != nil {
-				r.logger.Debugf("error while initializing cache put operation: %v", err)
-				return status.Error(codes.Internal, "failed to initialize cache put operation")
-			}
-			r.logger.Debugf("receiving cache with key %s", x.Key.CacheKey)
-		case *api.CacheEntry_Chunk:
-			if putOp == nil {
-				return status.Error(codes.PermissionDenied, "not authenticated")
-			}
-			n, err := putOp.Write(x.Chunk.Data)
-			if err != nil {
-				r.logger.Debugf("error while processing cache chunk: %v", err)
-				return status.Error(codes.Internal, "failed to process cache chunk")
-			}
-			bytesSaved += int64(n)
-		}
-	}
-
-	if putOp == nil {
-		r.logger.Warnf("attempted to upload cache without actually sending anything")
-		return status.Error(codes.FailedPrecondition, "attempted to upload cache without actually sending anything")
-	}
-
-	if err := putOp.Finalize(); err != nil {
-		r.logger.Debugf("while finalizing cache put operation")
-		return status.Error(codes.Internal, "failed to finalize cache put operation")
-	}
-
-	response := api.UploadCacheResponse{
-		BytesSaved: bytesSaved,
-	}
-	if err := stream.SendAndClose(&response); err != nil {
-		r.logger.Warnf("error while closing cache upload stream: %v", err)
-		return err
-	}
-
-	return nil
-}
-
-func (r *RPC) DownloadCache(req *api.DownloadCacheRequest, stream api.CirrusCIService_DownloadCacheServer) error {
-	_, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
-	if err != nil {
-		return err
-	}
-
-	file, err := r.build.Cache.Get(req.CacheKey)
-	if err != nil {
-		r.logger.Debugf("error while getting cache blob with key %s: %v", req.CacheKey, err)
-		return status.Errorf(codes.NotFound, "cache blob with the specified key not found")
-	}
-	defer file.Close()
-
-	r.logger.Debugf("sending cache with key %s", req.CacheKey)
-
-	buf := make([]byte, sendBufSize)
-
-	for {
-		n, err := file.Read(buf)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return status.Errorf(codes.Internal, "failed to read cache blob")
-		}
-
-		chunk := api.DataChunk{
-			Data: buf[:n],
-		}
-		err = stream.Send(&chunk)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			r.logger.Warnf("error while sending cache chunk of size %d: %v", n, err)
-			return err
-		}
-	}
-
-	return nil
-}
 
 func (r *RPC) CacheInfo(ctx context.Context, req *api.CacheInfoRequest) (*api.CacheInfoResponse, error) {
 	_, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
