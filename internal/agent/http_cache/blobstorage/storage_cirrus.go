@@ -5,7 +5,6 @@ import (
 
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"google.golang.org/grpc"
 )
 
 type cirrusBlobStorage struct {
@@ -124,15 +123,4 @@ func (s *cirrusBlobStorage) Delete(ctx context.Context, key string) error {
 	})
 
 	return err
-}
-
-func (s *cirrusBlobStorage) DownloadCacheRPC(ctx context.Context, key string) (api.CirrusCIService_DownloadCacheClient, error) {
-	return s.client.DownloadCache(ctx, &api.DownloadCacheRequest{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           key,
-	}, grpc.WaitForReady(true))
-}
-
-func (s *cirrusBlobStorage) UploadCacheRPC(ctx context.Context) (api.CirrusCIService_UploadCacheClient, error) {
-	return s.client.UploadCache(ctx, grpc.WaitForReady(true))
 }

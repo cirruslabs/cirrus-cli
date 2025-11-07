@@ -2,8 +2,6 @@ package blobstorage
 
 import (
 	"context"
-
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
 )
 
 type URLInfo struct {
@@ -31,6 +29,4 @@ type BlobStorageBacked interface {
 	MultipartUploadCommit(ctx context.Context, key string, uploadID string, parts []*MultipartPart) error
 	Info(ctx context.Context, key string, prefixes []string) (*CacheInfo, error)
 	Delete(ctx context.Context, key string) error
-	DownloadCacheRPC(ctx context.Context, key string) (api.CirrusCIService_DownloadCacheClient, error)
-	UploadCacheRPC(ctx context.Context) (api.CirrusCIService_UploadCacheClient, error)
 }
