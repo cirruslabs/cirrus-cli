@@ -15,18 +15,33 @@ func NewCirrusBlobStorage(client api.CirrusCIServiceClient) BlobStorageBacked {
 	return &cirrusBlobStorage{client: client}
 }
 
-func (s *cirrusBlobStorage) DownloadURLs(ctx context.Context, key string) ([]*URLInfo, error) {
-	resp, err := s.client.GenerateCacheDownloadURLs(ctx, s.cacheKey(key))
+func (s *cirrusBlobStorage) Info(ctx context.Context, key string, prefixes []string) (*CacheInfo, error) {
+	request := &api.CacheInfoRequest{
+		TaskIdentification: client.CirrusTaskIdentification,
+		CacheKey:           key,
+		CacheKeyPrefixes:   prefixes,
+	}
+
+	response, err := s.client.CacheInfo(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 
-	urlInfos := make([]*URLInfo, len(resp.GetUrls()))
-	for i, url := range resp.GetUrls() {
-		urlInfos[i] = &URLInfo{URL: url}
-	}
+	return &CacheInfo{
+		Key:                response.Info.GetKey(),
+		SizeInBytes:        response.Info.GetSizeInBytes(),
+		CreatedByTaskID:    response.Info.GetCreatedByTaskId(),
+		OldCreatedByTaskID: response.Info.GetOldCreatedByTaskId(),
+	}, nil
+}
 
-	return urlInfos, nil
+func (s *cirrusBlobStorage) Delete(ctx context.Context, key string) error {
+	_, err := s.client.DeleteCache(ctx, &api.DeleteCacheRequest{
+		TaskIdentification: client.CirrusTaskIdentification,
+		CacheKey:           key,
+	})
+
+	return err
 }
 
 func (s *cirrusBlobStorage) UploadURL(ctx context.Context, key string, metadata map[string]string) (*URLInfo, error) {
@@ -39,6 +54,20 @@ func (s *cirrusBlobStorage) UploadURL(ctx context.Context, key string, metadata 
 		URL:          resp.GetUrl(),
 		ExtraHeaders: resp.GetExtraHeaders(),
 	}, nil
+}
+
+func (s *cirrusBlobStorage) DownloadURLs(ctx context.Context, key string) ([]*URLInfo, error) {
+	resp, err := s.client.GenerateCacheDownloadURLs(ctx, s.cacheKey(key))
+	if err != nil {
+		return nil, err
+	}
+
+	urlInfos := make([]*URLInfo, len(resp.GetUrls()))
+	for i, url := range resp.GetUrls() {
+		urlInfos[i] = &URLInfo{URL: url}
+	}
+
+	return urlInfos, nil
 }
 
 func (s *cirrusBlobStorage) MultipartUploadCreate(ctx context.Context, key string) (string, error) {
@@ -94,33 +123,4 @@ func (s *cirrusBlobStorage) cacheKey(key string) *api.CacheKey {
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           key,
 	}
-}
-
-func (s *cirrusBlobStorage) Info(ctx context.Context, key string, prefixes []string) (*CacheInfo, error) {
-	request := &api.CacheInfoRequest{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           key,
-		CacheKeyPrefixes:   prefixes,
-	}
-
-	response, err := s.client.CacheInfo(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-
-	return &CacheInfo{
-		Key:                response.Info.GetKey(),
-		SizeInBytes:        response.Info.GetSizeInBytes(),
-		CreatedByTaskID:    response.Info.GetCreatedByTaskId(),
-		OldCreatedByTaskID: response.Info.GetOldCreatedByTaskId(),
-	}, nil
-}
-
-func (s *cirrusBlobStorage) Delete(ctx context.Context, key string) error {
-	_, err := s.client.DeleteCache(ctx, &api.DeleteCacheRequest{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           key,
-	})
-
-	return err
 }

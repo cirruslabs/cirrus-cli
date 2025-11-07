@@ -22,11 +22,11 @@ type CacheInfo struct {
 }
 
 type BlobStorageBacked interface {
-	DownloadURLs(ctx context.Context, key string) ([]*URLInfo, error)
+	Info(ctx context.Context, key string, prefixes []string) (*CacheInfo, error)
+	Delete(ctx context.Context, key string) error
 	UploadURL(ctx context.Context, key string, metadate map[string]string) (*URLInfo, error)
+	DownloadURLs(ctx context.Context, key string) ([]*URLInfo, error)
 	MultipartUploadCreate(ctx context.Context, key string) (string, error)
 	MultipartUploadPartURL(ctx context.Context, key string, uploadID string, partNumber uint32, contentLength uint64) (*URLInfo, error)
 	MultipartUploadCommit(ctx context.Context, key string, uploadID string, parts []*MultipartPart) error
-	Info(ctx context.Context, key string, prefixes []string) (*CacheInfo, error)
-	Delete(ctx context.Context, key string) error
 }
