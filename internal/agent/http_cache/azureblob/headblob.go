@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/blobstorage"
 )
 
 func (azureBlob *AzureBlob) headBlobAbstract(writer http.ResponseWriter, request *http.Request) {
@@ -18,14 +17,7 @@ func (azureBlob *AzureBlob) headBlobAbstract(writer http.ResponseWriter, request
 func (azureBlob *AzureBlob) headBlob(writer http.ResponseWriter, request *http.Request) {
 	key := request.PathValue("key")
 
-	// Generate cache entry download URL
-	generateCacheDownloadURLResponse, err := azureBlob.cirrusClient.GenerateCacheDownloadURLs(
-		request.Context(),
-		&api.CacheKey{
-			TaskIdentification: client.CirrusTaskIdentification,
-			CacheKey:           key,
-		},
-	)
+	urlInfos, err := azureBlob.storage.DownloadURLs(request.Context(), key)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to generate cache download URLs",
 			"key", key, "err", err)
@@ -33,7 +25,7 @@ func (azureBlob *AzureBlob) headBlob(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	if len(generateCacheDownloadURLResponse.Urls) == 0 {
+	if len(urlInfos) == 0 {
 		fail(writer, request, http.StatusInternalServerError, fmt.Sprintf("failed to generate"+
 			" cache download URLs: expected at least 1 URL, got 0"))
 
@@ -41,10 +33,10 @@ func (azureBlob *AzureBlob) headBlob(writer http.ResponseWriter, request *http.R
 	}
 
 	// Retrieve cache entry information
-	for i, url := range generateCacheDownloadURLResponse.Urls {
-		isLastIteration := i == len(generateCacheDownloadURLResponse.Urls)-1
+	for i, info := range urlInfos {
+		isLastIteration := i == len(urlInfos)-1
 
-		if azureBlob.retrieveCacheEntryInfo(writer, request, key, url, isLastIteration) {
+		if azureBlob.retrieveCacheEntryInfo(writer, request, key, info, isLastIteration) {
 			break
 		}
 	}
@@ -54,10 +46,14 @@ func (azureBlob *AzureBlob) retrieveCacheEntryInfo(
 	writer http.ResponseWriter,
 	request *http.Request,
 	key string,
-	url string,
+	info *blobstorage.URLInfo,
 	isLastIteration bool,
 ) bool {
-	req, err := http.NewRequestWithContext(request.Context(), http.MethodGet, url, nil)
+	if info == nil {
+		return false
+	}
+
+	req, err := http.NewRequestWithContext(request.Context(), http.MethodGet, info.URL, nil)
 	if err != nil {
 		if !isLastIteration {
 			return false
@@ -67,6 +63,10 @@ func (azureBlob *AzureBlob) retrieveCacheEntryInfo(
 			" cache entry information", "key", key, "err", err)
 
 		return true
+	}
+
+	for header, value := range info.ExtraHeaders {
+		req.Header.Set(header, value)
 	}
 
 	resp, err := http.DefaultClient.Do(req)

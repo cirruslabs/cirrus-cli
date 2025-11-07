@@ -3,18 +3,18 @@ package ghacachev2
 import (
 	"context"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
+	"hash/fnv"
+	"net/http"
+	"net/url"
+	"strings"
+
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/blobstorage"
 	"github.com/cirruslabs/cirrus-cli/pkg/api/gharesults"
 	"github.com/samber/lo"
 	"github.com/twitchtv/twirp"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"hash/fnv"
-	"net/http"
-	"net/url"
-	"strings"
 )
 
 // Interface guard
@@ -25,15 +25,15 @@ var _ gharesults.CacheService = (*Cache)(nil)
 const APIMountPoint = "/twirp"
 
 type Cache struct {
-	cacheHost    string
-	twirpServer  gharesults.TwirpServer
-	cirrusClient api.CirrusCIServiceClient
+	cacheHost   string
+	twirpServer gharesults.TwirpServer
+	storage     blobstorage.BlobStorageBacked
 }
 
-func New(cacheHost string, cirrusClient api.CirrusCIServiceClient) *Cache {
+func New(cacheHost string, storage blobstorage.BlobStorageBacked) *Cache {
 	cache := &Cache{
-		cacheHost:    cacheHost,
-		cirrusClient: cirrusClient,
+		cacheHost: cacheHost,
+		storage:   storage,
 	}
 
 	cache.twirpServer = gharesults.NewCacheServiceServer(cache)
@@ -50,15 +50,12 @@ func (cache *Cache) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 }
 
 func (cache *Cache) GetCacheEntryDownloadURL(ctx context.Context, request *gharesults.GetCacheEntryDownloadURLRequest) (*gharesults.GetCacheEntryDownloadURLResponse, error) {
-	grpcRequest := &api.CacheInfoRequest{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           httpCacheKey(request.Key, request.Version),
-		CacheKeyPrefixes: lo.Map(request.RestoreKeys, func(restoreKey string, _ int) string {
+	info, err := cache.storage.Info(ctx,
+		httpCacheKey(request.Key, request.Version),
+		lo.Map(request.RestoreKeys, func(restoreKey string, _ int) string {
 			return httpCacheKey(restoreKey, request.Version)
 		}),
-	}
-
-	grpcResponse, err := cache.cirrusClient.CacheInfo(ctx, grpcRequest)
+	)
 	if err != nil {
 		if status, ok := status.FromError(err); ok && status.Code() == codes.NotFound {
 			return &gharesults.GetCacheEntryDownloadURLResponse{
@@ -70,10 +67,16 @@ func (cache *Cache) GetCacheEntryDownloadURL(ctx context.Context, request *ghare
 			"about cache entry with key %q and version %q: %v", request.Key, request.Version, err)
 	}
 
+	if info == nil || info.Key == "" {
+		return &gharesults.GetCacheEntryDownloadURLResponse{
+			Ok: false,
+		}, nil
+	}
+
 	return &gharesults.GetCacheEntryDownloadURLResponse{
 		Ok:                true,
-		SignedDownloadUrl: cache.azureBlobURL(grpcResponse.Info.Key),
-		MatchedKey:        strings.TrimPrefix(grpcResponse.Info.Key, httpCacheKey("", request.Version)),
+		SignedDownloadUrl: cache.azureBlobURL(info.Key),
+		MatchedKey:        strings.TrimPrefix(info.Key, httpCacheKey("", request.Version)),
 	}, nil
 }
 

@@ -3,10 +3,11 @@ package uploadable
 import (
 	"cmp"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/rangetopart"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"golang.org/x/exp/slices"
 	"sync"
+
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/blobstorage"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/rangetopart"
+	"golang.org/x/exp/slices"
 )
 
 type Uploadable struct {
@@ -67,7 +68,7 @@ func (uploadable *Uploadable) AppendPart(number uint32, etag string, size int64)
 	return nil
 }
 
-func (uploadable *Uploadable) Finalize() ([]*api.MultipartCacheUploadCommitRequest_Part, int64, error) {
+func (uploadable *Uploadable) Finalize() ([]*blobstorage.MultipartPart, int64, error) {
 	uploadable.mtx.Lock()
 	defer uploadable.mtx.Unlock()
 
@@ -78,19 +79,19 @@ func (uploadable *Uploadable) Finalize() ([]*api.MultipartCacheUploadCommitReque
 	// Mark the uploadable as finalized
 	uploadable.finalized = true
 
-	var parts []*api.MultipartCacheUploadCommitRequest_Part
+	var parts []*blobstorage.MultipartPart
 	var partsSize int64
 
 	for _, part := range uploadable.parts {
-		parts = append(parts, &api.MultipartCacheUploadCommitRequest_Part{
+		parts = append(parts, &blobstorage.MultipartPart{
 			PartNumber: part.Number,
-			Etag:       part.ETag,
+			ETag:       part.ETag,
 		})
 
 		partsSize += part.Size
 	}
 
-	slices.SortFunc(parts, func(a, b *api.MultipartCacheUploadCommitRequest_Part) int {
+	slices.SortFunc(parts, func(a, b *blobstorage.MultipartPart) int {
 		return cmp.Compare(a.PartNumber, b.PartNumber)
 	})
 

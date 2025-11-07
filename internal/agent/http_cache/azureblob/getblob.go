@@ -11,11 +11,10 @@ import (
 
 	"log/slog"
 
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/simplerange"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/unexpectedeofreader"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/blobstorage"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/progressreader"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/dustin/go-humanize"
 )
 
@@ -32,14 +31,7 @@ func (azureBlob *AzureBlob) getBlobAbstract(writer http.ResponseWriter, request 
 func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Request) {
 	key := request.PathValue("key")
 
-	// Generate cache entry download URL
-	generateCacheDownloadURLResponse, err := azureBlob.cirrusClient.GenerateCacheDownloadURLs(
-		request.Context(),
-		&api.CacheKey{
-			TaskIdentification: client.CirrusTaskIdentification,
-			CacheKey:           key,
-		},
-	)
+	urlInfos, err := azureBlob.storage.DownloadURLs(request.Context(), key)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to generate cache download URLs",
 			"key", key, "err", err)
@@ -47,7 +39,7 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 		return
 	}
 
-	if len(generateCacheDownloadURLResponse.Urls) == 0 {
+	if len(urlInfos) == 0 {
 		fail(writer, request, http.StatusInternalServerError, fmt.Sprintf("failed to generate"+
 			" cache download URLs: expected at least 1 URL, got 0"))
 
@@ -55,10 +47,10 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 	}
 
 	// Proxy cache entry download
-	for i, url := range generateCacheDownloadURLResponse.Urls {
-		isLastIteration := i == len(generateCacheDownloadURLResponse.Urls)-1
+	for i, info := range urlInfos {
+		isLastIteration := i == len(urlInfos)-1
 
-		if azureBlob.proxyCacheEntryDownload(writer, request, key, url, isLastIteration) {
+		if azureBlob.proxyCacheEntryDownload(writer, request, key, info, isLastIteration) {
 			break
 		}
 	}
@@ -68,10 +60,14 @@ func (azureBlob *AzureBlob) proxyCacheEntryDownload(
 	writer http.ResponseWriter,
 	request *http.Request,
 	key string,
-	url string,
+	info *blobstorage.URLInfo,
 	isLastIteration bool,
 ) bool {
-	req, err := http.NewRequestWithContext(request.Context(), http.MethodGet, url, nil)
+	if info == nil {
+		return false
+	}
+
+	req, err := http.NewRequestWithContext(request.Context(), http.MethodGet, info.URL, nil)
 	if err != nil {
 		if !isLastIteration {
 			return false
@@ -81,6 +77,10 @@ func (azureBlob *AzureBlob) proxyCacheEntryDownload(
 			" cache entry download", "key", key, "err", err)
 
 		return true
+	}
+
+	for header, value := range info.ExtraHeaders {
+		req.Header.Set(header, value)
 	}
 
 	// Support HTTP range requests
@@ -157,7 +157,7 @@ func (azureBlob *AzureBlob) proxyCacheEntryDownload(
 
 		// Try to recover by adjusting Range header and re-issuing the request
 		if errors.Is(err, io.ErrUnexpectedEOF) {
-			bytesRecovered, err := azureBlob.proxyRecover(request.Context(), rangeHeaderToUse, resp, url, bytesRead, writer)
+			bytesRecovered, err := azureBlob.proxyRecover(request.Context(), rangeHeaderToUse, resp, info, bytesRead, writer)
 			if err != nil {
 				craftAndLogMessage(slog.LevelError, "failed to recover proxy cache entry download",
 					"err", err)
@@ -177,7 +177,7 @@ func (azureBlob *AzureBlob) proxyRecover(
 	ctx context.Context,
 	rangeHeader string,
 	upstreamResponse *http.Response,
-	url string,
+	info *blobstorage.URLInfo,
 	bytesRead int64,
 	writer http.ResponseWriter,
 ) (int64, error) {
@@ -205,7 +205,7 @@ func (azureBlob *AzureBlob) proxyRecover(
 		return 0, fmt.Errorf("no ETag or Last-Modifier header found to use for If-Range")
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, info.URL, nil)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create an additional request: %w", err)
 	}
@@ -222,6 +222,10 @@ func (azureBlob *AzureBlob) proxyRecover(
 	}
 
 	req.Header.Set("If-Range", ifRangeValue)
+
+	for header, value := range info.ExtraHeaders {
+		req.Header.Set(header, value)
+	}
 
 	resp, err := azureBlob.httpClient.Do(req)
 	if err != nil {

@@ -1,20 +1,19 @@
 package http_cache
 
 import (
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/blobstorage"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.Request, cacheKey string) {
-	cacheStream, err := httpCache.cirrusClient.DownloadCache(r.Context(), &api.DownloadCacheRequest{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           cacheKey,
-	})
+	cacheStream, err := httpCache.blobStorage.DownloadCacheRPC(r.Context(), cacheKey)
 	if err != nil {
 		log.Printf("%s cache download initialization (RPC fallback) failed: %v\n", cacheKey, err)
 
@@ -47,7 +46,9 @@ func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.R
 
 		if chunk.RedirectUrl != "" {
 			log.Printf("%s cache download (RPC fallback) requested a redirect\n", cacheKey)
-			httpCache.proxyDownloadFromURLs(w, r, []string{chunk.RedirectUrl})
+			httpCache.proxyDownloadFromURLs(w, r, []*blobstorage.URLInfo{
+				{URL: chunk.RedirectUrl},
+			})
 
 			return
 		}
@@ -66,7 +67,7 @@ func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.R
 }
 
 func (httpCache *HTTPCache) uploadCacheEntryViaRPC(w http.ResponseWriter, r *http.Request, cacheKey string) {
-	uploadCacheClient, err := httpCache.cirrusClient.UploadCache(r.Context())
+	uploadCacheClient, err := httpCache.blobStorage.UploadCacheRPC(r.Context())
 	if err != nil {
 		log.Printf("%s cache upload initialization (RPC fallback) failed: %v\n", cacheKey, err)
 		w.WriteHeader(http.StatusInternalServerError)
