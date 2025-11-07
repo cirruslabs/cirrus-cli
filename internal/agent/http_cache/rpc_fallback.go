@@ -11,7 +11,7 @@ import (
 )
 
 func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.Request, cacheKey string) {
-	cacheStream, err := client.CirrusClient.DownloadCache(r.Context(), &api.DownloadCacheRequest{
+	cacheStream, err := httpCache.cirrusClient.DownloadCache(r.Context(), &api.DownloadCacheRequest{
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	})
@@ -65,8 +65,8 @@ func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.R
 	}
 }
 
-func uploadCacheEntryViaRPC(w http.ResponseWriter, r *http.Request, cacheKey string) {
-	uploadCacheClient, err := client.CirrusClient.UploadCache(r.Context())
+func (httpCache *HTTPCache) uploadCacheEntryViaRPC(w http.ResponseWriter, r *http.Request, cacheKey string) {
+	uploadCacheClient, err := httpCache.cirrusClient.UploadCache(r.Context())
 	if err != nil {
 		log.Printf("%s cache upload initialization (RPC fallback) failed: %v\n", cacheKey, err)
 		w.WriteHeader(http.StatusInternalServerError)

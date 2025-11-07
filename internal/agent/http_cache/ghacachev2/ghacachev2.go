@@ -25,13 +25,15 @@ var _ gharesults.CacheService = (*Cache)(nil)
 const APIMountPoint = "/twirp"
 
 type Cache struct {
-	cacheHost   string
-	twirpServer gharesults.TwirpServer
+	cacheHost    string
+	twirpServer  gharesults.TwirpServer
+	cirrusClient api.CirrusCIServiceClient
 }
 
-func New(cacheHost string) *Cache {
+func New(cacheHost string, cirrusClient api.CirrusCIServiceClient) *Cache {
 	cache := &Cache{
-		cacheHost: cacheHost,
+		cacheHost:    cacheHost,
+		cirrusClient: cirrusClient,
 	}
 
 	cache.twirpServer = gharesults.NewCacheServiceServer(cache)
@@ -56,7 +58,7 @@ func (cache *Cache) GetCacheEntryDownloadURL(ctx context.Context, request *ghare
 		}),
 	}
 
-	grpcResponse, err := client.CirrusClient.CacheInfo(ctx, grpcRequest)
+	grpcResponse, err := cache.cirrusClient.CacheInfo(ctx, grpcRequest)
 	if err != nil {
 		if status, ok := status.FromError(err); ok && status.Code() == codes.NotFound {
 			return &gharesults.GetCacheEntryDownloadURLResponse{

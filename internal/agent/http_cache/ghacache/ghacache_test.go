@@ -23,7 +23,7 @@ func TestGHA(t *testing.T) {
 
 	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
-	httpCacheURL := "http://" + http_cache.Start(ctx) + "/"
+	httpCacheURL := "http://" + http_cache.Start(ctx, client.CirrusClient) + "/"
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"ac":  `[]`,

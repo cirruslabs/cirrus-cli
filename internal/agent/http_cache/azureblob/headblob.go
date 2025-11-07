@@ -19,7 +19,7 @@ func (azureBlob *AzureBlob) headBlob(writer http.ResponseWriter, request *http.R
 	key := request.PathValue("key")
 
 	// Generate cache entry download URL
-	generateCacheDownloadURLResponse, err := client.CirrusClient.GenerateCacheDownloadURLs(
+	generateCacheDownloadURLResponse, err := azureBlob.cirrusClient.GenerateCacheDownloadURLs(
 		request.Context(),
 		&api.CacheKey{
 			TaskIdentification: client.CirrusTaskIdentification,

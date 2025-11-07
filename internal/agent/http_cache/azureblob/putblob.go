@@ -49,7 +49,7 @@ func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Re
 	}
 
 	// Generate cache upload URL
-	generateCacheUploadURLResponse, err := client.CirrusClient.GenerateCacheUploadURL(
+	generateCacheUploadURLResponse, err := azureBlob.cirrusClient.GenerateCacheUploadURL(
 		request.Context(),
 		&api.CacheKey{
 			TaskIdentification: client.CirrusTaskIdentification,
@@ -162,7 +162,7 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 
 	// Retrieve an already existing uploadable ID or compute a new one
 	uploadID, err := uploadable.IDOrCompute(func() (string, error) {
-		multipartCacheUploadCreateResponse, err := client.CirrusClient.MultipartCacheUploadCreate(request.Context(),
+		multipartCacheUploadCreateResponse, err := azureBlob.cirrusClient.MultipartCacheUploadCreate(request.Context(),
 			cacheKey)
 		if err != nil {
 			return "", err
@@ -177,7 +177,7 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	multipartCacheUploadPartResponse, err := client.CirrusClient.MultipartCacheUploadPart(request.Context(),
+	multipartCacheUploadPartResponse, err := azureBlob.cirrusClient.MultipartCacheUploadPart(request.Context(),
 		&api.MultipartCacheUploadPartRequest{
 			CacheKey:      cacheKey,
 			UploadId:      uploadID,
@@ -304,7 +304,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 	}
 
 	if uploadable.Local() {
-		generateCacheUploadURLResponse, err := client.CirrusClient.GenerateCacheUploadURL(request.Context(), &api.CacheKey{
+		generateCacheUploadURLResponse, err := azureBlob.cirrusClient.GenerateCacheUploadURL(request.Context(), &api.CacheKey{
 			TaskIdentification: client.CirrusTaskIdentification,
 			CacheKey:           key,
 		})
@@ -354,7 +354,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 		return
 	}
 
-	_, err := client.CirrusClient.MultipartCacheUploadCommit(request.Context(), &api.MultipartCacheUploadCommitRequest{
+	_, err := azureBlob.cirrusClient.MultipartCacheUploadCommit(request.Context(), &api.MultipartCacheUploadCommitRequest{
 		CacheKey: cacheKey,
 		UploadId: uploadID,
 		Parts:    protoParts,

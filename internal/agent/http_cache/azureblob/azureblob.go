@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	uploadablepkg "github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/uploadable"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
@@ -31,14 +32,16 @@ type AzureBlob struct {
 	mux                     *http.ServeMux
 	uploadables             *xsync.MapOf[string, *uploadablepkg.Uploadable]
 	httpClient              *http.Client
+	cirrusClient            api.CirrusCIServiceClient
 	withUnexpectedEOFReader bool
 }
 
-func New(httpClient *http.Client, opts ...Option) *AzureBlob {
+func New(httpClient *http.Client, cirrusClient api.CirrusCIServiceClient, opts ...Option) *AzureBlob {
 	azureBlobContainer := &AzureBlob{
-		mux:         http.NewServeMux(),
-		uploadables: xsync.NewMapOf[string, *uploadablepkg.Uploadable](),
-		httpClient:  httpClient,
+		mux:          http.NewServeMux(),
+		uploadables:  xsync.NewMapOf[string, *uploadablepkg.Uploadable](),
+		httpClient:   httpClient,
+		cirrusClient: cirrusClient,
 	}
 
 	// Apply opts

@@ -32,6 +32,7 @@ const (
 
 type HTTPCache struct {
 	httpClient    *http.Client
+	cirrusClient  api.CirrusCIServiceClient
 	azureBlobOpts []azureblob.Option
 }
 
@@ -46,12 +47,17 @@ func DefaultTransport() *http.Transport {
 	}
 }
 
-func Start(ctx context.Context, opts ...Option) string {
+func Start(ctx context.Context, cirrusClient api.CirrusCIServiceClient, opts ...Option) string {
+	if cirrusClient == nil {
+		log.Panic("cirrusClient must not be nil when starting HTTP cache")
+	}
+
 	httpCache := &HTTPCache{
 		httpClient: &http.Client{
 			Transport: DefaultTransport(),
 			Timeout:   10 * time.Minute,
 		},
+		cirrusClient: cirrusClient,
 	}
 
 	// Apply opts
@@ -79,19 +85,19 @@ func Start(ctx context.Context, opts ...Option) string {
 		sentryHandler := sentryhttp.New(sentryhttp.Options{})
 
 		mux.Handle(ghacache.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(ghacache.APIMountPoint,
-			ghacache.New(address))))
+			ghacache.New(address, httpCache.cirrusClient))))
 
 		// GitHub Actions cache API v2
 		//
 		// Note that we don't strip the prefix here because
 		// Twirp handler inside *ghacachev2.Cache expects it.
-		ghaCacheV2 := ghacachev2.New(address)
+		ghaCacheV2 := ghacachev2.New(address, httpCache.cirrusClient)
 		mux.Handle(ghaCacheV2.PathPrefix(), ghaCacheV2)
 
 		// Partial Azure Blob Service REST API implementation
 		// needed for the GHA cache API v2 to function properly
 		mux.Handle(azureblob.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(azureblob.APIMountPoint,
-			azureblob.New(httpCache.httpClient, httpCache.azureBlobOpts...))))
+			azureblob.New(httpCache.httpClient, httpCache.cirrusClient, httpCache.azureBlobOpts...))))
 
 		httpServer := &http.Server{
 			// Use agent's context as a base for the HTTP cache handlers
@@ -141,25 +147,25 @@ func (httpCache *HTTPCache) handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		httpCache.downloadCache(w, r, key)
 	} else if r.Method == http.MethodHead {
-		checkCacheExists(w, key)
+		httpCache.checkCacheExists(w, key)
 	} else if r.Method == http.MethodPost {
 		httpCache.uploadCacheEntry(w, r, key)
 	} else if r.Method == http.MethodPut {
 		httpCache.uploadCacheEntry(w, r, key)
 	} else if r.Method == http.MethodDelete {
-		deleteCacheEntry(w, key)
+		httpCache.deleteCacheEntry(w, key)
 	} else {
 		log.Printf("Not supported request method: %s\n", r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
-func checkCacheExists(w http.ResponseWriter, cacheKey string) {
+func (httpCache *HTTPCache) checkCacheExists(w http.ResponseWriter, cacheKey string) {
 	cacheInfoRequest := api.CacheInfoRequest{
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	}
-	response, err := client.CirrusClient.CacheInfo(context.Background(), &cacheInfoRequest)
+	response, err := httpCache.cirrusClient.CacheInfo(context.Background(), &cacheInfoRequest)
 	if err != nil {
 		log.Printf("%s cache info failed: %v\n", cacheKey, err)
 		w.WriteHeader(http.StatusNotFound)
@@ -179,7 +185,7 @@ func (httpCache *HTTPCache) downloadCache(w http.ResponseWriter, r *http.Request
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	}
-	response, err := client.CirrusClient.GenerateCacheDownloadURLs(context.Background(), &key)
+	response, err := httpCache.cirrusClient.GenerateCacheDownloadURLs(context.Background(), &key)
 	if err != nil {
 		log.Printf("%s cache download failed: %v\n", cacheKey, err)
 
@@ -240,7 +246,7 @@ func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Requ
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	}
-	generateResp, err := client.CirrusClient.GenerateCacheUploadURL(context.Background(), &key)
+	generateResp, err := httpCache.cirrusClient.GenerateCacheUploadURL(context.Background(), &key)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to initialized uploading of %s cache! %s", cacheKey, err)
 		log.Println(errorMsg)
@@ -248,7 +254,7 @@ func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Requ
 		// RPC fallback
 		if status.Code(err) == codes.Unimplemented {
 			log.Println("Falling back to uploading cache over RPC...")
-			uploadCacheEntryViaRPC(w, r, cacheKey)
+			httpCache.uploadCacheEntryViaRPC(w, r, cacheKey)
 
 			return
 		}
@@ -286,13 +292,13 @@ func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(resp.StatusCode)
 }
 
-func deleteCacheEntry(w http.ResponseWriter, cacheKey string) {
+func (httpCache *HTTPCache) deleteCacheEntry(w http.ResponseWriter, cacheKey string) {
 	request := api.DeleteCacheRequest{
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	}
 
-	_, err := client.CirrusClient.DeleteCache(context.Background(), &request)
+	_, err := httpCache.cirrusClient.DeleteCache(context.Background(), &request)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to delete cache entry %s: %v", cacheKey, err)
 		log.Println(errorMsg)

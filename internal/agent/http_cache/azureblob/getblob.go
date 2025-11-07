@@ -33,7 +33,7 @@ func (azureBlob *AzureBlob) getBlob(writer http.ResponseWriter, request *http.Re
 	key := request.PathValue("key")
 
 	// Generate cache entry download URL
-	generateCacheDownloadURLResponse, err := client.CirrusClient.GenerateCacheDownloadURLs(
+	generateCacheDownloadURLResponse, err := azureBlob.cirrusClient.GenerateCacheDownloadURLs(
 		request.Context(),
 		&api.CacheKey{
 			TaskIdentification: client.CirrusTaskIdentification,

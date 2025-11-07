@@ -33,16 +33,18 @@ const (
 )
 
 type GHACache struct {
-	cacheHost   string
-	mux         *http.ServeMux
-	uploadables *xsync.MapOf[int64, *uploadable.Uploadable]
+	cacheHost    string
+	mux          *http.ServeMux
+	uploadables  *xsync.MapOf[int64, *uploadable.Uploadable]
+	cirrusClient api.CirrusCIServiceClient
 }
 
-func New(cacheHost string) *GHACache {
+func New(cacheHost string, cirrusClient api.CirrusCIServiceClient) *GHACache {
 	cache := &GHACache{
-		cacheHost:   cacheHost,
-		mux:         http.NewServeMux(),
-		uploadables: xsync.NewMapOf[int64, *uploadable.Uploadable](),
+		cacheHost:    cacheHost,
+		mux:          http.NewServeMux(),
+		uploadables:  xsync.NewMapOf[int64, *uploadable.Uploadable](),
+		cirrusClient: cirrusClient,
 	}
 
 	cache.mux.HandleFunc("GET /cache", cache.get)
@@ -74,7 +76,7 @@ func (cache *GHACache) get(writer http.ResponseWriter, request *http.Request) {
 		grpcRequest.CacheKeyPrefixes = keysWithVersions[1:]
 	}
 
-	grpcResponse, err := client.CirrusClient.CacheInfo(request.Context(), grpcRequest)
+	grpcResponse, err := cache.cirrusClient.CacheInfo(request.Context(), grpcRequest)
 	if err != nil {
 		if status, ok := status.FromError(err); ok && status.Code() == codes.NotFound {
 			writer.WriteHeader(http.StatusNoContent)
@@ -118,7 +120,7 @@ func (cache *GHACache) reserveUploadable(writer http.ResponseWriter, request *ht
 		CacheID: rand.Int63n(jsNumberMaxSafeInteger),
 	}
 
-	grpcResp, err := client.CirrusClient.MultipartCacheUploadCreate(request.Context(), &api.CacheKey{
+	grpcResp, err := cache.cirrusClient.MultipartCacheUploadCreate(request.Context(), &api.CacheKey{
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           httpCacheKey(jsonReq.Key, jsonReq.Version),
 	})
@@ -174,7 +176,7 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	response, err := client.CirrusClient.MultipartCacheUploadPart(request.Context(), &api.MultipartCacheUploadPartRequest{
+	response, err := cache.cirrusClient.MultipartCacheUploadPart(request.Context(), &api.MultipartCacheUploadPartRequest{
 		CacheKey: &api.CacheKey{
 			TaskIdentification: client.CirrusTaskIdentification,
 			CacheKey:           httpCacheKey(uploadable.Key(), uploadable.Version()),
@@ -292,7 +294,7 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	_, err = client.CirrusClient.MultipartCacheUploadCommit(request.Context(), &api.MultipartCacheUploadCommitRequest{
+	_, err = cache.cirrusClient.MultipartCacheUploadCommit(request.Context(), &api.MultipartCacheUploadCommitRequest{
 		CacheKey: &api.CacheKey{
 			TaskIdentification: client.CirrusTaskIdentification,
 			CacheKey:           httpCacheKey(uploadable.Key(), uploadable.Version()),

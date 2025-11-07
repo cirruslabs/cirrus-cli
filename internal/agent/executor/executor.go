@@ -223,7 +223,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// the OS environment nor through the task's environment,
 	// run our built-in cache server
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
-		httpCacheHost := http_cache.Start(ctx)
+		httpCacheHost := http_cache.Start(ctx, client.CirrusClient)
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
 
@@ -239,7 +239,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 				otelhttp.WithPropagators(propagation.TraceContext{}),
 			)
 
-			httpCacheHostThunder := http_cache.Start(ctx)
+			httpCacheHostThunder := http_cache.Start(ctx, client.CirrusClient)
 
 			executor.env.Set("CIRRUS_HTTP_CACHE_HOST_THUNDER", httpCacheHostThunder)
 		}
