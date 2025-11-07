@@ -9,7 +9,6 @@ import (
 
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/blobstorage"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/cirruscimock"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/google/uuid"
@@ -19,10 +18,9 @@ import (
 func TestHTTPCache(t *testing.T) {
 	testutil.NeedsContainerization(t)
 
-	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
+	storageBacked := client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
-	httpCacheObjectURL := "http://" + http_cache.Start(context.Background(),
-		blobstorage.NewCirrusBlobStorage(client.CirrusClient)) + "/cache/" + uuid.NewString() + "/test.txt"
+	httpCacheObjectURL := "http://" + http_cache.Start(context.Background(), storageBacked) + "/cache/" + uuid.NewString() + "/test.txt"
 
 	// Ensure that the cache entry does not exist
 	resp, err := http.Get(httpCacheObjectURL)

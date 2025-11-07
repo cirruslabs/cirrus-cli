@@ -8,7 +8,6 @@ import (
 
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/blobstorage"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/cirruscimock"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/golang-jwt/jwt/v5"
@@ -22,9 +21,9 @@ func TestGHA(t *testing.T) {
 
 	ctx := context.Background()
 
-	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
+	storageBacked := client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
-	httpCacheURL := "http://" + http_cache.Start(ctx, blobstorage.NewCirrusBlobStorage(client.CirrusClient)) + "/"
+	httpCacheURL := "http://" + http_cache.Start(ctx, storageBacked) + "/"
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"ac":  `[]`,

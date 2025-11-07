@@ -24,7 +24,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/updatebatcher"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/vaultunboxer"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/blobstorage"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
 )
@@ -218,7 +217,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// the OS environment nor through the task's environment,
 	// run our built-in cache server
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
-		httpCacheHost := http_cache.Start(ctx, blobstorage.NewCirrusBlobStorage(client.CirrusClient))
+		httpCacheHost := http_cache.Start(ctx, client.NewCirrusBlobStorage(client.CirrusClient))
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
 	}
