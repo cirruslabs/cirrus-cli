@@ -100,13 +100,6 @@ func Start(ctx context.Context, cirrusClient api.CirrusCIServiceClient, opts ...
 			azureblob.New(httpCache.httpClient, httpCache.cirrusClient, httpCache.azureBlobOpts...))))
 
 		httpServer := &http.Server{
-			// Use agent's context as a base for the HTTP cache handlers
-			//
-			// This way the HTTP cache handlers utilizing Chacha transport will
-			// be able to further propagate that context using W3C Trace Context
-			BaseContext: func(_ net.Listener) context.Context {
-				return ctx
-			},
 			Handler: mux,
 		}
 

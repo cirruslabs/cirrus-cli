@@ -198,12 +198,7 @@ func (worker *Worker) runTask(
 			"TRACEPARENT": mapCarrier.Get("traceparent"),
 			"TRACESTATE":  mapCarrier.Get("tracestate"),
 		},
-		Chacha:             worker.chacha,
 		LocalNetworkHelper: worker.localNetworkHelper,
-	}
-
-	if worker.chacha != nil {
-		maps.Copy(config.AdditionalEnvironment, worker.chacha.AgentEnvironmentVariables())
 	}
 
 	if err := config.SetCLIVersionWithoutDowngrade(cliVersion); err != nil {
