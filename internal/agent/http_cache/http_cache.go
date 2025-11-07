@@ -17,7 +17,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/blobstorage"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacachev2"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"golang.org/x/sync/semaphore"
 )
@@ -45,9 +44,9 @@ func DefaultTransport() *http.Transport {
 	}
 }
 
-func Start(ctx context.Context, cirrusClient api.CirrusCIServiceClient, opts ...Option) string {
-	if cirrusClient == nil {
-		log.Panic("cirrusClient must not be nil when starting HTTP cache")
+func Start(ctx context.Context, storage blobstorage.BlobStorageBacked, opts ...Option) string {
+	if storage == nil {
+		log.Panic("blobStorage must not be nil when starting HTTP cache")
 	}
 
 	httpCache := &HTTPCache{
@@ -55,7 +54,7 @@ func Start(ctx context.Context, cirrusClient api.CirrusCIServiceClient, opts ...
 			Transport: DefaultTransport(),
 			Timeout:   10 * time.Minute,
 		},
-		blobStorage: blobstorage.NewCirrusBlobStorage(cirrusClient),
+		blobStorage: storage,
 	}
 
 	// Apply opts
@@ -83,19 +82,19 @@ func Start(ctx context.Context, cirrusClient api.CirrusCIServiceClient, opts ...
 		sentryHandler := sentryhttp.New(sentryhttp.Options{})
 
 		mux.Handle(ghacache.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(ghacache.APIMountPoint,
-			ghacache.New(address, httpCache.blobStorage))))
+			ghacache.New(address, storage))))
 
 		// GitHub Actions cache API v2
 		//
 		// Note that we don't strip the prefix here because
 		// Twirp handler inside *ghacachev2.Cache expects it.
-		ghaCacheV2 := ghacachev2.New(address, httpCache.blobStorage)
+		ghaCacheV2 := ghacachev2.New(address, storage)
 		mux.Handle(ghaCacheV2.PathPrefix(), ghaCacheV2)
 
 		// Partial Azure Blob Service REST API implementation
 		// needed for the GHA cache API v2 to function properly
 		mux.Handle(azureblob.APIMountPoint+"/", sentryHandler.Handle(http.StripPrefix(azureblob.APIMountPoint,
-			azureblob.New(httpCache.httpClient, httpCache.blobStorage, httpCache.azureBlobOpts...))))
+			azureblob.New(httpCache.httpClient, storage, httpCache.azureBlobOpts...))))
 
 		httpServer := &http.Server{
 			Handler: mux,

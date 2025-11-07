@@ -12,6 +12,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/blobstorage"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/cirruscimock"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/api/gharesults"
@@ -27,7 +28,9 @@ func TestGHACacheV2(t *testing.T) {
 
 	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
-	httpCacheURL := "http://" + http_cache.Start(ctx, client.CirrusClient, http_cache.WithAzureBlobOpts(azureblob.WithUnexpectedEOFReader()))
+	httpCacheURL := "http://" + http_cache.Start(ctx,
+		blobstorage.NewCirrusBlobStorage(client.CirrusClient),
+		http_cache.WithAzureBlobOpts(azureblob.WithUnexpectedEOFReader()))
 
 	client := gharesults.NewCacheServiceJSONClient(httpCacheURL, &http.Client{})
 
@@ -122,7 +125,9 @@ func TestGHACacheV2UploadStream(t *testing.T) {
 		t.Run(testCase.Name, func(t *testing.T) {
 			client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
-			httpCacheURL := "http://" + http_cache.Start(t.Context(), client.CirrusClient, http_cache.WithAzureBlobOpts(azureblob.WithUnexpectedEOFReader()))
+			httpCacheURL := "http://" + http_cache.Start(t.Context(),
+				blobstorage.NewCirrusBlobStorage(client.CirrusClient),
+				http_cache.WithAzureBlobOpts(azureblob.WithUnexpectedEOFReader()))
 
 			client := gharesults.NewCacheServiceJSONClient(httpCacheURL, &http.Client{})
 
