@@ -11,9 +11,9 @@ require (
 	github.com/cirruslabs/go-java-glob v0.1.0
 	github.com/containers/image/v5 v5.36.2
 	github.com/containers/storage v1.59.1 // indirect
-	github.com/cyphar/filepath-securejoin v0.5.1
-	github.com/docker/cli v28.5.1+incompatible
-	github.com/docker/docker v28.5.1+incompatible
+	github.com/cyphar/filepath-securejoin v0.6.0
+	github.com/docker/cli v28.5.2+incompatible
+	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/getsentry/sentry-go v0.36.2
@@ -33,7 +33,7 @@ require (
 	github.com/lestrrat-go/pdebug v0.0.0-20210111095411-35b07dbf089b // indirect
 	github.com/lestrrat-go/structinfo v0.0.0-20210312050401-7f8bd69d6acb // indirect
 	github.com/mitchellh/go-ps v1.0.0
-	github.com/moby/buildkit v0.25.1
+	github.com/moby/buildkit v0.25.2
 	github.com/moby/term v0.5.2 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0
@@ -51,7 +51,7 @@ require (
 	github.com/yudai/pp v2.0.1+incompatible // indirect
 	go.starlark.net v0.0.0-20240314022150-ee8ed142361c
 	golang.org/x/crypto v0.43.0
-	golang.org/x/sys v0.37.0
+	golang.org/x/sys v0.38.0
 	golang.org/x/text v0.30.0
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
@@ -83,7 +83,7 @@ require (
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 	github.com/samber/lo v1.52.0
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/testcontainers/testcontainers-go v0.39.0
+	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/tonistiigi/go-actions-cache v0.0.0-20250626083717-378c5ed1ddd9
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	github.com/veqryn/slog-context v0.8.0
@@ -102,7 +102,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.38.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0
-	golang.org/x/sync v0.17.0
+	golang.org/x/sync v0.18.0
 	golang.org/x/time v0.14.0
 )
 
