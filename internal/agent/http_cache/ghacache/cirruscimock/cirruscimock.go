@@ -1,9 +1,13 @@
 package cirruscimock
 
 import (
-	"bytes"
 	"context"
 	"errors"
+	"net"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -15,11 +19,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"io"
-	"net"
-	"net/http"
-	"testing"
-	"time"
 )
 
 type cirrusCIMock struct {
@@ -62,75 +61,6 @@ func ClientConn(t *testing.T) *grpc.ClientConn {
 	require.NoError(t, err)
 
 	return clientConn
-}
-
-func (mock *cirrusCIMock) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
-	cacheEntries := map[string]*bytes.Buffer{}
-	var currentBuf *bytes.Buffer
-
-	for {
-		cacheEntry, err := stream.Recv()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-
-			return err
-		}
-
-		switch typed := cacheEntry.Value.(type) {
-		case *api.CacheEntry_Key:
-			currentBuf = &bytes.Buffer{}
-			cacheEntries[typed.Key.CacheKey] = currentBuf
-		case *api.CacheEntry_Chunk:
-			currentBuf.Write(typed.Chunk.Data)
-		}
-	}
-
-	for key, buf := range cacheEntries {
-		_, err := mock.s3Client.PutObjectWithContext(stream.Context(), &s3.PutObjectInput{
-			Bucket: mock.s3Bucket,
-			Key:    aws.String(key),
-			Body:   bytes.NewReader(buf.Bytes()),
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	return stream.SendAndClose(&api.UploadCacheResponse{})
-}
-
-func (mock *cirrusCIMock) DownloadCache(request *api.DownloadCacheRequest, stream api.CirrusCIService_DownloadCacheServer) error {
-	result, err := mock.s3Client.GetObjectWithContext(stream.Context(), &s3.GetObjectInput{
-		Bucket: mock.s3Bucket,
-		Key:    aws.String(request.CacheKey),
-	})
-	if err != nil {
-		var aerr awserr.Error
-		if errors.As(err, &aerr) && aerr.Code() == s3.ErrCodeNoSuchKey {
-			return status.Errorf(codes.NotFound, "cache entry for key %s is not found",
-				request.CacheKey)
-		}
-
-		return err
-	}
-	defer result.Body.Close()
-
-	buf, err := io.ReadAll(result.Body)
-	if err != nil {
-		return err
-	}
-
-	// Chunk the buffer to prevent the "grpc: received message larger than
-	// max (X vs. 4194304)" error
-	for _, chunk := range lo.Chunk(buf, 1*1024*1024) {
-		if err := stream.Send(&api.DataChunk{Data: chunk}); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (mock *cirrusCIMock) GenerateCacheUploadURL(ctx context.Context, request *api.CacheKey) (*api.GenerateURLResponse, error) {
