@@ -7,6 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"runtime"
+	"testing"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/agent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
@@ -22,12 +29,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
-	"os"
-	"path/filepath"
-	"runtime"
-	"testing"
-	"time"
 )
 
 // TestExecutorEmpty ensures that Executor works fine with an empty task list.
@@ -219,6 +220,10 @@ func TestCache(t *testing.T) {
 		t.Skip("no container backend configured")
 	}
 
+	if _, ok := testutil.ContainerBackendFromEnv(t).(*containerbackend.Podman); ok {
+		t.Skip("skipping test on Podman due to containers not sharing network and S3 presigned not working")
+	}
+
 	dir := testutil.TempDirPopulatedWith(t, "testdata/cache")
 	err := testutil.Execute(t, dir)
 	assert.NoError(t, err)
@@ -227,6 +232,10 @@ func TestCache(t *testing.T) {
 func TestCacheOptimisticRestore(t *testing.T) {
 	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
 		t.Skip("no container backend configured")
+	}
+
+	if _, ok := testutil.ContainerBackendFromEnv(t).(*containerbackend.Podman); ok {
+		t.Skip("skipping test on Podman due to containers not sharing network and S3 presigned not working")
 	}
 
 	dir := testutil.TempDirPopulatedWith(t, "testdata/cache-optimistic-restore")
