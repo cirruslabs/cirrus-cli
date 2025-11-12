@@ -18,7 +18,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
-	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
@@ -115,7 +114,7 @@ func (tart *Tart) Warmup(
 	config *runconfig.RunConfig,
 	logger *echelon.Logger,
 ) error {
-	err := tart.bootVM(ctx, ident, additionalEnvironment, "", lazyPull, config.Chacha, logger)
+	err := tart.bootVM(ctx, ident, additionalEnvironment, "", lazyPull, logger)
 	if err != nil {
 		return err
 	}
@@ -224,7 +223,6 @@ func (tart *Tart) bootVM(
 	additionalEnvironment map[string]string,
 	automountDir string,
 	lazyPull bool,
-	chacha *chacha.Chacha,
 	logger *echelon.Logger,
 ) error {
 	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
@@ -246,7 +244,6 @@ func (tart *Tart) bootVM(
 		tart.vmName, tmpVMName,
 		lazyPull,
 		additionalEnvironment,
-		chacha,
 		logger,
 	)
 	if err != nil {
@@ -353,7 +350,7 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 			automountProjectDir = config.ProjectDir
 		}
 		err = tart.bootVM(ctx, config.TaskID, config.AdditionalEnvironment,
-			automountProjectDir, config.TartOptions.LazyPull, config.Chacha, config.Logger())
+			automountProjectDir, config.TartOptions.LazyPull, config.Logger())
 		if err != nil {
 			return err
 		}

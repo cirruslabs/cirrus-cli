@@ -2,13 +2,9 @@ package executor
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -27,12 +23,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/terminalwrapper"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/updatebatcher"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/vaultunboxer"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/fallbackroundtripper"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/propagation"
 )
 
 type CommandAndLogs struct {
@@ -224,32 +217,11 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// the OS environment nor through the task's environment,
 	// run our built-in cache server
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
-		// Default HTTP cache
 		transport := http_cache.DefaultTransport()
 
-		httpCacheHost := http_cache.Start(ctx, http_cache.DefaultTransport(), false)
+		httpCacheHost := http_cache.Start(ctx, transport)
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
-
-		// Thunder HTTP cache
-		chachaTransport, err := executor.tryChachaTransport()
-		if err != nil {
-			log.Printf("%v", err)
-		}
-		if chachaTransport != nil {
-			// Propagate agent's context using W3C Trace Context
-			// when sending requests using the Chacha transport
-			chachaTransport = otelhttp.NewTransport(chachaTransport,
-				otelhttp.WithPropagators(propagation.TraceContext{}),
-			)
-
-			// Always Chacha transport with a fallback to the default transport, just in case
-			transport := fallbackroundtripper.New(chachaTransport, transport)
-
-			httpCacheHostThunder := http_cache.Start(ctx, transport, true)
-
-			executor.env.Set("CIRRUS_HTTP_CACHE_HOST_THUNDER", httpCacheHostThunder)
-		}
 	}
 
 	executor.httpCacheHost = executor.env.Get("CIRRUS_HTTP_CACHE_HOST")
@@ -453,68 +425,6 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	); err != nil {
 		log.Printf("Failed to report that the agent has finished: %v\n", err)
 	}
-}
-
-func (executor *Executor) tryChachaTransport() (http.RoundTripper, error) {
-	if _, ok := executor.env.Lookup("CIRRUS_CHACHA_ENABLED"); !ok {
-		log.Printf("not initializing Chacha transport because CIRRUS_CHACHA_ENABLED is not set")
-
-		return nil, nil
-	}
-
-	chachaAddr, ok := os.LookupEnv("CIRRUS_CHACHA_ADDR")
-	if !ok {
-		return nil, fmt.Errorf("failed to initialize Chacha transport: " +
-			"Chacha is enabled, but no CIRRUS_CHACHA_ADDR is set")
-	}
-
-	chachaURL, err := url.Parse(chachaAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize Chacha transport: "+
-			"failed to parse Chacha address %q: %w", chachaAddr, err)
-	}
-
-	chachaTransport := &http.Transport{
-		Proxy: func(request *http.Request) (*url.URL, error) {
-			// Chacha might issue a redirect and ask the client to connect
-			// directly to the storage server (without using a proxy)
-			if request.Response != nil && request.Response.Header.Get("X-Chacha-Direct-Connect") == "1" {
-				return nil, nil
-			}
-
-			return chachaURL, nil
-		},
-
-		// Disable compression when using Chacha, as the latter
-		// does not support Vary header yet, which means that
-		// any presence of this header causes the responses
-		// to be non-cacheable.
-		//
-		// Currently on Chacha we get an "Accept-Encoding: gzip"
-		// request and a "Vary: Accept-Encoding" response.
-		//
-		// When compression is disabled, we should not get
-		// "Vary" in responses because no "Accept-Encoding"
-		// will be set.
-		DisableCompression: true,
-	}
-
-	if chachaCert, ok := os.LookupEnv("CIRRUS_CHACHA_CERT"); ok {
-		certPool := x509.NewCertPool()
-
-		if certPool.AppendCertsFromPEM([]byte(chachaCert)) {
-			chachaTransport.TLSClientConfig = &tls.Config{
-				RootCAs: certPool,
-			}
-		} else {
-			return nil, fmt.Errorf("failed to initialize Chacha transport: " +
-				"failed to add Chacha PEM certificate to root CA pool")
-		}
-	}
-
-	log.Printf("Chacha transport initialized")
-
-	return chachaTransport, nil
 }
 
 // BoundedCommands bounds a slice of commands with unique names to a half-open range [fromName, toName).

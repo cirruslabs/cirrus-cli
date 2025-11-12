@@ -6,7 +6,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/platform"
-	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/echelon"
 	"github.com/cirruslabs/echelon/renderers"
 	"github.com/hashicorp/go-version"
@@ -28,7 +27,6 @@ type RunConfig struct {
 	agentVersion               string
 	containerBackend           containerbackend.ContainerBackend
 	AdditionalEnvironment      map[string]string
-	Chacha                     *chacha.Chacha
 	LocalNetworkHelper         *localnetworkhelper.LocalNetworkHelper
 }
 
