@@ -14,6 +14,10 @@ import (
 const sendBufSize = 1024 * 1024
 
 func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
+	if _, err := r.taskFromMetadata(stream.Context()); err != nil {
+		return err
+	}
+
 	var putOp *cache.PutOperation
 	var bytesSaved int64
 
@@ -32,10 +36,6 @@ func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
 			if putOp != nil {
 				r.logger.Warnf("received multiple cache entries in a single method call")
 				return status.Error(codes.FailedPrecondition, "received multiple cache entries in a single method call")
-			}
-			_, err := r.build.GetTaskFromIdentification(x.Key.TaskIdentification, r.clientSecret)
-			if err != nil {
-				return err
 			}
 			putOp, err = r.build.Cache.Put(x.Key.CacheKey)
 			if err != nil {
@@ -78,8 +78,7 @@ func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
 }
 
 func (r *RPC) DownloadCache(req *api.DownloadCacheRequest, stream api.CirrusCIService_DownloadCacheServer) error {
-	_, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
-	if err != nil {
+	if _, err := r.taskFromMetadata(stream.Context()); err != nil {
 		return err
 	}
 
@@ -120,14 +119,14 @@ func (r *RPC) DownloadCache(req *api.DownloadCacheRequest, stream api.CirrusCISe
 }
 
 func (r *RPC) CacheInfo(ctx context.Context, req *api.CacheInfoRequest) (*api.CacheInfoResponse, error) {
-	_, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
-	if err != nil {
+	if _, err := r.taskFromMetadata(ctx); err != nil {
 		return nil, err
 	}
 
 	r.logger.Debugf("sending info about cache key %s", req.CacheKey)
 
 	var file *os.File
+	var err error
 
 	var prefixMatch bool
 

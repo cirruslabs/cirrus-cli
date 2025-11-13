@@ -119,9 +119,9 @@ func (r *RPC) Stop() {
 
 func (r *RPC) InitialCommands(
 	ctx context.Context,
-	req *api.InitialCommandsRequest,
+	_ *api.InitialCommandsRequest,
 ) (*api.CommandsResponse, error) {
-	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+	task, err := r.taskFromMetadata(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func (r *RPC) ReportCommandUpdates(
 	ctx context.Context,
 	req *api.ReportCommandUpdatesRequest,
 ) (*api.ReportCommandUpdatesResponse, error) {
-	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+	task, err := r.taskFromMetadata(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +177,7 @@ func (r *RPC) ReportCommandUpdates(
 
 func (r *RPC) ReportAgentFinished(
 	ctx context.Context,
-	req *api.ReportAgentFinishedRequest,
+	_ *api.ReportAgentFinishedRequest,
 ) (*api.ReportAgentFinishedResponse, error) {
 	return &api.ReportAgentFinishedResponse{}, nil
 }
@@ -199,7 +199,11 @@ func (r *RPC) getCommandLogger(task *build.Task, command *build.Command) *echelo
 }
 
 func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
-	var currentTaskName string
+	task, err := r.taskFromMetadata(stream.Context())
+	if err != nil {
+		return err
+	}
+
 	var currentCommand string
 	streamLogger := r.logger
 
@@ -215,11 +219,6 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 
 		switch x := logEntry.Value.(type) {
 		case *api.LogEntry_Key:
-			task, err := r.build.GetTaskFromIdentification(x.Key.TaskIdentification, r.clientSecret)
-			if err != nil {
-				return err
-			}
-			currentTaskName = task.Name
 			currentCommand = x.Key.CommandName
 
 			command := task.GetCommand(currentCommand)
@@ -231,7 +230,7 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			streamLogger = r.getCommandLogger(task, command)
 			streamLogger.Debugf("begin streaming logs")
 		case *api.LogEntry_Chunk:
-			if currentTaskName == "" {
+			if currentCommand == "" {
 				return status.Error(codes.PermissionDenied, "not authenticated")
 			}
 
@@ -257,8 +256,8 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 	return nil
 }
 
-func (r *RPC) Heartbeat(ctx context.Context, req *api.HeartbeatRequest) (*api.HeartbeatResponse, error) {
-	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+func (r *RPC) Heartbeat(ctx context.Context, _ *api.HeartbeatRequest) (*api.HeartbeatResponse, error) {
+	task, err := r.taskFromMetadata(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +272,7 @@ func (r *RPC) Heartbeat(ctx context.Context, req *api.HeartbeatRequest) (*api.He
 }
 
 func (r *RPC) ReportAgentError(ctx context.Context, req *api.ReportAgentProblemRequest) (*empty.Empty, error) {
-	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+	task, err := r.taskFromMetadata(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +283,7 @@ func (r *RPC) ReportAgentError(ctx context.Context, req *api.ReportAgentProblemR
 }
 
 func (r *RPC) ReportAgentWarning(ctx context.Context, req *api.ReportAgentProblemRequest) (*empty.Empty, error) {
-	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+	task, err := r.taskFromMetadata(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +294,7 @@ func (r *RPC) ReportAgentWarning(ctx context.Context, req *api.ReportAgentProble
 }
 
 func (r *RPC) ReportAgentSignal(ctx context.Context, req *api.ReportAgentSignalRequest) (*empty.Empty, error) {
-	task, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+	task, err := r.taskFromMetadata(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +305,7 @@ func (r *RPC) ReportAgentSignal(ctx context.Context, req *api.ReportAgentSignalR
 }
 
 func (r *RPC) ReportAnnotations(ctx context.Context, req *api.ReportAnnotationsCommandRequest) (*empty.Empty, error) {
-	_, err := r.build.GetTaskFromIdentification(req.TaskIdentification, r.clientSecret)
+	_, err := r.taskFromMetadata(ctx)
 	if err != nil {
 		return nil, err
 	}
