@@ -288,6 +288,7 @@ service CirrusCIService {
   }
   rpc ReportAgentLogs (ReportAgentLogsRequest) returns (google.protobuf.Empty) {
   }
+  rpc ReportAgentResourceUtilization (ReportAgentResourceUtilizationRequest) returns (google.protobuf.Empty);
   rpc ReportAgentFinished (ReportAgentFinishedRequest) returns (ReportAgentFinishedResponse) {
   }
   rpc ReportTerminalAttached (ReportTerminalAttachedRequest) returns (ReportTerminalAttachedResponse) {
@@ -570,6 +571,11 @@ message ReportAgentSignalRequest {
 message ReportAgentLogsRequest {
   TaskIdentification task_identification = 1 [deprecated = true];
   string logs = 2;
+}
+
+message ReportAgentResourceUtilizationRequest {
+  TaskIdentification task_identification = 1 [deprecated = true];
+  ResourceUtilization resource_utilization = 2;
 }
 
 message CacheRetrievalAttempt {
