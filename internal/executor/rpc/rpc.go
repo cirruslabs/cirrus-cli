@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/commandstatus"
@@ -16,10 +21,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"io"
-	"strings"
-	"sync"
-	"time"
 
 	// Registers a gzip compressor needed for streaming logs from the agent.
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -230,10 +231,6 @@ func (r *RPC) StreamLogs(stream api.CirrusCIService_StreamLogsServer) error {
 			streamLogger = r.getCommandLogger(task, command)
 			streamLogger.Debugf("begin streaming logs")
 		case *api.LogEntry_Chunk:
-			if currentCommand == "" {
-				return status.Error(codes.PermissionDenied, "not authenticated")
-			}
-
 			streamLogger.Debugf("received log chunk of %d bytes", len(x.Chunk.Data))
 
 			// Ignore the newline at the end of the chunk,
