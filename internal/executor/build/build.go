@@ -1,13 +1,12 @@
 package build
 
 import (
+	"path/filepath"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor/build/taskstatus"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
 	"github.com/cirruslabs/cirrus-cli/internal/logger"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"path/filepath"
 )
 
 type Build struct {
@@ -66,19 +65,6 @@ func (b *Build) GetTask(id int64) *Task {
 	}
 
 	return task
-}
-
-func (b *Build) GetTaskFromIdentification(tid *api.TaskIdentification, clientSecret string) (*Task, error) {
-	if tid.Secret != clientSecret {
-		return nil, status.Error(codes.Unauthenticated, "provided secret value is invalid")
-	}
-
-	task, found := b.tasks[tid.TaskId]
-	if !found {
-		return nil, status.Errorf(codes.NotFound, "cannot find the task with the specified ID")
-	}
-
-	return task, nil
 }
 
 func (b *Build) taskHasUnresolvedDependencies(task *Task) bool {
