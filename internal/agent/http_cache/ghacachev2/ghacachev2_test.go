@@ -28,7 +28,7 @@ func TestGHACacheV2(t *testing.T) {
 	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
 	httpCacheURL := "http://" + http_cache.Start(ctx, http_cache.DefaultTransport(),
-		false, http_cache.WithAzureBlobOpts(azureblob.WithUnexpectedEOFReader()))
+		http_cache.WithAzureBlobOpts(azureblob.WithUnexpectedEOFReader()))
 
 	client := gharesults.NewCacheServiceJSONClient(httpCacheURL, &http.Client{})
 
@@ -124,7 +124,7 @@ func TestGHACacheV2UploadStream(t *testing.T) {
 			client.InitClient(cirruscimock.ClientConn(t), "test", "test")
 
 			httpCacheURL := "http://" + http_cache.Start(t.Context(), http_cache.DefaultTransport(),
-				false, http_cache.WithAzureBlobOpts(azureblob.WithUnexpectedEOFReader()))
+				http_cache.WithAzureBlobOpts(azureblob.WithUnexpectedEOFReader()))
 
 			client := gharesults.NewCacheServiceJSONClient(httpCacheURL, &http.Client{})
 

@@ -2,7 +2,6 @@ package worker
 
 import (
 	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
-	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/resourcemodifier"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/security"
 	"github.com/cirruslabs/cirrus-cli/internal/worker/tuning"
@@ -64,12 +63,6 @@ func WithTuning(tuning *tuning.Tuning) Option {
 func WithTartPrePull(tartPrePull *TartPrePull) Option {
 	return func(e *Worker) {
 		e.tartPrePull = tartPrePull
-	}
-}
-
-func WithChacha(chacha *chacha.Chacha) Option {
-	return func(e *Worker) {
-		e.chacha = chacha
 	}
 }
 

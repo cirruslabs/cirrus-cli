@@ -9,7 +9,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cirruslabs/cirrus-cli/internal/worker/chacha"
 	"github.com/cirruslabs/echelon"
 	"github.com/getsentry/sentry-go"
 	"go.opentelemetry.io/otel/trace"
@@ -41,7 +40,6 @@ func NewVMClonedFrom(
 	to string,
 	lazyPull bool,
 	env map[string]string,
-	chacha *chacha.Chacha,
 	logger *echelon.Logger,
 ) (*VM, error) {
 	runningVMCtx, runningVMCtxCancel := context.WithCancel(
@@ -58,7 +56,7 @@ func NewVMClonedFrom(
 
 	pullLogger := logger.Scoped("pull virtual machine")
 	if !lazyPull {
-		vm.pull(ctx, from, chacha, pullLogger)
+		vm.pull(ctx, from, pullLogger)
 	} else {
 		pullLogger.FinishWithType(echelon.FinishTypeSkipped)
 	}
@@ -83,26 +81,7 @@ func NewVMClonedFrom(
 	return vm, nil
 }
 
-func (vm *VM) pull(ctx context.Context, from string, chacha *chacha.Chacha, logger *echelon.Logger) {
-	if chacha != nil && chacha.EnableTart() {
-		logger.Infof("Pulling virtual machine %s via Chacha...", from)
-
-		args := []string{
-			"--proxy", chacha.Addr(),
-			"--ca-cert", chacha.CertPath(),
-			"--max-retries", "1",
-			from,
-		}
-
-		if _, _, err := CmdWithLogger(ctx, vm.env, logger, "pull", args...); err != nil {
-			logger.Errorf("Failed to pull virtual machine %s via Chacha: %v", from, err)
-		} else {
-			logger.FinishWithType(echelon.FinishTypeSucceeded)
-
-			return
-		}
-	}
-
+func (vm *VM) pull(ctx context.Context, from string, logger *echelon.Logger) {
 	logger.Infof("Pulling virtual machine %s...", from)
 
 	if _, _, err := CmdWithLogger(ctx, vm.env, logger, "pull", from); err != nil {

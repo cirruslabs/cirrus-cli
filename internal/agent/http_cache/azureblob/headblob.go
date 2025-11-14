@@ -68,7 +68,7 @@ func (azureBlob *AzureBlob) retrieveCacheEntryInfo(
 		return true
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := azureBlob.httpClient.Do(req)
 	if err != nil {
 		if !isLastIteration {
 			return false
@@ -80,12 +80,8 @@ func (azureBlob *AzureBlob) retrieveCacheEntryInfo(
 		return true
 	}
 
-	// Chacha doesn't support Range requests yet, and not disclosing Content-Length
-	// to the Azure Blob Client makes it not use the Range requests
-	if !azureBlob.chachaEnabled {
-		if contentLength := resp.Header.Get("Content-Length"); contentLength != "" {
-			writer.Header().Set("Content-Length", contentLength)
-		}
+	if contentLength := resp.Header.Get("Content-Length"); contentLength != "" {
+		writer.Header().Set("Content-Length", contentLength)
 	}
 
 	writer.WriteHeader(resp.StatusCode)

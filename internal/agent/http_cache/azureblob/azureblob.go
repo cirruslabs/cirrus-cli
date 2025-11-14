@@ -28,19 +28,17 @@ type statusAndError struct {
 }
 
 type AzureBlob struct {
-	mux                          *http.ServeMux
-	uploadables                  *xsync.MapOf[string, *uploadablepkg.Uploadable]
-	potentiallyCachingHTTPClient *http.Client
-	chachaEnabled                bool
-	withUnexpectedEOFReader      bool
+	mux                     *http.ServeMux
+	uploadables             *xsync.MapOf[string, *uploadablepkg.Uploadable]
+	httpClient              *http.Client
+	withUnexpectedEOFReader bool
 }
 
-func New(potentiallyCachingHTTPClient *http.Client, chachaEnabled bool, opts ...Option) *AzureBlob {
+func New(httpClient *http.Client, opts ...Option) *AzureBlob {
 	azureBlobContainer := &AzureBlob{
-		mux:                          http.NewServeMux(),
-		uploadables:                  xsync.NewMapOf[string, *uploadablepkg.Uploadable](),
-		potentiallyCachingHTTPClient: potentiallyCachingHTTPClient,
-		chachaEnabled:                chachaEnabled,
+		mux:         http.NewServeMux(),
+		uploadables: xsync.NewMapOf[string, *uploadablepkg.Uploadable](),
+		httpClient:  httpClient,
 	}
 
 	// Apply opts
