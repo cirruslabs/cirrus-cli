@@ -646,32 +646,33 @@ var CirrusWorkersService_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	CirrusCIService_InitialCommands_FullMethodName            = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/InitialCommands"
-	CirrusCIService_ReportCommandUpdates_FullMethodName       = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportCommandUpdates"
-	CirrusCIService_ReportAnnotations_FullMethodName          = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAnnotations"
-	CirrusCIService_StreamLogs_FullMethodName                 = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/StreamLogs"
-	CirrusCIService_SaveLogs_FullMethodName                   = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/SaveLogs"
-	CirrusCIService_UploadCache_FullMethodName                = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/UploadCache"
-	CirrusCIService_UploadArtifacts_FullMethodName            = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/UploadArtifacts"
-	CirrusCIService_GenerateArtifactUploadURLs_FullMethodName = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/GenerateArtifactUploadURLs"
-	CirrusCIService_CommitUploadedArtifacts_FullMethodName    = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/CommitUploadedArtifacts"
-	CirrusCIService_DownloadCache_FullMethodName              = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/DownloadCache"
-	CirrusCIService_CacheInfo_FullMethodName                  = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/CacheInfo"
-	CirrusCIService_DeleteCache_FullMethodName                = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/DeleteCache"
-	CirrusCIService_Heartbeat_FullMethodName                  = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/Heartbeat"
-	CirrusCIService_ReportStopHook_FullMethodName             = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportStopHook"
-	CirrusCIService_ReportAgentError_FullMethodName           = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentError"
-	CirrusCIService_ReportAgentWarning_FullMethodName         = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentWarning"
-	CirrusCIService_ReportAgentSignal_FullMethodName          = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentSignal"
-	CirrusCIService_ReportAgentLogs_FullMethodName            = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentLogs"
-	CirrusCIService_ReportAgentFinished_FullMethodName        = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentFinished"
-	CirrusCIService_ReportTerminalAttached_FullMethodName     = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportTerminalAttached"
-	CirrusCIService_ReportTerminalLifecycle_FullMethodName    = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportTerminalLifecycle"
-	CirrusCIService_GenerateCacheUploadURL_FullMethodName     = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/GenerateCacheUploadURL"
-	CirrusCIService_GenerateCacheDownloadURLs_FullMethodName  = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/GenerateCacheDownloadURLs"
-	CirrusCIService_MultipartCacheUploadCreate_FullMethodName = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/MultipartCacheUploadCreate"
-	CirrusCIService_MultipartCacheUploadPart_FullMethodName   = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/MultipartCacheUploadPart"
-	CirrusCIService_MultipartCacheUploadCommit_FullMethodName = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/MultipartCacheUploadCommit"
+	CirrusCIService_InitialCommands_FullMethodName                = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/InitialCommands"
+	CirrusCIService_ReportCommandUpdates_FullMethodName           = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportCommandUpdates"
+	CirrusCIService_ReportAnnotations_FullMethodName              = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAnnotations"
+	CirrusCIService_StreamLogs_FullMethodName                     = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/StreamLogs"
+	CirrusCIService_SaveLogs_FullMethodName                       = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/SaveLogs"
+	CirrusCIService_UploadCache_FullMethodName                    = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/UploadCache"
+	CirrusCIService_UploadArtifacts_FullMethodName                = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/UploadArtifacts"
+	CirrusCIService_GenerateArtifactUploadURLs_FullMethodName     = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/GenerateArtifactUploadURLs"
+	CirrusCIService_CommitUploadedArtifacts_FullMethodName        = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/CommitUploadedArtifacts"
+	CirrusCIService_DownloadCache_FullMethodName                  = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/DownloadCache"
+	CirrusCIService_CacheInfo_FullMethodName                      = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/CacheInfo"
+	CirrusCIService_DeleteCache_FullMethodName                    = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/DeleteCache"
+	CirrusCIService_Heartbeat_FullMethodName                      = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/Heartbeat"
+	CirrusCIService_ReportStopHook_FullMethodName                 = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportStopHook"
+	CirrusCIService_ReportAgentError_FullMethodName               = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentError"
+	CirrusCIService_ReportAgentWarning_FullMethodName             = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentWarning"
+	CirrusCIService_ReportAgentSignal_FullMethodName              = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentSignal"
+	CirrusCIService_ReportAgentLogs_FullMethodName                = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentLogs"
+	CirrusCIService_ReportAgentResourceUtilization_FullMethodName = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentResourceUtilization"
+	CirrusCIService_ReportAgentFinished_FullMethodName            = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAgentFinished"
+	CirrusCIService_ReportTerminalAttached_FullMethodName         = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportTerminalAttached"
+	CirrusCIService_ReportTerminalLifecycle_FullMethodName        = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportTerminalLifecycle"
+	CirrusCIService_GenerateCacheUploadURL_FullMethodName         = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/GenerateCacheUploadURL"
+	CirrusCIService_GenerateCacheDownloadURLs_FullMethodName      = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/GenerateCacheDownloadURLs"
+	CirrusCIService_MultipartCacheUploadCreate_FullMethodName     = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/MultipartCacheUploadCreate"
+	CirrusCIService_MultipartCacheUploadPart_FullMethodName       = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/MultipartCacheUploadPart"
+	CirrusCIService_MultipartCacheUploadCommit_FullMethodName     = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/MultipartCacheUploadCommit"
 )
 
 // CirrusCIServiceClient is the client API for CirrusCIService service.
@@ -698,6 +699,7 @@ type CirrusCIServiceClient interface {
 	ReportAgentWarning(ctx context.Context, in *ReportAgentProblemRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ReportAgentSignal(ctx context.Context, in *ReportAgentSignalRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ReportAgentLogs(ctx context.Context, in *ReportAgentLogsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ReportAgentResourceUtilization(ctx context.Context, in *ReportAgentResourceUtilizationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ReportAgentFinished(ctx context.Context, in *ReportAgentFinishedRequest, opts ...grpc.CallOption) (*ReportAgentFinishedResponse, error)
 	ReportTerminalAttached(ctx context.Context, in *ReportTerminalAttachedRequest, opts ...grpc.CallOption) (*ReportTerminalAttachedResponse, error)
 	ReportTerminalLifecycle(ctx context.Context, in *ReportTerminalLifecycleRequest, opts ...grpc.CallOption) (*ReportTerminalLifecycleResponse, error)
@@ -918,6 +920,16 @@ func (c *cirrusCIServiceClient) ReportAgentLogs(ctx context.Context, in *ReportA
 	return out, nil
 }
 
+func (c *cirrusCIServiceClient) ReportAgentResourceUtilization(ctx context.Context, in *ReportAgentResourceUtilizationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, CirrusCIService_ReportAgentResourceUtilization_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *cirrusCIServiceClient) ReportAgentFinished(ctx context.Context, in *ReportAgentFinishedRequest, opts ...grpc.CallOption) (*ReportAgentFinishedResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ReportAgentFinishedResponse)
@@ -1022,6 +1034,7 @@ type CirrusCIServiceServer interface {
 	ReportAgentWarning(context.Context, *ReportAgentProblemRequest) (*emptypb.Empty, error)
 	ReportAgentSignal(context.Context, *ReportAgentSignalRequest) (*emptypb.Empty, error)
 	ReportAgentLogs(context.Context, *ReportAgentLogsRequest) (*emptypb.Empty, error)
+	ReportAgentResourceUtilization(context.Context, *ReportAgentResourceUtilizationRequest) (*emptypb.Empty, error)
 	ReportAgentFinished(context.Context, *ReportAgentFinishedRequest) (*ReportAgentFinishedResponse, error)
 	ReportTerminalAttached(context.Context, *ReportTerminalAttachedRequest) (*ReportTerminalAttachedResponse, error)
 	ReportTerminalLifecycle(context.Context, *ReportTerminalLifecycleRequest) (*ReportTerminalLifecycleResponse, error)
@@ -1094,6 +1107,9 @@ func (UnimplementedCirrusCIServiceServer) ReportAgentSignal(context.Context, *Re
 }
 func (UnimplementedCirrusCIServiceServer) ReportAgentLogs(context.Context, *ReportAgentLogsRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReportAgentLogs not implemented")
+}
+func (UnimplementedCirrusCIServiceServer) ReportAgentResourceUtilization(context.Context, *ReportAgentResourceUtilizationRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReportAgentResourceUtilization not implemented")
 }
 func (UnimplementedCirrusCIServiceServer) ReportAgentFinished(context.Context, *ReportAgentFinishedRequest) (*ReportAgentFinishedResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReportAgentFinished not implemented")
@@ -1413,6 +1429,24 @@ func _CirrusCIService_ReportAgentLogs_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CirrusCIService_ReportAgentResourceUtilization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReportAgentResourceUtilizationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CirrusCIServiceServer).ReportAgentResourceUtilization(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CirrusCIService_ReportAgentResourceUtilization_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CirrusCIServiceServer).ReportAgentResourceUtilization(ctx, req.(*ReportAgentResourceUtilizationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CirrusCIService_ReportAgentFinished_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ReportAgentFinishedRequest)
 	if err := dec(in); err != nil {
@@ -1615,6 +1649,10 @@ var CirrusCIService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReportAgentLogs",
 			Handler:    _CirrusCIService_ReportAgentLogs_Handler,
+		},
+		{
+			MethodName: "ReportAgentResourceUtilization",
+			Handler:    _CirrusCIService_ReportAgentResourceUtilization_Handler,
 		},
 		{
 			MethodName: "ReportAgentFinished",
