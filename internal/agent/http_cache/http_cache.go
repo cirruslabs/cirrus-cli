@@ -288,7 +288,7 @@ func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Requ
 		log.Println("Failed response:")
 		resp.Write(log.Writer())
 	}
-	w.WriteHeader(resp.StatusCode)
+	w.WriteHeader(http.StatusCreated)
 }
 
 func deleteCacheEntry(w http.ResponseWriter, cacheKey string) {
