@@ -29,4 +29,5 @@ func TestDockerBuilderLinux(t *testing.T) {
 	err := testutil.ExecuteWithOptionsNew(t, dir, executor.WithLogger(logger))
 	assert.NoError(t, err)
 	assert.Contains(t, buf.String(), "'linux' task succeeded")
+	assert.Contains(t, buf.String(), "I am running inside Docker Builder!")
 }
