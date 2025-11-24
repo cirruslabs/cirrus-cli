@@ -16,7 +16,7 @@ import (
 	gopsutilcpu "github.com/shirou/gopsutil/v3/cpu"
 	gopsutilmem "github.com/shirou/gopsutil/v3/mem"
 	"github.com/sirupsen/logrus"
-	"log"
+	"log/slog"
 	"runtime"
 	"time"
 )
@@ -55,8 +55,8 @@ func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
 	resolver, err := resolver.New()
 	if err != nil {
 		if runtime.GOOS == "linux" {
-			log.Printf("cgroup resolver initialization failed (%v), falling back to system-wide metrics collection",
-				err)
+			slog.Warn("cgroup resolver initialization failed, falling back to system-wide metrics collection",
+				"err", err)
 		}
 	} else {
 		cpuSrc, err := cpu.NewCPU(resolver)

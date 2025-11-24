@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"log"
+	"log/slog"
 )
 
 type UpdateBatcher struct {
@@ -34,7 +34,7 @@ func (ub *UpdateBatcher) Flush(ctx context.Context, taskIdentification *api.Task
 		Updates:            ub.unflushedUpdates,
 	})
 	if err != nil {
-		log.Printf("Failed to report command updates: %v\n", err)
+		slog.Error("Failed to report command updates", "err", err)
 		return
 	}
 	ub.unflushedUpdates = ub.unflushedUpdates[:0]

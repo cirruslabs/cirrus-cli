@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -80,22 +80,29 @@ func Run(args []string) {
 	}
 	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0660)
 	if err != nil {
-		log.Printf("Failed to create log file: %v", err)
+		slog.Error("Failed to create log file", "path", logFilePath, "err", err)
 	} else {
 		defer func() {
 			logFilePos, err := logFile.Seek(0, io.SeekCurrent)
 			if err != nil {
-				log.Printf("Failed to determine the final log file size: %v", err)
+				slog.Error("Failed to determine the final log file size", "err", err)
 			}
 
-			log.Printf("Finalizing log file, %d bytes written", logFilePos)
+			slog.Info("Finalizing log file", "bytes_written", logFilePos)
 
 			_ = logFile.Close()
 			uploadAgentLogs(context.Background(), logFilePath, *taskIdPtr, *clientTokenPtr)
 		}()
 	}
-	multiWriter := io.MultiWriter(logFile, os.Stdout)
-	log.SetOutput(multiWriter)
+
+	writers := []io.Writer{os.Stdout}
+	if logFile != nil {
+		writers = append([]io.Writer{logFile}, writers...)
+	}
+
+	multiWriter := io.MultiWriter(writers...)
+	logger := slog.New(slog.NewTextHandler(multiWriter, nil))
+	slog.SetDefault(logger)
 	grpclog.SetLoggerV2(grpclog.NewLoggerV2(multiWriter, multiWriter, multiWriter))
 
 	// Handle panics
@@ -110,9 +117,8 @@ func Run(args []string) {
 		hub.Recover(err)
 
 		// Report exception to log file
-		log.Printf("Recovered an error: %v", err)
 		stack := string(debug.Stack())
-		log.Println(stack)
+		slog.Error("Recovered an error", "err", err, "stack", stack)
 
 		// Report exception to Cirrus CI
 		if client.CirrusClient == nil {
@@ -126,7 +132,7 @@ func Run(args []string) {
 		}
 		_, err = client.CirrusClient.ReportAgentError(context.Background(), request)
 		if err != nil {
-			log.Printf("Failed to report agent error: %v\n", err)
+			slog.Error("Failed to report agent error", "err", err)
 		}
 	}()
 
@@ -142,7 +148,7 @@ func Run(args []string) {
 
 	var conn *grpc.ClientConn
 
-	log.Printf("Running agent version %s", version.FullVersion)
+	slog.Info("Running agent", "version", version.FullVersion)
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -163,7 +169,7 @@ func Run(args []string) {
 				continue
 			}
 
-			log.Printf("Captured %v...", sig)
+			slog.Info("Captured signal", "signal", sig.String())
 
 			reportSignal(context.Background(), sig, *taskIdPtr, *clientTokenPtr)
 		}
@@ -171,7 +177,7 @@ func Run(args []string) {
 
 	// Prevent SENTRY_DSN propagation to scripts
 	if err := os.Unsetenv("SENTRY_DSN"); err != nil {
-		log.Printf("Failed to unset SENTRY_DSN: %v", err)
+		slog.Warn("Failed to unset SENTRY_DSN", "err", err)
 	}
 
 	// Connect to the RPC server
@@ -185,7 +191,7 @@ func Run(args []string) {
 			conn, err = dialWithTimeout(ctx, *apiEndpointPtr, md)
 			return err
 		}, retry.OnRetry(func(n uint, err error) {
-			log.Printf("Failed to open a connection: %v\n", err)
+			slog.Warn("Failed to open a connection", "err", err)
 		}),
 		retry.Delay(1*time.Second), retry.MaxDelay(1*time.Second),
 		retry.Attempts(0), retry.LastErrorOnly(true),
@@ -196,21 +202,23 @@ func Run(args []string) {
 		return
 	}
 
-	log.Printf("Connected!\n")
+	slog.Info("Connected")
 
 	client.InitClient(conn, *taskIdPtr, *clientTokenPtr)
 
 	if *stopHook {
-		log.Printf("Stop hook!\n")
+		slog.Info("Stop hook invoked")
 
 		request := api.ReportStopHookRequest{
 			TaskIdentification: client.CirrusTaskIdentification,
 		}
 		_, err = client.CirrusClient.ReportStopHook(ctx, &request)
 		if err != nil {
-			log.Printf("Failed to report stop hook for task %s: %v\n", *taskIdPtr, err)
+			slog.Error("Failed to report stop hook", "task_id", *taskIdPtr, "err", err)
 		} else {
-			logFile.Close()
+			if logFile != nil {
+				logFile.Close()
+			}
 			os.Remove(logFilePath)
 		}
 		os.Exit(0)
@@ -225,7 +233,7 @@ func Run(args []string) {
 				continue
 			}
 
-			log.Printf("Waiting on port %v...\n", port)
+			slog.Info("Waiting on port", "port", port)
 
 			subCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 			network.WaitForLocalPort(subCtx, portNumber)
@@ -336,20 +344,20 @@ func streamMetadataInterceptor(md metadata.MD) grpc.StreamClientInterceptor {
 
 func runHeartbeat(taskId string, clientToken string, conn *grpc.ClientConn) {
 	for {
-		log.Println("Sending heartbeat...")
+		slog.Info("Sending heartbeat...")
 		_, err := client.CirrusClient.Heartbeat(
 			context.Background(),
 			&api.HeartbeatRequest{TaskIdentification: api.OldTaskIdentification(taskId, clientToken)},
 		)
 		if err != nil {
-			log.Printf("Failed to send heartbeat: %v", err)
+			slog.Error("Failed to send heartbeat", "err", err)
 			connectionState := conn.GetState()
-			log.Printf("Connection state: %v", connectionState.String())
+			slog.Info("Connection state", "state", connectionState.String())
 			if connectionState == connectivity.TransientFailure {
 				conn.ResetConnectBackoff()
 			}
 		} else {
-			log.Printf("Sent heartbeat!")
+			slog.Info("Sent heartbeat!")
 		}
 		time.Sleep(60 * time.Second)
 	}

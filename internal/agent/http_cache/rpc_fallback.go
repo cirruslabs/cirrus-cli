@@ -6,7 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -16,7 +16,7 @@ func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.R
 		CacheKey:           cacheKey,
 	})
 	if err != nil {
-		log.Printf("%s cache download initialization (RPC fallback) failed: %v\n", cacheKey, err)
+		slog.Error("Cache download initialization via RPC failed", "cache_key", cacheKey, "err", err)
 
 		if status.Code(err) == codes.NotFound {
 			w.WriteHeader(http.StatusNotFound)
@@ -31,9 +31,9 @@ func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.R
 		chunk, err := cacheStream.Recv()
 		if err != nil {
 			if err == io.EOF {
-				log.Printf("%s cache download (RPC fallback) finished...\n", cacheKey)
+				slog.Info("Cache download via RPC finished", "cache_key", cacheKey)
 			} else {
-				log.Printf("%s cache download (RPC fallback) failed: %v\n", cacheKey, err)
+				slog.Error("Cache download via RPC failed", "cache_key", cacheKey, "err", err)
 
 				if status.Code(err) == codes.NotFound {
 					w.WriteHeader(http.StatusNotFound)
@@ -46,7 +46,7 @@ func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.R
 		}
 
 		if chunk.RedirectUrl != "" {
-			log.Printf("%s cache download (RPC fallback) requested a redirect\n", cacheKey)
+			slog.Info("Cache download via RPC requested redirect", "cache_key", cacheKey)
 			httpCache.proxyDownloadFromURLs(w, r, []string{chunk.RedirectUrl})
 
 			return
@@ -57,7 +57,7 @@ func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.R
 		}
 
 		if _, err := w.Write(chunk.Data); err != nil {
-			log.Printf("%s cache download (RPC fallback) failed: %v\n", cacheKey, err)
+			slog.Error("Cache download via RPC failed", "cache_key", cacheKey, "err", err)
 			w.WriteHeader(http.StatusInternalServerError)
 
 			return
@@ -68,7 +68,7 @@ func (httpCache *HTTPCache) downloadCacheViaRPC(w http.ResponseWriter, r *http.R
 func uploadCacheEntryViaRPC(w http.ResponseWriter, r *http.Request, cacheKey string) {
 	uploadCacheClient, err := client.CirrusClient.UploadCache(r.Context())
 	if err != nil {
-		log.Printf("%s cache upload initialization (RPC fallback) failed: %v\n", cacheKey, err)
+		slog.Error("Cache upload initialization via RPC failed", "cache_key", cacheKey, "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
 
 		return
@@ -82,7 +82,7 @@ func uploadCacheEntryViaRPC(w http.ResponseWriter, r *http.Request, cacheKey str
 			},
 		},
 	}); err != nil {
-		log.Printf("%s cache upload (RPC fallback) failed: %v\n", cacheKey, err)
+		slog.Error("Cache upload via RPC failed", "cache_key", cacheKey, "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
 
 		return
@@ -101,7 +101,7 @@ func uploadCacheEntryViaRPC(w http.ResponseWriter, r *http.Request, cacheKey str
 				},
 			})
 			if err != nil {
-				log.Printf("%s cache upload (RPC fallback) failed: %v\n", cacheKey, err)
+				slog.Error("Cache upload via RPC failed", "cache_key", cacheKey, "err", err)
 				w.WriteHeader(http.StatusInternalServerError)
 
 				_, _ = uploadCacheClient.CloseAndRecv()
@@ -110,12 +110,12 @@ func uploadCacheEntryViaRPC(w http.ResponseWriter, r *http.Request, cacheKey str
 			}
 		}
 		if err == io.EOF {
-			log.Printf("%s cache upload (RPC fallback) finished...\n", cacheKey)
+			slog.Info("Cache upload via RPC finished", "cache_key", cacheKey)
 
 			break
 		}
 		if err != nil {
-			log.Printf("%s cache upload (RPC fallback) failed: %v\n", cacheKey, err)
+			slog.Error("Cache upload via RPC failed", "cache_key", cacheKey, "err", err)
 			w.WriteHeader(http.StatusBadRequest)
 
 			_, _ = uploadCacheClient.CloseAndRecv()
@@ -125,7 +125,7 @@ func uploadCacheEntryViaRPC(w http.ResponseWriter, r *http.Request, cacheKey str
 	}
 
 	if _, err := uploadCacheClient.CloseAndRecv(); err != nil {
-		log.Printf("%s cache upload (RPC fallback) failed: %v\n", cacheKey, err)
+		slog.Error("Cache upload via RPC failed", "cache_key", cacheKey, "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusCreated)

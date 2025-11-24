@@ -5,7 +5,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/stretchr/testify/require"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"testing"
 	"time"
@@ -22,7 +22,7 @@ func TestProgressReader(t *testing.T) {
 	progressReader := progressreader.New(resp.Body, time.Second, func(bytes int64, duration time.Duration) {
 		rate := float64(bytes) / duration.Seconds()
 
-		log.Printf("%d bytes read in %s (%s/s)", bytes, duration, humanize.Bytes(uint64(rate)))
+		slog.Info("Bytes read", "bytes", bytes, "duration", duration, "rate", humanize.Bytes(uint64(rate)))
 	})
 
 	_, err = io.Copy(io.Discard, progressReader)
