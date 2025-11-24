@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -91,7 +91,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	defer metricsCancel()
 	metricsResultChan := metrics.Run(metricsCtx, nil)
 
-	log.Println("Getting initial commands...")
+	slog.Info("Getting initial commands...")
 
 	var response *api.CommandsResponse
 	var err error
@@ -108,7 +108,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			return err
 		}, retry.OnRetry(func(n uint, err error) {
 			numRetries++
-			log.Printf("Failed to get initial commands: %v", err)
+			slog.Warn("Failed to get initial commands", "err", err)
 		}),
 		retry.Delay(5*time.Second),
 		retry.Attempts(0), retry.LastErrorOnly(true),
@@ -120,8 +120,8 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	}
 
 	if response.ServerToken != executor.serverToken {
-		log.Panic("Server token is incorrect!")
-		return
+		slog.Error("Server token is incorrect!")
+		panic("Server token is incorrect!")
 	}
 
 	// Retrieve the script/commands environment, but do not merge it into the
@@ -141,7 +141,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// "PASSWORD: VAULT[$PATH $ARGS]" would work.
 	vaultUnboxerEnv := environment.New(scriptEnvironment)
 
-	log.Println("Unboxing VAULT[...] environment variables, if any")
+	slog.Info("Unboxing VAULT[...] environment variables, if any")
 
 	var vaultUnboxer *vaultunboxer.VaultUnboxer
 
@@ -153,31 +153,31 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			}
 
 			message := fmt.Sprintf("failed to parse a Vault-boxed value %s: %v", value, err)
-			log.Println(message)
+			slog.Error(message)
 			executor.reportError(message)
 
 			return
 		}
 
 		if vaultUnboxer == nil {
-			log.Println("Found at least one VAULT[...] environment variable, initializing Vault client")
+			slog.Info("Found at least one VAULT[...] environment variable, initializing Vault client")
 
 			vaultUnboxer, err = vaultunboxer.NewFromEnvironment(ctx, vaultUnboxerEnv)
 			if err != nil {
 				message := fmt.Sprintf("failed to initialize a Vault client: %v", err)
-				log.Println(message)
+				slog.Error(message)
 				executor.reportError(message)
 
 				return
 			}
 
-			log.Println("Vault client successfully initialized")
+			slog.Info("Vault client successfully initialized")
 		}
 
 		unboxedValue, err := vaultUnboxer.Unbox(ctx, boxedValue)
 		if err != nil {
 			message := fmt.Sprintf("failed to unbox a Vault-boxed value %s: %v", value, err)
-			log.Println(message)
+			slog.Error(message)
 			executor.reportError(message)
 
 			return
@@ -191,19 +191,19 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 
 	workingDir, ok := executor.env.Lookup("CIRRUS_WORKING_DIR")
 	if ok {
-		log.Printf("Changing current working directory to %s", workingDir)
+		slog.Info("Changing current working directory", "path", workingDir)
 
 		EnsureFolderExists(workingDir)
 
 		if err := os.Chdir(workingDir); err != nil {
 			message := fmt.Sprintf("Failed to change current working directory to '%s': %v", workingDir, err)
-			log.Println(message)
+			slog.Error(message)
 			executor.reportError(message)
 
 			return
 		}
 	} else {
-		log.Printf("Not changing current working directory because CIRRUS_WORKING_DIR is not set")
+		slog.Info("Not changing current working directory because CIRRUS_WORKING_DIR is not set")
 	}
 
 	commands := response.Commands
@@ -240,7 +240,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	executor.env.AddSensitiveValues(response.SecretsToMask...)
 
 	if len(commands) == 0 {
-		log.Printf("No commands to run, exiting!")
+		slog.Info("No commands to run, exiting!")
 
 		return
 	}
@@ -299,7 +299,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		})
 		ub.Flush(ctx, executor.taskIdentification())
 
-		log.Printf("Executing %s...", command.Name)
+		slog.Info("Executing command", "name", command.Name)
 
 		var stepCtx context.Context
 
@@ -330,7 +330,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			currentCommandStatus = api.Status_FAILED
 		}
 
-		log.Printf("%s %s!", command.Name, strings.ToLower(currentCommandStatus.String()))
+		slog.Info("Command finished", "name", command.Name, "status", strings.ToLower(currentCommandStatus.String()))
 
 		ub.Queue(&api.CommandResult{
 			Name:            command.Name,
@@ -342,10 +342,10 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 
 	ub.Flush(ctx, executor.taskIdentification())
 
-	log.Printf("Background commands to clean up after: %d!\n", len(executor.backgroundCommands))
+	slog.Info("Background commands to clean up after", "count", len(executor.backgroundCommands))
 	for i := 0; i < len(executor.backgroundCommands); i++ {
 		backgroundCommand := executor.backgroundCommands[i]
-		log.Printf("Cleaning up after background command %s...\n", backgroundCommand.Name)
+		slog.Info("Cleaning up after background command", "name", backgroundCommand.Name)
 		err := backgroundCommand.Cmd.Process.Kill()
 		if err != nil {
 			backgroundCommand.Logs.Write([]byte(fmt.Sprintf("\nFailed to stop background script %s: %s!", backgroundCommand.Name, err)))
@@ -354,7 +354,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	}
 
 	// Retrieve resource utilization metrics
-	log.Println("Retrieving resource utilization metrics...")
+	slog.Info("Retrieving resource utilization metrics...")
 
 	metricsCancel()
 
@@ -363,15 +363,16 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	select {
 	case metricsResult := <-metricsResultChan:
 		if resourceUtilization := metricsResult.ResourceUtilization; resourceUtilization != nil {
-			log.Printf("Received metrics: %d CPU points, %d memory points and %d errors\n",
-				len(metricsResult.ResourceUtilization.CpuChart), len(metricsResult.ResourceUtilization.MemoryChart),
-				len(metricsResult.Errors()))
+			slog.Info("Received metrics",
+				"cpu_points", len(metricsResult.ResourceUtilization.CpuChart),
+				"memory_points", len(metricsResult.ResourceUtilization.MemoryChart),
+				"errors", len(metricsResult.Errors()))
 		} else {
-			log.Println("Received no metrics (this OS/architecture likely doesn't support metric gathering)")
+			slog.Info("Received no metrics (this OS/architecture likely doesn't support metric gathering)")
 		}
 		for _, err := range metricsResult.Errors() {
 			message := fmt.Sprintf("Encountered an error while gathering resource utilization metrics: %v", err)
-			log.Println(message)
+			slog.Warn(message)
 			_, _ = client.CirrusClient.ReportAgentWarning(ctx, &api.ReportAgentProblemRequest{
 				TaskIdentification: executor.taskIdentification(),
 				Message:            message,
@@ -384,7 +385,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		//
 		// [1]: https://github.com/shirou/gopsutil/issues/724
 		message := "Failed to retrieve resource utilization metrics in time"
-		log.Println(message)
+		slog.Warn(message)
 		_, _ = client.CirrusClient.ReportAgentWarning(ctx, &api.ReportAgentProblemRequest{
 			TaskIdentification: executor.taskIdentification(),
 			Message:            message,
@@ -404,7 +405,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		})
 	}
 
-	log.Println("Reporting that the agent has finished...")
+	slog.Info("Reporting that the agent has finished...")
 
 	if err = retry.Do(
 		func() error {
@@ -417,13 +418,13 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 				})
 			return err
 		}, retry.OnRetry(func(n uint, err error) {
-			log.Printf("Failed to report that the agent has finished: %v\nRetrying...\n", err)
+			slog.Warn("Failed to report that the agent has finished, retrying...", "err", err)
 		}),
 		retry.Delay(10*time.Second),
 		retry.Attempts(2),
 		retry.Context(context.WithoutCancel(ctx)),
 	); err != nil {
-		log.Printf("Failed to report that the agent has finished: %v\n", err)
+		slog.Error("Failed to report that the agent has finished", "err", err)
 	}
 }
 
@@ -507,7 +508,7 @@ func (executor *Executor) performStep(ctx context.Context, currentStep *api.Comm
 	cirrusEnv, err := cirrusenv.New(executor.taskId)
 	if err != nil {
 		message := fmt.Sprintf("Failed initialize CIRRUS_ENV subsystem: %v", err)
-		log.Print(message)
+		slog.Error(message)
 		fmt.Fprintln(logUploader, message)
 		return &StepResult{
 			Success:  false,
@@ -545,10 +546,13 @@ func (executor *Executor) performStep(ctx context.Context, currentStep *api.Comm
 				Cmd:  cmd,
 				Logs: logUploader,
 			})
-			log.Printf("Started execution of #%d background command %s\n", len(executor.backgroundCommands), currentStep.Name)
+			slog.Info("Started execution of background command",
+				"index", len(executor.backgroundCommands),
+				"name", currentStep.Name)
 			success = true
 		} else {
-			log.Printf("Failed to create command line for background command %s: %s\n", currentStep.Name, err)
+			slog.Error("Failed to create command line for background command",
+				"name", currentStep.Name, "err", err)
 			_, _ = logUploader.Write([]byte(fmt.Sprintf("Failed to create command line: %s", err)))
 			logUploader.Finalize()
 			success = false
@@ -569,7 +573,7 @@ func (executor *Executor) performStep(ctx context.Context, currentStep *api.Comm
 		for {
 			switch operation := (<-operationChan).(type) {
 			case *terminalwrapper.LogOperation:
-				log.Println(operation.Message)
+				slog.Info(operation.Message)
 				_, _ = fmt.Fprintln(logUploader, operation.Message)
 			case *terminalwrapper.ExitOperation:
 				success = operation.Success
@@ -577,14 +581,14 @@ func (executor *Executor) performStep(ctx context.Context, currentStep *api.Comm
 			}
 		}
 	default:
-		log.Printf("Unsupported instruction %T", instruction)
+		slog.Warn("Unsupported instruction", "type", fmt.Sprintf("%T", instruction))
 		success = false
 	}
 
 	cirrusEnvVariables, err := cirrusEnv.Consume()
 	if err != nil {
 		message := fmt.Sprintf("Failed collect CIRRUS_ENV subsystem results: %v", err)
-		log.Print(message)
+		slog.Error(message)
 		fmt.Fprintln(logUploader, message)
 	}
 
@@ -656,7 +660,7 @@ func (executor *Executor) CreateFile(
 	case *api.FileInstruction_FromContents:
 		content = source.FromContents
 	default:
-		log.Printf("Unsupported source %T", source)
+		slog.Warn("Unsupported source", "type", fmt.Sprintf("%T", source))
 
 		return false
 	}

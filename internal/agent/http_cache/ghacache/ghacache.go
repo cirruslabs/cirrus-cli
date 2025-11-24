@@ -11,10 +11,9 @@ import (
 	"github.com/go-chi/render"
 	"github.com/puzpuzpuz/xsync/v3"
 	"github.com/samber/lo"
-	"golang.org/x/exp/slog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log"
+	"log/slog"
 	"math"
 	"math/rand"
 	"net/http"
@@ -374,7 +373,7 @@ func fail(writer http.ResponseWriter, request *http.Request, status int, msg str
 	message := stringBuilder.String()
 
 	// Report failure to the logger
-	log.Println(message)
+	slog.Error(msg, args...)
 
 	// Report failure to the caller
 	writer.WriteHeader(status)

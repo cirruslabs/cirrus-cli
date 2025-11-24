@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/cirruslabs/cirrus-ci-annotations/model"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,7 +30,7 @@ func EnsureFolderExists(path string) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err = os.MkdirAll(path, 0755)
 		if err != nil {
-			log.Printf("Failed to mkdir %s: %s", path, err)
+			slog.Warn("Failed to mkdir", "path", path, "err", err)
 		}
 	}
 }

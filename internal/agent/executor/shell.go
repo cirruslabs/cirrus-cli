@@ -8,7 +8,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/piper"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/processdumper"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -93,7 +93,7 @@ func ShellCommandsAndWait(
 				handler([]byte(fmt.Sprintf("\nExit status: %d", exitStatus)))
 			}
 		} else {
-			log.Printf("Failed to get wait status: %v", cmd.ProcessState.Sys())
+			slog.Warn("Failed to get wait status", "status", cmd.ProcessState.Sys())
 		}
 		return cmd, nil
 	}

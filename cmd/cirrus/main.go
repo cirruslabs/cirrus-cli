@@ -12,7 +12,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/opentelemetry"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
 	"github.com/getsentry/sentry-go"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"strings"
@@ -38,7 +38,8 @@ func main() {
 		AttachStacktrace: true,
 	})
 	if err != nil {
-		log.Fatalf("failed to initialize Sentry: %v", err)
+		slog.Error("failed to initialize Sentry", "err", err)
+		os.Exit(1)
 	}
 	defer sentry.Flush(5 * time.Second)
 	defer sentry.Recover()

@@ -5,11 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
-
-	"log/slog"
 
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/simplerange"
@@ -17,6 +14,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/progressreader"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/dustin/go-humanize"
+	"log/slog"
 )
 
 const PROXY_DOWNLOAD_BUFFER_SIZE = 1024 * 1024
@@ -151,8 +149,11 @@ func (azureBlob *AzureBlob) proxyCacheEntryDownload(
 	progressReader := progressreader.New(reader, PROXY_DOWNLOAD_PROGRESS_LOG_INTERVAL, func(bytes int64, duration time.Duration) {
 		rate := float64(bytes) / duration.Seconds()
 
-		log.Printf("Proxying cache entry download for %s: %d bytes read in %s (%s/s)",
-			key, bytes, duration, humanize.Bytes(uint64(rate)))
+		slog.Info("Proxying cache entry download",
+			"key", key,
+			"bytes", bytes,
+			"duration", duration,
+			"rate", humanize.Bytes(uint64(rate)))
 	})
 	bytesRead, err := io.CopyBuffer(writer, progressReader, largeBuffer)
 	if err != nil {

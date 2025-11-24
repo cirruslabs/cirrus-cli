@@ -1,10 +1,10 @@
 package azureblob
 
 import (
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -128,7 +128,7 @@ func craftAndLogMessage(level slog.Level, msg string, args ...any) string {
 	message := stringBuilder.String()
 
 	// Report failure to the logger
-	log.Print(message)
+	slog.Log(context.Background(), level, msg, args...)
 
 	return message
 }

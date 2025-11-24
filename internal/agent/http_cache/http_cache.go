@@ -6,11 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
@@ -76,12 +77,12 @@ func Start(
 	listener, err := net.Listen("tcp", address)
 
 	if err != nil {
-		log.Printf("Port 12321 is occupied: %s. Looking for another one...\n", err)
+		slog.Warn("Port 12321 is occupied, looking for another one", "err", err)
 		listener, err = net.Listen("tcp", "127.0.0.1:0")
 	}
 	if err == nil {
 		address = listener.Addr().String()
-		log.Printf("Starting http cache server %s\n", address)
+		slog.Info("Starting http cache server", "address", address)
 
 		// GitHub Actions cache API
 		sentryHandler := sentryhttp.New(sentryhttp.Options{})
@@ -111,7 +112,7 @@ func Start(
 
 		go httpServer.Serve(listener)
 	} else {
-		log.Printf("Failed to start http cache server %s: %s\n", address, err)
+		slog.Error("Failed to start http cache server", "address", address, "err", err)
 	}
 	return address
 }
@@ -119,7 +120,7 @@ func Start(
 func (httpCache *HTTPCache) handler(w http.ResponseWriter, r *http.Request) {
 	// Limit request concurrency
 	if err := sem.Acquire(r.Context(), 1); err != nil {
-		log.Printf("Failed to acquite the semaphore: %s\n", err)
+		slog.Warn("Failed to acquire the semaphore", "err", err)
 		if errors.Is(err, context.Canceled) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -154,7 +155,7 @@ func (httpCache *HTTPCache) handler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodDelete {
 		deleteCacheEntry(w, key)
 	} else {
-		log.Printf("Not supported request method: %s\n", r.Method)
+		slog.Warn("Not supported request method", "method", r.Method)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
@@ -166,7 +167,7 @@ func checkCacheExists(w http.ResponseWriter, cacheKey string) {
 	}
 	response, err := client.CirrusClient.CacheInfo(context.Background(), &cacheInfoRequest)
 	if err != nil {
-		log.Printf("%s cache info failed: %v\n", cacheKey, err)
+		slog.Error("Cache info failed", "cache_key", cacheKey, "err", err)
 		w.WriteHeader(http.StatusNotFound)
 	} else {
 		if response.Info.OldCreatedByTaskId > 0 {
@@ -186,11 +187,11 @@ func (httpCache *HTTPCache) downloadCache(w http.ResponseWriter, r *http.Request
 	}
 	response, err := client.CirrusClient.GenerateCacheDownloadURLs(context.Background(), &key)
 	if err != nil {
-		log.Printf("%s cache download failed: %v\n", cacheKey, err)
+		slog.Error("Cache download failed", "cache_key", cacheKey, "err", err)
 
 		// RPC fallback
 		if status.Code(err) == codes.Unimplemented {
-			log.Println("Falling back to downloading cache over RPC...")
+			slog.Info("Falling back to downloading cache over RPC...")
 			httpCache.downloadCacheViaRPC(w, r, cacheKey)
 
 			return
@@ -198,7 +199,7 @@ func (httpCache *HTTPCache) downloadCache(w http.ResponseWriter, r *http.Request
 
 		w.WriteHeader(http.StatusNotFound)
 	} else {
-		log.Printf("Redirecting cache download of %s\n", cacheKey)
+		slog.Info("Redirecting cache download", "cache_key", cacheKey)
 		httpCache.proxyDownloadFromURLs(w, r, response.Urls)
 	}
 }
@@ -215,27 +216,27 @@ func (httpCache *HTTPCache) proxyDownloadFromURLs(w http.ResponseWriter, r *http
 func (httpCache *HTTPCache) proxyDownloadFromURL(w http.ResponseWriter, r *http.Request, url string) bool {
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, url, nil)
 	if err != nil {
-		log.Printf("Failed to create a new GET HTTP request to URL %s: %v", url, err)
+		slog.Error("Failed to create a new GET HTTP request", "url", url, "err", err)
 		return false
 	}
 	resp, err := httpCache.httpClient.Do(req)
 	if err != nil {
-		log.Printf("Proxying cache %s failed: %v\n", url, err)
+		slog.Error("Proxying cache failed", "url", url, "err", err)
 		return false
 	}
 	defer resp.Body.Close()
 	successfulStatus := 100 <= resp.StatusCode && resp.StatusCode < 300
 	if !successfulStatus {
-		log.Printf("Proxying cache %s failed with %d status\n", url, resp.StatusCode)
+		slog.Warn("Proxying cache failed with non-success status", "url", url, "status_code", resp.StatusCode)
 		return false
 	}
 	w.WriteHeader(resp.StatusCode)
 	bytesRead, err := io.Copy(w, resp.Body)
 	if err != nil {
-		log.Printf("Proxying cache download for %s failed with %v\n", url, err)
+		slog.Error("Proxying cache download failed", "url", url, "err", err)
 		return false
 	} else {
-		log.Printf("Proxying cache %s succeded! Proxies %d bytes!\n", url, bytesRead)
+		slog.Info("Proxying cache succeeded", "url", url, "bytes", bytesRead)
 	}
 	return true
 }
@@ -248,11 +249,11 @@ func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Requ
 	generateResp, err := client.CirrusClient.GenerateCacheUploadURL(context.Background(), &key)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to initialized uploading of %s cache! %s", cacheKey, err)
-		log.Println(errorMsg)
+		slog.Error(errorMsg)
 
 		// RPC fallback
 		if status.Code(err) == codes.Unimplemented {
-			log.Println("Falling back to uploading cache over RPC...")
+			slog.Info("Falling back to uploading cache over RPC...")
 			uploadCacheEntryViaRPC(w, r, cacheKey)
 
 			return
@@ -264,7 +265,7 @@ func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Requ
 	}
 	req, err := http.NewRequest("PUT", generateResp.Url, bufio.NewReader(r.Body))
 	if err != nil {
-		log.Printf("%s cache upload failed: %v\n", cacheKey, err)
+		slog.Error("Cache upload failed", "cache_key", cacheKey, "err", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -276,17 +277,21 @@ func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Requ
 	resp, err := httpCache.httpClient.Do(req)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to proxy upload of %s cache! %s", cacheKey, err)
-		log.Println(errorMsg)
+		slog.Error(errorMsg)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(errorMsg))
 		return
 	}
 	if resp.StatusCode >= 400 {
-		log.Printf("Failed to proxy upload of %s cache! %s", cacheKey, resp.Status)
-		log.Printf("Headers for PUT request to  %s\n", generateResp.Url)
-		req.Header.Write(log.Writer())
-		log.Println("Failed response:")
-		resp.Write(log.Writer())
+		slog.Error("Failed to proxy upload of cache", "cache_key", cacheKey, "status", resp.Status)
+
+		var headersBuilder strings.Builder
+		req.Header.Write(&headersBuilder)
+		slog.Error("Headers for PUT request", "url", generateResp.Url, "headers", headersBuilder.String())
+
+		var responseBuilder strings.Builder
+		resp.Write(&responseBuilder)
+		slog.Error("Failed response", "response", responseBuilder.String())
 	}
 	w.WriteHeader(resp.StatusCode)
 }
@@ -300,7 +305,7 @@ func deleteCacheEntry(w http.ResponseWriter, cacheKey string) {
 	_, err := client.CirrusClient.DeleteCache(context.Background(), &request)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to delete cache entry %s: %v", cacheKey, err)
-		log.Println(errorMsg)
+		slog.Error(errorMsg)
 
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(errorMsg))

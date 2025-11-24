@@ -7,13 +7,13 @@ import (
 	"github.com/mitchellh/go-ps"
 	gopsutilprocess "github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/exp/slices"
-	"log"
+	"log/slog"
 )
 
 func Dump() {
 	processes, err := ps.Processes()
 	if err != nil {
-		log.Printf("Failed to retrieve processes to diagnose the time out")
+		slog.Warn("Failed to retrieve processes to diagnose the time out", "err", err)
 	} else {
 		fmt.Println("Dumping process list to diagnose the time out")
 		fmt.Println("PID\tPPID\tExe or cmdline")

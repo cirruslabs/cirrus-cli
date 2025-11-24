@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -140,8 +140,8 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 		local := contentLength < 5*humanize.MiByte
 
 		if local {
-			log.Printf("Using local uploadable because the first observed "+
-				"block size for key %q is only %s", key, humanize.IBytes(contentLength))
+			slog.Info("Using local uploadable because the first observed block size is below multipart minimum",
+				"key", key, "size", humanize.IBytes(contentLength))
 		}
 
 		return uploadablepkg.New(local)

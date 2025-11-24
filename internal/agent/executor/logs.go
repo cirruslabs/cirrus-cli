@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding/gzip"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"sync"
 	"time"
@@ -69,7 +69,7 @@ func NewLogUploader(ctx context.Context, executor *Executor, commandName string)
 func (uploader *LogUploader) reInitializeClient(ctx context.Context) error {
 	err := uploader.client.CloseSend()
 	if err != nil {
-		log.Printf("Failed to close log for %s for reinitialization: %s\n", uploader.commandName, err.Error())
+		slog.Warn("Failed to close log for reinitialization", "command", uploader.commandName, "err", err)
 	}
 	logClient, err := InitializeLogStreamClient(ctx, uploader.taskIdentification, uploader.commandName, false)
 	if err != nil {
@@ -139,16 +139,16 @@ func (uploader *LogUploader) StreamLogs() {
 		logs, finished := uploader.ReadAvailableChunks()
 		_, err := uploader.WriteChunk(logs)
 		if finished {
-			log.Printf("Finished streaming logs for %s!\n", uploader.commandName)
+			slog.Info("Finished streaming logs", "command", uploader.commandName)
 			break
 		}
 		if err == io.EOF {
-			log.Printf("Got EOF while streaming logs for %s! Trying to reinitilize logs uploader...\n", uploader.commandName)
+			slog.Warn("Got EOF while streaming logs, trying to reinitialize", "command", uploader.commandName)
 			err := uploader.reInitializeClient(ctx)
 			if err == nil {
-				log.Printf("Successfully reinitilized log uploader for %s!\n", uploader.commandName)
+				slog.Info("Successfully reinitialized log uploader", "command", uploader.commandName)
 			} else {
-				log.Printf("Failed to reinitilized log uploader for %s: %s\n", uploader.commandName, err.Error())
+				slog.Error("Failed to reinitialize log uploader", "command", uploader.commandName, "err", err)
 			}
 		}
 	}
@@ -156,9 +156,9 @@ func (uploader *LogUploader) StreamLogs() {
 
 	err := uploader.UploadStoredOutput(ctx)
 	if err != nil {
-		log.Printf("Failed to upload stored logs for %s: %s", uploader.commandName, err.Error())
+		slog.Error("Failed to upload stored logs", "command", uploader.commandName, "err", err)
 	} else {
-		log.Printf("Uploaded stored logs for %s!", uploader.commandName)
+		slog.Info("Uploaded stored logs", "command", uploader.commandName)
 	}
 
 	uploader.storedOutput.Close()
@@ -181,7 +181,7 @@ func (uploader *LogUploader) ReadAvailableChunks() ([]byte, bool) {
 		case nextChunk, more := <-uploader.logsChannel:
 			result = append(result, nextChunk...)
 			if !more {
-				log.Printf("No more log chunks for %s\n", uploader.commandName)
+				slog.Info("No more log chunks", "command", uploader.commandName)
 				return result, true
 			}
 		default:
@@ -207,7 +207,7 @@ func (uploader *LogUploader) WriteChunk(bytesToWrite []byte) (int, error) {
 	logEntry := api.LogEntry_Chunk{Chunk: &dataChunk}
 	err := uploader.client.Send(&api.LogEntry{Value: &logEntry})
 	if err != nil {
-		log.Printf("Failed to send logs! %s For %s", err.Error(), string(bytesToWrite))
+		slog.Error("Failed to send logs", "command", uploader.commandName, "err", err, "bytes", string(bytesToWrite))
 		uploader.erroredChunks++
 		return 0, err
 	}
@@ -215,7 +215,7 @@ func (uploader *LogUploader) WriteChunk(bytesToWrite []byte) (int, error) {
 }
 
 func (uploader *LogUploader) Finalize() {
-	log.Printf("Finalizing log uploading for %s!\n", uploader.commandName)
+	slog.Info("Finalizing log uploading", "command", uploader.commandName)
 	uploader.mutex.Lock()
 	uploader.closed = true
 	close(uploader.logsChannel)
@@ -272,7 +272,7 @@ func InitializeLogStreamClient(ctx context.Context, taskIdentification *api.Task
 		return err
 	}, retry.Delay(5*time.Second), retry.Attempts(3), retry.Context(ctx))
 	if err != nil {
-		log.Printf("Failed to start streaming logs for %s! %s", commandName, err.Error())
+		slog.Error("Failed to start streaming logs", "command", commandName, "err", err)
 		request := api.ReportAgentProblemRequest{
 			TaskIdentification: taskIdentification,
 			Message:            fmt.Sprintf("Failed to start streaming logs for command %v: %v", commandName, err),
@@ -304,7 +304,7 @@ func InitializeLogSaveClient(
 		retry.Attempts(3),
 	)
 	if err != nil {
-		log.Printf("Failed to start saving logs for %s! %s", commandName, err.Error())
+		slog.Error("Failed to start saving logs", "command", commandName, "err", err)
 		request := api.ReportAgentProblemRequest{
 			TaskIdentification: taskIdentification,
 			Message:            fmt.Sprintf("Failed to start saving logs for command %v: %v", commandName, err),
