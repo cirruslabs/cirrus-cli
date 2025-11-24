@@ -122,7 +122,6 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	if response.ServerToken != executor.serverToken {
 		slog.Error("Server token is incorrect!")
 		panic("Server token is incorrect!")
-		return
 	}
 
 	// Retrieve the script/commands environment, but do not merge it into the
