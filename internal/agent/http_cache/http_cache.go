@@ -35,6 +35,7 @@ const (
 type HTTPCache struct {
 	httpClient    *http.Client
 	azureBlobOpts []azureblob.Option
+	proxy         *urlproxy.Proxy
 }
 
 var sem = semaphore.NewWeighted(int64(runtime.NumCPU() * activeRequestsPerLogicalCPU))
@@ -57,11 +58,13 @@ func Start(
 		transport = DefaultTransport()
 	}
 
+	httpClient := &http.Client{
+		Transport: transport,
+		Timeout:   10 * time.Minute,
+	}
 	httpCache := &HTTPCache{
-		httpClient: &http.Client{
-			Transport: transport,
-			Timeout:   10 * time.Minute,
-		},
+		httpClient: httpClient,
+		proxy:      urlproxy.NewProxy(urlproxy.WithHTTPClient(httpClient)),
 	}
 
 	// Apply opts
@@ -208,7 +211,7 @@ func (httpCache *HTTPCache) downloadCache(w http.ResponseWriter, r *http.Request
 func (httpCache *HTTPCache) proxyDownloadFromURLs(w http.ResponseWriter, r *http.Request, cacheKey string, urls []string) {
 	for _, url := range urls {
 		urlInfo := storage.URLInfo{URL: url}
-		if urlproxy.ProxyDownloadFromURL(r.Context(), w, &urlInfo, cacheKey) {
+		if httpCache.proxy.ProxyDownloadFromURL(r.Context(), w, &urlInfo, cacheKey) {
 			return
 		}
 	}
