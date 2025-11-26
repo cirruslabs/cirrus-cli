@@ -35,7 +35,7 @@ func TestHTTPCache(t *testing.T) {
 	// Create the cache entry
 	resp, err = http.Post(httpCacheObjectURL, "text/plain", strings.NewReader("Hello, World!"))
 	require.NoError(t, err)
-	require.Equal(t, http.StatusCreated, resp.StatusCode)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 
 	// Ensure that the cache entry now exists
 	resp, err = http.Head(httpCacheObjectURL)
