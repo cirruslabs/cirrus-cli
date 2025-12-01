@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"net"
 	"net/http"
@@ -19,6 +18,8 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacachev2"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/cirruslabs/omni-cache/pkg/storage"
+	urlproxy "github.com/cirruslabs/omni-cache/pkg/url-proxy"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"golang.org/x/sync/semaphore"
 	"google.golang.org/grpc/codes"
@@ -34,6 +35,7 @@ const (
 type HTTPCache struct {
 	httpClient    *http.Client
 	azureBlobOpts []azureblob.Option
+	proxy         *urlproxy.Proxy
 }
 
 var sem = semaphore.NewWeighted(int64(runtime.NumCPU() * activeRequestsPerLogicalCPU))
@@ -56,11 +58,13 @@ func Start(
 		transport = DefaultTransport()
 	}
 
+	httpClient := &http.Client{
+		Transport: transport,
+		Timeout:   10 * time.Minute,
+	}
 	httpCache := &HTTPCache{
-		httpClient: &http.Client{
-			Transport: transport,
-			Timeout:   10 * time.Minute,
-		},
+		httpClient: httpClient,
+		proxy:      urlproxy.NewProxy(urlproxy.WithHTTPClient(httpClient)),
 	}
 
 	// Apply opts
@@ -200,45 +204,18 @@ func (httpCache *HTTPCache) downloadCache(w http.ResponseWriter, r *http.Request
 		w.WriteHeader(http.StatusNotFound)
 	} else {
 		slog.Info("Redirecting cache download", "cache_key", cacheKey)
-		httpCache.proxyDownloadFromURLs(w, r, response.Urls)
+		httpCache.proxyDownloadFromURLs(w, r, cacheKey, response.Urls)
 	}
 }
 
-func (httpCache *HTTPCache) proxyDownloadFromURLs(w http.ResponseWriter, r *http.Request, urls []string) {
+func (httpCache *HTTPCache) proxyDownloadFromURLs(w http.ResponseWriter, r *http.Request, cacheKey string, urls []string) {
 	for _, url := range urls {
-		if httpCache.proxyDownloadFromURL(w, r, url) {
+		urlInfo := storage.URLInfo{URL: url}
+		if httpCache.proxy.ProxyDownloadFromURL(r.Context(), w, &urlInfo, cacheKey) {
 			return
 		}
 	}
 	w.WriteHeader(http.StatusNotFound)
-}
-
-func (httpCache *HTTPCache) proxyDownloadFromURL(w http.ResponseWriter, r *http.Request, url string) bool {
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, url, nil)
-	if err != nil {
-		slog.Error("Failed to create a new GET HTTP request", "url", url, "err", err)
-		return false
-	}
-	resp, err := httpCache.httpClient.Do(req)
-	if err != nil {
-		slog.Error("Proxying cache failed", "url", url, "err", err)
-		return false
-	}
-	defer resp.Body.Close()
-	successfulStatus := 100 <= resp.StatusCode && resp.StatusCode < 300
-	if !successfulStatus {
-		slog.Warn("Proxying cache failed with non-success status", "url", url, "status_code", resp.StatusCode)
-		return false
-	}
-	w.WriteHeader(resp.StatusCode)
-	bytesRead, err := io.Copy(w, resp.Body)
-	if err != nil {
-		slog.Error("Proxying cache download failed", "url", url, "err", err)
-		return false
-	} else {
-		slog.Info("Proxying cache succeeded", "url", url, "bytes", bytesRead)
-	}
-	return true
 }
 
 func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Request, cacheKey string) {
