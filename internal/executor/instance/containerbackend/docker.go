@@ -8,20 +8,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"runtime"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/docker"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	cerrdefs "github.com/containerd/errdefs"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/cli/cli/flags"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/api/types/mount"
-	"github.com/docker/docker/api/types/volume"
-	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/mount"
+	"github.com/moby/moby/client"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
-	"io"
 )
 
 type Docker struct {
@@ -44,7 +44,7 @@ func NewDocker(hosts ...string) (*Docker, error) {
 		return nil, err
 	}
 
-	_, err = cli.Ping(context.Background())
+	_, err = cli.Ping(context.Background(), client.PingOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -59,14 +59,20 @@ func (backend *Docker) Close() error {
 }
 
 func (backend *Docker) ImagePull(ctx context.Context, reference string, architecture *api.Architecture) error {
-	options := &image.PullOptions{}
+	options := &client.ImagePullOptions{}
 
 	if architecture != nil {
 		switch *architecture {
 		case api.Architecture_AMD64:
-			options.Platform = "linux/amd64"
+			options.Platforms = append(options.Platforms, v1.Platform{
+				Architecture: "amd64",
+				OS:           runtime.GOOS,
+			})
 		case api.Architecture_ARM64:
-			options.Platform = "linux/arm64"
+			options.Platforms = append(options.Platforms, v1.Platform{
+				Architecture: "arm64",
+				OS:           runtime.GOOS,
+			})
 		}
 	}
 
@@ -88,7 +94,7 @@ func (backend *Docker) ImagePush(ctx context.Context, reference string) error {
 		return err
 	}
 
-	stream, err := backend.cli.ImagePush(ctx, reference, image.PushOptions{
+	stream, err := backend.cli.ImagePush(ctx, reference, client.ImagePushOptions{
 		RegistryAuth: auth,
 	})
 	if err != nil {
@@ -144,7 +150,7 @@ func (backend *Docker) ImageBuild(
 			pointyArguments[key] = &valueCopy
 		}
 
-		buildProgress, err := backend.cli.ImageBuild(ctx, tarball, types.ImageBuildOptions{
+		buildProgress, err := backend.cli.ImageBuild(ctx, tarball, client.ImageBuildOptions{
 			Tags:       input.Tags,
 			Dockerfile: input.Dockerfile,
 			BuildArgs:  pointyArguments,
@@ -170,9 +176,9 @@ func (backend *Docker) ImageBuild(
 }
 
 func (backend *Docker) ImageInspect(ctx context.Context, reference string) error {
-	_, _, err := backend.cli.ImageInspectWithRaw(ctx, reference)
+	_, err := backend.cli.ImageInspect(ctx, reference)
 
-	if client.IsErrNotFound(err) {
+	if cerrdefs.IsNotFound(err) {
 		return ErrNotFound
 	}
 
@@ -180,9 +186,9 @@ func (backend *Docker) ImageInspect(ctx context.Context, reference string) error
 }
 
 func (backend *Docker) ImageDelete(ctx context.Context, reference string) error {
-	_, err := backend.cli.ImageRemove(ctx, reference, image.RemoveOptions{})
+	_, err := backend.cli.ImageRemove(ctx, reference, client.ImageRemoveOptions{})
 
-	if client.IsErrNotFound(err) {
+	if cerrdefs.IsNotFound(err) {
 		return ErrNotFound
 	}
 
@@ -190,14 +196,14 @@ func (backend *Docker) ImageDelete(ctx context.Context, reference string) error 
 }
 
 func (backend *Docker) VolumeCreate(ctx context.Context, name string) error {
-	_, err := backend.cli.VolumeCreate(ctx, volume.CreateOptions{Name: name})
+	_, err := backend.cli.VolumeCreate(ctx, client.VolumeCreateOptions{Name: name})
 	return err
 }
 
 func (backend *Docker) VolumeInspect(ctx context.Context, name string) error {
-	_, err := backend.cli.VolumeInspect(ctx, name)
+	_, err := backend.cli.VolumeInspect(ctx, name, client.VolumeInspectOptions{})
 
-	if client.IsErrNotFound(err) {
+	if cerrdefs.IsNotFound(err) {
 		return ErrNotFound
 	}
 
@@ -205,7 +211,9 @@ func (backend *Docker) VolumeInspect(ctx context.Context, name string) error {
 }
 
 func (backend *Docker) VolumeDelete(ctx context.Context, name string) error {
-	return backend.cli.VolumeRemove(ctx, name, false)
+	_, err := backend.cli.VolumeRemove(ctx, name, client.VolumeRemoveOptions{})
+
+	return err
 }
 
 func (backend *Docker) ContainerCreate(
@@ -268,7 +276,12 @@ func (backend *Docker) ContainerCreate(
 		}
 	}
 
-	cont, err := backend.cli.ContainerCreate(ctx, &containerConfig, &hostConfig, nil, platform, name)
+	cont, err := backend.cli.ContainerCreate(ctx, client.ContainerCreateOptions{
+		Config:     &containerConfig,
+		HostConfig: &hostConfig,
+		Platform:   platform,
+		Name:       name,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +292,9 @@ func (backend *Docker) ContainerCreate(
 }
 
 func (backend *Docker) ContainerStart(ctx context.Context, id string) error {
-	return backend.cli.ContainerStart(ctx, id, container.StartOptions{})
+	_, err := backend.cli.ContainerStart(ctx, id, client.ContainerStartOptions{})
+
+	return err
 }
 
 func (backend *Docker) ContainerWait(ctx context.Context, id string) (<-chan ContainerWaitResult, <-chan error) {
@@ -287,10 +302,12 @@ func (backend *Docker) ContainerWait(ctx context.Context, id string) (<-chan Con
 	errChan := make(chan error)
 
 	go func() {
-		dockerWaitChan, dockerErrChan := backend.cli.ContainerWait(ctx, id, container.WaitConditionNotRunning)
+		result := backend.cli.ContainerWait(ctx, id, client.ContainerWaitOptions{
+			Condition: container.WaitConditionNotRunning,
+		})
 
 		select {
-		case resp := <-dockerWaitChan:
+		case resp := <-result.Result:
 			result := ContainerWaitResult{
 				StatusCode: resp.StatusCode,
 			}
@@ -300,7 +317,7 @@ func (backend *Docker) ContainerWait(ctx context.Context, id string) (<-chan Con
 			}
 
 			waitChan <- result
-		case err := <-dockerErrChan:
+		case err := <-result.Error:
 			errChan <- err
 		}
 	}()
@@ -311,7 +328,7 @@ func (backend *Docker) ContainerWait(ctx context.Context, id string) (<-chan Con
 func (backend *Docker) ContainerLogs(ctx context.Context, id string) (<-chan string, error) {
 	logChan := make(chan string, containerLogsChannelSize)
 
-	multiplexedStream, err := backend.cli.ContainerLogs(ctx, id, container.LogsOptions{
+	multiplexedStream, err := backend.cli.ContainerLogs(ctx, id, client.ContainerLogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Follow:     true,
@@ -342,22 +359,24 @@ func (backend *Docker) ContainerLogs(ctx context.Context, id string) (<-chan str
 }
 
 func (backend *Docker) ContainerDelete(ctx context.Context, id string) error {
-	return backend.cli.ContainerRemove(ctx, id, container.RemoveOptions{
+	_, err := backend.cli.ContainerRemove(ctx, id, client.ContainerRemoveOptions{
 		RemoveVolumes: true,
 		Force:         true,
 	})
+
+	return err
 }
 
 func (backend *Docker) SystemInfo(ctx context.Context) (*SystemInfo, error) {
-	info, err := backend.cli.Info(ctx)
+	result, err := backend.cli.Info(ctx, client.InfoOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	return &SystemInfo{
-		Version:          info.ServerVersion,
-		TotalCPUs:        int64(info.NCPU),
-		TotalMemoryBytes: info.MemTotal,
+		Version:          result.Info.ServerVersion,
+		TotalCPUs:        int64(result.Info.NCPU),
+		TotalMemoryBytes: result.Info.MemTotal,
 	}, nil
 }
 
