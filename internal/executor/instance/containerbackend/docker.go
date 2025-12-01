@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"runtime"
 
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend/docker"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
@@ -66,12 +65,12 @@ func (backend *Docker) ImagePull(ctx context.Context, reference string, architec
 		case api.Architecture_AMD64:
 			options.Platforms = append(options.Platforms, v1.Platform{
 				Architecture: "amd64",
-				OS:           runtime.GOOS,
+				OS:           "linux",
 			})
 		case api.Architecture_ARM64:
 			options.Platforms = append(options.Platforms, v1.Platform{
 				Architecture: "arm64",
-				OS:           runtime.GOOS,
+				OS:           "linux",
 			})
 		}
 	}
