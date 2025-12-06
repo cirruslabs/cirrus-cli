@@ -3,16 +3,17 @@ package executor_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/executor"
-	"github.com/cirruslabs/cirrus-cli/internal/testutil"
-	"github.com/cirruslabs/echelon"
-	"github.com/cirruslabs/echelon/renderers"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/cirruslabs/cirrus-cli/internal/executor"
+	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/echelon"
+	"github.com/cirruslabs/echelon/renderers"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExecutorParallels(t *testing.T) {
@@ -134,7 +135,7 @@ task:
 			// Ensure we get the logs from the VM
 			assert.Contains(t, buf.String(), "Getting initial commands...")
 			assert.Contains(t, buf.String(), "Sending heartbeat...")
-			assert.Contains(t, buf.String(), "Background commands to clean up after:")
+			assert.Contains(t, buf.String(), "Background commands to clean up after")
 		})
 	}
 }

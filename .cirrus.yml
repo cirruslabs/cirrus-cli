@@ -49,7 +49,7 @@ task:
     resources:
       tart-vms: 1
   env:
-    CIRRUS_INTERNAL_TART_VM: ghcr.io/cirruslabs/macos-sonoma-base:latest
+    CIRRUS_INTERNAL_TART_VM: ghcr.io/cirruslabs/macos-tahoe-base:latest
     CIRRUS_INTERNAL_TART_SSH_PASSWORD: admin
     CIRRUS_INTERNAL_TART_SSH_USER: admin
   test_script:
