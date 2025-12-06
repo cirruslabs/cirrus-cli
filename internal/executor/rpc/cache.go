@@ -47,16 +47,16 @@ func (r *RPC) Write(stream bytestream.ByteStream_WriteServer) error {
 			}
 		}
 
-		if cacheEntry.FinishWrite {
-			break
-		}
-
 		n, err := putOp.Write(cacheEntry.Data)
 		if err != nil {
 			r.logger.Debugf("error while processing cache chunk: %v", err)
 			return status.Error(codes.Internal, "failed to process cache chunk")
 		}
 		bytesSaved += int64(n)
+
+		if cacheEntry.FinishWrite {
+			break
+		}
 	}
 
 	if putOp == nil {
