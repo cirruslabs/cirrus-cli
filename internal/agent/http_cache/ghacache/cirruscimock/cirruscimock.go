@@ -10,6 +10,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/genproto/googleapis/bytestream"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -27,6 +28,7 @@ type cirrusCIMock struct {
 	s3Bucket *string
 
 	api.UnimplementedCirrusCIServiceServer
+	bytestream.UnimplementedByteStreamServer
 }
 
 func newCirrusCIMock(t *testing.T, s3Client *s3.S3) *cirrusCIMock {
@@ -53,7 +55,10 @@ func ClientConn(t *testing.T) *grpc.ClientConn {
 
 	go func() {
 		server := grpc.NewServer()
-		api.RegisterCirrusCIServiceServer(server, newCirrusCIMock(t, s3Client))
+		mock := newCirrusCIMock(t, s3Client)
+
+		api.RegisterCirrusCIServiceServer(server, mock)
+		bytestream.RegisterByteStreamServer(server, mock)
 		require.NoError(t, server.Serve(lis))
 	}()
 
@@ -64,12 +69,15 @@ func ClientConn(t *testing.T) *grpc.ClientConn {
 	return clientConn
 }
 
-func (mock *cirrusCIMock) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
-	cacheEntries := map[string]*bytes.Buffer{}
-	var currentBuf *bytes.Buffer
+const chunkSize = 1 * 1024 * 1024
+
+func (mock *cirrusCIMock) Write(stream bytestream.ByteStream_WriteServer) error {
+	var buf bytes.Buffer
+	var resourceName string
+	var bytesSaved int64
 
 	for {
-		cacheEntry, err := stream.Recv()
+		req, err := stream.Recv()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
@@ -78,54 +86,77 @@ func (mock *cirrusCIMock) UploadCache(stream api.CirrusCIService_UploadCacheServ
 			return err
 		}
 
-		switch typed := cacheEntry.Value.(type) {
-		case *api.CacheEntry_Key:
-			currentBuf = &bytes.Buffer{}
-			cacheEntries[typed.Key.CacheKey] = currentBuf
-		case *api.CacheEntry_Chunk:
-			currentBuf.Write(typed.Chunk.Data)
+		if resourceName == "" {
+			resourceName = req.ResourceName
+		} else if req.ResourceName != "" && req.ResourceName != resourceName {
+			return status.Errorf(codes.InvalidArgument, "resource name %s does not match %s",
+				req.ResourceName, resourceName)
 		}
-	}
 
-	for key, buf := range cacheEntries {
-		_, err := mock.s3Client.PutObjectWithContext(stream.Context(), &s3.PutObjectInput{
-			Bucket: mock.s3Bucket,
-			Key:    aws.String(key),
-			Body:   bytes.NewReader(buf.Bytes()),
-		})
+		if req.WriteOffset != bytesSaved {
+			return status.Errorf(codes.InvalidArgument, "unexpected write offset %d (expected %d)",
+				req.WriteOffset, bytesSaved)
+		}
+
+		n, err := buf.Write(req.Data)
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, "failed to buffer data: %v", err)
+		}
+		bytesSaved += int64(n)
+
+		if req.FinishWrite {
+			break
 		}
 	}
 
-	return stream.SendAndClose(&api.UploadCacheResponse{})
+	if resourceName == "" {
+		return status.Error(codes.FailedPrecondition, "attempted to upload cache without specifying resource name")
+	}
+
+	_, err := mock.s3Client.PutObjectWithContext(stream.Context(), &s3.PutObjectInput{
+		Bucket: mock.s3Bucket,
+		Key:    aws.String(resourceName),
+		Body:   bytes.NewReader(buf.Bytes()),
+	})
+	if err != nil {
+		return err
+	}
+
+	return stream.SendAndClose(&bytestream.WriteResponse{
+		CommittedSize: bytesSaved,
+	})
 }
 
-func (mock *cirrusCIMock) DownloadCache(request *api.DownloadCacheRequest, stream api.CirrusCIService_DownloadCacheServer) error {
+func (mock *cirrusCIMock) Read(request *bytestream.ReadRequest, stream bytestream.ByteStream_ReadServer) error {
 	result, err := mock.s3Client.GetObjectWithContext(stream.Context(), &s3.GetObjectInput{
 		Bucket: mock.s3Bucket,
-		Key:    aws.String(request.CacheKey),
+		Key:    aws.String(request.ResourceName),
 	})
 	if err != nil {
 		var aerr awserr.Error
 		if errors.As(err, &aerr) && aerr.Code() == s3.ErrCodeNoSuchKey {
 			return status.Errorf(codes.NotFound, "cache entry for key %s is not found",
-				request.CacheKey)
+				request.ResourceName)
 		}
 
 		return err
 	}
 	defer result.Body.Close()
 
-	buf, err := io.ReadAll(result.Body)
-	if err != nil {
-		return err
-	}
+	buf := make([]byte, chunkSize)
 
-	// Chunk the buffer to prevent the "grpc: received message larger than
-	// max (X vs. 4194304)" error
-	for _, chunk := range lo.Chunk(buf, 1*1024*1024) {
-		if err := stream.Send(&api.DataChunk{Data: chunk}); err != nil {
+	for {
+		n, err := result.Body.Read(buf)
+		if n > 0 {
+			if err := stream.Send(&bytestream.ReadResponse{Data: buf[:n]}); err != nil {
+				return err
+			}
+		}
+
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
 			return err
 		}
 	}
