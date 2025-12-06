@@ -2,18 +2,26 @@ package rpc
 
 import (
 	"context"
+	"io"
+	"os"
+	"strings"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
+	"google.golang.org/genproto/googleapis/bytestream"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"io"
-	"os"
 )
 
 const sendBufSize = 1024 * 1024
 
-func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
+func (r *RPC) GenerateCacheUploadURL(context.Context, *api.CacheKey) (*api.GenerateURLResponse, error) {
+	grpcEndpoint := strings.ReplaceAll(r.ContainerEndpoint(), "http", "grpc")
+	return &api.GenerateURLResponse{Url: grpcEndpoint}, nil
+}
+
+func (r *RPC) Write(stream bytestream.ByteStream_WriteServer) error {
 	if _, err := r.taskFromMetadata(stream.Context()); err != nil {
 		return err
 	}
@@ -31,29 +39,24 @@ func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
 			return err
 		}
 
-		switch x := cacheEntry.Value.(type) {
-		case *api.CacheEntry_Key:
-			if putOp != nil {
-				r.logger.Warnf("received multiple cache entries in a single method call")
-				return status.Error(codes.FailedPrecondition, "received multiple cache entries in a single method call")
-			}
-			putOp, err = r.build.Cache.Put(x.Key.CacheKey)
+		if putOp == nil {
+			putOp, err = r.build.Cache.Put(cacheEntry.ResourceName)
 			if err != nil {
 				r.logger.Debugf("error while initializing cache put operation: %v", err)
 				return status.Error(codes.Internal, "failed to initialize cache put operation")
 			}
-			r.logger.Debugf("receiving cache with key %s", x.Key.CacheKey)
-		case *api.CacheEntry_Chunk:
-			if putOp == nil {
-				return status.Error(codes.PermissionDenied, "not authenticated")
-			}
-			n, err := putOp.Write(x.Chunk.Data)
-			if err != nil {
-				r.logger.Debugf("error while processing cache chunk: %v", err)
-				return status.Error(codes.Internal, "failed to process cache chunk")
-			}
-			bytesSaved += int64(n)
 		}
+
+		if cacheEntry.FinishWrite {
+			break
+		}
+
+		n, err := putOp.Write(cacheEntry.Data)
+		if err != nil {
+			r.logger.Debugf("error while processing cache chunk: %v", err)
+			return status.Error(codes.Internal, "failed to process cache chunk")
+		}
+		bytesSaved += int64(n)
 	}
 
 	if putOp == nil {
@@ -66,30 +69,27 @@ func (r *RPC) UploadCache(stream api.CirrusCIService_UploadCacheServer) error {
 		return status.Error(codes.Internal, "failed to finalize cache put operation")
 	}
 
-	response := api.UploadCacheResponse{
-		BytesSaved: bytesSaved,
-	}
-	if err := stream.SendAndClose(&response); err != nil {
-		r.logger.Warnf("error while closing cache upload stream: %v", err)
-		return err
-	}
-
 	return nil
 }
 
-func (r *RPC) DownloadCache(req *api.DownloadCacheRequest, stream api.CirrusCIService_DownloadCacheServer) error {
+func (r *RPC) GenerateCacheDownloadURLs(context.Context, *api.CacheKey) (*api.GenerateURLsResponse, error) {
+	grpcEndpoint := strings.ReplaceAll(r.ContainerEndpoint(), "http", "grpc")
+	return &api.GenerateURLsResponse{Urls: []string{grpcEndpoint}}, nil
+}
+
+func (r *RPC) Read(req *bytestream.ReadRequest, stream bytestream.ByteStream_ReadServer) error {
 	if _, err := r.taskFromMetadata(stream.Context()); err != nil {
 		return err
 	}
 
-	file, err := r.build.Cache.Get(req.CacheKey)
+	file, err := r.build.Cache.Get(req.ResourceName)
 	if err != nil {
-		r.logger.Debugf("error while getting cache blob with key %s: %v", req.CacheKey, err)
+		r.logger.Debugf("error while getting cache blob with key %s: %v", req.ResourceName, err)
 		return status.Errorf(codes.NotFound, "cache blob with the specified key not found")
 	}
 	defer file.Close()
 
-	r.logger.Debugf("sending cache with key %s", req.CacheKey)
+	r.logger.Debugf("sending cache with key %s", req.ResourceName)
 
 	buf := make([]byte, sendBufSize)
 
@@ -102,7 +102,7 @@ func (r *RPC) DownloadCache(req *api.DownloadCacheRequest, stream api.CirrusCISe
 			return status.Errorf(codes.Internal, "failed to read cache blob")
 		}
 
-		chunk := api.DataChunk{
+		chunk := bytestream.ReadResponse{
 			Data: buf[:n],
 		}
 		err = stream.Send(&chunk)
