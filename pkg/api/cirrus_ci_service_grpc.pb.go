@@ -651,11 +651,9 @@ const (
 	CirrusCIService_ReportAnnotations_FullMethodName          = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/ReportAnnotations"
 	CirrusCIService_StreamLogs_FullMethodName                 = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/StreamLogs"
 	CirrusCIService_SaveLogs_FullMethodName                   = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/SaveLogs"
-	CirrusCIService_UploadCache_FullMethodName                = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/UploadCache"
 	CirrusCIService_UploadArtifacts_FullMethodName            = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/UploadArtifacts"
 	CirrusCIService_GenerateArtifactUploadURLs_FullMethodName = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/GenerateArtifactUploadURLs"
 	CirrusCIService_CommitUploadedArtifacts_FullMethodName    = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/CommitUploadedArtifacts"
-	CirrusCIService_DownloadCache_FullMethodName              = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/DownloadCache"
 	CirrusCIService_CacheInfo_FullMethodName                  = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/CacheInfo"
 	CirrusCIService_DeleteCache_FullMethodName                = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/DeleteCache"
 	CirrusCIService_Heartbeat_FullMethodName                  = "/org.cirruslabs.ci.services.cirruscigrpc.CirrusCIService/Heartbeat"
@@ -683,13 +681,11 @@ type CirrusCIServiceClient interface {
 	ReportAnnotations(ctx context.Context, in *ReportAnnotationsCommandRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	StreamLogs(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[LogEntry, UploadLogsResponse], error)
 	SaveLogs(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[LogEntry, UploadLogsResponse], error)
-	UploadCache(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[CacheEntry, UploadCacheResponse], error)
 	// Artifacts upload over gRPC
 	UploadArtifacts(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ArtifactEntry, UploadArtifactsResponse], error)
 	// Artifacts upload over HTTPS
 	GenerateArtifactUploadURLs(ctx context.Context, in *GenerateArtifactUploadURLsRequest, opts ...grpc.CallOption) (*GenerateArtifactUploadURLsResponse, error)
 	CommitUploadedArtifacts(ctx context.Context, in *CommitUploadedArtifactsRequest, opts ...grpc.CallOption) (*CommitUploadedArtifactsResponse, error)
-	DownloadCache(ctx context.Context, in *DownloadCacheRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DataChunk], error)
 	CacheInfo(ctx context.Context, in *CacheInfoRequest, opts ...grpc.CallOption) (*CacheInfoResponse, error)
 	DeleteCache(ctx context.Context, in *DeleteCacheRequest, opts ...grpc.CallOption) (*DeleteCacheResponse, error)
 	Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error)
@@ -773,22 +769,9 @@ func (c *cirrusCIServiceClient) SaveLogs(ctx context.Context, opts ...grpc.CallO
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type CirrusCIService_SaveLogsClient = grpc.ClientStreamingClient[LogEntry, UploadLogsResponse]
 
-func (c *cirrusCIServiceClient) UploadCache(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[CacheEntry, UploadCacheResponse], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &CirrusCIService_ServiceDesc.Streams[2], CirrusCIService_UploadCache_FullMethodName, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &grpc.GenericClientStream[CacheEntry, UploadCacheResponse]{ClientStream: stream}
-	return x, nil
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CirrusCIService_UploadCacheClient = grpc.ClientStreamingClient[CacheEntry, UploadCacheResponse]
-
 func (c *cirrusCIServiceClient) UploadArtifacts(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ArtifactEntry, UploadArtifactsResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &CirrusCIService_ServiceDesc.Streams[3], CirrusCIService_UploadArtifacts_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &CirrusCIService_ServiceDesc.Streams[2], CirrusCIService_UploadArtifacts_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -818,25 +801,6 @@ func (c *cirrusCIServiceClient) CommitUploadedArtifacts(ctx context.Context, in 
 	}
 	return out, nil
 }
-
-func (c *cirrusCIServiceClient) DownloadCache(ctx context.Context, in *DownloadCacheRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DataChunk], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &CirrusCIService_ServiceDesc.Streams[4], CirrusCIService_DownloadCache_FullMethodName, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &grpc.GenericClientStream[DownloadCacheRequest, DataChunk]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CirrusCIService_DownloadCacheClient = grpc.ServerStreamingClient[DataChunk]
 
 func (c *cirrusCIServiceClient) CacheInfo(ctx context.Context, in *CacheInfoRequest, opts ...grpc.CallOption) (*CacheInfoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -1007,13 +971,11 @@ type CirrusCIServiceServer interface {
 	ReportAnnotations(context.Context, *ReportAnnotationsCommandRequest) (*emptypb.Empty, error)
 	StreamLogs(grpc.ClientStreamingServer[LogEntry, UploadLogsResponse]) error
 	SaveLogs(grpc.ClientStreamingServer[LogEntry, UploadLogsResponse]) error
-	UploadCache(grpc.ClientStreamingServer[CacheEntry, UploadCacheResponse]) error
 	// Artifacts upload over gRPC
 	UploadArtifacts(grpc.ClientStreamingServer[ArtifactEntry, UploadArtifactsResponse]) error
 	// Artifacts upload over HTTPS
 	GenerateArtifactUploadURLs(context.Context, *GenerateArtifactUploadURLsRequest) (*GenerateArtifactUploadURLsResponse, error)
 	CommitUploadedArtifacts(context.Context, *CommitUploadedArtifactsRequest) (*CommitUploadedArtifactsResponse, error)
-	DownloadCache(*DownloadCacheRequest, grpc.ServerStreamingServer[DataChunk]) error
 	CacheInfo(context.Context, *CacheInfoRequest) (*CacheInfoResponse, error)
 	DeleteCache(context.Context, *DeleteCacheRequest) (*DeleteCacheResponse, error)
 	Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error)
@@ -1056,9 +1018,6 @@ func (UnimplementedCirrusCIServiceServer) StreamLogs(grpc.ClientStreamingServer[
 func (UnimplementedCirrusCIServiceServer) SaveLogs(grpc.ClientStreamingServer[LogEntry, UploadLogsResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method SaveLogs not implemented")
 }
-func (UnimplementedCirrusCIServiceServer) UploadCache(grpc.ClientStreamingServer[CacheEntry, UploadCacheResponse]) error {
-	return status.Errorf(codes.Unimplemented, "method UploadCache not implemented")
-}
 func (UnimplementedCirrusCIServiceServer) UploadArtifacts(grpc.ClientStreamingServer[ArtifactEntry, UploadArtifactsResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method UploadArtifacts not implemented")
 }
@@ -1067,9 +1026,6 @@ func (UnimplementedCirrusCIServiceServer) GenerateArtifactUploadURLs(context.Con
 }
 func (UnimplementedCirrusCIServiceServer) CommitUploadedArtifacts(context.Context, *CommitUploadedArtifactsRequest) (*CommitUploadedArtifactsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CommitUploadedArtifacts not implemented")
-}
-func (UnimplementedCirrusCIServiceServer) DownloadCache(*DownloadCacheRequest, grpc.ServerStreamingServer[DataChunk]) error {
-	return status.Errorf(codes.Unimplemented, "method DownloadCache not implemented")
 }
 func (UnimplementedCirrusCIServiceServer) CacheInfo(context.Context, *CacheInfoRequest) (*CacheInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CacheInfo not implemented")
@@ -1208,13 +1164,6 @@ func _CirrusCIService_SaveLogs_Handler(srv interface{}, stream grpc.ServerStream
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type CirrusCIService_SaveLogsServer = grpc.ClientStreamingServer[LogEntry, UploadLogsResponse]
 
-func _CirrusCIService_UploadCache_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(CirrusCIServiceServer).UploadCache(&grpc.GenericServerStream[CacheEntry, UploadCacheResponse]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CirrusCIService_UploadCacheServer = grpc.ClientStreamingServer[CacheEntry, UploadCacheResponse]
-
 func _CirrusCIService_UploadArtifacts_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(CirrusCIServiceServer).UploadArtifacts(&grpc.GenericServerStream[ArtifactEntry, UploadArtifactsResponse]{ServerStream: stream})
 }
@@ -1257,17 +1206,6 @@ func _CirrusCIService_CommitUploadedArtifacts_Handler(srv interface{}, ctx conte
 	}
 	return interceptor(ctx, in, info, handler)
 }
-
-func _CirrusCIService_DownloadCache_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(DownloadCacheRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(CirrusCIServiceServer).DownloadCache(m, &grpc.GenericServerStream[DownloadCacheRequest, DataChunk]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type CirrusCIService_DownloadCacheServer = grpc.ServerStreamingServer[DataChunk]
 
 func _CirrusCIService_CacheInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CacheInfoRequest)
@@ -1661,19 +1599,9 @@ var CirrusCIService_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "UploadCache",
-			Handler:       _CirrusCIService_UploadCache_Handler,
-			ClientStreams: true,
-		},
-		{
 			StreamName:    "UploadArtifacts",
 			Handler:       _CirrusCIService_UploadArtifacts_Handler,
 			ClientStreams: true,
-		},
-		{
-			StreamName:    "DownloadCache",
-			Handler:       _CirrusCIService_DownloadCache_Handler,
-			ServerStreams: true,
 		},
 	},
 	Metadata: "api/cirrus_ci_service.proto",

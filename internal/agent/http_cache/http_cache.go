@@ -22,8 +22,6 @@ import (
 	urlproxy "github.com/cirruslabs/omni-cache/pkg/url-proxy"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"golang.org/x/sync/semaphore"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -193,14 +191,6 @@ func (httpCache *HTTPCache) downloadCache(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		slog.Error("Cache download failed", "cache_key", cacheKey, "err", err)
 
-		// RPC fallback
-		if status.Code(err) == codes.Unimplemented {
-			slog.Info("Falling back to downloading cache over RPC...")
-			httpCache.downloadCacheViaRPC(w, r, cacheKey)
-
-			return
-		}
-
 		w.WriteHeader(http.StatusNotFound)
 	} else {
 		slog.Info("Redirecting cache download", "cache_key", cacheKey)
@@ -227,14 +217,6 @@ func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to initialized uploading of %s cache! %s", cacheKey, err)
 		slog.Error(errorMsg)
-
-		// RPC fallback
-		if status.Code(err) == codes.Unimplemented {
-			slog.Info("Falling back to uploading cache over RPC...")
-			uploadCacheEntryViaRPC(w, r, cacheKey)
-
-			return
-		}
 
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(errorMsg))

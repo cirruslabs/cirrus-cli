@@ -23,6 +23,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	// Registers a gzip compressor needed for streaming logs from the agent.
+	"google.golang.org/genproto/googleapis/bytestream"
 	_ "google.golang.org/grpc/encoding/gzip"
 )
 
@@ -31,6 +32,7 @@ var ErrRPCFailed = errors.New("RPC server failed")
 type RPC struct {
 	// must be embedded to have forward compatible implementations
 	api.UnimplementedCirrusCIServiceServer
+	bytestream.UnimplementedByteStreamServer
 
 	listener                   *heuristic.Listener
 	server                     *grpc.Server
@@ -53,6 +55,7 @@ func New(build *build.Build, opts ...Option) *RPC {
 
 	// Register itself
 	api.RegisterCirrusCIServiceServer(r.server, r)
+	bytestream.RegisterByteStreamServer(r.server, r)
 
 	// Apply options
 	for _, opt := range opts {
