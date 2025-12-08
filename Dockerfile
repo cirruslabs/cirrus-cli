@@ -9,7 +9,10 @@ RUN apt update && apt -y install goreleaser-pro
 
 RUN goreleaser build --timeout 60m --single-target
 
-FROM alpine:latest
+# Temporarily downgraded due to "execve: No such file or directory" error [1].
+#
+# [1]: https://gitlab.alpinelinux.org/alpine/aports/-/issues/17775
+FROM alpine:3.22
 LABEL org.opencontainers.image.source=https://github.com/cirruslabs/cirrus-cli/
 RUN apk add --no-cache rsync
 COPY --from=builder /build/dist/linux_*/cirrus_linux_*/cirrus /usr/local/bin/
