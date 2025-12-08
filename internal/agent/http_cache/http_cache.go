@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/grpcutils"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacachev2"
@@ -22,7 +23,9 @@ import (
 	urlproxy "github.com/cirruslabs/omni-cache/pkg/url-proxy"
 	sentryhttp "github.com/getsentry/sentry-go/http"
 	"golang.org/x/sync/semaphore"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -62,9 +65,14 @@ func Start(
 		Transport: transport,
 		Timeout:   10 * time.Minute,
 	}
+	proxyOptions := []urlproxy.ProxyOption{urlproxy.WithHTTPClient(httpClient)}
+	if outgoingMD, ok := metadata.FromOutgoingContext(ctx); ok {
+		outgoingInterceptor := grpc.WithUnaryInterceptor(grpcutils.UnaryMetadataInterceptor(outgoingMD))
+		proxyOptions = append(proxyOptions, urlproxy.WithGRPCDialOptions(outgoingInterceptor))
+	}
 	httpCache := &HTTPCache{
 		httpClient: httpClient,
-		proxy:      urlproxy.NewProxy(urlproxy.WithHTTPClient(httpClient)),
+		proxy:      urlproxy.NewProxy(proxyOptions...),
 	}
 
 	// Apply opts
