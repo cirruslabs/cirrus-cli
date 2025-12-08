@@ -11,7 +11,7 @@ const (
 	agentImageBase = "ghcr.io/cirruslabs/cirrus-cli:v"
 
 	// DefaultAgentVersion represents the default version of the https://github.com/cirruslabs/cirrus-ci-agent to use.
-	DefaultAgentVersion = "0.157.1"
+	DefaultAgentVersion = "0.157.2"
 )
 
 type CopyCommand struct {
