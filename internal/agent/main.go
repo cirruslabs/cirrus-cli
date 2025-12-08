@@ -245,7 +245,7 @@ func Run(args []string) {
 
 	buildExecutor := executor.NewExecutor(*taskIdPtr, *clientTokenPtr, *serverTokenPtr, *commandFromPtr, *commandToPtr,
 		*preCreatedWorkingDir)
-	buildExecutor.RunBuild(ctx)
+	buildExecutor.RunBuild(metadata.NewOutgoingContext(ctx, md))
 }
 
 func uploadAgentLogs(ctx context.Context, logFilePath string, taskId string, clientToken string) {
