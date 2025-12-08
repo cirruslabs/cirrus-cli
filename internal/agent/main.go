@@ -18,6 +18,7 @@ import (
 	"github.com/avast/retry-go/v4"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/grpcutils"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/network"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/signalfilter"
 	"github.com/cirruslabs/cirrus-cli/internal/version"
@@ -245,7 +246,7 @@ func Run(args []string) {
 
 	buildExecutor := executor.NewExecutor(*taskIdPtr, *clientTokenPtr, *serverTokenPtr, *commandFromPtr, *commandToPtr,
 		*preCreatedWorkingDir)
-	buildExecutor.RunBuild(ctx)
+	buildExecutor.RunBuild(metadata.NewOutgoingContext(ctx, md))
 }
 
 func uploadAgentLogs(ctx context.Context, logFilePath string, taskId string, clientToken string) {
@@ -304,42 +305,12 @@ func dialWithTimeout(ctx context.Context, apiEndpoint string, md metadata.MD) (*
 				grpc_retry.WithCodes(retryCodes...),
 				grpc_retry.WithPerRetryTimeout(60*time.Second),
 			),
-			unaryMetadataInterceptor(md),
+			grpcutils.UnaryMetadataInterceptor(md),
 		),
 		grpc.WithChainStreamInterceptor(
-			streamMetadataInterceptor(md),
+			grpcutils.StreamMetadataInterceptor(md),
 		),
 	)
-}
-
-func unaryMetadataInterceptor(md metadata.MD) grpc.UnaryClientInterceptor {
-	return func(
-		ctx context.Context,
-		method string,
-		req, reply interface{},
-		cc *grpc.ClientConn,
-		invoker grpc.UnaryInvoker,
-		opts ...grpc.CallOption,
-	) error {
-		ctx = metadata.NewOutgoingContext(ctx, md)
-
-		return invoker(ctx, method, req, reply, cc, opts...)
-	}
-}
-
-func streamMetadataInterceptor(md metadata.MD) grpc.StreamClientInterceptor {
-	return func(
-		ctx context.Context,
-		desc *grpc.StreamDesc,
-		cc *grpc.ClientConn,
-		method string,
-		streamer grpc.Streamer,
-		opts ...grpc.CallOption,
-	) (grpc.ClientStream, error) {
-		ctx = metadata.NewOutgoingContext(ctx, md)
-
-		return streamer(ctx, desc, cc, method, opts...)
-	}
 }
 
 func runHeartbeat(taskId string, clientToken string, conn *grpc.ClientConn) {
