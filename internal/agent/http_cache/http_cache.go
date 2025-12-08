@@ -67,8 +67,13 @@ func Start(
 	}
 	proxyOptions := []urlproxy.ProxyOption{urlproxy.WithHTTPClient(httpClient)}
 	if outgoingMD, ok := metadata.FromOutgoingContext(ctx); ok {
-		outgoingInterceptor := grpc.WithUnaryInterceptor(grpcutils.UnaryMetadataInterceptor(outgoingMD))
-		proxyOptions = append(proxyOptions, urlproxy.WithGRPCDialOptions(outgoingInterceptor))
+		proxyOptions = append(
+			proxyOptions,
+			urlproxy.WithGRPCDialOptions(
+				grpc.WithUnaryInterceptor(grpcutils.UnaryMetadataInterceptor(outgoingMD)),
+				grpc.WithStreamInterceptor(grpcutils.StreamMetadataInterceptor(outgoingMD)),
+			),
+		)
 	}
 	httpCache := &HTTPCache{
 		httpClient: httpClient,
