@@ -45,6 +45,7 @@ func (r *RPC) Write(stream bytestream.ByteStream_WriteServer) error {
 				r.logger.Debugf("error while initializing cache put operation: %v", err)
 				return status.Error(codes.Internal, "failed to initialize cache put operation")
 			}
+			r.logger.Debugf("initialized cache put operation for %s", cacheEntry.ResourceName)
 		}
 
 		n, err := putOp.Write(cacheEntry.Data)
