@@ -101,6 +101,8 @@ github.com/cirruslabs/omni-cache v0.0.0-20251126154424-4794a1e10bc2 h1:TBRvJzkJw
 github.com/cirruslabs/omni-cache v0.0.0-20251126154424-4794a1e10bc2/go.mod h1:iiox2bLcisBBYXG8aUyvn6/UcuTrCexs+u4sv65qx6E=
 github.com/cirruslabs/omni-cache v0.0.0-20251208144910-277e1f819714 h1:AUT3wGOwLd+Q4aLnGs5jIHyf/9dGRruCYC2d2gsDd1U=
 github.com/cirruslabs/omni-cache v0.0.0-20251208144910-277e1f819714/go.mod h1:iiox2bLcisBBYXG8aUyvn6/UcuTrCexs+u4sv65qx6E=
+github.com/cirruslabs/omni-cache v0.2.2 h1:O7V7zP+wBJOAL5xtjoQvz5459AaEKtdtZl7RaunnrqM=
+github.com/cirruslabs/omni-cache v0.2.2/go.mod h1:iiox2bLcisBBYXG8aUyvn6/UcuTrCexs+u4sv65qx6E=
 github.com/cirruslabs/terminal v0.16.0 h1:RUHtBccwykpGI1pKb9aKqtMQnnz6DyzJZiQyI2e81zw=
 github.com/cirruslabs/terminal v0.16.0/go.mod h1:NYC5TZrMSZFaNwXv8OTk1kwOOgkpeB1Snp2sP6e17e4=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
