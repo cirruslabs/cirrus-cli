@@ -97,10 +97,6 @@ github.com/cirruslabs/echelon v1.9.0 h1:UtHAtoc+C7KZoYtbMCOL8JYA1Ndi6/4u0+gWxw9s
 github.com/cirruslabs/echelon v1.9.0/go.mod h1:Zk4IGe8upeefcwPGE143JCM7iwOkJnZ2ZFCbDWwoadA=
 github.com/cirruslabs/go-java-glob v0.1.0 h1:qC4Fzrq2sXKTLLsBb7ih7BNdCjCR6ZJAAK4nOZ6d/Ak=
 github.com/cirruslabs/go-java-glob v0.1.0/go.mod h1:+4vLmYqEnKtVAdeYsP5GCcPBcTuWsqi6P9bO6HraGFE=
-github.com/cirruslabs/omni-cache v0.0.0-20251126154424-4794a1e10bc2 h1:TBRvJzkJwHE+y6SZRrzmJuE8Q+Ig1D9VMBD/thX7RGc=
-github.com/cirruslabs/omni-cache v0.0.0-20251126154424-4794a1e10bc2/go.mod h1:iiox2bLcisBBYXG8aUyvn6/UcuTrCexs+u4sv65qx6E=
-github.com/cirruslabs/omni-cache v0.0.0-20251208144910-277e1f819714 h1:AUT3wGOwLd+Q4aLnGs5jIHyf/9dGRruCYC2d2gsDd1U=
-github.com/cirruslabs/omni-cache v0.0.0-20251208144910-277e1f819714/go.mod h1:iiox2bLcisBBYXG8aUyvn6/UcuTrCexs+u4sv65qx6E=
 github.com/cirruslabs/omni-cache v0.2.2 h1:O7V7zP+wBJOAL5xtjoQvz5459AaEKtdtZl7RaunnrqM=
 github.com/cirruslabs/omni-cache v0.2.2/go.mod h1:iiox2bLcisBBYXG8aUyvn6/UcuTrCexs+u4sv65qx6E=
 github.com/cirruslabs/terminal v0.16.0 h1:RUHtBccwykpGI1pKb9aKqtMQnnz6DyzJZiQyI2e81zw=
