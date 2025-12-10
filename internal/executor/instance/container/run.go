@@ -4,13 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
-	"github.com/cirruslabs/cirrus-cli/internal/executor/pullhelper"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"github.com/cirruslabs/echelon"
 	"math"
 	"os"
 	"path/filepath"
@@ -18,6 +11,14 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/cirruslabs/cirrus-cli/internal/executor/heuristic"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/containerbackend"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/runconfig"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/options"
+	"github.com/cirruslabs/cirrus-cli/internal/executor/pullhelper"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/cirruslabs/echelon"
 )
 
 const (
@@ -111,8 +112,8 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 
 	// Mount the  directory with the CLI's Unix domain socket in case it's used,
 	// assuming that we run in the same mount namespace as the Docker daemon
-	if strings.HasPrefix(config.Endpoint.Container(), "unix:") {
-		socketPath := strings.TrimPrefix(config.Endpoint.Container(), "unix:")
+	if strings.HasPrefix(config.Endpoint.Container(), "unix://") {
+		socketPath := strings.TrimPrefix(config.Endpoint.Container(), "unix://")
 		socketDir := filepath.Dir(socketPath)
 
 		input.Mounts = append(input.Mounts, containerbackend.ContainerMount{
