@@ -1,7 +1,6 @@
 package http_cache
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -10,7 +9,6 @@ import (
 	"net/http"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
@@ -236,7 +234,7 @@ func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Requ
 		TaskIdentification: client.CirrusTaskIdentification,
 		CacheKey:           cacheKey,
 	}
-	generateResp, err := client.CirrusClient.GenerateCacheUploadURL(context.Background(), &key)
+	generateResp, err := client.CirrusClient.GenerateCacheUploadURL(r.Context(), &key)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to initialized uploading of %s cache! %s", cacheKey, err)
 		slog.Error(errorMsg)
@@ -253,37 +251,16 @@ func (httpCache *HTTPCache) uploadCacheEntry(w http.ResponseWriter, r *http.Requ
 		w.Write([]byte(errorMsg))
 		return
 	}
-	req, err := http.NewRequest("PUT", generateResp.Url, bufio.NewReader(r.Body))
-	if err != nil {
-		slog.Error("Cache upload failed", "cache_key", cacheKey, "err", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	urlInfo := storage.URLInfo{
+		URL:          generateResp.Url,
+		ExtraHeaders: generateResp.GetExtraHeaders(),
 	}
-	req.Header.Set("Content-Type", "application/octet-stream")
-	req.ContentLength = r.ContentLength
-	for k, v := range generateResp.GetExtraHeaders() {
-		req.Header.Set(k, v)
+	uploadResource := urlproxy.UploadResource{
+		Body:          r.Body,
+		ContentLength: r.ContentLength,
+		ResourceName:  cacheKey,
 	}
-	resp, err := httpCache.httpClient.Do(req)
-	if err != nil {
-		errorMsg := fmt.Sprintf("Failed to proxy upload of %s cache! %s", cacheKey, err)
-		slog.Error(errorMsg)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(errorMsg))
-		return
-	}
-	if resp.StatusCode >= 400 {
-		slog.Error("Failed to proxy upload of cache", "cache_key", cacheKey, "status", resp.Status)
-
-		var headersBuilder strings.Builder
-		req.Header.Write(&headersBuilder)
-		slog.Error("Headers for PUT request", "url", generateResp.Url, "headers", headersBuilder.String())
-
-		var responseBuilder strings.Builder
-		resp.Write(&responseBuilder)
-		slog.Error("Failed response", "response", responseBuilder.String())
-	}
-	w.WriteHeader(resp.StatusCode)
+	httpCache.proxy.ProxyUploadToURL(r.Context(), w, &urlInfo, uploadResource)
 }
 
 func deleteCacheEntry(w http.ResponseWriter, cacheKey string) {
