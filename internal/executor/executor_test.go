@@ -7,6 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"runtime"
+	"testing"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/agent"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance"
@@ -22,12 +29,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io"
-	"os"
-	"path/filepath"
-	"runtime"
-	"testing"
-	"time"
 )
 
 // TestExecutorEmpty ensures that Executor works fine with an empty task list.
@@ -623,7 +624,7 @@ func TestContainerLogs(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, buf.String(), "Getting initial commands...")
 	assert.Contains(t, buf.String(), "Sending heartbeat...")
-	assert.Contains(t, buf.String(), "Executing main...")
+	assert.Contains(t, buf.String(), "\"Executing command\" name=main")
 
 	// Skip last line check for Podman, for which the final part of the log is sometimes skipped. Exact cause unknown,
 	// but might be related to the use of connection flushing[1], which will introduce delay for picking up the next
