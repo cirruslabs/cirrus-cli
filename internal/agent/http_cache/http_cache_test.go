@@ -7,10 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/cirruscimock"
+	agentstorage "github.com/cirruslabs/cirrus-cli/internal/agent/storage"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
@@ -18,9 +19,10 @@ import (
 func TestHTTPCache(t *testing.T) {
 	testutil.NeedsContainerization(t)
 
-	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
+	conn := cirruscimock.ClientConn(t)
+	backend := agentstorage.NewCirrusStoreBackend(api.NewCirrusCIServiceClient(conn), api.OldTaskIdentification("test", "test"))
 
-	httpCacheObjectURL := "http://" + http_cache.Start(context.Background(), http_cache.DefaultTransport()) +
+	httpCacheObjectURL := "http://" + http_cache.Start(context.Background(), http_cache.DefaultTransport(), backend) +
 		"/cache/" + uuid.NewString() + "/test.txt"
 
 	// Ensure that the cache entry does not exist

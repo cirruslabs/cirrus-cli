@@ -9,11 +9,12 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/cirruscimock"
+	agentstorage "github.com/cirruslabs/cirrus-cli/internal/agent/storage"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
+	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/cirrus-cli/pkg/api/gharesults"
 	"github.com/dustin/go-humanize"
 	"github.com/google/uuid"
@@ -25,9 +26,10 @@ func TestGHACacheV2(t *testing.T) {
 
 	ctx := context.Background()
 
-	client.InitClient(cirruscimock.ClientConn(t), "test", "test")
+	conn := cirruscimock.ClientConn(t)
+	backend := agentstorage.NewCirrusStoreBackend(api.NewCirrusCIServiceClient(conn), api.OldTaskIdentification("test", "test"))
 
-	httpCacheURL := "http://" + http_cache.Start(ctx, http_cache.DefaultTransport(),
+	httpCacheURL := "http://" + http_cache.Start(ctx, http_cache.DefaultTransport(), backend,
 		http_cache.WithAzureBlobOpts(azureblob.WithUnexpectedEOFReader()))
 
 	client := gharesults.NewCacheServiceJSONClient(httpCacheURL, &http.Client{})
@@ -121,9 +123,10 @@ func TestGHACacheV2UploadStream(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.Name, func(t *testing.T) {
-			client.InitClient(cirruscimock.ClientConn(t), "test", "test")
+			conn := cirruscimock.ClientConn(t)
+			backend := agentstorage.NewCirrusStoreBackend(api.NewCirrusCIServiceClient(conn), api.OldTaskIdentification("test", "test"))
 
-			httpCacheURL := "http://" + http_cache.Start(t.Context(), http_cache.DefaultTransport(),
+			httpCacheURL := "http://" + http_cache.Start(t.Context(), http_cache.DefaultTransport(), backend,
 				http_cache.WithAzureBlobOpts(azureblob.WithUnexpectedEOFReader()))
 
 			client := gharesults.NewCacheServiceJSONClient(httpCacheURL, &http.Client{})

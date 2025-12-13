@@ -3,10 +3,9 @@ package ghacache
 import (
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/httprange"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/uploadable"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	agentstorage "github.com/cirruslabs/cirrus-cli/internal/agent/storage"
 	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/render"
 	"github.com/puzpuzpuz/xsync/v3"
@@ -33,13 +32,15 @@ const (
 
 type GHACache struct {
 	cacheHost   string
+	backend     agentstorage.CacheBackend
 	mux         *http.ServeMux
 	uploadables *xsync.MapOf[int64, *uploadable.Uploadable]
 }
 
-func New(cacheHost string) *GHACache {
+func New(cacheHost string, backend agentstorage.CacheBackend) *GHACache {
 	cache := &GHACache{
 		cacheHost:   cacheHost,
+		backend:     backend,
 		mux:         http.NewServeMux(),
 		uploadables: xsync.NewMapOf[int64, *uploadable.Uploadable](),
 	}
@@ -64,16 +65,8 @@ func (cache *GHACache) get(writer http.ResponseWriter, request *http.Request) {
 		return httpCacheKey(key, version)
 	})
 
-	grpcRequest := &api.CacheInfoRequest{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           keysWithVersions[0],
-	}
-
-	if len(keysWithVersions) > 1 {
-		grpcRequest.CacheKeyPrefixes = keysWithVersions[1:]
-	}
-
-	grpcResponse, err := client.CirrusClient.CacheInfo(request.Context(), grpcRequest)
+	cacheKeyPrefixes := keysWithVersions[1:]
+	info, err := cache.backend.CacheInfo(request.Context(), keysWithVersions[0], cacheKeyPrefixes)
 	if err != nil {
 		if status, ok := status.FromError(err); ok && status.Code() == codes.NotFound {
 			writer.WriteHeader(http.StatusNoContent)
@@ -91,8 +84,8 @@ func (cache *GHACache) get(writer http.ResponseWriter, request *http.Request) {
 		Key string `json:"cacheKey"`
 		URL string `json:"archiveLocation"`
 	}{
-		Key: strings.TrimPrefix(grpcResponse.Info.Key, httpCacheKey("", version)),
-		URL: cache.httpCacheURL(grpcResponse.Info.Key),
+		Key: strings.TrimPrefix(info.Key, httpCacheKey("", version)),
+		URL: cache.httpCacheURL(info.Key),
 	}
 
 	render.JSON(writer, request, &jsonResp)
@@ -117,10 +110,7 @@ func (cache *GHACache) reserveUploadable(writer http.ResponseWriter, request *ht
 		CacheID: rand.Int63n(jsNumberMaxSafeInteger),
 	}
 
-	grpcResp, err := client.CirrusClient.MultipartCacheUploadCreate(request.Context(), &api.CacheKey{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           httpCacheKey(jsonReq.Key, jsonReq.Version),
-	})
+	uploadID, err := cache.backend.CreateMultipartUpload(request.Context(), httpCacheKey(jsonReq.Key, jsonReq.Version), nil)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to create "+
 			"multipart upload", "key", jsonReq.Key, "version", jsonReq.Version, "err", err)
@@ -128,7 +118,7 @@ func (cache *GHACache) reserveUploadable(writer http.ResponseWriter, request *ht
 		return
 	}
 
-	cache.uploadables.Store(jsonResp.CacheID, uploadable.New(jsonReq.Key, jsonReq.Version, grpcResp.UploadId))
+	cache.uploadables.Store(jsonResp.CacheID, uploadable.New(jsonReq.Key, jsonReq.Version, uploadID))
 
 	render.JSON(writer, request, &jsonResp)
 }
@@ -173,15 +163,12 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	response, err := client.CirrusClient.MultipartCacheUploadPart(request.Context(), &api.MultipartCacheUploadPartRequest{
-		CacheKey: &api.CacheKey{
-			TaskIdentification: client.CirrusTaskIdentification,
-			CacheKey:           httpCacheKey(uploadable.Key(), uploadable.Version()),
-		},
-		UploadId:      uploadable.UploadID(),
-		PartNumber:    uint32(partNumber),
-		ContentLength: uint64(httpRanges[0].Length),
-	})
+	urlInfo, err := cache.backend.UploadPartURL(request.Context(),
+		httpCacheKey(uploadable.Key(), uploadable.Version()),
+		uploadable.UploadID(),
+		uint32(partNumber),
+		uint64(httpRanges[0].Length),
+	)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed create pre-signed "+
 			"upload part URL", "key", uploadable.Key(), "version", uploadable.Version(),
@@ -190,7 +177,7 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	uploadPartRequest, err := http.NewRequest(http.MethodPut, response.Url, request.Body)
+	uploadPartRequest, err := http.NewRequest(http.MethodPut, urlInfo.URL, request.Body)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to create upload part "+
 			"request", "key", uploadable.Key(), "version", uploadable.Version(), "part_number", partNumber,
@@ -207,7 +194,7 @@ func (cache *GHACache) updateUploadable(writer http.ResponseWriter, request *htt
 	uploadPartRequest.ContentLength = httpRanges[0].Length
 
 	// Add headers mandated by the pre-signed request
-	for key, value := range response.ExtraHeaders {
+	for key, value := range urlInfo.ExtraHeaders {
 		uploadPartRequest.Header.Set(key, value)
 	}
 
@@ -291,14 +278,11 @@ func (cache *GHACache) commitUploadable(writer http.ResponseWriter, request *htt
 		return
 	}
 
-	_, err = client.CirrusClient.MultipartCacheUploadCommit(request.Context(), &api.MultipartCacheUploadCommitRequest{
-		CacheKey: &api.CacheKey{
-			TaskIdentification: client.CirrusTaskIdentification,
-			CacheKey:           httpCacheKey(uploadable.Key(), uploadable.Version()),
-		},
-		UploadId: uploadable.UploadID(),
-		Parts:    parts,
-	})
+	err = cache.backend.CommitMultipartUpload(request.Context(),
+		httpCacheKey(uploadable.Key(), uploadable.Version()),
+		uploadable.UploadID(),
+		parts,
+	)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "GHA cache failed to commit multipart upload",
 			"id", uploadable.UploadID(), "key", uploadable.Key(), "version", uploadable.Version(),
