@@ -8,9 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	uploadablepkg "github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob/uploadable"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	omnistorage "github.com/cirruslabs/omni-cache/pkg/storage"
 	"github.com/dustin/go-humanize"
 	"github.com/go-chi/render"
 )
@@ -49,13 +48,7 @@ func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Re
 	}
 
 	// Generate cache upload URL
-	generateCacheUploadURLResponse, err := client.CirrusClient.GenerateCacheUploadURL(
-		request.Context(),
-		&api.CacheKey{
-			TaskIdentification: client.CirrusTaskIdentification,
-			CacheKey:           key,
-		},
-	)
+	urlInfo, err := azureBlob.storageBackend.UploadURL(request.Context(), key, nil)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to generate cache upload URL",
 			"key", key, "err", err)
@@ -65,7 +58,7 @@ func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Re
 
 	// Proxy cache entry upload since Azure Blob client does not support redirects
 	req, err := http.NewRequestWithContext(request.Context(), http.MethodPut,
-		generateCacheUploadURLResponse.Url, request.Body)
+		urlInfo.URL, request.Body)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to create request to proxy "+
 			"cache entry upload", "key", key, "err", err)
@@ -75,7 +68,7 @@ func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Re
 
 	// Headers are pre-signed too, so ensure that they're present,
 	// otherwise we'll get HTTP 403
-	for key, value := range generateCacheUploadURLResponse.GetExtraHeaders() {
+	for key, value := range urlInfo.ExtraHeaders {
 		req.Header.Set(key, value)
 	}
 
@@ -96,7 +89,7 @@ func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Re
 
 		fail(writer, request, http.StatusInternalServerError, fmt.Sprintf("failed to perform request to proxy "+
 			"cache entry upload, got unexpected HTTP %d", resp.StatusCode), "key", key,
-			"url", generateCacheUploadURLResponse.Url, "extra_headers", generateCacheUploadURLResponse.ExtraHeaders,
+			"url", urlInfo.URL, "extra_headers", urlInfo.ExtraHeaders,
 			"body", string(bodyBytes), "body_read_err", bodyReadErr)
 
 		return
@@ -107,11 +100,6 @@ func (azureBlob *AzureBlob) putBlob(writer http.ResponseWriter, request *http.Re
 
 func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.Request) {
 	key := request.PathValue("key")
-
-	cacheKey := &api.CacheKey{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           key,
-	}
 
 	// Decode the block ID
 	blockID := request.URL.Query().Get("blockid")
@@ -162,13 +150,7 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 
 	// Retrieve an already existing uploadable ID or compute a new one
 	uploadID, err := uploadable.IDOrCompute(func() (string, error) {
-		multipartCacheUploadCreateResponse, err := client.CirrusClient.MultipartCacheUploadCreate(request.Context(),
-			cacheKey)
-		if err != nil {
-			return "", err
-		}
-
-		return multipartCacheUploadCreateResponse.UploadId, nil
+		return azureBlob.storageBackend.CreateMultipartUpload(request.Context(), key, nil)
 	})
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to create new multipart upload",
@@ -177,14 +159,7 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	multipartCacheUploadPartResponse, err := client.CirrusClient.MultipartCacheUploadPart(request.Context(),
-		&api.MultipartCacheUploadPartRequest{
-			CacheKey:      cacheKey,
-			UploadId:      uploadID,
-			PartNumber:    uint32(partNumber),
-			ContentLength: contentLength,
-		},
-	)
+	urlInfo, err := azureBlob.storageBackend.UploadPartURL(request.Context(), key, uploadID, partNumber, contentLength)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to create new multipart upload part",
 			"key", key, "blockid", blockID, "uploadid", uploadID, "err", err)
@@ -194,7 +169,7 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 
 	// Proxy cache entry upload since we need an ETag
 	req, err := http.NewRequestWithContext(request.Context(), http.MethodPut,
-		multipartCacheUploadPartResponse.Url, request.Body)
+		urlInfo.URL, request.Body)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to create request to proxy "+
 			"cache multipart entry upload", "key", key, "blockid", blockID, "err", err)
@@ -204,6 +179,10 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 
 	// Content-Length is pre-signed, so we need to provide it
 	req.ContentLength = int64(contentLength)
+
+	for key, value := range urlInfo.ExtraHeaders {
+		req.Header.Set(key, value)
+	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -232,11 +211,6 @@ func (azureBlob *AzureBlob) putBlock(writer http.ResponseWriter, request *http.R
 
 func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *http.Request) {
 	key := request.PathValue("key")
-
-	cacheKey := &api.CacheKey{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           key,
-	}
 
 	var blockList blockList
 
@@ -272,7 +246,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 
 	var localPartReaders []io.Reader
 	var localPartReadersTotalBytes int64
-	var protoParts []*api.MultipartCacheUploadCommitRequest_Part
+	var multipartParts []omnistorage.MultipartUploadPart
 
 	for _, blockID := range blockList.Latest {
 		// Decode the part number
@@ -296,18 +270,15 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 			localPartReaders = append(localPartReaders, part.File())
 			localPartReadersTotalBytes += part.FileSize()
 		} else {
-			protoParts = append(protoParts, &api.MultipartCacheUploadCommitRequest_Part{
+			multipartParts = append(multipartParts, omnistorage.MultipartUploadPart{
 				PartNumber: partNumber,
-				Etag:       part.ETag(),
+				ETag:       part.ETag(),
 			})
 		}
 	}
 
 	if uploadable.Local() {
-		generateCacheUploadURLResponse, err := client.CirrusClient.GenerateCacheUploadURL(request.Context(), &api.CacheKey{
-			TaskIdentification: client.CirrusTaskIdentification,
-			CacheKey:           key,
-		})
+		urlInfo, err := azureBlob.storageBackend.UploadURL(request.Context(), key, nil)
 		if err != nil {
 			fail(writer, request, http.StatusInternalServerError, "failed to generate cache upload URL "+
 				"for local part upload", "key", key, "uploadid", uploadID, "err", err)
@@ -315,7 +286,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 			return
 		}
 
-		uploadReq, err := http.NewRequest(http.MethodPut, generateCacheUploadURLResponse.Url,
+		uploadReq, err := http.NewRequest(http.MethodPut, urlInfo.URL,
 			io.MultiReader(localPartReaders...))
 		if err != nil {
 			fail(writer, request, http.StatusInternalServerError, "failed to create request to cache upload URL "+
@@ -326,7 +297,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 
 		// Headers are pre-signed too, so ensure that they're present,
 		// otherwise we'll get HTTP 403
-		for key, value := range generateCacheUploadURLResponse.GetExtraHeaders() {
+		for key, value := range urlInfo.ExtraHeaders {
 			uploadReq.Header.Set(key, value)
 		}
 
@@ -354,11 +325,7 @@ func (azureBlob *AzureBlob) putBlockList(writer http.ResponseWriter, request *ht
 		return
 	}
 
-	_, err := client.CirrusClient.MultipartCacheUploadCommit(request.Context(), &api.MultipartCacheUploadCommitRequest{
-		CacheKey: cacheKey,
-		UploadId: uploadID,
-		Parts:    protoParts,
-	})
+	err := azureBlob.storageBackend.CommitMultipartUpload(request.Context(), key, uploadID, multipartParts)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to commit a multipart upload",
 			"key", key, "uploadid", uploadID, "err", err)

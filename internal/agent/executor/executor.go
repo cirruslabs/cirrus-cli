@@ -24,6 +24,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/updatebatcher"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/vaultunboxer"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
+	agentstorage "github.com/cirruslabs/cirrus-cli/internal/agent/storage"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
 )
@@ -219,7 +220,8 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
 		transport := http_cache.DefaultTransport()
 
-		httpCacheHost := http_cache.Start(ctx, transport)
+		backend := agentstorage.NewCirrusStoreBackend(client.CirrusClient, client.CirrusTaskIdentification)
+		httpCacheHost := http_cache.Start(ctx, transport, backend)
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
 	}
