@@ -2,8 +2,6 @@ package azureblob
 
 import (
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"net/http"
 )
 
@@ -18,13 +16,7 @@ func (azureBlob *AzureBlob) headBlob(writer http.ResponseWriter, request *http.R
 	key := request.PathValue("key")
 
 	// Generate cache entry download URL
-	generateCacheDownloadURLResponse, err := client.CirrusClient.GenerateCacheDownloadURLs(
-		request.Context(),
-		&api.CacheKey{
-			TaskIdentification: client.CirrusTaskIdentification,
-			CacheKey:           key,
-		},
-	)
+	urls, err := azureBlob.storageBackend.DownloadURLs(request.Context(), key)
 	if err != nil {
 		fail(writer, request, http.StatusInternalServerError, "failed to generate cache download URLs",
 			"key", key, "err", err)
@@ -32,7 +24,7 @@ func (azureBlob *AzureBlob) headBlob(writer http.ResponseWriter, request *http.R
 		return
 	}
 
-	if len(generateCacheDownloadURLResponse.Urls) == 0 {
+	if len(urls) == 0 {
 		fail(writer, request, http.StatusInternalServerError, fmt.Sprintf("failed to generate"+
 			" cache download URLs: expected at least 1 URL, got 0"))
 
@@ -40,10 +32,10 @@ func (azureBlob *AzureBlob) headBlob(writer http.ResponseWriter, request *http.R
 	}
 
 	// Retrieve cache entry information
-	for i, url := range generateCacheDownloadURLResponse.Urls {
-		isLastIteration := i == len(generateCacheDownloadURLResponse.Urls)-1
+	for i, url := range urls {
+		isLastIteration := i == len(urls)-1
 
-		if azureBlob.retrieveCacheEntryInfo(writer, request, key, url, isLastIteration) {
+		if azureBlob.retrieveCacheEntryInfo(writer, request, key, url.URL, isLastIteration) {
 			break
 		}
 	}

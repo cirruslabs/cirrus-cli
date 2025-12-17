@@ -3,9 +3,8 @@ package ghacachev2
 import (
 	"context"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/azureblob"
-	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	agentstorage "github.com/cirruslabs/cirrus-cli/internal/agent/storage"
 	"github.com/cirruslabs/cirrus-cli/pkg/api/gharesults"
 	"github.com/samber/lo"
 	"github.com/twitchtv/twirp"
@@ -26,12 +25,17 @@ const APIMountPoint = "/twirp"
 
 type Cache struct {
 	cacheHost   string
+	backend     agentstorage.CacheBackend
 	twirpServer gharesults.TwirpServer
 }
 
-func New(cacheHost string) *Cache {
+func New(cacheHost string, backend agentstorage.CacheBackend) *Cache {
+	if backend == nil {
+		panic("ghacachev2.New: backend is required")
+	}
 	cache := &Cache{
 		cacheHost: cacheHost,
+		backend:   backend,
 	}
 
 	cache.twirpServer = gharesults.NewCacheServiceServer(cache)
@@ -48,15 +52,10 @@ func (cache *Cache) ServeHTTP(writer http.ResponseWriter, request *http.Request)
 }
 
 func (cache *Cache) GetCacheEntryDownloadURL(ctx context.Context, request *gharesults.GetCacheEntryDownloadURLRequest) (*gharesults.GetCacheEntryDownloadURLResponse, error) {
-	grpcRequest := &api.CacheInfoRequest{
-		TaskIdentification: client.CirrusTaskIdentification,
-		CacheKey:           httpCacheKey(request.Key, request.Version),
-		CacheKeyPrefixes: lo.Map(request.RestoreKeys, func(restoreKey string, _ int) string {
-			return httpCacheKey(restoreKey, request.Version)
-		}),
-	}
-
-	grpcResponse, err := client.CirrusClient.CacheInfo(ctx, grpcRequest)
+	cacheKeyPrefixes := lo.Map(request.RestoreKeys, func(restoreKey string, _ int) string {
+		return httpCacheKey(restoreKey, request.Version)
+	})
+	info, err := cache.backend.CacheInfo(ctx, httpCacheKey(request.Key, request.Version), cacheKeyPrefixes)
 	if err != nil {
 		if status, ok := status.FromError(err); ok && status.Code() == codes.NotFound {
 			return &gharesults.GetCacheEntryDownloadURLResponse{
@@ -70,8 +69,8 @@ func (cache *Cache) GetCacheEntryDownloadURL(ctx context.Context, request *ghare
 
 	return &gharesults.GetCacheEntryDownloadURLResponse{
 		Ok:                true,
-		SignedDownloadUrl: cache.azureBlobURL(grpcResponse.Info.Key),
-		MatchedKey:        strings.TrimPrefix(grpcResponse.Info.Key, httpCacheKey("", request.Version)),
+		SignedDownloadUrl: cache.azureBlobURL(info.Key),
+		MatchedKey:        strings.TrimPrefix(info.Key, httpCacheKey("", request.Version)),
 	}, nil
 }
 
