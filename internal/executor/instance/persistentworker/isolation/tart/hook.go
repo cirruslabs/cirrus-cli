@@ -1,8 +1,10 @@
 package tart
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+
 	"github.com/cirruslabs/cirrus-cli/internal/executor/instance/persistentworker/remoteagent"
 	"github.com/cirruslabs/echelon"
 	"golang.org/x/crypto/ssh"
@@ -51,8 +53,14 @@ func unmountWorkingDirectoryHook(logger *echelon.Logger) remoteagent.WaitForAgen
 			return err
 		}
 
+		var stdout, stderr bytes.Buffer
+		sshSess.Stdout = &stdout
+		sshSess.Stderr = &stderr
+
 		if err := sshSess.Run(command); err != nil {
 			_ = sshSess.Close()
+
+			syncLogger.Errorf("%s", firstNonEmptyLine(stderr.String(), stdout.String()))
 
 			syncLogger.Finish(false)
 			return err
