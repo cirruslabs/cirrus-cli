@@ -311,6 +311,7 @@ func WaitForSSH(
 
 		sshConn, chans, reqs, err = ssh.NewClientConn(netConn, addr, sshConfig)
 		if err != nil {
+			_ = netConn.Close()
 			err := fmt.Errorf("%w: failed to connect via SSH: %v", ErrFailed, err)
 
 			logger.Debugf("failed to perform SSH handshake with %s: %v", addr, err)
