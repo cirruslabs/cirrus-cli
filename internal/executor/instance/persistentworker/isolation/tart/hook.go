@@ -14,27 +14,16 @@ func mountWorkingDirectoryHook(tag string, logger *echelon.Logger) remoteagent.W
 	return func(ctx context.Context, sshClient *ssh.Client) error {
 		syncLogger := logger.Scoped("mounting the working directory")
 
-		command := fmt.Sprintf("mkdir %q && mount_virtiofs %q %q",
-			macOSAutomountDirectoryPath, tag, macOSAutomountDirectoryPath)
-
-		syncLogger.Infof("running command: %s", command)
-
-		sshSess, err := sshClient.NewSession()
+		err := remoteCommand(sshClient, syncLogger, fmt.Sprintf("mkdir %q && mount_virtiofs %q %q",
+			macOSAutomountDirectoryPath, tag, macOSAutomountDirectoryPath))
 		if err != nil {
 			syncLogger.Finish(false)
+
 			return err
 		}
-
-		if err := sshSess.Run(command); err != nil {
-			_ = sshSess.Close()
-
-			syncLogger.Finish(false)
-			return err
-		}
-
-		_ = sshSess.Close()
 
 		syncLogger.Finish(true)
+
 		return nil
 	}
 }
@@ -43,32 +32,46 @@ func unmountWorkingDirectoryHook(logger *echelon.Logger) remoteagent.WaitForAgen
 	return func(ctx context.Context, sshClient *ssh.Client) error {
 		syncLogger := logger.Scoped("unmounting the working directory")
 
-		command := fmt.Sprintf("umount %q", macOSAutomountDirectoryPath)
+		err := remoteCommand(sshClient, syncLogger, fmt.Sprintf("umount %q",
+			macOSAutomountDirectoryPath))
+		if err == nil {
+			syncLogger.Finish(true)
 
-		syncLogger.Infof("running command: %s", command)
-
-		sshSess, err := sshClient.NewSession()
-		if err != nil {
-			syncLogger.Finish(false)
-			return err
+			return nil
 		}
 
-		var stdout, stderr bytes.Buffer
-		sshSess.Stdout = &stdout
-		sshSess.Stderr = &stderr
+		err = remoteCommand(sshClient, syncLogger, fmt.Sprintf("diskutil unmount %q",
+			macOSAutomountDirectoryPath))
+		if err == nil {
+			syncLogger.Finish(true)
 
-		if err := sshSess.Run(command); err != nil {
-			_ = sshSess.Close()
-
-			syncLogger.Errorf("%s", firstNonEmptyLine(stderr.String(), stdout.String()))
-
-			syncLogger.Finish(false)
-			return err
+			return nil
 		}
 
-		_ = sshSess.Close()
+		syncLogger.Finish(false)
 
-		syncLogger.Finish(true)
-		return nil
+		return err
 	}
+}
+
+func remoteCommand(sshClient *ssh.Client, syncLogger *echelon.Logger, command string) error {
+	syncLogger.Infof("running command: %s", command)
+
+	sshSess, err := sshClient.NewSession()
+	if err != nil {
+		return err
+	}
+	defer sshSess.Close()
+
+	var stdout, stderr bytes.Buffer
+	sshSess.Stdout = &stdout
+	sshSess.Stderr = &stderr
+
+	if err = sshSess.Run(command); err != nil {
+		syncLogger.Errorf("%s", firstNonEmptyLine(stderr.String(), stdout.String()))
+
+		return err
+	}
+
+	return nil
 }
