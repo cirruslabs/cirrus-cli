@@ -114,7 +114,8 @@ func (tart *Tart) Warmup(
 	config *runconfig.RunConfig,
 	logger *echelon.Logger,
 ) error {
-	err := tart.bootVM(ctx, ident, additionalEnvironment, "", lazyPull, logger)
+	err := tart.bootVM(ctx, ident, additionalEnvironment, "", lazyPull,
+		config.TartOptions.NoUnmount, logger)
 	if err != nil {
 		return err
 	}
@@ -223,6 +224,7 @@ func (tart *Tart) bootVM(
 	additionalEnvironment map[string]string,
 	automountDir string,
 	lazyPull bool,
+	noUnmount bool,
 	logger *echelon.Logger,
 ) error {
 	ctx, prepareInstanceSpan := tracer.Start(ctx, "prepare-instance")
@@ -267,7 +269,7 @@ func (tart *Tart) bootVM(
 		})
 
 		tart.initializeHooks = append(tart.initializeHooks, mountWorkingDirectoryHook(tag, logger))
-		tart.terminateHooks = append(tart.terminateHooks, unmountWorkingDirectoryHook(logger))
+		tart.terminateHooks = append(tart.terminateHooks, unmountWorkingDirectoryHook(noUnmount, logger))
 	}
 
 	// Convert volumes to directory mounts
@@ -350,7 +352,8 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 			automountProjectDir = config.ProjectDir
 		}
 		err = tart.bootVM(ctx, config.TaskID, config.AdditionalEnvironment,
-			automountProjectDir, config.TartOptions.LazyPull, config.Logger())
+			automountProjectDir, config.TartOptions.LazyPull,
+			config.TartOptions.NoUnmount, config.Logger())
 		if err != nil {
 			return err
 		}

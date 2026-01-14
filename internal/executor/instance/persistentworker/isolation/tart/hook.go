@@ -28,9 +28,15 @@ func mountWorkingDirectoryHook(tag string, logger *echelon.Logger) remoteagent.W
 	}
 }
 
-func unmountWorkingDirectoryHook(logger *echelon.Logger) remoteagent.WaitForAgentHook {
+func unmountWorkingDirectoryHook(noUnmount bool, logger *echelon.Logger) remoteagent.WaitForAgentHook {
 	return func(ctx context.Context, sshClient *ssh.Client) error {
 		syncLogger := logger.Scoped("unmounting the working directory")
+
+		if noUnmount {
+			syncLogger.FinishWithType(echelon.FinishTypeSkipped)
+
+			return nil
+		}
 
 		err := remoteCommand(sshClient, syncLogger, fmt.Sprintf("umount %q",
 			macOSAutomountDirectoryPath))
