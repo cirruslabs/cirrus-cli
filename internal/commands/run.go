@@ -6,12 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
-	"github.com/cirruslabs/chacha/pkg/privdrop"
 	"os"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/cirruslabs/chacha/pkg/localnetworkhelper"
+	"github.com/cirruslabs/chacha/pkg/privdrop"
 
 	"github.com/cirruslabs/cirrus-cli/internal/commands/helpers"
 	"github.com/cirruslabs/cirrus-cli/internal/commands/logs"
@@ -62,6 +63,9 @@ var (
 
 // Tart-related flags.
 var tartLazyPull bool
+
+// Tart-related flags (experimental).
+var tartNoUnmount bool
 
 // Vetu-related flags.
 var vetuLazyPull bool
@@ -197,7 +201,8 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Tart-related options
 	executorOpts = append(executorOpts, executor.WithTartOptions(options.TartOptions{
-		LazyPull: lazyPull || tartLazyPull,
+		LazyPull:  lazyPull || tartLazyPull,
+		NoUnmount: tartNoUnmount,
 	}))
 
 	// Vetu-related options
@@ -301,6 +306,11 @@ func newRunCmd() *cobra.Command {
 	// Tart-related flags
 	cmd.PersistentFlags().BoolVar(&tartLazyPull, "tart-lazy-pull", false,
 		"attempt to pull Tart VM images only if they are missing locally (helpful in case of registry rate limits)")
+
+	// Tart-related flags (experimental)
+	cmd.PersistentFlags().BoolVar(&tartNoUnmount, "tart-no-unmount", false,
+		"when --dirty is used, skip unmounting the working directory inside Tart VMs")
+	cmd.PersistentFlags().MarkHidden("tart-no-unmount")
 
 	// Vetu-related flags
 	cmd.PersistentFlags().BoolVar(&vetuLazyPull, "vetu-lazy-pull", false,
