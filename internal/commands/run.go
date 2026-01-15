@@ -62,10 +62,10 @@ var (
 )
 
 // Tart-related flags.
-var (
-	tartLazyPull  bool
-	tartNoUnmount bool
-)
+var tartLazyPull bool
+
+// Tart-related flags (experimental).
+var tartNoUnmount bool
 
 // Vetu-related flags.
 var vetuLazyPull bool
@@ -306,8 +306,11 @@ func newRunCmd() *cobra.Command {
 	// Tart-related flags
 	cmd.PersistentFlags().BoolVar(&tartLazyPull, "tart-lazy-pull", false,
 		"attempt to pull Tart VM images only if they are missing locally (helpful in case of registry rate limits)")
+
+	// Tart-related flags (experimental)
 	cmd.PersistentFlags().BoolVar(&tartNoUnmount, "tart-no-unmount", false,
 		"when --dirty is used, skip unmounting the working directory inside Tart VMs")
+	cmd.PersistentFlags().MarkHidden("tart-no-unmount")
 
 	// Vetu-related flags
 	cmd.PersistentFlags().BoolVar(&vetuLazyPull, "vetu-lazy-pull", false,
