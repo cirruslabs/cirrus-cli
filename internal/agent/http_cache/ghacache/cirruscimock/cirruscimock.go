@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/smithy-go"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
@@ -24,20 +26,20 @@ import (
 )
 
 type cirrusCIMock struct {
-	s3Client *s3.S3
+	s3Client *s3.Client
 	s3Bucket *string
 
 	api.UnimplementedCirrusCIServiceServer
 	bytestream.UnimplementedByteStreamServer
 }
 
-func newCirrusCIMock(t *testing.T, s3Client *s3.S3) *cirrusCIMock {
+func newCirrusCIMock(t *testing.T, s3Client *s3.Client) *cirrusCIMock {
 	mock := &cirrusCIMock{
 		s3Client: s3Client,
 		s3Bucket: aws.String("test"),
 	}
 
-	_, err := mock.s3Client.CreateBucket(&s3.CreateBucketInput{
+	_, err := mock.s3Client.CreateBucket(context.Background(), &s3.CreateBucketInput{
 		Bucket: mock.s3Bucket,
 	})
 	require.NoError(t, err)
@@ -113,7 +115,7 @@ func (mock *cirrusCIMock) Write(stream bytestream.ByteStream_WriteServer) error 
 		return status.Error(codes.FailedPrecondition, "attempted to upload cache without specifying resource name")
 	}
 
-	_, err := mock.s3Client.PutObjectWithContext(stream.Context(), &s3.PutObjectInput{
+	_, err := mock.s3Client.PutObject(stream.Context(), &s3.PutObjectInput{
 		Bucket: mock.s3Bucket,
 		Key:    aws.String(resourceName),
 		Body:   bytes.NewReader(buf.Bytes()),
@@ -128,13 +130,12 @@ func (mock *cirrusCIMock) Write(stream bytestream.ByteStream_WriteServer) error 
 }
 
 func (mock *cirrusCIMock) Read(request *bytestream.ReadRequest, stream bytestream.ByteStream_ReadServer) error {
-	result, err := mock.s3Client.GetObjectWithContext(stream.Context(), &s3.GetObjectInput{
+	result, err := mock.s3Client.GetObject(stream.Context(), &s3.GetObjectInput{
 		Bucket: mock.s3Bucket,
 		Key:    aws.String(request.ResourceName),
 	})
 	if err != nil {
-		var aerr awserr.Error
-		if errors.As(err, &aerr) && aerr.Code() == s3.ErrCodeNoSuchKey {
+		if isS3NotFound(err) {
 			return status.Errorf(codes.NotFound, "cache entry for key %s is not found",
 				request.ResourceName)
 		}
@@ -165,54 +166,51 @@ func (mock *cirrusCIMock) Read(request *bytestream.ReadRequest, stream bytestrea
 }
 
 func (mock *cirrusCIMock) GenerateCacheUploadURL(ctx context.Context, request *api.CacheKey) (*api.GenerateURLResponse, error) {
-	putObjectRequest, _ := mock.s3Client.PutObjectRequest(&s3.PutObjectInput{
+	presignClient := s3.NewPresignClient(mock.s3Client)
+	presignResult, err := presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket: mock.s3Bucket,
 		Key:    aws.String(request.CacheKey),
-	})
-
-	url, _, err := putObjectRequest.PresignRequest(10 * time.Minute)
+	}, s3.WithPresignExpires(10*time.Minute))
 	if err != nil {
 		return nil, err
 	}
 
 	return &api.GenerateURLResponse{
-		Url: url,
+		Url: presignResult.URL,
 	}, nil
 }
 
 func (mock *cirrusCIMock) GenerateCacheDownloadURLs(
-	_ context.Context,
+	ctx context.Context,
 	request *api.CacheKey,
 ) (*api.GenerateURLsResponse, error) {
-	getObjectRequest, _ := mock.s3Client.GetObjectRequest(&s3.GetObjectInput{
+	presignClient := s3.NewPresignClient(mock.s3Client)
+	presignResult, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: mock.s3Bucket,
 		Key:    aws.String(request.CacheKey),
-	})
-
-	url, _, err := getObjectRequest.PresignRequest(10 * time.Minute)
+	}, s3.WithPresignExpires(10*time.Minute))
 	if err != nil {
 		return nil, err
 	}
 
 	return &api.GenerateURLsResponse{
-		Urls: []string{url},
+		Urls: []string{presignResult.URL},
 	}, nil
 }
 
 func (mock *cirrusCIMock) CacheInfo(ctx context.Context, request *api.CacheInfoRequest) (*api.CacheInfoResponse, error) {
-	result, err := mock.s3Client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
+	result, err := mock.s3Client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: mock.s3Bucket,
 		Key:    aws.String(request.CacheKey),
 	})
 	if err != nil {
-		var requestFailure awserr.RequestFailure
-		if errors.As(err, &requestFailure) && requestFailure.StatusCode() == http.StatusNotFound {
+		if isS3NotFound(err) {
 			// Try to match cache entry by key prefixes as a fallback
 			for _, cacheKeyPrefix := range request.CacheKeyPrefixes {
-				result, err := mock.s3Client.ListObjectsWithContext(ctx, &s3.ListObjectsInput{
+				result, err := mock.s3Client.ListObjects(ctx, &s3.ListObjectsInput{
 					Bucket:  mock.s3Bucket,
 					Prefix:  aws.String(cacheKeyPrefix),
-					MaxKeys: aws.Int64(1),
+					MaxKeys: aws.Int32(1),
 				})
 				if err != nil {
 					return nil, err
@@ -246,7 +244,7 @@ func (mock *cirrusCIMock) CacheInfo(ctx context.Context, request *api.CacheInfoR
 }
 
 func (mock *cirrusCIMock) MultipartCacheUploadCreate(ctx context.Context, request *api.CacheKey) (*api.MultipartCacheUploadCreateResponse, error) {
-	result, err := mock.s3Client.CreateMultipartUploadWithContext(ctx, &s3.CreateMultipartUploadInput{
+	result, err := mock.s3Client.CreateMultipartUpload(ctx, &s3.CreateMultipartUploadInput{
 		Bucket: mock.s3Bucket,
 		Key:    aws.String(request.CacheKey),
 	})
@@ -260,41 +258,40 @@ func (mock *cirrusCIMock) MultipartCacheUploadCreate(ctx context.Context, reques
 }
 
 func (mock *cirrusCIMock) MultipartCacheUploadPart(ctx context.Context, request *api.MultipartCacheUploadPartRequest) (*api.GenerateURLResponse, error) {
-	uploadPartRequest, _ := mock.s3Client.UploadPartRequest(&s3.UploadPartInput{
+	presignClient := s3.NewPresignClient(mock.s3Client)
+	presignResult, err := presignClient.PresignUploadPart(ctx, &s3.UploadPartInput{
 		Bucket:     mock.s3Bucket,
 		Key:        aws.String(request.CacheKey.CacheKey),
 		UploadId:   aws.String(request.UploadId),
-		PartNumber: aws.Int64(int64(request.PartNumber)),
-	})
-
-	url, headers, err := uploadPartRequest.PresignRequest(10 * time.Minute)
+		PartNumber: aws.Int32(int32(request.PartNumber)),
+	}, s3.WithPresignExpires(10*time.Minute))
 	if err != nil {
 		return nil, err
 	}
 
 	return &api.GenerateURLResponse{
-		Url: url,
-		ExtraHeaders: lo.MapEntries(headers, func(key string, value []string) (string, string) {
+		Url: presignResult.URL,
+		ExtraHeaders: lo.MapEntries(presignResult.SignedHeader, func(key string, value []string) (string, string) {
 			return key, value[0]
 		}),
 	}, nil
 }
 
 func (mock *cirrusCIMock) MultipartCacheUploadCommit(ctx context.Context, request *api.MultipartCacheUploadCommitRequest) (*emptypb.Empty, error) {
-	var parts []*s3.CompletedPart
+	var parts []types.CompletedPart
 
 	for _, part := range request.Parts {
-		parts = append(parts, &s3.CompletedPart{
-			PartNumber: aws.Int64(int64(part.PartNumber)),
+		parts = append(parts, types.CompletedPart{
+			PartNumber: aws.Int32(int32(part.PartNumber)),
 			ETag:       aws.String(part.Etag),
 		})
 	}
 
-	_, err := mock.s3Client.CompleteMultipartUploadWithContext(ctx, &s3.CompleteMultipartUploadInput{
+	_, err := mock.s3Client.CompleteMultipartUpload(ctx, &s3.CompleteMultipartUploadInput{
 		Bucket:   mock.s3Bucket,
 		Key:      aws.String(request.CacheKey.CacheKey),
 		UploadId: aws.String(request.UploadId),
-		MultipartUpload: &s3.CompletedMultipartUpload{
+		MultipartUpload: &types.CompletedMultipartUpload{
 			Parts: parts,
 		},
 	})
@@ -303,4 +300,31 @@ func (mock *cirrusCIMock) MultipartCacheUploadCommit(ctx context.Context, reques
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+func isS3NotFound(err error) bool {
+	var noSuchKey *types.NoSuchKey
+	if errors.As(err, &noSuchKey) {
+		return true
+	}
+
+	var notFound *types.NotFound
+	if errors.As(err, &notFound) {
+		return true
+	}
+
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		switch apiErr.ErrorCode() {
+		case "NoSuchKey", "NotFound":
+			return true
+		}
+	}
+
+	var responseErr *smithyhttp.ResponseError
+	if errors.As(err, &responseErr) && responseErr.HTTPStatusCode() == http.StatusNotFound {
+		return true
+	}
+
+	return false
 }

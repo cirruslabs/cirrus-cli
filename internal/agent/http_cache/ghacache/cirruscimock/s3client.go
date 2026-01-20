@@ -3,10 +3,10 @@ package cirruscimock
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func S3Client(t *testing.T) *s3.S3 {
+func S3Client(t *testing.T) *s3.Client {
 	t.Helper()
 
 	ctx := context.Background()
@@ -35,12 +35,16 @@ func S3Client(t *testing.T) *s3.S3 {
 	mappedPort, err := localstackContainer.MappedPort(ctx, exposedPort)
 	require.NoError(t, err)
 
-	session, err := session.NewSession(&aws.Config{
-		Endpoint:    aws.String(fmt.Sprintf("http://test.s3.localhost.localstack.cloud:%d/", mappedPort.Int())),
-		Region:      aws.String("us-east-1"),
-		Credentials: credentials.NewStaticCredentials("id", "secret", ""),
-	})
+	endpoint := fmt.Sprintf("http://s3.localhost.localstack.cloud:%d", mappedPort.Int())
+
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion("us-east-1"),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider("id", "secret", "")),
+	)
 	require.NoError(t, err)
 
-	return s3.New(session)
+	return s3.NewFromConfig(cfg, func(options *s3.Options) {
+		options.BaseEndpoint = aws.String(endpoint)
+		options.UsePathStyle = true
+	})
 }
