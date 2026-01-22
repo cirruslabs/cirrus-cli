@@ -23,9 +23,9 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/terminalwrapper"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/updatebatcher"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/vaultunboxer"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	agentstorage "github.com/cirruslabs/cirrus-cli/internal/agent/storage"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	omnicache "github.com/cirruslabs/omni-cache/pkg/server"
 	"github.com/samber/lo"
 )
 
@@ -218,12 +218,16 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// the OS environment nor through the task's environment,
 	// run our built-in cache server
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
-		transport := http_cache.DefaultTransport()
-
 		backend := agentstorage.NewCirrusStoreBackend(client.CirrusClient, client.CirrusTaskIdentification)
-		httpCacheHost := http_cache.Start(ctx, transport, backend)
+		cacheServer, err := omnicache.StartDefault(ctx, backend)
 
-		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
+		if err != nil {
+			message := fmt.Sprintf("Failed to start the built-in HTTP cache server: %v", err)
+			slog.Error(message)
+			executor.reportError(message)
+		} else {
+			executor.env.Set("CIRRUS_HTTP_CACHE_HOST", cacheServer.Addr)
+		}
 	}
 
 	executor.httpCacheHost = executor.env.Get("CIRRUS_HTTP_CACHE_HOST")
