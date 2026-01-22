@@ -7,14 +7,9 @@ import (
 	omnistorage "github.com/cirruslabs/omni-cache/pkg/storage"
 )
 
-type CacheBackend interface {
+type CirrusStoreBackend struct {
 	omnistorage.MultipartBlobStorageBackend
 
-	CacheInfo(ctx context.Context, key string, prefixes []string) (*api.CacheInfo, error)
-	DeleteCache(ctx context.Context, key string) error
-}
-
-type CirrusStoreBackend struct {
 	client             api.CirrusCIServiceClient
 	taskIdentification *api.TaskIdentification
 }

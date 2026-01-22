@@ -111,6 +111,8 @@ github.com/cirruslabs/go-java-glob v0.1.0 h1:qC4Fzrq2sXKTLLsBb7ih7BNdCjCR6ZJAAK4
 github.com/cirruslabs/go-java-glob v0.1.0/go.mod h1:+4vLmYqEnKtVAdeYsP5GCcPBcTuWsqi6P9bO6HraGFE=
 github.com/cirruslabs/omni-cache v0.3.0 h1:L3XmbRfoWcHI2WQGRsHb1LiJ2cFhtf+qIje+zsxOLYI=
 github.com/cirruslabs/omni-cache v0.3.0/go.mod h1:iiox2bLcisBBYXG8aUyvn6/UcuTrCexs+u4sv65qx6E=
+github.com/cirruslabs/omni-cache v0.5.1 h1:trufcsgBhtXjdcMSAtV2NYi91Xk74weehzTOFboZJw8=
+github.com/cirruslabs/omni-cache v0.5.1/go.mod h1:fHTyrrK09sbcuz7iyqaoLamQHd2Zub3v3SesWfDkhdg=
 github.com/cirruslabs/terminal v0.16.0 h1:RUHtBccwykpGI1pKb9aKqtMQnnz6DyzJZiQyI2e81zw=
 github.com/cirruslabs/terminal v0.16.0/go.mod h1:NYC5TZrMSZFaNwXv8OTk1kwOOgkpeB1Snp2sP6e17e4=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
