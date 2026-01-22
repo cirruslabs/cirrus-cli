@@ -1,10 +1,10 @@
-package ghacache_test
+package http_cache_test
 
 import (
 	"bytes"
 	"context"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/ghacache/cirruscimock"
+	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache/cirruscimock"
 	agentstorage "github.com/cirruslabs/cirrus-cli/internal/agent/storage"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
@@ -24,7 +24,7 @@ func TestGHA(t *testing.T) {
 	conn := cirruscimock.ClientConn(t)
 	backend := agentstorage.NewCirrusStoreBackend(api.NewCirrusCIServiceClient(conn), api.OldTaskIdentification("test", "test"))
 
-	httpCacheURL := "http://" + http_cache.Start(ctx, http_cache.DefaultTransport(), backend) + "/"
+	httpCacheURL := "http://" + http_cache.Start(ctx, backend) + "/"
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"ac":  `[]`,

@@ -10,7 +10,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/client"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/environment"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/hasher"
-	"github.com/cirruslabs/cirrus-cli/internal/agent/http_cache"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/targz"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"log/slog"
@@ -479,12 +478,7 @@ func (executor *Executor) UploadCache(
 		}
 		response, _ := httpClient.Do(req)
 		if response != nil && response.StatusCode == http.StatusOK {
-			createdByTaskId := response.Header.Get(http_cache.CirrusHeaderCreatedBy)
-			if createdByTaskId != "" {
-				logUploader.Write([]byte(fmt.Sprintf("\nTask '%s' has already uploaded cache entry %s! Skipping upload...", createdByTaskId, cache.Key)))
-			} else {
-				logUploader.Write([]byte(fmt.Sprintf("\nSome other task has already uploaded cache entry %s! Skipping upload...", cache.Key)))
-			}
+			logUploader.Write([]byte(fmt.Sprintf("\nSome other task has already uploaded cache entry %s! Skipping upload...", cache.Key)))
 			return true
 		}
 	}

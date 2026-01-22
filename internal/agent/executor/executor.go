@@ -218,10 +218,8 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// the OS environment nor through the task's environment,
 	// run our built-in cache server
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
-		transport := http_cache.DefaultTransport()
-
 		backend := agentstorage.NewCirrusStoreBackend(client.CirrusClient, client.CirrusTaskIdentification)
-		httpCacheHost := http_cache.Start(ctx, transport, backend)
+		httpCacheHost := http_cache.Start(ctx, backend)
 
 		executor.env.Set("CIRRUS_HTTP_CACHE_HOST", httpCacheHost)
 	}
