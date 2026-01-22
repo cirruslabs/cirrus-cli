@@ -1,5 +1,5 @@
 container:
-  image: curlimages/curl:latest
+  image: debian:latest
 
 socket_cache_task:
   script:
