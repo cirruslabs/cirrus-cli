@@ -226,6 +226,8 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			slog.Error(message)
 			executor.reportError(message)
 		} else {
+			// so the socket file is removed
+			defer cacheServer.Shutdown(ctx)
 			executor.env.Set("CIRRUS_HTTP_CACHE_HOST", cacheServer.Addr)
 		}
 	}
