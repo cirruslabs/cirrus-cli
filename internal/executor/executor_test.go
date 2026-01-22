@@ -225,6 +225,16 @@ func TestCache(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestCacheSocket(t *testing.T) {
+	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
+		t.Skip("no container backend configured")
+	}
+
+	dir := testutil.TempDirPopulatedWith(t, "testdata/cache-socket")
+	err := testutil.Execute(t, dir)
+	assert.NoError(t, err)
+}
+
 func TestCacheOptimisticRestore(t *testing.T) {
 	if _, ok := os.LookupEnv("CIRRUS_CONTAINER_BACKEND"); !ok {
 		t.Skip("no container backend configured")
