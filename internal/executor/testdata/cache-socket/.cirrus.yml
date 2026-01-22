@@ -1,0 +1,7 @@
+container:
+  image: debian:latest
+
+socket_cache_task:
+  script:
+    - if [ -n "$HOME" ]; then socket="$HOME/.cirruslabs/omni-cache.sock"; else socket="/tmp/.cirruslabs/omni-cache.sock"; fi
+    - test -S "$socket"
