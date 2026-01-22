@@ -5,6 +5,8 @@ import (
 
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	omnistorage "github.com/cirruslabs/omni-cache/pkg/storage"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type CirrusStoreBackend struct {
@@ -108,17 +110,28 @@ func (c *CirrusStoreBackend) CommitMultipartUpload(ctx context.Context, key stri
 	return err
 }
 
-func (c *CirrusStoreBackend) CacheInfo(ctx context.Context, key string, prefixes []string) (*api.CacheInfo, error) {
+func (c *CirrusStoreBackend) CacheInfo(ctx context.Context, key string, prefixes []string) (*omnistorage.CacheInfo, error) {
 	response, err := c.client.CacheInfo(ctx, &api.CacheInfoRequest{
 		TaskIdentification: c.taskIdentification,
 		CacheKey:           key,
 		CacheKeyPrefixes:   prefixes,
 	})
 	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, omnistorage.ErrCacheNotFound
+		}
 		return nil, err
 	}
 
-	return response.Info, nil
+	info := response.GetInfo()
+	if info == nil {
+		return nil, omnistorage.ErrCacheNotFound
+	}
+
+	return &omnistorage.CacheInfo{
+		Key:       info.Key,
+		SizeBytes: info.SizeInBytes,
+	}, nil
 }
 
 func (c *CirrusStoreBackend) DeleteCache(ctx context.Context, key string) error {
