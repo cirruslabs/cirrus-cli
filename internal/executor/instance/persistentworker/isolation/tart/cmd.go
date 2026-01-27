@@ -5,14 +5,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cirruslabs/cirrus-cli/pkg/privdrop"
-	"github.com/cirruslabs/echelon"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapio"
 	"io"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/cirruslabs/cirrus-cli/pkg/privdrop"
+	"github.com/cirruslabs/echelon"
+	"go.opentelemetry.io/otel/propagation"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapio"
 )
 
 const tartCommandName = "tart"
@@ -78,6 +80,15 @@ func CmdWithLogger(
 	// Additional environment
 	for key, value := range additionalEnvironment {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", key, value))
+	}
+
+	// Propagate current W3C Trace Context to a Tart binary using the environment variables[1]
+	//
+	// [1]: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/env-carriers.md
+	mapCarrier := propagation.MapCarrier{}
+	propagation.TraceContext{}.Inject(ctx, mapCarrier)
+	for key, value := range mapCarrier {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", strings.ToUpper(key), value))
 	}
 
 	var stdout, stderr bytes.Buffer
