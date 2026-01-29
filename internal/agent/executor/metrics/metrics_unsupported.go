@@ -5,7 +5,8 @@ package metrics
 import (
 	"context"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"github.com/sirupsen/logrus"
+	"log/slog"
+	"time"
 )
 
 type Result struct {
@@ -16,10 +17,35 @@ func (Result) Errors() []error {
 	return []error{}
 }
 
-func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
+type Snapshot struct {
+	Timestamp   time.Time
+	CPUUsed     float64
+	MemoryUsed  float64
+	CPUTotal    float64
+	MemoryTotal float64
+	CPUError    error
+	MemoryError error
+	TotalsError error
+}
+
+type Collector struct{}
+
+func NewCollector(logger *slog.Logger) *Collector {
+	return &Collector{}
+}
+
+func (collector *Collector) Snapshot() Snapshot {
+	return Snapshot{}
+}
+
+func (collector *Collector) Run(ctx context.Context) chan *Result {
 	resultChan := make(chan *Result, 1)
 
 	resultChan <- &Result{}
 
 	return resultChan
+}
+
+func Run(ctx context.Context, logger *slog.Logger) chan *Result {
+	return NewCollector(logger).Run(ctx)
 }

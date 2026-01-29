@@ -47,6 +47,7 @@ type Executor struct {
 	cacheAttempts        *CacheAttempts
 	env                  *environment.Environment
 	terminalWrapper      *terminalwrapper.Wrapper
+	metrics              *metrics.Collector
 }
 
 type StepResult struct {
@@ -79,7 +80,16 @@ func NewExecutor(
 		preCreatedWorkingDir: preCreatedWorkingDir,
 		cacheAttempts:        NewCacheAttempts(),
 		env:                  environment.NewEmpty(),
+		metrics:              metrics.NewCollector(slog.Default()),
 	}
+}
+
+func (executor *Executor) MetricsSnapshot() metrics.Snapshot {
+	if executor.metrics == nil {
+		return metrics.Snapshot{}
+	}
+
+	return executor.metrics.Snapshot()
 }
 
 func (executor *Executor) taskIdentification() *api.TaskIdentification {
@@ -90,7 +100,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// Start collecting metrics
 	metricsCtx, metricsCancel := context.WithCancel(ctx)
 	defer metricsCancel()
-	metricsResultChan := metrics.Run(metricsCtx, nil)
+	metricsResultChan := executor.metrics.Run(metricsCtx)
 
 	slog.Info("Getting initial commands...")
 

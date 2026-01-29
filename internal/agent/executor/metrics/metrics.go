@@ -15,9 +15,9 @@ import (
 	"github.com/dustin/go-humanize"
 	gopsutilcpu "github.com/shirou/gopsutil/v3/cpu"
 	gopsutilmem "github.com/shirou/gopsutil/v3/mem"
-	"github.com/sirupsen/logrus"
 	"log/slog"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -42,9 +42,26 @@ func (result Result) Errors() []error {
 	return deduplicatedErrors
 }
 
-func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
-	resultChan := make(chan *Result, 1)
+type Snapshot struct {
+	Timestamp   time.Time
+	CPUUsed     float64
+	MemoryUsed  float64
+	CPUTotal    float64
+	MemoryTotal float64
+	CPUError    error
+	MemoryError error
+	TotalsError error
+}
 
+type Collector struct {
+	cpuSource    source.CPU
+	memorySource source.Memory
+	logger       *slog.Logger
+	mu           sync.RWMutex
+	snapshot     Snapshot
+}
+
+func NewCollector(logger *slog.Logger) *Collector {
 	var cpuSource source.CPU
 	var memorySource source.Memory
 
@@ -62,7 +79,7 @@ func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
 		cpuSrc, err := cpu.NewCPU(resolver)
 		if err == nil {
 			if logger != nil {
-				logger.Infof("CPU metrics are now cgroup-aware")
+				logger.Info("CPU metrics are now cgroup-aware")
 			}
 			cpuSource = cpuSrc
 		}
@@ -70,11 +87,56 @@ func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
 		memorySrc, err := memory.NewMemory(resolver)
 		if err == nil {
 			if logger != nil {
-				logger.Infof("memory metrics are now cgroup-aware")
+				logger.Info("memory metrics are now cgroup-aware")
 			}
 			memorySource = memorySrc
 		}
 	}
+
+	return &Collector{
+		cpuSource:    cpuSource,
+		memorySource: memorySource,
+		logger:       logger,
+	}
+}
+
+func (collector *Collector) Snapshot() Snapshot {
+	collector.mu.RLock()
+	defer collector.mu.RUnlock()
+
+	return collector.snapshot
+}
+
+func (collector *Collector) updateTotals(numCpusTotal uint64, amountMemoryTotal uint64, totalsErr error) {
+	collector.mu.Lock()
+	snapshot := collector.snapshot
+	snapshot.TotalsError = totalsErr
+	if totalsErr == nil {
+		snapshot.CPUTotal = float64(numCpusTotal)
+		snapshot.MemoryTotal = float64(amountMemoryTotal)
+	}
+	collector.snapshot = snapshot
+	collector.mu.Unlock()
+}
+
+func (collector *Collector) updateUsage(numCpusUsed float64, cpuErr error, amountMemoryUsed float64, memoryErr error) {
+	collector.mu.Lock()
+	snapshot := collector.snapshot
+	snapshot.Timestamp = time.Now()
+	snapshot.CPUError = cpuErr
+	snapshot.MemoryError = memoryErr
+	if cpuErr == nil {
+		snapshot.CPUUsed = numCpusUsed
+	}
+	if memoryErr == nil {
+		snapshot.MemoryUsed = amountMemoryUsed
+	}
+	collector.snapshot = snapshot
+	collector.mu.Unlock()
+}
+
+func (collector *Collector) Run(ctx context.Context) chan *Result {
+	resultChan := make(chan *Result, 1)
 
 	go func() {
 		result := &Result{
@@ -84,6 +146,7 @@ func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
 
 		// Totals
 		numCpusTotal, amountMemoryTotal, totalsErr := Totals(ctx)
+		collector.updateTotals(numCpusTotal, amountMemoryTotal, totalsErr)
 		if totalsErr != nil {
 			if errors.Is(totalsErr, context.Canceled) || errors.Is(totalsErr, context.DeadlineExceeded) {
 				resultChan <- result
@@ -105,7 +168,7 @@ func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
 			cycleStartTime := time.Now()
 
 			// CPU usage
-			numCpusUsed, cpuErr := cpuSource.NumCpusUsed(ctx, pollInterval)
+			numCpusUsed, cpuErr := collector.cpuSource.NumCpusUsed(ctx, pollInterval)
 			if cpuErr != nil {
 				if errors.Is(cpuErr, context.Canceled) || errors.Is(cpuErr, context.DeadlineExceeded) {
 					resultChan <- result
@@ -113,12 +176,12 @@ func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
 					return
 				}
 
-				err := fmt.Errorf("%w using %s: %v", ErrFailedToQueryCPU, cpuSource.Name(), cpuErr)
+				err := fmt.Errorf("%w using %s: %v", ErrFailedToQueryCPU, collector.cpuSource.Name(), cpuErr)
 				result.errors[err.Error()] = err
 			}
 
 			// Memory usage
-			amountMemoryUsed, memoryErr := memorySource.AmountMemoryUsed(ctx)
+			amountMemoryUsed, memoryErr := collector.memorySource.AmountMemoryUsed(ctx)
 			if memoryErr != nil {
 				if errors.Is(memoryErr, context.Canceled) || errors.Is(memoryErr, context.DeadlineExceeded) {
 					resultChan <- result
@@ -126,13 +189,17 @@ func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
 					return
 				}
 
-				err := fmt.Errorf("%w using %s: %v", ErrFailedToQueryMemory, memorySource.Name(), memoryErr)
+				err := fmt.Errorf("%w using %s: %v", ErrFailedToQueryMemory, collector.memorySource.Name(), memoryErr)
 				result.errors[err.Error()] = err
 			}
 
-			if logger != nil {
-				logger.Infof("CPUs used: %.2f, CPU usage: %.2f%%, memory used: %s", numCpusUsed, numCpusUsed*100.0,
-					humanize.Bytes(uint64(amountMemoryUsed)))
+			collector.updateUsage(numCpusUsed, cpuErr, amountMemoryUsed, memoryErr)
+
+			if collector.logger != nil {
+				collector.logger.Info("Resource usage",
+					"cpus_used", numCpusUsed,
+					"cpu_usage_percent", numCpusUsed*100.0,
+					"memory_used", humanize.Bytes(uint64(amountMemoryUsed)))
 			}
 
 			timeSinceStart := time.Since(startTime)
@@ -170,6 +237,10 @@ func Run(ctx context.Context, logger logrus.FieldLogger) chan *Result {
 	}()
 
 	return resultChan
+}
+
+func Run(ctx context.Context, logger *slog.Logger) chan *Result {
+	return NewCollector(logger).Run(ctx)
 }
 
 func Totals(ctx context.Context) (uint64, uint64, error) {
