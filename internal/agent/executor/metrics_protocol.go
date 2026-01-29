@@ -197,8 +197,9 @@ func formatGithubActionsNotice(snapshot metrics.Snapshot, utilization *api.Resou
 	message := strings.Join(parts, "; ")
 	notice := fmt.Sprintf("::notice title=Resource Utilization::%s", message)
 
-	cpuBelow := cpuOK && cpuTotal > 0 && cpuPeak < (cpuTotal*0.5)
-	memBelow := memOK && memTotal > 0 && memPeak < (memTotal*0.5)
+	warnOnTotals := !(snapshot.CPUIsCgroup || snapshot.MemoryIsCgroup)
+	cpuBelow := warnOnTotals && cpuOK && cpuTotal > 0 && cpuPeak < (cpuTotal*0.5)
+	memBelow := warnOnTotals && memOK && memTotal > 0 && memPeak < (memTotal*0.5)
 	if cpuBelow && memBelow {
 		warning := "::warning title=Resource Utilization::Peak CPU and memory utilization are below 50% of available resources; it might be worth using a different resource class if possible."
 		return notice + "\n" + warning

@@ -18,14 +18,16 @@ func (Result) Errors() []error {
 }
 
 type Snapshot struct {
-	Timestamp   time.Time
-	CPUUsed     float64
-	MemoryUsed  float64
-	CPUTotal    float64
-	MemoryTotal float64
-	CPUError    error
-	MemoryError error
-	TotalsError error
+	Timestamp      time.Time
+	CPUUsed        float64
+	MemoryUsed     float64
+	CPUTotal       float64
+	MemoryTotal    float64
+	CPUIsCgroup    bool
+	MemoryIsCgroup bool
+	CPUError       error
+	MemoryError    error
+	TotalsError    error
 }
 
 type Collector struct{}

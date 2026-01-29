@@ -64,3 +64,25 @@ func TestFormatGithubActionsNoticeWithWarning(t *testing.T) {
 
 	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 1.50 cores (37.50% of 4.00) at 2s; Peak memory utilization: 1.0 GB (25.00% of 4.0 GB) at 4s\n::warning title=Resource Utilization::Peak CPU and memory utilization are below 50% of available resources; it might be worth using a different resource class if possible.", notice)
 }
+
+func TestFormatGithubActionsNoticeWithoutWarningForCgroupTotals(t *testing.T) {
+	utilization := &api.ResourceUtilization{
+		CpuTotal:    4,
+		MemoryTotal: 4_000_000_000,
+		CpuChart: []*api.ChartPoint{
+			{SecondsFromStart: 2, Value: 1.5},
+		},
+		MemoryChart: []*api.ChartPoint{
+			{SecondsFromStart: 4, Value: 1_000_000_000},
+		},
+	}
+
+	snapshot := metrics.Snapshot{
+		CPUIsCgroup:    true,
+		MemoryIsCgroup: true,
+	}
+
+	notice := formatGithubActionsNotice(snapshot, utilization)
+
+	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 1.50 cores (37.50% of 4.00) at 2s; Peak memory utilization: 1.0 GB (25.00% of 4.0 GB) at 4s", notice)
+}
