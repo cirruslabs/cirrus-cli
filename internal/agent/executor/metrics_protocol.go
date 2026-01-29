@@ -42,6 +42,12 @@ func (protocol *metricsProtocol) handleMetrics(w http.ResponseWriter, r *http.Re
 	}
 
 	utilization := protocol.collector.ResourceUtilizationSnapshot()
+	if acceptsGithubActions(r.Header.Get("Accept")) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = io.WriteString(w, formatGithubActionsNotice(protocol.collector.Snapshot(), utilization))
+		return
+	}
+
 	if acceptsJSON(r.Header.Get("Accept")) {
 		w.Header().Set("Content-Type", "application/json")
 		response := metricsResponse{
@@ -148,6 +154,131 @@ func formatMetricsSummary(snapshot metrics.Snapshot, utilization *api.ResourceUt
 	return builder.String()
 }
 
+func formatGithubActionsNotice(snapshot metrics.Snapshot, utilization *api.ResourceUtilization) string {
+	cpuPeak, cpuSeconds, cpuOK := peakCPUUsage(snapshot, utilization)
+	memPeak, memSeconds, memOK := peakMemoryUsage(snapshot, utilization)
+
+	cpuTotal := snapshot.CPUTotal
+	if cpuTotal == 0 && utilization != nil {
+		cpuTotal = utilization.CpuTotal
+	}
+	memTotal := snapshot.MemoryTotal
+	if memTotal == 0 && utilization != nil {
+		memTotal = utilization.MemoryTotal
+	}
+
+	var parts []string
+	if cpuOK {
+		part := fmt.Sprintf("Peak CPU utilization: %.2f cores", cpuPeak)
+		if cpuTotal > 0 {
+			part = fmt.Sprintf("%s (%.2f%% of %.2f)", part, (cpuPeak/cpuTotal)*100.0, cpuTotal)
+		}
+		if cpuSeconds != nil {
+			part = fmt.Sprintf("%s at %ds", part, *cpuSeconds)
+		}
+		parts = append(parts, part)
+	}
+	if memOK {
+		memUsed := uint64(maxFloat(memPeak, 0))
+		part := fmt.Sprintf("Peak memory utilization: %s", humanize.Bytes(memUsed))
+		if memTotal > 0 {
+			part = fmt.Sprintf("%s (%.2f%% of %s)", part, (memPeak/memTotal)*100.0, humanize.Bytes(uint64(memTotal)))
+		}
+		if memSeconds != nil {
+			part = fmt.Sprintf("%s at %ds", part, *memSeconds)
+		}
+		parts = append(parts, part)
+	}
+
+	if len(parts) == 0 {
+		return "::notice title=Resource Utilization::Peak utilization: unavailable"
+	}
+
+	message := strings.Join(parts, "; ")
+	notice := fmt.Sprintf("::notice title=Resource Utilization::%s", message)
+
+	cpuBelow := cpuOK && cpuTotal > 0 && cpuPeak < (cpuTotal*0.5)
+	memBelow := memOK && memTotal > 0 && memPeak < (memTotal*0.5)
+	if cpuBelow && memBelow {
+		warning := "::warning title=Resource Utilization::Peak CPU and memory utilization are below 50% of available resources; it might be worth using a different resource class if possible."
+		return notice + "\n" + warning
+	}
+
+	return notice
+}
+
+func peakCPUUsage(snapshot metrics.Snapshot, utilization *api.ResourceUtilization) (float64, *uint32, bool) {
+	var peakValue float64
+	var peakSeconds uint32
+	found := false
+
+	if utilization != nil {
+		for _, point := range utilization.CpuChart {
+			if point == nil {
+				continue
+			}
+			if !found || point.Value > peakValue {
+				peakValue = point.Value
+				peakSeconds = point.SecondsFromStart
+				found = true
+			}
+		}
+	}
+
+	if !found && !snapshot.Timestamp.IsZero() {
+		peakValue = snapshot.CPUUsed
+		found = true
+	}
+
+	if !found {
+		return 0, nil, false
+	}
+
+	var secondsPtr *uint32
+	if found && utilization != nil && len(utilization.CpuChart) > 0 {
+		seconds := peakSeconds
+		secondsPtr = &seconds
+	}
+
+	return peakValue, secondsPtr, true
+}
+
+func peakMemoryUsage(snapshot metrics.Snapshot, utilization *api.ResourceUtilization) (float64, *uint32, bool) {
+	var peakValue float64
+	var peakSeconds uint32
+	found := false
+
+	if utilization != nil {
+		for _, point := range utilization.MemoryChart {
+			if point == nil {
+				continue
+			}
+			if !found || point.Value > peakValue {
+				peakValue = point.Value
+				peakSeconds = point.SecondsFromStart
+				found = true
+			}
+		}
+	}
+
+	if !found && !snapshot.Timestamp.IsZero() {
+		peakValue = snapshot.MemoryUsed
+		found = true
+	}
+
+	if !found {
+		return 0, nil, false
+	}
+
+	var secondsPtr *uint32
+	if found && utilization != nil && len(utilization.MemoryChart) > 0 {
+		seconds := peakSeconds
+		secondsPtr = &seconds
+	}
+
+	return peakValue, secondsPtr, true
+}
+
 func acceptsJSON(acceptHeader string) bool {
 	if strings.TrimSpace(acceptHeader) == "" {
 		return false
@@ -155,6 +286,19 @@ func acceptsJSON(acceptHeader string) bool {
 	for _, part := range strings.Split(acceptHeader, ",") {
 		mediaType := strings.TrimSpace(strings.SplitN(part, ";", 2)[0])
 		if mediaType == "application/json" || strings.HasSuffix(mediaType, "+json") {
+			return true
+		}
+	}
+	return false
+}
+
+func acceptsGithubActions(acceptHeader string) bool {
+	if strings.TrimSpace(acceptHeader) == "" {
+		return false
+	}
+	for _, part := range strings.Split(acceptHeader, ",") {
+		mediaType := strings.TrimSpace(strings.SplitN(part, ";", 2)[0])
+		if strings.Contains(mediaType, "github-actions") {
 			return true
 		}
 	}
