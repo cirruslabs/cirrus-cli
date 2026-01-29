@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	vault "github.com/hashicorp/vault/api"
 	"github.com/stretchr/testify/require"
-	"github.com/testcontainers/testcontainers-go"
 	"os"
 	"testing"
 	"time"
@@ -25,17 +24,7 @@ func TestVault(t *testing.T) {
 	var vaultToken = uuid.New().String()
 
 	// Create and start the HashiCorp's Vault container
-	request := testcontainers.GenericContainerRequest{
-		ContainerRequest: testcontainers.ContainerRequest{
-			Image:        testutil.VaultContainerImage,
-			ExposedPorts: []string{"8200/tcp"},
-			Env: map[string]string{
-				"VAULT_DEV_ROOT_TOKEN_ID": vaultToken,
-			},
-		},
-		Started: true,
-	}
-	container, err := testcontainers.GenericContainer(ctx, request)
+	container, err := testutil.StartVaultContainer(ctx, vaultToken)
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
@@ -84,17 +73,7 @@ func TestVaultUseCache(t *testing.T) {
 	var vaultToken = uuid.New().String()
 
 	// Create and start the HashiCorp's Vault container
-	request := testcontainers.GenericContainerRequest{
-		ContainerRequest: testcontainers.ContainerRequest{
-			Image:        testutil.VaultContainerImage,
-			ExposedPorts: []string{"8200/tcp"},
-			Env: map[string]string{
-				"VAULT_DEV_ROOT_TOKEN_ID": vaultToken,
-			},
-		},
-		Started: true,
-	}
-	container, err := testcontainers.GenericContainer(ctx, request)
+	container, err := testutil.StartVaultContainer(ctx, vaultToken)
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
@@ -169,17 +148,7 @@ func TestVaultDictionaryAsJSON(t *testing.T) {
 	var vaultToken = uuid.New().String()
 
 	// Create and start the HashiCorp's Vault container
-	request := testcontainers.GenericContainerRequest{
-		ContainerRequest: testcontainers.ContainerRequest{
-			Image:        testutil.VaultContainerImage,
-			ExposedPorts: []string{"8200/tcp"},
-			Env: map[string]string{
-				"VAULT_DEV_ROOT_TOKEN_ID": vaultToken,
-			},
-		},
-		Started: true,
-	}
-	container, err := testcontainers.GenericContainer(ctx, request)
+	container, err := testutil.StartVaultContainer(ctx, vaultToken)
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
