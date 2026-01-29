@@ -128,8 +128,10 @@ func (collector *Collector) ResourceUtilizationSnapshot() *api.ResourceUtilizati
 			if point == nil {
 				continue
 			}
-			value := *point
-			snapshot.CpuChart[i] = &value
+			snapshot.CpuChart[i] = &api.ChartPoint{
+				SecondsFromStart: point.SecondsFromStart,
+				Value:            point.Value,
+			}
 		}
 	}
 
@@ -139,8 +141,10 @@ func (collector *Collector) ResourceUtilizationSnapshot() *api.ResourceUtilizati
 			if point == nil {
 				continue
 			}
-			value := *point
-			snapshot.MemoryChart[i] = &value
+			snapshot.MemoryChart[i] = &api.ChartPoint{
+				SecondsFromStart: point.SecondsFromStart,
+				Value:            point.Value,
+			}
 		}
 	}
 
