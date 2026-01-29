@@ -225,7 +225,7 @@ func peakCPUUsage(snapshot metrics.Snapshot, utilization *api.ResourceUtilizatio
 		}
 	}
 
-	if !found && !snapshot.Timestamp.IsZero() {
+	if !found && !snapshot.Timestamp.IsZero() && snapshot.CPUError == nil {
 		peakValue = snapshot.CPUUsed
 		found = true
 	}
@@ -261,7 +261,7 @@ func peakMemoryUsage(snapshot metrics.Snapshot, utilization *api.ResourceUtiliza
 		}
 	}
 
-	if !found && !snapshot.Timestamp.IsZero() {
+	if !found && !snapshot.Timestamp.IsZero() && snapshot.MemoryError == nil {
 		peakValue = snapshot.MemoryUsed
 		found = true
 	}
