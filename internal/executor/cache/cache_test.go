@@ -1,13 +1,13 @@
 package cache_test
 
 import (
-	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/stretchr/testify/require"
 	"io"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"testing"
@@ -95,7 +95,8 @@ func TestMultipleGetAndPut(t *testing.T) {
 func getRandomBlob(t *testing.T, size int) []byte {
 	buf := make([]byte, size)
 
-	if _, err := rand.Read(buf); err != nil {
+	rng := rand.New(rand.NewSource(1))
+	if _, err := rng.Read(buf); err != nil {
 		t.Fatal(err)
 	}
 
