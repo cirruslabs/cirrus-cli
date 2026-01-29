@@ -59,6 +59,7 @@ type Collector struct {
 	logger       *slog.Logger
 	mu           sync.RWMutex
 	snapshot     Snapshot
+	utilization  *api.ResourceUtilization
 }
 
 func NewCollector(logger *slog.Logger) *Collector {
@@ -97,6 +98,7 @@ func NewCollector(logger *slog.Logger) *Collector {
 		cpuSource:    cpuSource,
 		memorySource: memorySource,
 		logger:       logger,
+		utilization:  &api.ResourceUtilization{},
 	}
 }
 
@@ -107,6 +109,44 @@ func (collector *Collector) Snapshot() Snapshot {
 	return collector.snapshot
 }
 
+func (collector *Collector) ResourceUtilizationSnapshot() *api.ResourceUtilization {
+	collector.mu.RLock()
+	defer collector.mu.RUnlock()
+
+	if collector.utilization == nil {
+		return nil
+	}
+
+	snapshot := &api.ResourceUtilization{
+		CpuTotal:    collector.utilization.CpuTotal,
+		MemoryTotal: collector.utilization.MemoryTotal,
+	}
+
+	if len(collector.utilization.CpuChart) > 0 {
+		snapshot.CpuChart = make([]*api.ChartPoint, len(collector.utilization.CpuChart))
+		for i, point := range collector.utilization.CpuChart {
+			if point == nil {
+				continue
+			}
+			value := *point
+			snapshot.CpuChart[i] = &value
+		}
+	}
+
+	if len(collector.utilization.MemoryChart) > 0 {
+		snapshot.MemoryChart = make([]*api.ChartPoint, len(collector.utilization.MemoryChart))
+		for i, point := range collector.utilization.MemoryChart {
+			if point == nil {
+				continue
+			}
+			value := *point
+			snapshot.MemoryChart[i] = &value
+		}
+	}
+
+	return snapshot
+}
+
 func (collector *Collector) updateTotals(numCpusTotal uint64, amountMemoryTotal uint64, totalsErr error) {
 	collector.mu.Lock()
 	snapshot := collector.snapshot
@@ -114,12 +154,16 @@ func (collector *Collector) updateTotals(numCpusTotal uint64, amountMemoryTotal 
 	if totalsErr == nil {
 		snapshot.CPUTotal = float64(numCpusTotal)
 		snapshot.MemoryTotal = float64(amountMemoryTotal)
+		if collector.utilization != nil {
+			collector.utilization.CpuTotal = float64(numCpusTotal)
+			collector.utilization.MemoryTotal = float64(amountMemoryTotal)
+		}
 	}
 	collector.snapshot = snapshot
 	collector.mu.Unlock()
 }
 
-func (collector *Collector) updateUsage(numCpusUsed float64, cpuErr error, amountMemoryUsed float64, memoryErr error) {
+func (collector *Collector) updateUsage(timeSinceStart time.Duration, numCpusUsed float64, cpuErr error, amountMemoryUsed float64, memoryErr error) {
 	collector.mu.Lock()
 	snapshot := collector.snapshot
 	snapshot.Timestamp = time.Now()
@@ -132,6 +176,20 @@ func (collector *Collector) updateUsage(numCpusUsed float64, cpuErr error, amoun
 		snapshot.MemoryUsed = amountMemoryUsed
 	}
 	collector.snapshot = snapshot
+	if collector.utilization != nil {
+		if cpuErr == nil {
+			collector.utilization.CpuChart = append(collector.utilization.CpuChart, &api.ChartPoint{
+				SecondsFromStart: uint32(timeSinceStart.Seconds()),
+				Value:            numCpusUsed,
+			})
+		}
+		if memoryErr == nil {
+			collector.utilization.MemoryChart = append(collector.utilization.MemoryChart, &api.ChartPoint{
+				SecondsFromStart: uint32(timeSinceStart.Seconds()),
+				Value:            amountMemoryUsed,
+			})
+		}
+	}
 	collector.mu.Unlock()
 }
 
@@ -141,7 +199,7 @@ func (collector *Collector) Run(ctx context.Context) chan *Result {
 	go func() {
 		result := &Result{
 			errors:              map[string]error{},
-			ResourceUtilization: &api.ResourceUtilization{},
+			ResourceUtilization: collector.utilization,
 		}
 
 		// Totals
@@ -156,9 +214,6 @@ func (collector *Collector) Run(ctx context.Context) chan *Result {
 
 			err := fmt.Errorf("%w: %v", ErrFailedToQueryTotals, totalsErr)
 			result.errors[err.Error()] = err
-		} else {
-			result.ResourceUtilization.CpuTotal = float64(numCpusTotal)
-			result.ResourceUtilization.MemoryTotal = float64(amountMemoryTotal)
 		}
 
 		pollInterval := 1 * time.Second
@@ -193,8 +248,6 @@ func (collector *Collector) Run(ctx context.Context) chan *Result {
 				result.errors[err.Error()] = err
 			}
 
-			collector.updateUsage(numCpusUsed, cpuErr, amountMemoryUsed, memoryErr)
-
 			if collector.logger != nil {
 				collector.logger.Info("Resource usage",
 					"cpus_used", numCpusUsed,
@@ -203,19 +256,7 @@ func (collector *Collector) Run(ctx context.Context) chan *Result {
 			}
 
 			timeSinceStart := time.Since(startTime)
-
-			if cpuErr == nil {
-				result.ResourceUtilization.CpuChart = append(result.ResourceUtilization.CpuChart, &api.ChartPoint{
-					SecondsFromStart: uint32(timeSinceStart.Seconds()),
-					Value:            numCpusUsed,
-				})
-			}
-			if memoryErr == nil {
-				result.ResourceUtilization.MemoryChart = append(result.ResourceUtilization.MemoryChart, &api.ChartPoint{
-					SecondsFromStart: uint32(timeSinceStart.Seconds()),
-					Value:            amountMemoryUsed,
-				})
-			}
+			collector.updateUsage(timeSinceStart, numCpusUsed, cpuErr, amountMemoryUsed, memoryErr)
 
 			// Make sure we wait the whole pollInterval
 			timeLeftToWait := pollInterval - time.Since(cycleStartTime)

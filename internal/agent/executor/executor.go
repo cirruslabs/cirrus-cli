@@ -25,6 +25,7 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/vaultunboxer"
 	agentstorage "github.com/cirruslabs/cirrus-cli/internal/agent/storage"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
+	"github.com/cirruslabs/omni-cache/pkg/protocols/builtin"
 	omnicache "github.com/cirruslabs/omni-cache/pkg/server"
 	"github.com/samber/lo"
 )
@@ -229,7 +230,8 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	// run our built-in cache server
 	if _, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); !ok {
 		backend := agentstorage.NewCirrusStoreBackend(client.CirrusClient, client.CirrusTaskIdentification)
-		cacheServer, err := omnicache.StartDefault(ctx, backend)
+		factories := append(builtin.Factories(), metricsProtocolFactory{collector: executor.metrics})
+		cacheServer, err := omnicache.StartDefault(ctx, backend, factories...)
 
 		if err != nil {
 			message := fmt.Sprintf("Failed to start the built-in HTTP cache server: %v", err)

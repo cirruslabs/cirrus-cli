@@ -38,6 +38,10 @@ func (collector *Collector) Snapshot() Snapshot {
 	return Snapshot{}
 }
 
+func (collector *Collector) ResourceUtilizationSnapshot() *api.ResourceUtilization {
+	return nil
+}
+
 func (collector *Collector) Run(ctx context.Context) chan *Result {
 	resultChan := make(chan *Result, 1)
 
