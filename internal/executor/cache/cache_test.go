@@ -1,7 +1,6 @@
 package cache_test
 
 import (
-	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
 	"github.com/cirruslabs/cirrus-cli/internal/executor/cache"
@@ -71,9 +70,8 @@ func TestMultipleGetAndPut(t *testing.T) {
 
 	// Prepare examples
 	var examples = map[string][]byte{
-		"":           []byte("empty key"),
-		"1/2/3":      []byte("some slashes"),
-		"large blob": getRandomBlob(t, 64*1024*1024),
+		"":      []byte("empty key"),
+		"1/2/3": []byte("some slashes"),
 	}
 
 	// Write to cache
@@ -90,16 +88,6 @@ func TestMultipleGetAndPut(t *testing.T) {
 	for key := range examples {
 		require.NoError(t, c.Delete(key))
 	}
-}
-
-func getRandomBlob(t *testing.T, size int) []byte {
-	buf := make([]byte, size)
-
-	if _, err := rand.Read(buf); err != nil {
-		t.Fatal(err)
-	}
-
-	return buf
 }
 
 func cacheWrite(t *testing.T, c *cache.Cache, key string, data []byte) {

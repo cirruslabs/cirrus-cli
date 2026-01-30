@@ -18,7 +18,8 @@ func TestMetrics(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second+500*time.Millisecond)
 	defer cancel()
 
-	resultChan := metrics.Run(ctx, nil)
+	collector := metrics.NewCollector(nil)
+	resultChan := collector.Run(ctx)
 
 	result := <-resultChan
 
