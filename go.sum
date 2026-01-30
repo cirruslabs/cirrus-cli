@@ -105,8 +105,8 @@ github.com/cirruslabs/echelon v1.9.0 h1:UtHAtoc+C7KZoYtbMCOL8JYA1Ndi6/4u0+gWxw9s
 github.com/cirruslabs/echelon v1.9.0/go.mod h1:Zk4IGe8upeefcwPGE143JCM7iwOkJnZ2ZFCbDWwoadA=
 github.com/cirruslabs/go-java-glob v0.1.0 h1:qC4Fzrq2sXKTLLsBb7ih7BNdCjCR6ZJAAK4nOZ6d/Ak=
 github.com/cirruslabs/go-java-glob v0.1.0/go.mod h1:+4vLmYqEnKtVAdeYsP5GCcPBcTuWsqi6P9bO6HraGFE=
-github.com/cirruslabs/omni-cache v0.8.0 h1:6o/MBQ05rgR1jsy2NgeG6T2TzKEgvChC9q89mKXyIQE=
-github.com/cirruslabs/omni-cache v0.8.0/go.mod h1:DUJR/8GYjN9XKDFmn9MMB/A8fCuBVIqweggZKBpxmP8=
+github.com/cirruslabs/omni-cache v0.9.0 h1:uyk2UHj2ZcKi5bKHbkN7oTMLJEe3QVzbXCpgmEtjRY4=
+github.com/cirruslabs/omni-cache v0.9.0/go.mod h1:DUJR/8GYjN9XKDFmn9MMB/A8fCuBVIqweggZKBpxmP8=
 github.com/cirruslabs/terminal v0.16.0 h1:RUHtBccwykpGI1pKb9aKqtMQnnz6DyzJZiQyI2e81zw=
 github.com/cirruslabs/terminal v0.16.0/go.mod h1:NYC5TZrMSZFaNwXv8OTk1kwOOgkpeB1Snp2sP6e17e4=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
