@@ -44,8 +44,17 @@ func TestFormatGithubActionsNoticeWithoutChart(t *testing.T) {
 func TestAcceptsGithubActions(t *testing.T) {
 	require.True(t, acceptsGithubActions("text/vnd.github-actions"))
 	require.True(t, acceptsGithubActions("text/plain, text/vnd.github-actions"))
+	require.True(t, acceptsGithubActions("text/vnd.github-actions; q=1.0"))
+	require.False(t, acceptsGithubActions("text/vnd.github-actions; q=0"))
 	require.False(t, acceptsGithubActions("application/json"))
 	require.False(t, acceptsGithubActions(""))
+}
+
+func TestAcceptsJSON(t *testing.T) {
+	require.True(t, acceptsJSON("application/json"))
+	require.True(t, acceptsJSON("application/vnd.github+json; charset=utf-8"))
+	require.False(t, acceptsJSON("application/json; q=0"))
+	require.False(t, acceptsJSON(""))
 }
 
 func TestFormatGithubActionsNoticeWithWarning(t *testing.T) {

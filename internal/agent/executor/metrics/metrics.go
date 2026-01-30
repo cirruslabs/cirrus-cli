@@ -123,6 +123,7 @@ func (collector *Collector) ResourceUtilizationSnapshot() *api.ResourceUtilizati
 		return nil
 	}
 
+	// Return a deep copy so callers can read without holding the lock.
 	snapshot := &api.ResourceUtilization{
 		CpuTotal:    collector.utilization.CpuTotal,
 		MemoryTotal: collector.utilization.MemoryTotal,
@@ -157,52 +158,6 @@ func (collector *Collector) ResourceUtilizationSnapshot() *api.ResourceUtilizati
 	return snapshot
 }
 
-func (collector *Collector) updateTotals(numCpusTotal uint64, amountMemoryTotal uint64, totalsErr error) {
-	collector.mu.Lock()
-	snapshot := collector.snapshot
-	snapshot.TotalsError = totalsErr
-	if totalsErr == nil {
-		snapshot.CPUTotal = float64(numCpusTotal)
-		snapshot.MemoryTotal = float64(amountMemoryTotal)
-		if collector.utilization != nil {
-			collector.utilization.CpuTotal = float64(numCpusTotal)
-			collector.utilization.MemoryTotal = float64(amountMemoryTotal)
-		}
-	}
-	collector.snapshot = snapshot
-	collector.mu.Unlock()
-}
-
-func (collector *Collector) updateUsage(timeSinceStart time.Duration, numCpusUsed float64, cpuErr error, amountMemoryUsed float64, memoryErr error) {
-	collector.mu.Lock()
-	snapshot := collector.snapshot
-	snapshot.Timestamp = time.Now()
-	snapshot.CPUError = cpuErr
-	snapshot.MemoryError = memoryErr
-	if cpuErr == nil {
-		snapshot.CPUUsed = numCpusUsed
-	}
-	if memoryErr == nil {
-		snapshot.MemoryUsed = amountMemoryUsed
-	}
-	collector.snapshot = snapshot
-	if collector.utilization != nil {
-		if cpuErr == nil {
-			collector.utilization.CpuChart = append(collector.utilization.CpuChart, &api.ChartPoint{
-				SecondsFromStart: uint32(timeSinceStart.Seconds()),
-				Value:            numCpusUsed,
-			})
-		}
-		if memoryErr == nil {
-			collector.utilization.MemoryChart = append(collector.utilization.MemoryChart, &api.ChartPoint{
-				SecondsFromStart: uint32(timeSinceStart.Seconds()),
-				Value:            amountMemoryUsed,
-			})
-		}
-	}
-	collector.mu.Unlock()
-}
-
 func (collector *Collector) Run(ctx context.Context) chan *Result {
 	resultChan := make(chan *Result, 1)
 
@@ -214,7 +169,22 @@ func (collector *Collector) Run(ctx context.Context) chan *Result {
 
 		// Totals
 		numCpusTotal, amountMemoryTotal, totalsErr := Totals(ctx)
-		collector.updateTotals(numCpusTotal, amountMemoryTotal, totalsErr)
+		func() {
+			collector.mu.Lock()
+			defer collector.mu.Unlock()
+
+			snapshot := collector.snapshot
+			snapshot.TotalsError = totalsErr
+			if totalsErr == nil {
+				snapshot.CPUTotal = float64(numCpusTotal)
+				snapshot.MemoryTotal = float64(amountMemoryTotal)
+				if collector.utilization != nil {
+					collector.utilization.CpuTotal = float64(numCpusTotal)
+					collector.utilization.MemoryTotal = float64(amountMemoryTotal)
+				}
+			}
+			collector.snapshot = snapshot
+		}()
 		if totalsErr != nil {
 			if errors.Is(totalsErr, context.Canceled) || errors.Is(totalsErr, context.DeadlineExceeded) {
 				resultChan <- result
@@ -266,7 +236,37 @@ func (collector *Collector) Run(ctx context.Context) chan *Result {
 			}
 
 			timeSinceStart := time.Since(startTime)
-			collector.updateUsage(timeSinceStart, numCpusUsed, cpuErr, amountMemoryUsed, memoryErr)
+			func() {
+				collector.mu.Lock()
+				defer collector.mu.Unlock()
+
+				snapshot := collector.snapshot
+				snapshot.Timestamp = time.Now()
+				snapshot.CPUError = cpuErr
+				snapshot.MemoryError = memoryErr
+				if cpuErr == nil {
+					snapshot.CPUUsed = numCpusUsed
+				}
+				if memoryErr == nil {
+					snapshot.MemoryUsed = amountMemoryUsed
+				}
+				collector.snapshot = snapshot
+
+				if collector.utilization != nil {
+					if cpuErr == nil {
+						collector.utilization.CpuChart = append(collector.utilization.CpuChart, &api.ChartPoint{
+							SecondsFromStart: uint32(timeSinceStart.Seconds()),
+							Value:            numCpusUsed,
+						})
+					}
+					if memoryErr == nil {
+						collector.utilization.MemoryChart = append(collector.utilization.MemoryChart, &api.ChartPoint{
+							SecondsFromStart: uint32(timeSinceStart.Seconds()),
+							Value:            amountMemoryUsed,
+						})
+					}
+				}
+			}()
 
 			// Make sure we wait the whole pollInterval
 			timeLeftToWait := pollInterval - time.Since(cycleStartTime)

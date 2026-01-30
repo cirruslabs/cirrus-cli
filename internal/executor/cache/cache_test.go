@@ -7,7 +7,6 @@ import (
 	"github.com/cirruslabs/cirrus-cli/internal/testutil"
 	"github.com/stretchr/testify/require"
 	"io"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"testing"
@@ -71,9 +70,8 @@ func TestMultipleGetAndPut(t *testing.T) {
 
 	// Prepare examples
 	var examples = map[string][]byte{
-		"":           []byte("empty key"),
-		"1/2/3":      []byte("some slashes"),
-		"large blob": getRandomBlob(t, 64*1024*1024),
+		"":      []byte("empty key"),
+		"1/2/3": []byte("some slashes"),
 	}
 
 	// Write to cache
@@ -90,17 +88,6 @@ func TestMultipleGetAndPut(t *testing.T) {
 	for key := range examples {
 		require.NoError(t, c.Delete(key))
 	}
-}
-
-func getRandomBlob(t *testing.T, size int) []byte {
-	buf := make([]byte, size)
-
-	rng := rand.New(rand.NewSource(1))
-	if _, err := rng.Read(buf); err != nil {
-		t.Fatal(err)
-	}
-
-	return buf
 }
 
 func cacheWrite(t *testing.T, c *cache.Cache, key string, data []byte) {

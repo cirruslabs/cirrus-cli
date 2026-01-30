@@ -85,14 +85,6 @@ func NewExecutor(
 	}
 }
 
-func (executor *Executor) MetricsSnapshot() metrics.Snapshot {
-	if executor.metrics == nil {
-		return metrics.Snapshot{}
-	}
-
-	return executor.metrics.Snapshot()
-}
-
 func (executor *Executor) taskIdentification() *api.TaskIdentification {
 	return api.OldTaskIdentification(executor.taskId, executor.clientToken)
 }

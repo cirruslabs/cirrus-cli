@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"mime"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/metrics"
@@ -129,7 +131,7 @@ func formatMetricsSummary(snapshot metrics.Snapshot, utilization *api.ResourceUt
 	}
 	builder.WriteString(")\n")
 
-	memoryUsed := uint64(maxFloat(snapshot.MemoryUsed, 0))
+	memoryUsed := uint64(max(snapshot.MemoryUsed, 0.0))
 	if memoryTotal > 0 {
 		memoryPercent := (snapshot.MemoryUsed / memoryTotal) * 100.0
 		fmt.Fprintf(&builder, "memory: %s / %s (%.2f%%)\n",
@@ -179,7 +181,7 @@ func formatGithubActionsNotice(snapshot metrics.Snapshot, utilization *api.Resou
 		parts = append(parts, part)
 	}
 	if memOK {
-		memUsed := uint64(maxFloat(memPeak, 0))
+		memUsed := uint64(max(memPeak, 0.0))
 		part := fmt.Sprintf("Peak memory utilization: %s", humanize.Bytes(memUsed))
 		if memTotal > 0 {
 			part = fmt.Sprintf("%s (%.2f%% of %s)", part, (memPeak/memTotal)*100.0, humanize.Bytes(uint64(memTotal)))
@@ -281,34 +283,35 @@ func peakMemoryUsage(snapshot metrics.Snapshot, utilization *api.ResourceUtiliza
 }
 
 func acceptsJSON(acceptHeader string) bool {
-	if strings.TrimSpace(acceptHeader) == "" {
-		return false
-	}
-	for _, part := range strings.Split(acceptHeader, ",") {
-		mediaType := strings.TrimSpace(strings.SplitN(part, ";", 2)[0])
-		if mediaType == "application/json" || strings.HasSuffix(mediaType, "+json") {
-			return true
-		}
-	}
-	return false
+	return acceptsMediaType(acceptHeader, func(mediaType string) bool {
+		return mediaType == "application/json" || strings.HasSuffix(mediaType, "+json")
+	})
 }
 
 func acceptsGithubActions(acceptHeader string) bool {
+	return acceptsMediaType(acceptHeader, func(mediaType string) bool {
+		return strings.Contains(mediaType, "github-actions")
+	})
+}
+
+func acceptsMediaType(acceptHeader string, match func(string) bool) bool {
 	if strings.TrimSpace(acceptHeader) == "" {
 		return false
 	}
 	for _, part := range strings.Split(acceptHeader, ",") {
-		mediaType := strings.TrimSpace(strings.SplitN(part, ";", 2)[0])
-		if strings.Contains(mediaType, "github-actions") {
+		mediaType, params, err := mime.ParseMediaType(strings.TrimSpace(part))
+		if err != nil {
+			continue
+		}
+		if qValue, ok := params["q"]; ok {
+			q, err := strconv.ParseFloat(qValue, 64)
+			if err == nil && q <= 0 {
+				continue
+			}
+		}
+		if match(mediaType) {
 			return true
 		}
 	}
 	return false
-}
-
-func maxFloat(value float64, min float64) float64 {
-	if value < min {
-		return min
-	}
-	return value
 }
