@@ -12,11 +12,11 @@ require (
 	github.com/containers/image/v5 v5.36.2
 	github.com/containers/storage v1.59.1 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1
-	github.com/docker/cli v29.1.5+incompatible
+	github.com/docker/cli v29.2.0+incompatible
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/getsentry/sentry-go v0.41.0
+	github.com/getsentry/sentry-go v0.42.0
 	github.com/go-git/go-billy/v5 v5.7.0
 	github.com/go-git/go-git/v5 v5.16.4
 	github.com/go-test/deep v1.1.1
@@ -33,7 +33,7 @@ require (
 	github.com/lestrrat-go/pdebug v0.0.0-20210111095411-35b07dbf089b // indirect
 	github.com/lestrrat-go/structinfo v0.0.0-20210312050401-7f8bd69d6acb // indirect
 	github.com/mitchellh/go-ps v1.0.0
-	github.com/moby/buildkit v0.27.0
+	github.com/moby/buildkit v0.27.1
 	github.com/moby/term v0.5.2 // indirect
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0
@@ -74,8 +74,8 @@ require (
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/jellydator/ttlcache/v3 v3.4.0
 	github.com/klauspost/pgzip v1.2.6
-	github.com/moby/moby/api v1.52.0
-	github.com/moby/moby/client v0.2.1
+	github.com/moby/moby/api v1.53.0
+	github.com/moby/moby/client v0.2.2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/procfs v0.19.2
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
@@ -83,7 +83,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/twitchtv/twirp v8.1.3+incompatible
-	github.com/veqryn/slog-context v0.8.0
+	github.com/veqryn/slog-context v0.9.0
 	go.opentelemetry.io/contrib/bridges/otelzap v0.14.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.64.0
 	go.opentelemetry.io/otel v1.39.0
