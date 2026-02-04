@@ -33,7 +33,7 @@ type metricsProtocol struct {
 }
 
 func (protocol *metricsProtocol) Register(registrar *protocols.Registrar) error {
-	registrar.HTTP().HandleFunc("GET /metrics", protocol.handleMetrics)
+	registrar.HTTP().HandleFunc("GET /metrics/resources", protocol.handleMetrics)
 	return nil
 }
 
