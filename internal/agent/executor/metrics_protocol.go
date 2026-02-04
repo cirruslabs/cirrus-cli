@@ -196,7 +196,7 @@ func formatGithubActionsNotice(snapshot metrics.Snapshot, utilization *api.Resou
 		return "::notice title=Resource Utilization::Peak utilization: unavailable"
 	}
 
-	message := strings.Join(parts, "; ")
+	message := strings.Join(parts, "%0A")
 	notice := fmt.Sprintf("::notice title=Resource Utilization::%s", message)
 
 	warnOnTotals := !(snapshot.CPUIsCgroup || snapshot.MemoryIsCgroup)

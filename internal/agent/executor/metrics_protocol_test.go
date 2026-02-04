@@ -26,7 +26,7 @@ func TestFormatGithubActionsNoticeWithChart(t *testing.T) {
 
 	notice := formatGithubActionsNotice(snapshot, utilization)
 
-	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 2.00 cores (50.00% of 4.00) at 10s; Peak memory utilization: 2.0 GB (50.00% of 4.0 GB) at 8s", notice)
+	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 2.00 cores (50.00% of 4.00) at 10s%0APeak memory utilization: 2.0 GB (50.00% of 4.0 GB) at 8s", notice)
 }
 
 func TestFormatGithubActionsNoticeWithoutChart(t *testing.T) {
@@ -38,7 +38,7 @@ func TestFormatGithubActionsNoticeWithoutChart(t *testing.T) {
 
 	notice := formatGithubActionsNotice(snapshot, nil)
 
-	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 1.50 cores; Peak memory utilization: 1.0 GB", notice)
+	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 1.50 cores%0APeak memory utilization: 1.0 GB", notice)
 }
 
 func TestAcceptsGithubActions(t *testing.T) {
@@ -71,7 +71,7 @@ func TestFormatGithubActionsNoticeWithWarning(t *testing.T) {
 
 	notice := formatGithubActionsNotice(metrics.Snapshot{}, utilization)
 
-	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 1.50 cores (37.50% of 4.00) at 2s; Peak memory utilization: 1.0 GB (25.00% of 4.0 GB) at 4s\n::warning title=Resource Utilization::Peak CPU and memory utilization are below 50% of available resources; it might be worth using a different resource class if possible.", notice)
+	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 1.50 cores (37.50% of 4.00) at 2s%0APeak memory utilization: 1.0 GB (25.00% of 4.0 GB) at 4s\n::warning title=Resource Utilization::Peak CPU and memory utilization are below 50% of available resources; it might be worth using a different resource class if possible.", notice)
 }
 
 func TestFormatGithubActionsNoticeWithoutWarningForCgroupTotals(t *testing.T) {
@@ -93,5 +93,5 @@ func TestFormatGithubActionsNoticeWithoutWarningForCgroupTotals(t *testing.T) {
 
 	notice := formatGithubActionsNotice(snapshot, utilization)
 
-	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 1.50 cores (37.50% of 4.00) at 2s; Peak memory utilization: 1.0 GB (25.00% of 4.0 GB) at 4s", notice)
+	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 1.50 cores (37.50% of 4.00) at 2s%0APeak memory utilization: 1.0 GB (25.00% of 4.0 GB) at 4s", notice)
 }
