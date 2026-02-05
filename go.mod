@@ -65,7 +65,7 @@ require (
 	github.com/bmatcuk/doublestar v1.3.4
 	github.com/cirruslabs/chacha v0.16.3
 	github.com/cirruslabs/cirrus-ci-annotations v0.10.0
-	github.com/cirruslabs/omni-cache v1.0.0
+	github.com/cirruslabs/omni-cache v1.1.0
 	github.com/cirruslabs/terminal v0.16.0
 	github.com/containerd/errdefs v1.0.0
 	github.com/google/go-github/v59 v59.0.0
