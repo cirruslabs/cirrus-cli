@@ -6,19 +6,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"runtime"
+	"sync"
+	"time"
+
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/metrics/source"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/metrics/source/cgroup/cpu"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/metrics/source/cgroup/memory"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/metrics/source/cgroup/resolver"
 	"github.com/cirruslabs/cirrus-cli/internal/agent/executor/metrics/source/system"
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
-	"github.com/dustin/go-humanize"
 	gopsutilcpu "github.com/shirou/gopsutil/v3/cpu"
 	gopsutilmem "github.com/shirou/gopsutil/v3/mem"
-	"log/slog"
-	"runtime"
-	"sync"
-	"time"
 )
 
 var (
@@ -226,13 +226,6 @@ func (collector *Collector) Run(ctx context.Context) chan *Result {
 
 				err := fmt.Errorf("%w using %s: %v", ErrFailedToQueryMemory, collector.memorySource.Name(), memoryErr)
 				result.errors[err.Error()] = err
-			}
-
-			if collector.logger != nil {
-				collector.logger.Info("Resource usage",
-					"cpus_used", numCpusUsed,
-					"cpu_usage_percent", numCpusUsed*100.0,
-					"memory_used", humanize.Bytes(uint64(amountMemoryUsed)))
 			}
 
 			timeSinceStart := time.Since(startTime)
