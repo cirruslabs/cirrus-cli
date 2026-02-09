@@ -58,7 +58,7 @@ func eval(cmd *cobra.Command, args []string) error {
 	if err := runTopLevelStarlark(cmd.Context(), source, filename, cmd.OutOrStdout()); err != nil {
 		var evalErr *starlark.EvalError
 		if errors.As(err, &evalErr) {
-			_, _ = fmt.Fprintln(cmd.OutOrStdout(), evalErr.Backtrace())
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), evalErr.Backtrace())
 		}
 
 		return fmt.Errorf("%w: %v", ErrEval, err)
@@ -102,9 +102,20 @@ func runTopLevelStarlark(ctx context.Context, source, filename string, output io
 		"println": starlark.Universe["print"],
 	}
 
-	_, err := starlark.ExecFile(thread, filename, source, predeclared)
+	errCh := make(chan error, 1)
 
-	return err
+	go func() {
+		_, err := starlark.ExecFile(thread, filename, source, predeclared)
+		errCh <- err
+	}()
+
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+		thread.Cancel(ctx.Err().Error())
+		return ctx.Err()
+	}
 }
 
 func processEnvironment() map[string]string {
