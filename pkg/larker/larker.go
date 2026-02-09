@@ -289,8 +289,6 @@ func (larker *Larker) Hook(
 }
 
 func logsWithErrorAttached(logs []byte, err error) []byte {
-	fmt.Printf("%T\n", err)
-
 	ee, ok := errors.Unwrap(err).(*starlark.EvalError)
 	if !ok {
 		return logs
