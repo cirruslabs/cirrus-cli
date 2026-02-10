@@ -201,6 +201,22 @@ func TestFormatGithubActionsNoticeWithoutChartForShortRuns(t *testing.T) {
 	require.NotContains(t, notice, "Resource utilization charts (asciigraph")
 }
 
+func TestFormatGithubActionsNoticeWithoutChartWhenTotalsUnknown(t *testing.T) {
+	utilization := &api.ResourceUtilization{
+		CpuChart: []*api.ChartPoint{
+			{SecondsFromStart: 2, Value: 1.5},
+		},
+		MemoryChart: []*api.ChartPoint{
+			{SecondsFromStart: 4, Value: 1_000_000_000},
+		},
+	}
+
+	notice := formatGithubActionsNotice(metrics.Snapshot{}, utilization)
+
+	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 1.50 cores at 2s%0APeak memory utilization: 1.0 GB at 4s", notice)
+	require.NotContains(t, notice, "Resource utilization charts (asciigraph")
+}
+
 func TestFormatGithubActionsASCIIChartFullMultilineText(t *testing.T) {
 	utilization := &api.ResourceUtilization{
 		CpuTotal:    4,

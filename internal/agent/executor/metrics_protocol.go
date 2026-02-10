@@ -304,25 +304,16 @@ func normalizeUtilizationPercent(values []float64, total float64) []float64 {
 	if len(values) == 0 {
 		return nil
 	}
+	if total <= 0 {
+		// Percent-of-total charts are only meaningful when totals are known.
+		return nil
+	}
 
 	normalized := make([]float64, len(values))
-	if total > 0 {
-		for i, value := range values {
-			normalized[i] = (value / total) * 100.0
-		}
-		return normalized
+	for i, value := range values {
+		normalized[i] = (value / total) * 100.0
 	}
 
-	peak := 0.0
-	for _, value := range values {
-		peak = max(peak, value)
-	}
-	if peak == 0 {
-		return normalized
-	}
-	for i, value := range values {
-		normalized[i] = (value / peak) * 100.0
-	}
 	return normalized
 }
 
