@@ -14,11 +14,19 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/api"
 	"github.com/cirruslabs/omni-cache/pkg/protocols"
 	"github.com/dustin/go-humanize"
+	"github.com/guptarohit/asciigraph"
 )
 
 type metricsProtocolFactory struct {
 	collector *metrics.Collector
 }
+
+const (
+	githubActionsChartMaxWidth  = 120
+	githubActionsChartMinWidth  = 40
+	githubActionsChartHeight    = 50
+	githubActionsChartMinPoints = 15
+)
 
 func (metricsProtocolFactory) ID() string {
 	return "cirrus-metrics"
@@ -198,16 +206,153 @@ func formatGithubActionsNotice(snapshot metrics.Snapshot, utilization *api.Resou
 
 	message := strings.Join(parts, "%0A")
 	notice := fmt.Sprintf("::notice title=Resource Utilization::%s", message)
+	lines := []string{notice}
 
 	warnOnTotals := !(snapshot.CPUIsCgroup || snapshot.MemoryIsCgroup)
 	cpuBelow := warnOnTotals && cpuOK && cpuTotal > 0 && cpuPeak < (cpuTotal*0.5)
 	memBelow := warnOnTotals && memOK && memTotal > 0 && memPeak < (memTotal*0.5)
 	if cpuBelow && memBelow {
 		warning := "::warning title=Resource Utilization::Peak CPU and memory utilization are below 50% of available resources; it might be worth using a different resource class if possible."
-		return notice + "\n" + warning
+		lines = append(lines, warning)
 	}
 
-	return notice
+	if chart := formatGithubActionsASCIIChart(utilization, cpuTotal, memTotal, githubActionsChartMaxWidth); chart != "" {
+		lines = append(lines, chart)
+	}
+
+	return strings.Join(lines, "\n")
+}
+
+func formatGithubActionsASCIIChart(
+	utilization *api.ResourceUtilization,
+	cpuTotal float64,
+	memTotal float64,
+	maxWidth int,
+) string {
+	if utilization == nil {
+		return ""
+	}
+
+	cpuValues, cpuDuration := chartValues(utilization.CpuChart)
+	memValues, memDuration := chartValues(utilization.MemoryChart)
+	if len(cpuValues) == 0 && len(memValues) == 0 {
+		return ""
+	}
+	if max(len(cpuValues), len(memValues)) < githubActionsChartMinPoints {
+		return ""
+	}
+
+	duration := max(cpuDuration, memDuration)
+	preferredWidth := max(len(cpuValues), len(memValues))
+	preferredWidth = max(preferredWidth, githubActionsChartMinWidth)
+	if preferredWidth > maxWidth {
+		preferredWidth = maxWidth
+	}
+
+	cpuPercentValues := normalizeUtilizationPercent(cpuValues, cpuTotal)
+	memPercentValues := normalizeUtilizationPercent(memValues, memTotal)
+
+	cpuGraph := renderUtilizationChart(
+		cpuPercentValues,
+		preferredWidth,
+		githubActionsChartHeight,
+		maxWidth,
+	)
+	memGraph := renderUtilizationChart(
+		memPercentValues,
+		preferredWidth,
+		githubActionsChartHeight,
+		maxWidth,
+	)
+	if cpuGraph == "" && memGraph == "" {
+		return ""
+	}
+
+	var builder strings.Builder
+	builder.WriteString("Resource utilization charts (asciigraph)\n")
+	fmt.Fprintf(&builder, "Time   0s -> %ds\n", duration)
+	if cpuGraph != "" {
+		fmt.Fprintf(&builder, "CPU utilization (%% of total, peak %.2f%%)\n", peakSeriesValue(cpuPercentValues))
+		builder.WriteString(cpuGraph)
+		builder.WriteByte('\n')
+	}
+	if memGraph != "" {
+		fmt.Fprintf(&builder, "Memory utilization (%% of total, peak %.2f%%)\n", peakSeriesValue(memPercentValues))
+		builder.WriteString(memGraph)
+		builder.WriteByte('\n')
+	}
+	builder.WriteString("Legend: y-axis is utilization percent")
+	return builder.String()
+}
+
+func chartValues(points []*api.ChartPoint) ([]float64, uint32) {
+	values := make([]float64, 0, len(points))
+	var duration uint32
+	for _, point := range points {
+		if point == nil {
+			continue
+		}
+		values = append(values, max(point.Value, 0.0))
+		if point.SecondsFromStart > duration {
+			duration = point.SecondsFromStart
+		}
+	}
+	return values, duration
+}
+
+func normalizeUtilizationPercent(values []float64, total float64) []float64 {
+	if len(values) == 0 {
+		return nil
+	}
+
+	normalized := make([]float64, len(values))
+	if total > 0 {
+		for i, value := range values {
+			normalized[i] = (value / total) * 100.0
+		}
+		return normalized
+	}
+
+	peak := 0.0
+	for _, value := range values {
+		peak = max(peak, value)
+	}
+	if peak == 0 {
+		return normalized
+	}
+	for i, value := range values {
+		normalized[i] = (value / peak) * 100.0
+	}
+	return normalized
+}
+
+func peakSeriesValue(values []float64) float64 {
+	peak := 0.0
+	for _, value := range values {
+		peak = max(peak, value)
+	}
+	return peak
+}
+
+func renderUtilizationChart(values []float64, preferredWidth int, height int, maxWidth int) string {
+	if len(values) == 0 || height <= 0 || maxWidth <= 0 {
+		return ""
+	}
+	width := preferredWidth
+	if width <= 0 {
+		width = githubActionsChartMinWidth
+	}
+	if width > maxWidth {
+		width = maxWidth
+	}
+
+	return asciigraph.Plot(values,
+		asciigraph.Height(height),
+		asciigraph.Width(width),
+		asciigraph.Precision(0),
+		asciigraph.LowerBound(0),
+		asciigraph.UpperBound(100),
+	)
 }
 
 func peakCPUUsage(snapshot metrics.Snapshot, utilization *api.ResourceUtilization) (float64, *uint32, bool) {
