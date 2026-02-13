@@ -12,13 +12,14 @@ import (
 	"github.com/cirruslabs/cirrus-cli/pkg/larker/loader"
 	"github.com/spf13/cobra"
 	"go.starlark.net/starlark"
+	"golang.org/x/sync/errgroup"
 )
 
 var ErrEval = errors.New("eval failed")
 
 func newEvalCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "eval <script.star|->",
+		Use:   "eval [FILE]",
 		Short: "Evaluate a Starlark script and stream print output",
 		Long: `Evaluate a Starlark script in top-level mode without requiring main().
 
@@ -29,17 +30,13 @@ and exposes Cirrus built-ins that are useful for automation and data handling.
 Load built-ins like this:
   load("cirrus", "http", "fs", "json", "yaml")
 
-Output is produced only by print(...) and println(...).`,
+Output is produced only by print(...).`,
 		Example: strings.TrimSpace(`
 cirrus eval scripts/task.star
-cat script.star | cirrus eval -
-cat <<'STAR' | cirrus eval -
-load("cirrus", "http")
-status = http.get("https://www.githubstatus.com/api/v2/status.json").json()
-print(status["status"]["description"])
-STAR
+cat script.star | cirrus eval
+cirrus eval < script.star
 `),
-		Args: cobra.ExactArgs(1),
+		Args: cobra.MaximumNArgs(1),
 		RunE: eval,
 	}
 
@@ -50,7 +47,12 @@ func eval(cmd *cobra.Command, args []string) error {
 	// https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 	cmd.SilenceUsage = true
 
-	source, filename, err := readEvalSource(cmd, args[0])
+	sourcePath := "-"
+	if len(args) == 1 {
+		sourcePath = args[0]
+	}
+
+	source, filename, err := readEvalSource(cmd, sourcePath)
 	if err != nil {
 		return fmt.Errorf("%w: %v", ErrEval, err)
 	}
@@ -98,24 +100,26 @@ func runTopLevelStarlark(ctx context.Context, source, filename string, output io
 		},
 	}
 
-	predeclared := starlark.StringDict{
-		"println": starlark.Universe["print"],
-	}
+	done := make(chan struct{})
+	var group errgroup.Group
 
-	errCh := make(chan error, 1)
-
-	go func() {
-		_, err := starlark.ExecFile(thread, filename, source, predeclared)
-		errCh <- err
-	}()
-
-	select {
-	case err := <-errCh:
+	group.Go(func() error {
+		defer close(done)
+		_, err := starlark.ExecFile(thread, filename, source, nil)
 		return err
-	case <-ctx.Done():
-		thread.Cancel(ctx.Err().Error())
-		return ctx.Err()
-	}
+	})
+
+	group.Go(func() error {
+		select {
+		case <-done:
+			return nil
+		case <-ctx.Done():
+			thread.Cancel(ctx.Err().Error())
+			return ctx.Err()
+		}
+	})
+
+	return group.Wait()
 }
 
 func processEnvironment() map[string]string {

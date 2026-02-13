@@ -28,23 +28,23 @@ func TestEvalTopLevelPrint(t *testing.T) {
 	assert.Empty(t, stderr)
 }
 
-func TestEvalPrintlnAlias(t *testing.T) {
+func TestEvalPrintlnIsNotDefined(t *testing.T) {
 	testutil.TempChdir(t)
 
 	if err := os.WriteFile("script.star", []byte(`
-print("a", "b")
 println("c", "d")
 `), 0600); err != nil {
 		t.Fatal(err)
 	}
 
 	stdout, stderr, err := evalCommandOutputs([]string{"eval", "script.star"}, "")
-	if err != nil {
-		t.Fatal(err)
+	if err == nil {
+		t.Fatal("expected command to fail")
 	}
 
-	assert.Equal(t, "a b\nc d\n", stdout)
+	assert.Empty(t, stdout)
 	assert.Empty(t, stderr)
+	assert.Contains(t, err.Error(), "undefined: println")
 }
 
 func TestEvalStdin(t *testing.T) {
@@ -56,6 +56,18 @@ func TestEvalStdin(t *testing.T) {
 	}
 
 	assert.Equal(t, "from-stdin\n", stdout)
+	assert.Empty(t, stderr)
+}
+
+func TestEvalStdinByDefault(t *testing.T) {
+	testutil.TempChdir(t)
+
+	stdout, stderr, err := evalCommandOutputs([]string{"eval"}, `print("from-stdin-default")`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "from-stdin-default\n", stdout)
 	assert.Empty(t, stderr)
 }
 
@@ -182,10 +194,11 @@ func TestEvalHelpText(t *testing.T) {
 
 	assert.Contains(t, stdout, "lightweight, LLM-friendly way to run Python-like scripts")
 	assert.Contains(t, stdout, `load("cirrus", "http", "fs", "json", "yaml")`)
-	assert.Contains(t, stdout, "print(...) and println(...)")
-	assert.Contains(t, stdout, "cat script.star | cirrus eval -")
+	assert.Contains(t, stdout, "cirrus eval [FILE]")
+	assert.Contains(t, stdout, "print(...)")
+	assert.Contains(t, stdout, "cat script.star | cirrus eval")
 	assert.Contains(t, stdout, "cirrus eval scripts/task.star")
-	assert.Contains(t, stdout, "https://www.githubstatus.com/api/v2/status.json")
+	assert.Contains(t, stdout, "cirrus eval < script.star")
 	assert.Empty(t, stderr)
 }
 
