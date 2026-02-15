@@ -185,6 +185,7 @@ func Run(args []string) {
 	md := metadata.New(map[string]string{
 		"org.cirruslabs.task-id":       *taskIdPtr,
 		"org.cirruslabs.client-secret": *clientTokenPtr,
+		"org.cirruslabs.api-endpoint":  *apiEndpointPtr,
 	})
 
 	err = retry.Do(

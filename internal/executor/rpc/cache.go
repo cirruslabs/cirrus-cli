@@ -11,13 +11,15 @@ import (
 	"github.com/samber/lo"
 	"google.golang.org/genproto/googleapis/bytestream"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
 const sendBufSize = 1024 * 1024
+const apiEndpointMetadataKey = "org.cirruslabs.api-endpoint"
 
-func (r *RPC) GenerateCacheUploadURL(context.Context, *api.CacheKey) (*api.GenerateURLResponse, error) {
-	grpcEndpoint := strings.ReplaceAll(r.ContainerEndpoint(), "http", "grpc")
+func (r *RPC) GenerateCacheUploadURL(ctx context.Context, _ *api.CacheKey) (*api.GenerateURLResponse, error) {
+	grpcEndpoint := asGRPCEndpoint(r.cacheEndpoint(ctx))
 	return &api.GenerateURLResponse{Url: grpcEndpoint}, nil
 }
 
@@ -73,9 +75,31 @@ func (r *RPC) Write(stream bytestream.ByteStream_WriteServer) error {
 	return nil
 }
 
-func (r *RPC) GenerateCacheDownloadURLs(context.Context, *api.CacheKey) (*api.GenerateURLsResponse, error) {
-	grpcEndpoint := strings.ReplaceAll(r.ContainerEndpoint(), "http", "grpc")
+func (r *RPC) GenerateCacheDownloadURLs(ctx context.Context, _ *api.CacheKey) (*api.GenerateURLsResponse, error) {
+	grpcEndpoint := asGRPCEndpoint(r.cacheEndpoint(ctx))
 	return &api.GenerateURLsResponse{Urls: []string{grpcEndpoint}}, nil
+}
+
+func (r *RPC) cacheEndpoint(ctx context.Context) string {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		apiEndpoints := md.Get(apiEndpointMetadataKey)
+		if len(apiEndpoints) != 0 && apiEndpoints[0] != "" {
+			return apiEndpoints[0]
+		}
+	}
+
+	return r.ContainerEndpoint()
+}
+
+func asGRPCEndpoint(apiEndpoint string) string {
+	switch {
+	case strings.HasPrefix(apiEndpoint, "http://"):
+		return "grpc://" + strings.TrimPrefix(apiEndpoint, "http://")
+	case strings.HasPrefix(apiEndpoint, "https://"):
+		return "grpcs://" + strings.TrimPrefix(apiEndpoint, "https://")
+	default:
+		return apiEndpoint
+	}
 }
 
 func (r *RPC) Read(req *bytestream.ReadRequest, stream bytestream.ByteStream_ReadServer) error {
