@@ -3,6 +3,7 @@ package rpc
 import (
 	"context"
 	"io"
+	"net"
 	"os"
 	"strings"
 
@@ -11,13 +12,14 @@ import (
 	"github.com/samber/lo"
 	"google.golang.org/genproto/googleapis/bytestream"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 )
 
 const sendBufSize = 1024 * 1024
 
-func (r *RPC) GenerateCacheUploadURL(context.Context, *api.CacheKey) (*api.GenerateURLResponse, error) {
-	grpcEndpoint := strings.ReplaceAll(r.ContainerEndpoint(), "http", "grpc")
+func (r *RPC) GenerateCacheUploadURL(ctx context.Context, _ *api.CacheKey) (*api.GenerateURLResponse, error) {
+	grpcEndpoint := strings.Replace(r.cacheEndpoint(ctx), "http://", "grpc://", 1)
 	return &api.GenerateURLResponse{Url: grpcEndpoint}, nil
 }
 
@@ -73,9 +75,39 @@ func (r *RPC) Write(stream bytestream.ByteStream_WriteServer) error {
 	return nil
 }
 
-func (r *RPC) GenerateCacheDownloadURLs(context.Context, *api.CacheKey) (*api.GenerateURLsResponse, error) {
-	grpcEndpoint := strings.ReplaceAll(r.ContainerEndpoint(), "http", "grpc")
+func (r *RPC) GenerateCacheDownloadURLs(ctx context.Context, _ *api.CacheKey) (*api.GenerateURLsResponse, error) {
+	grpcEndpoint := strings.Replace(r.cacheEndpoint(ctx), "http://", "grpc://", 1)
 	return &api.GenerateURLsResponse{Urls: []string{grpcEndpoint}}, nil
+}
+
+func (r *RPC) cacheEndpoint(ctx context.Context) string {
+	if isLoopbackClient(ctx) {
+		return r.DirectEndpoint()
+	}
+
+	return r.ContainerEndpoint()
+}
+
+func isLoopbackClient(ctx context.Context) bool {
+	p, ok := peer.FromContext(ctx)
+	if !ok || p == nil || p.Addr == nil {
+		return false
+	}
+
+	switch addr := p.Addr.(type) {
+	case *net.UnixAddr:
+		return true
+	case *net.TCPAddr:
+		return addr.IP.IsLoopback()
+	default:
+		host, _, err := net.SplitHostPort(addr.String())
+		if err != nil {
+			return false
+		}
+
+		ip := net.ParseIP(host)
+		return ip != nil && ip.IsLoopback()
+	}
 }
 
 func (r *RPC) Read(req *bytestream.ReadRequest, stream bytestream.ByteStream_ReadServer) error {
