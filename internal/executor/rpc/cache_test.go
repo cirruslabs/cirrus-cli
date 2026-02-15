@@ -3,7 +3,6 @@ package rpc
 import (
 	"context"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
@@ -17,36 +16,51 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func TestGenerateCacheUploadURLUsesDirectEndpointForLoopbackClient(t *testing.T) {
+func TestGenerateCacheUploadURLUsesReportedAPIEndpoint(t *testing.T) {
 	task := testTask(t)
 	rpcServer, conn := startRPCServerAndConnect(t, task)
 	cirrusClient := api.NewCirrusCIServiceClient(conn)
 
-	ctx := authenticatedContext(t, rpcServer, task.LocalGroupId)
+	reportedAPIEndpoint := "http://127.0.0.1:31337"
+	ctx := authenticatedContext(t, rpcServer, task.LocalGroupId, reportedAPIEndpoint)
 
 	response, err := cirrusClient.GenerateCacheUploadURL(ctx, &api.CacheKey{
 		CacheKey: "cache-key",
 	})
 	require.NoError(t, err)
 
-	expected := strings.Replace(rpcServer.DirectEndpoint(), "http://", "grpc://", 1)
-	require.Equal(t, expected, response.Url)
+	require.Equal(t, asGRPCEndpoint(reportedAPIEndpoint), response.Url)
 }
 
-func TestGenerateCacheDownloadURLsUsesDirectEndpointForLoopbackClient(t *testing.T) {
+func TestGenerateCacheDownloadURLsUsesReportedAPIEndpoint(t *testing.T) {
 	task := testTask(t)
 	rpcServer, conn := startRPCServerAndConnect(t, task)
 	cirrusClient := api.NewCirrusCIServiceClient(conn)
 
-	ctx := authenticatedContext(t, rpcServer, task.LocalGroupId)
+	reportedAPIEndpoint := "http://127.0.0.1:31337"
+	ctx := authenticatedContext(t, rpcServer, task.LocalGroupId, reportedAPIEndpoint)
 
 	response, err := cirrusClient.GenerateCacheDownloadURLs(ctx, &api.CacheKey{
 		CacheKey: "cache-key",
 	})
 	require.NoError(t, err)
 
-	expected := strings.Replace(rpcServer.DirectEndpoint(), "http://", "grpc://", 1)
-	require.Equal(t, []string{expected}, response.Urls)
+	require.Equal(t, []string{asGRPCEndpoint(reportedAPIEndpoint)}, response.Urls)
+}
+
+func TestGenerateCacheUploadURLFallsBackToContainerEndpoint(t *testing.T) {
+	task := testTask(t)
+	rpcServer, conn := startRPCServerAndConnect(t, task)
+	cirrusClient := api.NewCirrusCIServiceClient(conn)
+
+	ctx := authenticatedContext(t, rpcServer, task.LocalGroupId, "")
+
+	response, err := cirrusClient.GenerateCacheUploadURL(ctx, &api.CacheKey{
+		CacheKey: "cache-key",
+	})
+	require.NoError(t, err)
+
+	require.Equal(t, asGRPCEndpoint(rpcServer.ContainerEndpoint()), response.Url)
 }
 
 func startRPCServerAndConnect(t *testing.T, task *api.Task) (*RPC, *grpc.ClientConn) {
@@ -69,16 +83,24 @@ func startRPCServerAndConnect(t *testing.T, task *api.Task) (*RPC, *grpc.ClientC
 	return rpcServer, conn
 }
 
-func authenticatedContext(t *testing.T, rpcServer *RPC, taskID int64) context.Context {
+func authenticatedContext(t *testing.T, rpcServer *RPC, taskID int64, apiEndpoint string) context.Context {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	t.Cleanup(cancel)
 
-	return metadata.AppendToOutgoingContext(
-		ctx,
+	metadataPairs := []string{
 		taskIDMetadataKey, strconv.FormatInt(taskID, 10),
 		clientSecretMetadataKey, rpcServer.ClientSecret(),
+	}
+
+	if apiEndpoint != "" {
+		metadataPairs = append(metadataPairs, apiEndpointMetadataKey, apiEndpoint)
+	}
+
+	return metadata.AppendToOutgoingContext(
+		ctx,
+		metadataPairs...,
 	)
 }
 

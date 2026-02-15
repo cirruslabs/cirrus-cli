@@ -3,7 +3,6 @@ package rpc
 import (
 	"context"
 	"io"
-	"net"
 	"os"
 	"strings"
 
@@ -12,14 +11,15 @@ import (
 	"github.com/samber/lo"
 	"google.golang.org/genproto/googleapis/bytestream"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
 const sendBufSize = 1024 * 1024
+const apiEndpointMetadataKey = "org.cirruslabs.api-endpoint"
 
 func (r *RPC) GenerateCacheUploadURL(ctx context.Context, _ *api.CacheKey) (*api.GenerateURLResponse, error) {
-	grpcEndpoint := strings.Replace(r.cacheEndpoint(ctx), "http://", "grpc://", 1)
+	grpcEndpoint := asGRPCEndpoint(r.cacheEndpoint(ctx))
 	return &api.GenerateURLResponse{Url: grpcEndpoint}, nil
 }
 
@@ -76,37 +76,29 @@ func (r *RPC) Write(stream bytestream.ByteStream_WriteServer) error {
 }
 
 func (r *RPC) GenerateCacheDownloadURLs(ctx context.Context, _ *api.CacheKey) (*api.GenerateURLsResponse, error) {
-	grpcEndpoint := strings.Replace(r.cacheEndpoint(ctx), "http://", "grpc://", 1)
+	grpcEndpoint := asGRPCEndpoint(r.cacheEndpoint(ctx))
 	return &api.GenerateURLsResponse{Urls: []string{grpcEndpoint}}, nil
 }
 
 func (r *RPC) cacheEndpoint(ctx context.Context) string {
-	if isLoopbackClient(ctx) {
-		return r.DirectEndpoint()
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		apiEndpoints := md.Get(apiEndpointMetadataKey)
+		if len(apiEndpoints) != 0 && apiEndpoints[0] != "" {
+			return apiEndpoints[0]
+		}
 	}
 
 	return r.ContainerEndpoint()
 }
 
-func isLoopbackClient(ctx context.Context) bool {
-	p, ok := peer.FromContext(ctx)
-	if !ok || p == nil || p.Addr == nil {
-		return false
-	}
-
-	switch addr := p.Addr.(type) {
-	case *net.UnixAddr:
-		return true
-	case *net.TCPAddr:
-		return addr.IP.IsLoopback()
+func asGRPCEndpoint(apiEndpoint string) string {
+	switch {
+	case strings.HasPrefix(apiEndpoint, "http://"):
+		return "grpc://" + strings.TrimPrefix(apiEndpoint, "http://")
+	case strings.HasPrefix(apiEndpoint, "https://"):
+		return "grpcs://" + strings.TrimPrefix(apiEndpoint, "https://")
 	default:
-		host, _, err := net.SplitHostPort(addr.String())
-		if err != nil {
-			return false
-		}
-
-		ip := net.ParseIP(host)
-		return ip != nil && ip.IsLoopback()
+		return apiEndpoint
 	}
 }
 
