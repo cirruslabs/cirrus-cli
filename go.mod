@@ -69,6 +69,7 @@ require (
 	github.com/cirruslabs/terminal v0.16.0
 	github.com/containerd/errdefs v1.0.0
 	github.com/google/go-github/v59 v59.0.0
+	github.com/guptarohit/asciigraph v0.7.3
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/hashicorp/vault/api v1.22.0
 	github.com/jarcoal/httpmock v1.4.1
