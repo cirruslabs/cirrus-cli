@@ -233,8 +233,8 @@ func formatGithubActionsASCIIChart(
 		return ""
 	}
 
-	cpuValues, cpuDuration := chartValues(utilization.CpuChart)
-	memValues, memDuration := chartValues(utilization.MemoryChart)
+	cpuValues, _ := chartValues(utilization.CpuChart)
+	memValues, _ := chartValues(utilization.MemoryChart)
 	if len(cpuValues) == 0 && len(memValues) == 0 {
 		return ""
 	}
@@ -242,7 +242,6 @@ func formatGithubActionsASCIIChart(
 		return ""
 	}
 
-	duration := max(cpuDuration, memDuration)
 	preferredWidth := max(len(cpuValues), len(memValues))
 	preferredWidth = max(preferredWidth, githubActionsChartMinWidth)
 	if preferredWidth > maxWidth {
