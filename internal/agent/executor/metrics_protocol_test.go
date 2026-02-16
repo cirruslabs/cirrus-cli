@@ -30,13 +30,14 @@ func TestFormatGithubActionsNoticeWithChart(t *testing.T) {
 	notice := formatGithubActionsNotice(snapshot, utilization)
 
 	lines := strings.Split(notice, "\n")
-	require.Len(t, lines, 108)
+	graphLines := githubActionsChartHeight + 1
+	require.Len(t, lines, 6+(2*graphLines))
 	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 2.00 cores (50.00% of 4.00) at 19s%0APeak memory utilization: 2.0 GB (50.00% of 4.0 GB) at 19s", lines[0])
 	require.Equal(t, "Resource utilization charts (asciigraph)", lines[1])
 	require.Equal(t, "Time   0s -> 19s", lines[2])
 	require.Equal(t, "CPU utilization (% of total, peak 50.00%)", lines[3])
-	require.Equal(t, "Memory utilization (% of total, peak 50.00%)", lines[55])
-	require.Equal(t, "Legend: y-axis is utilization percent", lines[107])
+	require.Equal(t, "Memory utilization (% of total, peak 50.00%)", lines[4+graphLines])
+	require.Equal(t, "Legend: y-axis is utilization percent", lines[5+(2*graphLines)])
 }
 
 func TestFormatGithubActionsNoticeWithoutChart(t *testing.T) {
@@ -132,12 +133,13 @@ func TestFormatGithubActionsNoticeChartWidthCap(t *testing.T) {
 
 	chart := formatGithubActionsASCIIChart(utilization, utilization.CpuTotal, utilization.MemoryTotal, githubActionsChartMaxWidth)
 	lines := strings.Split(chart, "\n")
-	require.Len(t, lines, 107)
+	graphLines := githubActionsChartHeight + 1
+	require.Len(t, lines, 5+(2*graphLines))
 	require.Equal(t, "Resource utilization charts (asciigraph)", lines[0])
 	require.Equal(t, "Time   0s -> 499s", lines[1])
 	require.Equal(t, "CPU utilization (% of total, peak 75.00%)", lines[2])
-	require.Equal(t, "Memory utilization (% of total, peak 50.00%)", lines[54])
-	require.Equal(t, "Legend: y-axis is utilization percent", lines[106])
+	require.Equal(t, "Memory utilization (% of total, peak 50.00%)", lines[3+graphLines])
+	require.Equal(t, "Legend: y-axis is utilization percent", lines[4+(2*graphLines)])
 }
 
 func TestFormatGithubActionsASCIIChartFullVisualization(t *testing.T) {
@@ -169,12 +171,13 @@ func TestFormatGithubActionsASCIIChartFullVisualization(t *testing.T) {
 	chart := formatGithubActionsASCIIChart(utilization, utilization.CpuTotal, utilization.MemoryTotal, githubActionsChartMaxWidth)
 	lines := strings.Split(chart, "\n")
 
-	require.Len(t, lines, 107)
+	graphLines := githubActionsChartHeight + 1
+	require.Len(t, lines, 5+(2*graphLines))
 	require.Equal(t, "Resource utilization charts (asciigraph)", lines[0])
 	require.Equal(t, "Time   0s -> 219s", lines[1])
 	require.Equal(t, "CPU utilization (% of total, peak 96.88%)", lines[2])
-	require.Equal(t, "Memory utilization (% of total, peak 81.25%)", lines[54])
-	require.Equal(t, "Legend: y-axis is utilization percent", lines[106])
+	require.Equal(t, "Memory utilization (% of total, peak 81.25%)", lines[3+graphLines])
+	require.Equal(t, "Legend: y-axis is utilization percent", lines[4+(2*graphLines)])
 
 	t.Logf("\n%s", chart)
 }
@@ -238,107 +241,47 @@ func TestFormatGithubActionsASCIIChartFullMultilineText(t *testing.T) {
 Time   0s -> 14s
 CPU utilization (% of total, peak 50.00%)
  100 ┤
-  98 ┤
-  96 ┤
-  94 ┤
-  92 ┤
+  95 ┤
   90 ┤
-  88 ┤
-  86 ┤
-  84 ┤
-  82 ┤
+  85 ┤
   80 ┤
-  78 ┤
-  76 ┤
-  74 ┤
-  72 ┤
+  75 ┤
   70 ┤
-  68 ┤
-  66 ┤
-  64 ┤
-  62 ┤
+  65 ┤
   60 ┤
-  58 ┤
-  56 ┤
-  54 ┤
-  52 ┤
-  50 ┼───────────────────────────────────────
-  48 ┤
-  46 ┤
-  44 ┤
-  42 ┤
+  55 ┤
+  50 ┼───────────────────────────────────────────────────────────
+  45 ┤
   40 ┤
-  38 ┤
-  36 ┤
-  34 ┤
-  32 ┤
+  35 ┤
   30 ┤
-  28 ┤
-  26 ┤
-  24 ┤
-  22 ┤
+  25 ┤
   20 ┤
-  18 ┤
-  16 ┤
-  14 ┤
-  12 ┤
+  15 ┤
   10 ┤
-   8 ┤
-   6 ┤
-   4 ┤
-   2 ┤
+   5 ┤
    0 ┤
 Memory utilization (% of total, peak 25.00%)
  100 ┤
-  98 ┤
-  96 ┤
-  94 ┤
-  92 ┤
+  95 ┤
   90 ┤
-  88 ┤
-  86 ┤
-  84 ┤
-  82 ┤
+  85 ┤
   80 ┤
-  78 ┤
-  76 ┤
-  74 ┤
-  72 ┤
+  75 ┤
   70 ┤
-  68 ┤
-  66 ┤
-  64 ┤
-  62 ┤
+  65 ┤
   60 ┤
-  58 ┤
-  56 ┤
-  54 ┤
-  52 ┤
+  55 ┤
   50 ┤
-  48 ┤
-  46 ┤
-  44 ┤
-  42 ┤
+  45 ┤
   40 ┤
-  38 ┤
-  36 ┤
-  34 ┤
-  32 ┤
+  35 ┤
   30 ┤
-  28 ┤
-  26 ┼───────────────────────────────────────
-  24 ┤
-  22 ┤
+  25 ┼───────────────────────────────────────────────────────────
   20 ┤
-  18 ┤
-  16 ┤
-  14 ┤
-  12 ┤
+  15 ┤
   10 ┤
-   8 ┤
-   6 ┤
-   4 ┤
-   2 ┤
+   5 ┤
    0 ┤
 Legend: y-axis is utilization percent`
 
