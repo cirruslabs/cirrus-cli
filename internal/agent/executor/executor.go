@@ -441,12 +441,6 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 	}
 }
 
-func (executor *Executor) exposeOmniCacheAddress() {
-	if cacheHost, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); ok {
-		executor.env.Set("OMNI_CACHE_ADDRESS", cacheHost)
-	}
-}
-
 // BoundedCommands bounds a slice of commands with unique names to a half-open range [fromName, toName).
 func BoundedCommands(commands []*api.Command, fromName, toName string) []*api.Command {
 	left, right := 0, len(commands)
