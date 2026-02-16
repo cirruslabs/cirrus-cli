@@ -22,9 +22,9 @@ type metricsProtocolFactory struct {
 }
 
 const (
-	githubActionsChartMaxWidth  = 120
-	githubActionsChartMinWidth  = 40
-	githubActionsChartHeight    = 50
+	githubActionsChartMaxWidth  = 180
+	githubActionsChartMinWidth  = 60
+	githubActionsChartHeight    = 20
 	githubActionsChartMinPoints = 15
 )
 
