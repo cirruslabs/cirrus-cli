@@ -31,13 +31,11 @@ func TestFormatGithubActionsNoticeWithChart(t *testing.T) {
 
 	lines := strings.Split(notice, "\n")
 	graphLines := githubActionsChartHeight + 1
-	require.Len(t, lines, 6+(2*graphLines))
+	require.Len(t, lines, 5+(2*graphLines))
 	require.Equal(t, "::notice title=Resource Utilization::Peak CPU utilization: 2.00 cores (50.00% of 4.00) at 19s%0APeak memory utilization: 2.0 GB (50.00% of 4.0 GB) at 19s", lines[0])
 	require.Equal(t, "Resource utilization charts (asciigraph)", lines[1])
-	require.Equal(t, "Time   0s -> 19s", lines[2])
-	require.Equal(t, "CPU utilization (% of total, peak 50.00%)", lines[3])
-	require.Equal(t, "Memory utilization (% of total, peak 50.00%)", lines[4+graphLines])
-	require.Equal(t, "Legend: y-axis is utilization percent", lines[5+(2*graphLines)])
+	require.Equal(t, "CPU utilization (% of total, peak 50.00%)", lines[2])
+	require.Equal(t, "Memory utilization (% of total, peak 50.00%)", lines[3+graphLines])
 }
 
 func TestFormatGithubActionsNoticeWithoutChart(t *testing.T) {
@@ -134,12 +132,10 @@ func TestFormatGithubActionsNoticeChartWidthCap(t *testing.T) {
 	chart := formatGithubActionsASCIIChart(utilization, utilization.CpuTotal, utilization.MemoryTotal, githubActionsChartMaxWidth)
 	lines := strings.Split(chart, "\n")
 	graphLines := githubActionsChartHeight + 1
-	require.Len(t, lines, 5+(2*graphLines))
+	require.Len(t, lines, 4+(2*graphLines))
 	require.Equal(t, "Resource utilization charts (asciigraph)", lines[0])
-	require.Equal(t, "Time   0s -> 499s", lines[1])
-	require.Equal(t, "CPU utilization (% of total, peak 75.00%)", lines[2])
-	require.Equal(t, "Memory utilization (% of total, peak 50.00%)", lines[3+graphLines])
-	require.Equal(t, "Legend: y-axis is utilization percent", lines[4+(2*graphLines)])
+	require.Equal(t, "CPU utilization (% of total, peak 75.00%)", lines[1])
+	require.Equal(t, "Memory utilization (% of total, peak 50.00%)", lines[2+graphLines])
 }
 
 func TestFormatGithubActionsASCIIChartFullVisualization(t *testing.T) {
@@ -172,12 +168,10 @@ func TestFormatGithubActionsASCIIChartFullVisualization(t *testing.T) {
 	lines := strings.Split(chart, "\n")
 
 	graphLines := githubActionsChartHeight + 1
-	require.Len(t, lines, 5+(2*graphLines))
+	require.Len(t, lines, 4+(2*graphLines))
 	require.Equal(t, "Resource utilization charts (asciigraph)", lines[0])
-	require.Equal(t, "Time   0s -> 219s", lines[1])
-	require.Equal(t, "CPU utilization (% of total, peak 96.88%)", lines[2])
-	require.Equal(t, "Memory utilization (% of total, peak 81.25%)", lines[3+graphLines])
-	require.Equal(t, "Legend: y-axis is utilization percent", lines[4+(2*graphLines)])
+	require.Equal(t, "CPU utilization (% of total, peak 96.88%)", lines[1])
+	require.Equal(t, "Memory utilization (% of total, peak 81.25%)", lines[2+graphLines])
 
 	t.Logf("\n%s", chart)
 }
@@ -238,7 +232,6 @@ func TestFormatGithubActionsASCIIChartFullMultilineText(t *testing.T) {
 
 	chart := formatGithubActionsASCIIChart(utilization, utilization.CpuTotal, utilization.MemoryTotal, githubActionsChartMaxWidth)
 	expected := `Resource utilization charts (asciigraph)
-Time   0s -> 14s
 CPU utilization (% of total, peak 50.00%)
  100 ┤
   95 ┤
@@ -283,7 +276,7 @@ Memory utilization (% of total, peak 25.00%)
   10 ┤
    5 ┤
    0 ┤
-Legend: y-axis is utilization percent`
+`
 
 	require.Equal(t, expected, chart)
 }
