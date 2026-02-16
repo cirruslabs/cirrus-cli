@@ -233,6 +233,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			// so the socket file is removed
 			defer cacheServer.Shutdown(ctx)
 			executor.env.Set("CIRRUS_HTTP_CACHE_HOST", cacheServer.Addr)
+			executor.env.Set("OMNI_CACHE_ADDRESS", cacheServer.Addr)
 		}
 	}
 
@@ -437,6 +438,12 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 		retry.Context(context.WithoutCancel(ctx)),
 	); err != nil {
 		slog.Error("Failed to report that the agent has finished", "err", err)
+	}
+}
+
+func (executor *Executor) exposeOmniCacheAddress() {
+	if cacheHost, ok := executor.env.Lookup("CIRRUS_HTTP_CACHE_HOST"); ok {
+		executor.env.Set("OMNI_CACHE_ADDRESS", cacheHost)
 	}
 }
 
