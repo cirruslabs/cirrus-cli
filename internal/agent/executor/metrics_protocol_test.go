@@ -295,3 +295,29 @@ func TestRenderUtilizationChartFakeMultilineText(t *testing.T) {
 
 	require.Equal(t, expected, graph)
 }
+
+func TestNormalizeXCoordinatesUsesSeconds(t *testing.T) {
+	values := []float64{0, 10, 20, 120}
+	seconds := []uint32{0, 1, 2, 12}
+
+	normalized := normalizeXCoordinates(seconds, values, 12, 4)
+	expected := []float64{0, 40, 80, 120}
+
+	require.Len(t, normalized, len(expected))
+	for i := range expected {
+		require.InDelta(t, expected[i], normalized[i], 0.0001)
+	}
+}
+
+func TestNormalizeXCoordinatesKeepsLatestValuePerSecond(t *testing.T) {
+	values := []float64{10, 30, 50}
+	seconds := []uint32{0, 0, 10}
+
+	normalized := normalizeXCoordinates(seconds, values, 10, 3)
+	expected := []float64{30, 40, 50}
+
+	require.Len(t, normalized, len(expected))
+	for i := range expected {
+		require.InDelta(t, expected[i], normalized[i], 0.0001)
+	}
+}
