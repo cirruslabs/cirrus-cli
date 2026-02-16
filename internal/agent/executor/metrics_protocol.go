@@ -270,7 +270,6 @@ func formatGithubActionsASCIIChart(
 
 	var builder strings.Builder
 	builder.WriteString("Resource utilization charts (asciigraph)\n")
-	fmt.Fprintf(&builder, "Time   0s -> %ds\n", duration)
 	if cpuGraph != "" {
 		fmt.Fprintf(&builder, "CPU utilization (%% of total, peak %.2f%%)\n", peakSeriesValue(cpuPercentValues))
 		builder.WriteString(cpuGraph)
@@ -281,7 +280,6 @@ func formatGithubActionsASCIIChart(
 		builder.WriteString(memGraph)
 		builder.WriteByte('\n')
 	}
-	builder.WriteString("Legend: y-axis is utilization percent")
 	return builder.String()
 }
 
