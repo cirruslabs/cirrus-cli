@@ -233,8 +233,8 @@ func formatGithubActionsASCIIChart(
 		return ""
 	}
 
-	cpuValues, cpuDuration := chartValues(utilization.CpuChart)
-	memValues, memDuration := chartValues(utilization.MemoryChart)
+	cpuValues, _ := chartValues(utilization.CpuChart)
+	memValues, _ := chartValues(utilization.MemoryChart)
 	if len(cpuValues) == 0 && len(memValues) == 0 {
 		return ""
 	}
@@ -242,7 +242,6 @@ func formatGithubActionsASCIIChart(
 		return ""
 	}
 
-	duration := max(cpuDuration, memDuration)
 	preferredWidth := max(len(cpuValues), len(memValues))
 	preferredWidth = max(preferredWidth, githubActionsChartMinWidth)
 	if preferredWidth > maxWidth {
@@ -270,7 +269,6 @@ func formatGithubActionsASCIIChart(
 
 	var builder strings.Builder
 	builder.WriteString("Resource utilization charts (asciigraph)\n")
-	fmt.Fprintf(&builder, "Time   0s -> %ds\n", duration)
 	if cpuGraph != "" {
 		fmt.Fprintf(&builder, "CPU utilization (%% of total, peak %.2f%%)\n", peakSeriesValue(cpuPercentValues))
 		builder.WriteString(cpuGraph)
@@ -281,7 +279,6 @@ func formatGithubActionsASCIIChart(
 		builder.WriteString(memGraph)
 		builder.WriteByte('\n')
 	}
-	builder.WriteString("Legend: y-axis is utilization percent")
 	return builder.String()
 }
 
