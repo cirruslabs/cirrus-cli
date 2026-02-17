@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"mime"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -233,8 +234,8 @@ func formatGithubActionsASCIIChart(
 		return ""
 	}
 
-	cpuValues, _ := chartValues(utilization.CpuChart)
-	memValues, _ := chartValues(utilization.MemoryChart)
+	cpuValues, cpuSeconds, cpuDuration := chartValues(utilization.CpuChart)
+	memValues, memSeconds, memDuration := chartValues(utilization.MemoryChart)
 	if len(cpuValues) == 0 && len(memValues) == 0 {
 		return ""
 	}
@@ -250,6 +251,15 @@ func formatGithubActionsASCIIChart(
 
 	cpuPercentValues := normalizeUtilizationPercent(cpuValues, cpuTotal)
 	memPercentValues := normalizeUtilizationPercent(memValues, memTotal)
+	cpuPeakPercent := peakSeriesValue(cpuPercentValues)
+	memPeakPercent := peakSeriesValue(memPercentValues)
+
+	chartDuration := cpuDuration
+	if memDuration > chartDuration {
+		chartDuration = memDuration
+	}
+	cpuPercentValues = normalizeXCoordinates(cpuSeconds, cpuPercentValues, chartDuration, preferredWidth)
+	memPercentValues = normalizeXCoordinates(memSeconds, memPercentValues, chartDuration, preferredWidth)
 
 	cpuGraph := renderUtilizationChart(
 		cpuPercentValues,
@@ -270,31 +280,33 @@ func formatGithubActionsASCIIChart(
 	var builder strings.Builder
 	builder.WriteString("Resource utilization charts (asciigraph)\n")
 	if cpuGraph != "" {
-		fmt.Fprintf(&builder, "CPU utilization (%% of total, peak %.2f%%)\n", peakSeriesValue(cpuPercentValues))
+		fmt.Fprintf(&builder, "CPU utilization (%% of total, peak %.2f%%)\n", cpuPeakPercent)
 		builder.WriteString(cpuGraph)
 		builder.WriteByte('\n')
 	}
 	if memGraph != "" {
-		fmt.Fprintf(&builder, "Memory utilization (%% of total, peak %.2f%%)\n", peakSeriesValue(memPercentValues))
+		fmt.Fprintf(&builder, "Memory utilization (%% of total, peak %.2f%%)\n", memPeakPercent)
 		builder.WriteString(memGraph)
 		builder.WriteByte('\n')
 	}
 	return builder.String()
 }
 
-func chartValues(points []*api.ChartPoint) ([]float64, uint32) {
+func chartValues(points []*api.ChartPoint) ([]float64, []uint32, uint32) {
 	values := make([]float64, 0, len(points))
+	seconds := make([]uint32, 0, len(points))
 	var duration uint32
 	for _, point := range points {
 		if point == nil {
 			continue
 		}
 		values = append(values, max(point.Value, 0.0))
+		seconds = append(seconds, point.SecondsFromStart)
 		if point.SecondsFromStart > duration {
 			duration = point.SecondsFromStart
 		}
 	}
-	return values, duration
+	return values, seconds, duration
 }
 
 func normalizeUtilizationPercent(values []float64, total float64) []float64 {
@@ -309,6 +321,96 @@ func normalizeUtilizationPercent(values []float64, total float64) []float64 {
 	normalized := make([]float64, len(values))
 	for i, value := range values {
 		normalized[i] = (value / total) * 100.0
+	}
+
+	return normalized
+}
+
+type timedValue struct {
+	seconds uint32
+	value   float64
+}
+
+func normalizeXCoordinates(seconds []uint32, values []float64, duration uint32, width int) []float64 {
+	if len(values) == 0 || len(values) != len(seconds) || width <= 0 {
+		return nil
+	}
+
+	samples := make([]timedValue, 0, len(values))
+	for i, value := range values {
+		samples = append(samples, timedValue{
+			seconds: seconds[i],
+			value:   value,
+		})
+	}
+
+	sort.SliceStable(samples, func(i, j int) bool {
+		return samples[i].seconds < samples[j].seconds
+	})
+
+	// Keep only the latest value for each second.
+	deduplicated := samples[:0]
+	for _, sample := range samples {
+		if len(deduplicated) == 0 || deduplicated[len(deduplicated)-1].seconds != sample.seconds {
+			deduplicated = append(deduplicated, sample)
+			continue
+		}
+		deduplicated[len(deduplicated)-1].value = sample.value
+	}
+	samples = deduplicated
+
+	if len(samples) == 1 {
+		normalized := make([]float64, width)
+		for i := range normalized {
+			normalized[i] = samples[0].value
+		}
+		return normalized
+	}
+
+	if latestSecond := samples[len(samples)-1].seconds; latestSecond > duration {
+		duration = latestSecond
+	}
+	if duration == 0 {
+		normalized := make([]float64, width)
+		for i := range normalized {
+			normalized[i] = samples[len(samples)-1].value
+		}
+		return normalized
+	}
+	if width == 1 {
+		return []float64{samples[len(samples)-1].value}
+	}
+
+	normalized := make([]float64, width)
+	step := float64(duration) / float64(width-1)
+	lastIdx := len(samples) - 1
+	leftIdx := 0
+
+	for i := range normalized {
+		targetSecond := step * float64(i)
+
+		if targetSecond <= float64(samples[0].seconds) {
+			normalized[i] = samples[0].value
+			continue
+		}
+		if targetSecond >= float64(samples[lastIdx].seconds) {
+			normalized[i] = samples[lastIdx].value
+			continue
+		}
+
+		for leftIdx+1 < len(samples) && float64(samples[leftIdx+1].seconds) < targetSecond {
+			leftIdx++
+		}
+
+		left := samples[leftIdx]
+		right := samples[leftIdx+1]
+		if right.seconds == left.seconds {
+			normalized[i] = right.value
+			continue
+		}
+
+		ratio := (targetSecond - float64(left.seconds)) / float64(right.seconds-left.seconds)
+		normalized[i] = left.value + (right.value-left.value)*ratio
 	}
 
 	return normalized
