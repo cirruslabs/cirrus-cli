@@ -233,6 +233,7 @@ func (executor *Executor) RunBuild(ctx context.Context) {
 			// so the socket file is removed
 			defer cacheServer.Shutdown(ctx)
 			executor.env.Set("CIRRUS_HTTP_CACHE_HOST", cacheServer.Addr)
+			executor.env.Set("OMNI_CACHE_ADDRESS", cacheServer.Addr)
 		}
 	}
 
