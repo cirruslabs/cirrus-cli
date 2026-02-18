@@ -56,37 +56,6 @@ task:
     - go test -v -p 1 ./...
 
 task:
-  name: Test (Linux with Vetu)
-  alias: Tests
-  aws_credentials:
-    role_arn: arn:aws:iam::944424729675:role/VetuIntegrationTests
-    role_session_name: cirrus
-    region: us-east-2
-  ec2_instance:
-    image: ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-server-*
-    architecture: arm64
-    region: us-east-2
-    type: a1.metal
-    block_device_mappings:
-      - device_name: /dev/sda1
-        ebs:
-          volume_size: 100
-          volume_type: gp3
-  prepare_script:
-    - sudo apt-get update && sudo apt-get -y install apt-transport-https ca-certificates golang-go
-    - echo "deb [trusted=yes] https://apt.fury.io/cirruslabs/ /" | sudo tee /etc/apt/sources.list.d/cirruslabs.list
-    - sudo apt-get update && sudo apt-get -y install vetu
-  pre_pull_vm_script:
-    - vetu pull $CIRRUS_INTERNAL_VETU_VM
-  test_script:
-    - go test -v -p 1 ./...
-  env:
-    CIRRUS_INTERNAL_VETU_VM: ghcr.io/cirruslabs/ubuntu:latest
-    CIRRUS_INTERNAL_VETU_SSH_PASSWORD: admin
-    CIRRUS_INTERNAL_VETU_SSH_USER: admin
-    HOME: /root
-
-task:
   name: Release (Dry Run)
   only_if: $CIRRUS_TAG == ''
   macos_instance:
