@@ -1,0 +1,25 @@
+on:
+  push:
+
+jobs:
+  test-integration:
+    name: Test (Linux with Vetu)
+    runs-on: ghcr.io/cirruslabs/ubuntu-runner-amd64:24.04-md
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Install Vetu
+        run: |
+          sudo apt-get update && sudo apt-get -y install apt-transport-https ca-certificates golang-go
+          echo "deb [trusted=yes] https://apt.fury.io/cirruslabs/ /" | sudo tee /etc/apt/sources.list.d/cirruslabs.list
+          sudo apt-get update && sudo apt-get -y install vetu
+      - name: Pre-pull Vetu VM image
+        run: vetu pull $CIRRUS_INTERNAL_VETU_VM
+      - name: Run tests
+        run: go test -v -p 1 ./...
+    env:
+      CIRRUS_INTERNAL_VETU_VM: ghcr.io/cirruslabs/ubuntu-runner-amd64:latest
+      CIRRUS_INTERNAL_VETU_SSH_PASSWORD: admin
+      CIRRUS_INTERNAL_VETU_SSH_USER: admin
