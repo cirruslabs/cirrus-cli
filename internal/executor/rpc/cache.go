@@ -72,6 +72,14 @@ func (r *RPC) Write(stream bytestream.ByteStream_WriteServer) error {
 		return status.Error(codes.Internal, "failed to finalize cache put operation")
 	}
 
+	if err := stream.SendAndClose(&bytestream.WriteResponse{
+		CommittedSize: bytesSaved,
+	}); err != nil {
+		r.logger.Warnf("failed to send bytestream write response and close the stream: %v", err)
+
+		return err
+	}
+
 	return nil
 }
 
