@@ -16,9 +16,9 @@ require (
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/getsentry/sentry-go v0.42.0
-	github.com/go-git/go-billy/v5 v5.7.0
-	github.com/go-git/go-git/v5 v5.16.5
+	github.com/getsentry/sentry-go v0.43.0
+	github.com/go-git/go-billy/v5 v5.8.0
+	github.com/go-git/go-git/v5 v5.17.0
 	github.com/go-test/deep v1.1.1
 	github.com/golang/protobuf v1.5.4
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -78,7 +78,7 @@ require (
 	github.com/moby/moby/api v1.53.0
 	github.com/moby/moby/client v0.2.2
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/procfs v0.19.2
+	github.com/prometheus/procfs v0.20.1
 	github.com/puzpuzpuz/xsync/v3 v3.5.1
 	github.com/samber/lo v1.52.0
 	github.com/shirou/gopsutil/v3 v3.24.5
