@@ -8,13 +8,22 @@
 >
 > The  [newly introduced "Local Network" permission](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy) in macOS Sequoia requires accepting a GUI pop-up on each host machine that runs `cirrus run` or `cirrus worker run` and Tart VMs.
 >
-> To work around this, upgrade to Cirrus CLI 0.143.0 or newer and invoke the `cirrus run` or `cirrus worker run` as `root` with an additional `--user` command-line argument, which takes a name of your regular, non-privileged user on the host machine.
+> To work around this, there are two options. The first one is to invoke the `cirrus run` or `cirrus worker run` as `root` with an additional `--user` command-line argument, which takes a name of your regular, non-privileged user on the host machine.
 >
 > This will cause the Cirrus CLI to start a small `cirrus localnetworkhelper` process in the background and then drop the privileges to the specified user.
 >
 >The helper process is privileged and needed to establish network connections on behalf of the Cirrus CLI without triggering a GUI pop-up.
 >
 >This approach is more secure than simply running `cirrus run` or `cirrus worker run` as `root`, because only a small part of Cirrus CLI runs privileged and the only functionality that this part has is establishing new connections.
+>
+> The second workaround is to [set the local network privacy preferences](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy#macOS-considerations) so that all [IPv4 private address space](https://datatracker.ietf.org/doc/html/rfc1918#section-3) that could potentially be used for Tart VMs is excluded:
+>
+> ```shell
+> sudo defaults write com.apple.network.local-network AllowedEthernetLocalNetworkAddresses -array "10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16"
+> sudo defaults write com.apple.network.local-network AllowedWiFiLocalNetworkAddresses -array "10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16"
+> ```
+>
+> ...and then reboot.
 
 Cirrus CLI is a tool for running containerized tasks reproducibly in any environment. Most commonly, Cirrus tasks are used as part of continuous integration workflows 
 but can also be used as part of local development process as a [hermetic replacement of helper scripts/Makefiles](https://medium.com/cirruslabs/using-cirrus-cli-instead-of-makefiles-for-generating-grpc-87b949a67449).
