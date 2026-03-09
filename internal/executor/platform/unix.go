@@ -3,7 +3,6 @@ package platform
 import (
 	"fmt"
 	"path"
-	"path/filepath"
 )
 
 type UnixPlatform struct{}
@@ -13,7 +12,9 @@ func NewUnix() Platform {
 }
 
 func (platform *UnixPlatform) ContainerCLIPath() string {
-	return filepath.Join(platform.ContainerAgentVolumeDir(), workingVolumeAgentBinary)
+	// Use POSIX-style paths for the container, regardless of host OS.
+	// The Unix platform always targets Linux containers where paths are `/`-separated.
+	return path.Join(platform.ContainerAgentVolumeDir(), workingVolumeAgentBinary)
 }
 
 func (platform *UnixPlatform) ContainerAgentVolumeDir() string {

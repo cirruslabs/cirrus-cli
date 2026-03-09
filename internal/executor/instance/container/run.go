@@ -181,7 +181,6 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 
 	logReaderCtx, cancelLogReaderCtx := context.WithCancel(ctx)
 	var logReaderWg sync.WaitGroup
-	logReaderWg.Add(1)
 
 	// Schedule all containers for removal
 	defer func() {
@@ -238,11 +237,13 @@ func RunContainerizedAgent(ctx context.Context, config *runconfig.RunConfig, par
 	if err != nil {
 		return err
 	}
+	logReaderWg.Add(1)
 	go func() {
+		defer logReaderWg.Done()
+
 		for logLine := range logChan {
 			logger.Debugf("container: %s", logLine)
 		}
-		logReaderWg.Done()
 	}()
 
 	logger.Debugf("waiting for container %s to finish", cont.ID)
