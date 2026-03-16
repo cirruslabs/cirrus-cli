@@ -5,12 +5,14 @@ project_name: cirrus
 before:
   hooks:
     - go mod download
+    - sh -c "sed 's/__VERSION__/{{ .Version }}/g' Info.plist > Info.generated.plist"
 
 builds:
   - main: cmd/cirrus/main.go
-    ldflags: >
-      -X github.com/cirruslabs/cirrus-cli/internal/version.Version={{.Version}}
-      -X github.com/cirruslabs/cirrus-cli/internal/version.Commit={{.ShortCommit}}
+    ldflags:
+      - -X github.com/cirruslabs/cirrus-cli/internal/version.Version={{.Version}}
+      - -X github.com/cirruslabs/cirrus-cli/internal/version.Commit={{.ShortCommit}}
+      - '{{- if eq .Os "darwin" }}-extldflags "-sectcreate __TEXT __info_plist Info.generated.plist"{{ end }}'
     env:
       - CGO_ENABLED={{if eq .Os "darwin"}}1{{else}}0{{end}}
     goos:
