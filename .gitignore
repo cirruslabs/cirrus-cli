@@ -9,3 +9,6 @@ dist/
 
 # binary files like goreleaser binary
 bin
+
+# Info.plist embedding
+Info.generated.plist
