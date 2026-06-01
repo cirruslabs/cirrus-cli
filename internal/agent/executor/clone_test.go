@@ -25,7 +25,11 @@ func newNewlineNormalizingWriter(writer io.Writer) *newlineNormalizingWriter {
 }
 
 func (nw *newlineNormalizingWriter) Write(p []byte) (n int, err error) {
-	return fmt.Fprintln(nw.writer, strings.TrimSpace(string(p)))
+	if _, err := fmt.Fprintln(nw.writer, strings.TrimSpace(string(p))); err != nil {
+		return 0, err
+	}
+
+	return len(p), nil
 }
 
 func TestClone(t *testing.T) {
