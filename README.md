@@ -172,3 +172,9 @@ Please [open an issue](https://github.com/cirruslabs/cirrus-cli/issues/new) if y
  a [variety of supported compute services](https://cirrus-ci.org/guide/supported-computing-services/) or
  using a [managed infrastructure with per-second billing](https://cirrus-ci.org/pricing/#compute-credits).
 </details>
+
+## License
+
+Cirrus CLI is distributed under the [MIT License](LICENSE).
+
+Copyright (c) 2026 Cirrus Labs, Inc.
