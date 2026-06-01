@@ -17,6 +17,7 @@ func StartVaultContainer(ctx context.Context, vaultToken string) (testcontainers
 				"VAULT_DEV_ROOT_TOKEN_ID":  vaultToken,
 				"VAULT_DEV_LISTEN_ADDRESS": "0.0.0.0:8200",
 				"VAULT_DISABLE_MLOCK":      "true",
+				"SKIP_SETCAP":              "true",
 			},
 			WaitingFor: wait.ForHTTP("/v1/sys/health").
 				WithPort("8200/tcp").
