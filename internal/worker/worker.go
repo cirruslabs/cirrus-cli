@@ -246,6 +246,10 @@ func (worker *Worker) tryCreateStandby(ctx context.Context) error {
 	}
 
 	// Do nothing if there are tasks that are running to simplify the resource management
+	if worker.tasks.Size() > 0 {
+		return nil
+	}
+
 	if !worker.canFitResources(worker.standbyParameters.Resources) {
 		return nil
 	}
