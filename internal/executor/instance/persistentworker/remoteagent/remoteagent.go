@@ -154,7 +154,7 @@ func WaitForAgent(
 		if err != nil {
 			return fmt.Errorf("%w: failed to set-up SSH port forwarding: %v", ErrFailed, err)
 		}
-		defer vmListener.Close()
+		defer closeForwardingListener(ctx, vmListener, logger)
 
 		go forwardViaSSH(vmListener, logger, config.Endpoint.Direct())
 
@@ -204,6 +204,17 @@ func WaitForAgent(
 	}
 
 	return nil
+}
+
+func closeForwardingListener(ctx context.Context, listener net.Listener, logger logger.Lightweight) {
+	if ctx.Err() != nil {
+		logger.Debugf("skipping SSH port forwarding listener close after context cancellation: %v", ctx.Err())
+		return
+	}
+
+	if err := listener.Close(); err != nil {
+		logger.Debugf("failed to close SSH port forwarding listener: %v", err)
+	}
 }
 
 func forwardViaSSH(vmListener net.Listener, logger logger.Lightweight, endpoint string) {

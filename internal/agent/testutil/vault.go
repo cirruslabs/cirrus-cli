@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/testcontainers/testcontainers-go"
@@ -12,10 +13,15 @@ func StartVaultContainer(ctx context.Context, vaultToken string) (testcontainers
 	request := testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image:        VaultContainerImage,
+			Entrypoint:   []string{"vault"},
+			Cmd:          []string{"server", "-config=/tmp/vault.hcl", "-dev", "-dev-root-token-id=" + vaultToken, "-dev-listen-address=0.0.0.0:8200"},
 			ExposedPorts: []string{"8200/tcp"},
-			Env: map[string]string{
-				"VAULT_DEV_ROOT_TOKEN_ID":  vaultToken,
-				"VAULT_DEV_LISTEN_ADDRESS": "0.0.0.0:8200",
+			Files: []testcontainers.ContainerFile{
+				{
+					Reader:            strings.NewReader("disable_mlock = true\n"),
+					ContainerFilePath: "/tmp/vault.hcl",
+					FileMode:          0o644,
+				},
 			},
 			WaitingFor: wait.ForHTTP("/v1/sys/health").
 				WithPort("8200/tcp").

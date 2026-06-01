@@ -160,12 +160,22 @@ func (worker *Worker) runTask(
 	localHub := sentry.CurrentHub().Clone()
 	ctx = sentry.SetHubOnContext(ctx, localHub)
 
-	defer func() {
+	instanceClosed := false
+	closeInstance := func() {
+		if instanceClosed {
+			return
+		}
+
+		instanceClosed = true
+
 		if err := inst.Close(ctx); err != nil {
 			worker.logger.Errorf("failed to close persistent worker instance for task %s: %v",
 				taskID, err)
 		}
+	}
 
+	defer func() {
+		closeInstance()
 		worker.taskCompletions <- taskID
 	}()
 
@@ -253,6 +263,8 @@ func (worker *Worker) runTask(
 			})
 		}
 	}
+
+	closeInstance()
 
 	boundedCtx, cancel := context.WithTimeout(backgroundCtxWithSpan, perCallTimeout)
 	defer cancel()

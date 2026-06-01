@@ -232,7 +232,9 @@ func (tart *Tart) bootVM(
 
 	if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
 		localHub.ConfigureScope(func(scope *sentry.Scope) {
-			scope.SetExtra("Softnet enabled", tart.softnet)
+			scope.SetContext("Tart", sentry.Context{
+				"Softnet enabled": tart.softnet,
+			})
 		})
 	}
 
