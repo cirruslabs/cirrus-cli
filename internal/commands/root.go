@@ -35,6 +35,7 @@ func NewRootCmd() *cobra.Command {
 
 	commands := []*cobra.Command{
 		validate.NewValidateCmd(),
+		newEvalCmd(),
 		newRunCmd(),
 		newServeCmd(),
 		internal.NewRootCmd(),
