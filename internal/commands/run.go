@@ -63,6 +63,7 @@ var (
 
 // Tart-related flags.
 var tartLazyPull bool
+var tartRunArgs []string
 
 // Tart-related flags (experimental).
 var tartNoUnmount bool
@@ -199,11 +200,12 @@ func run(cmd *cobra.Command, args []string) error {
 		DockerfileImagePush:     dockerfileImagePush,
 	}))
 
-	// Tart-related options
-	executorOpts = append(executorOpts, executor.WithTartOptions(options.TartOptions{
-		LazyPull:  lazyPull || tartLazyPull,
+    // Tart-related options
+    executorOpts = append(executorOpts, executor.WithTartOptions(options.TartOptions{
+        LazyPull: lazyPull || tartLazyPull,
 		NoUnmount: tartNoUnmount,
-	}))
+        RunArgs:  tartRunArgs,
+    }))
 
 	// Vetu-related options
 	executorOpts = append(executorOpts, executor.WithVetuOptions(options.VetuOptions{
@@ -303,9 +305,11 @@ func newRunCmd() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&dockerfileImagePush, "dockerfile-image-push",
 		false, "whether to push the image produced by the Dockerfile as CI environment feature")
 
-	// Tart-related flags
-	cmd.PersistentFlags().BoolVar(&tartLazyPull, "tart-lazy-pull", false,
+    // Tart-related flags
+    cmd.PersistentFlags().BoolVar(&tartLazyPull, "tart-lazy-pull", false,
 		"attempt to pull Tart VM images only if they are missing locally (helpful in case of registry rate limits)")
+    cmd.PersistentFlags().StringArrayVar(&tartRunArgs, "tart-arg", []string{},
+        "additional arguments to pass to 'tart run' (e.g., --disk=/path.sparseimage)")
 
 	// Tart-related flags (experimental)
 	cmd.PersistentFlags().BoolVar(&tartNoUnmount, "tart-no-unmount", false,

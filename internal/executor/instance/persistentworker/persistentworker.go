@@ -131,8 +131,8 @@ func newTart(iso *api.Isolation_Tart_, security *security.Security, logger logge
 		opts = append(opts, tart.WithSyncTimeOverSSH())
 	}
 
-	return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, uint16(iso.Tart.Port),
-		iso.Tart.Cpu, iso.Tart.Memory, opts...)
+    return tart.New(iso.Tart.Image, iso.Tart.User, iso.Tart.Password, uint16(iso.Tart.Port),
+        iso.Tart.Cpu, iso.Tart.Memory, opts...)
 }
 
 func newVetu(

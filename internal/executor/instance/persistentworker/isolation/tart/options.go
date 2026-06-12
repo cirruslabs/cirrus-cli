@@ -49,3 +49,9 @@ func WithSyncTimeOverSSH() Option {
 		tart.syncTimeOverSSH = true
 	}
 }
+
+func WithRunArgs(args []string) Option {
+    return func(tart *Tart) {
+        tart.extraRunArgs = append(tart.extraRunArgs, args...)
+    }
+}

@@ -56,6 +56,7 @@ type Tart struct {
 	display         string
 	volumes         []*api.Isolation_Tart_Volume
 	syncTimeOverSSH bool
+    extraRunArgs    []string
 
 	vm              *VM
 	initializeHooks []remoteagent.WaitForAgentHook
@@ -302,7 +303,7 @@ func (tart *Tart) bootVM(
 		})
 	}
 
-	vm.Start(ctx, tart.softnet, tart.softnetAllow, tart.nested, directoryMounts)
+    vm.Start(ctx, tart.softnet, tart.softnetAllow, tart.nested, directoryMounts, tart.extraRunArgs)
 
 	// Wait for the VM to start and get it's DHCP address
 	bootLogger := logger.Scoped("boot virtual machine")
@@ -348,7 +349,11 @@ func (tart *Tart) Run(ctx context.Context, config *runconfig.RunConfig) (err err
 	if tart.vm != nil && config.DirtyMode {
 		return fmt.Errorf("%w: dirty mode is not supported for a warmed instance", ErrFailed)
 	}
-	if tart.vm == nil {
+    if tart.vm == nil {
+        // propagate extra run args from run config
+        if len(config.TartOptions.RunArgs) != 0 {
+            tart.extraRunArgs = append(tart.extraRunArgs, config.TartOptions.RunArgs...)
+        }
 		automountProjectDir := ""
 		if config.DirtyMode && config.ProjectDir != "" {
 			automountProjectDir = config.ProjectDir

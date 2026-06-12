@@ -161,7 +161,8 @@ func (vm *VM) Start(
 	softnet bool,
 	softnetAllow []string,
 	nested bool,
-	directoryMounts []directoryMount,
+    directoryMounts []directoryMount,
+    extraRunArgs []string,
 ) {
 	vm.wg.Add(1)
 
@@ -202,7 +203,12 @@ func (vm *VM) Start(
 			args = append(args, "--dir", dirArgumentValue)
 		}
 
-		args = append(args, vm.ident)
+        // Extra arguments first, then VM ident at the end
+        if len(extraRunArgs) > 0 {
+            args = append(args, extraRunArgs...)
+        }
+
+        args = append(args, vm.ident)
 
 		stdout, stderr, err := Cmd(vm.runningVMCtx, vm.env, "run", args...)
 		if localHub := sentry.GetHubFromContext(ctx); localHub != nil {
