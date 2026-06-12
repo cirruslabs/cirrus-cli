@@ -1,6 +1,7 @@
 package options
 
 type TartOptions struct {
-	LazyPull  bool
+	LazyPull bool
 	NoUnmount bool
+    RunArgs  []string
 }
